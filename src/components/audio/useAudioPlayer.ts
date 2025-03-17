@@ -15,16 +15,12 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: UseAudi
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(0.7);
   const [playbackRate, setPlaybackRate] = useState(1);
-  const [hasCompleted, setHasCompleted] = useState(false);
-  const [hasTriggeredEndEvent, setHasTriggeredEndEvent] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   
   // Reset player when lesson changes
   useEffect(() => {
     if (lesson) {
       setCurrentTime(0);
-      setHasCompleted(false);
-      setHasTriggeredEndEvent(false);
       
       if (audioRef.current) {
         audioRef.current.currentTime = 0;
@@ -82,25 +78,10 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: UseAudi
     }
   }, [volume, isMuted, playbackRate]);
   
-  // Update time display and check for completion
+  // Update time display
   const updateTime = () => {
     if (audioRef.current) {
       setCurrentTime(audioRef.current.currentTime);
-      
-      // Mark lesson as complete at 95% but don't advance yet
-      if (!hasCompleted && audioRef.current.currentTime >= audioRef.current.duration * 0.95) {
-        console.log("95% completion reached, marking lesson as complete");
-        setHasCompleted(true);
-        onComplete(); // This marks the lesson as complete in the system
-      }
-      
-      // When we're near the very end (99.5%), prepare for clean transition
-      // This helps with some browsers that might not fire onEnded reliably
-      if (!hasTriggeredEndEvent && 
-          audioRef.current.currentTime >= audioRef.current.duration * 0.995) {
-        console.log("99.5% completion reached, preparing to advance");
-        setHasTriggeredEndEvent(true);
-      }
     }
   };
   
@@ -111,21 +92,18 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: UseAudi
     }
   };
   
-  // Handle audio ended event (when it reaches 100%)
+  // Handle audio ended event - when it reaches 100%
   const handleAudioEnded = () => {
-    // The audio has naturally ended, let's proceed to next lesson
-    console.log("Audio ended naturally, dispatching lessonEnded event");
+    // Mark the lesson as complete
     if (lesson) {
-      // Prevent double-firing by checking if we already triggered the end event
-      if (!hasTriggeredEndEvent) {
-        setHasTriggeredEndEvent(true);
-        
-        // Dispatch custom event to signal lesson ended
-        const event = new CustomEvent('lessonEnded', { 
-          detail: { lessonId: lesson.id }
-        });
-        window.dispatchEvent(event);
-      }
+      console.log("Audio ended naturally, marking lesson complete");
+      onComplete();
+      
+      // Dispatch custom event to signal lesson ended for auto-advancing
+      const event = new CustomEvent('lessonEnded', { 
+        detail: { lessonId: lesson.id }
+      });
+      window.dispatchEvent(event);
     }
   };
   
@@ -160,7 +138,6 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: UseAudi
     isMuted,
     volume,
     playbackRate,
-    hasCompleted,
     handleSeek,
     handleVolumeChange,
     toggleMute,
