@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import AudioPlayer from '../components/AudioPlayer';
-import { Podcast, Lesson } from '../types';
+import { Podcast, Lesson, Module } from '../types';
 import { getPodcastById } from '../data/podcasts';
 import CourseHero from '../components/course/CourseHero';
 import CourseContent from '../components/course/CourseContent';
@@ -22,6 +22,29 @@ const Course = () => {
       const podcastData = getPodcastById(id);
       
       if (podcastData) {
+        // Generate modules if they don't exist
+        if (!podcastData.modules || podcastData.modules.length === 0) {
+          const defaultModules: Module[] = [
+            {
+              id: 'module-1',
+              title: 'Conceptos Básicos',
+              lessonIds: podcastData.lessons.slice(0, 2).map(l => l.id)
+            },
+            {
+              id: 'module-2',
+              title: 'Técnicas Intermedias',
+              lessonIds: podcastData.lessons.slice(2, 4).map(l => l.id)
+            },
+            {
+              id: 'module-3',
+              title: 'Aplicación Práctica',
+              lessonIds: podcastData.lessons.slice(4).map(l => l.id)
+            }
+          ];
+          
+          podcastData.modules = defaultModules;
+        }
+        
         setPodcast(podcastData);
         
         // Set first unlocked lesson as current

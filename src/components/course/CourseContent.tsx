@@ -17,6 +17,7 @@ const CourseContent = ({ podcast, currentLessonId, onSelectLesson }: CourseConte
           <div className="lg:col-span-8 flex justify-center">
             <LearningPath 
               lessons={podcast.lessons}
+              modules={podcast.modules}
               onSelectLesson={onSelectLesson}
               currentLessonId={currentLessonId}
             />

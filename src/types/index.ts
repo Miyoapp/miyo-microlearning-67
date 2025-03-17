@@ -15,6 +15,13 @@ export interface Podcast {
   imageUrl: string;
   description: string;
   lessons: Lesson[];
+  modules: Module[];
+}
+
+export interface Module {
+  id: string;
+  title: string;
+  lessonIds: string[];
 }
 
 export interface Lesson {
