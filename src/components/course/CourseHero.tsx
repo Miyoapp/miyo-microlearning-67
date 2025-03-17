@@ -221,7 +221,8 @@ const CourseHero = ({ podcast }: CourseHeroProps) => {
       </div>
       
       {/* Add custom styles for animations */}
-      <style jsx>{`
+      <style>
+        {`
         @keyframes pulse {
           0%, 100% { transform: scaleY(1); opacity: 0.7; }
           50% { transform: scaleY(1.2); opacity: 1; }
@@ -238,7 +239,8 @@ const CourseHero = ({ podcast }: CourseHeroProps) => {
           border-radius: 50%;
           background: radial-gradient(circle at center, transparent 40%, rgba(255,255,255,0.1) 60%, transparent 70%);
         }
-      `}</style>
+        `}
+      </style>
     </section>
   );
 };
