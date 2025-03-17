@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Podcast, Lesson } from '@/types';
 import { useToast } from "@/components/ui/use-toast";
 
@@ -27,8 +27,14 @@ export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcas
       return;
     }
     
+    // If selecting the same lesson that's already playing, just toggle play/pause
+    if (currentLesson && lesson.id === currentLesson.id) {
+      handleTogglePlay();
+      return;
+    }
+    
     setCurrentLesson(lesson);
-    // Iniciar reproducción automáticamente al seleccionar desde la ruta de aprendizaje
+    // Start playback automatically when selecting from learning path
     setIsPlaying(true);
   };
 
@@ -36,7 +42,7 @@ export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcas
   const getNextLesson = (currentLessonId: string): Lesson | null => {
     if (!podcast) return null;
     
-    // Encontrar todos los IDs de lecciones desbloqueadas en el orden correcto de los módulos
+    // Find all unlocked lesson IDs in the correct order from modules
     const allAvailableLessons: Lesson[] = [];
     podcast.modules.forEach(module => {
       module.lessonIds.forEach(lessonId => {
@@ -47,10 +53,10 @@ export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcas
       });
     });
 
-    // Encontrar el índice de la lección actual
+    // Find the index of the current lesson
     const currentIndex = allAvailableLessons.findIndex(lesson => lesson.id === currentLessonId);
     
-    // Si encontramos la lección actual y hay una siguiente disponible
+    // If we found the current lesson and there's a next one available
     if (currentIndex !== -1 && currentIndex < allAvailableLessons.length - 1) {
       return allAvailableLessons[currentIndex + 1];
     }
@@ -59,7 +65,7 @@ export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcas
   };
 
   // Advance to the next lesson and keep playing
-  const advanceToNextLesson = () => {
+  const advanceToNextLesson = useCallback(() => {
     if (!currentLesson) return;
     
     const nextLesson = getNextLesson(currentLesson.id);
@@ -82,7 +88,7 @@ export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcas
         variant: "default"
       });
     }
-  };
+  }, [currentLesson, toast]);
 
   // Handle toggling play state
   const handleTogglePlay = () => {
@@ -93,11 +99,11 @@ export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcas
   const handleLessonComplete = () => {
     if (!podcast || !currentLesson) return;
     
-    // Crear una copia de las lecciones para modificar
+    // Create a copy of the lessons to modify
     const updatedLessons = [...podcast.lessons];
     const modules = [...podcast.modules];
     
-    // Encontrar el módulo actual y el índice de la lección actual dentro de ese módulo
+    // Find the current module and the index of the current lesson within that module
     const currentModuleIndex = modules.findIndex(module => 
       module.lessonIds.includes(currentLesson.id)
     );
@@ -107,43 +113,43 @@ export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcas
     const currentModule = modules[currentModuleIndex];
     const currentLessonIndexInModule = currentModule.lessonIds.indexOf(currentLesson.id);
     
-    // Marcar la lección actual como completada
+    // Mark the current lesson as completed
     const lessonIndex = updatedLessons.findIndex(l => l.id === currentLesson.id);
     if (lessonIndex !== -1) {
       updatedLessons[lessonIndex] = { ...updatedLessons[lessonIndex], isCompleted: true };
     }
     
-    // Determinar qué lección desbloquear a continuación
+    // Determine which lesson to unlock next
     let nextLessonToUnlock: string | null = null;
     let unlockDescription = "";
     
-    // Si hay más lecciones en el módulo actual
+    // If there are more lessons in the current module
     if (currentLessonIndexInModule < currentModule.lessonIds.length - 1) {
-      // Desbloquear la siguiente lección del mismo módulo
+      // Unlock the next lesson in the same module
       nextLessonToUnlock = currentModule.lessonIds[currentLessonIndexInModule + 1];
       unlockDescription = "La siguiente lección ha sido desbloqueada.";
     } else {
-      // Si es la última lección del módulo actual y hay más módulos
+      // If it's the last lesson of the current module and there are more modules
       if (currentModuleIndex < modules.length - 1) {
-        // Verificar si todas las lecciones del módulo actual están completadas
+        // Check if all lessons in the current module are completed
         const allLessonsInModuleCompleted = currentModule.lessonIds.every(lessonId => {
           const lesson = updatedLessons.find(l => l.id === lessonId);
           return lesson && (lesson.id === currentLesson.id || lesson.isCompleted);
         });
         
         if (allLessonsInModuleCompleted) {
-          // Desbloquear la primera lección del siguiente módulo
+          // Unlock the first lesson of the next module
           const nextModule = modules[currentModuleIndex + 1];
           nextLessonToUnlock = nextModule.lessonIds[0];
           unlockDescription = "¡Módulo completado! La primera lección del siguiente módulo ha sido desbloqueada.";
         }
       } else {
-        // Era la última lección del último módulo
+        // It was the last lesson of the last module
         unlockDescription = "¡Has completado todas las lecciones del curso!";
       }
     }
     
-    // Desbloquear la siguiente lección si corresponde
+    // Unlock the next lesson if applicable
     if (nextLessonToUnlock) {
       const nextLessonIndex = updatedLessons.findIndex(l => l.id === nextLessonToUnlock);
       if (nextLessonIndex !== -1) {
@@ -151,23 +157,15 @@ export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcas
       }
     }
     
-    // Actualizar el podcast con las nuevas lecciones
+    // Update the podcast with the new lessons
     setPodcast({ ...podcast, lessons: updatedLessons });
     
-    // Notificar al usuario
+    // Notify the user
     toast({
       title: "¡Lección completada!",
       description: unlockDescription,
       variant: "default"
     });
-    
-    // Avanzar a la siguiente lección disponible
-    const nextLesson = getNextLesson(currentLesson.id);
-    if (nextLesson) {
-      setCurrentLesson(nextLesson);
-      // Mantener el estado de reproducción
-      setIsPlaying(true);
-    }
   };
 
   return {

@@ -21,7 +21,6 @@ const Course = () => {
     handleSelectLesson, 
     handleTogglePlay, 
     handleLessonComplete,
-    getNextLesson,
     advanceToNextLesson
   } = useLessons(podcast, setPodcast);
   
@@ -30,7 +29,7 @@ const Course = () => {
     if (podcast) {
       initializeCurrentLesson();
     }
-  }, [podcast]);
+  }, [podcast, initializeCurrentLesson]);
   
   // Listen for lesson ended event to advance to next lesson
   useEffect(() => {
