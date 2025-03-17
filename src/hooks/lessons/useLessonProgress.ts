@@ -13,6 +13,8 @@ export function useLessonProgress(
   const handleLessonComplete = useCallback(() => {
     if (!podcast || !currentLesson) return;
     
+    console.log(`Marking lesson complete: ${currentLesson.title}`);
+    
     // Create a copy of the lessons to modify
     const updatedLessons = [...podcast.lessons];
     const modules = [...podcast.modules];
@@ -22,7 +24,10 @@ export function useLessonProgress(
       module.lessonIds.includes(currentLesson.id)
     );
     
-    if (currentModuleIndex === -1) return;
+    if (currentModuleIndex === -1) {
+      console.log("No module contains this lesson. Cannot mark as complete.");
+      return;
+    }
     
     const currentModule = modules[currentModuleIndex];
     const currentLessonIndexInModule = currentModule.lessonIds.indexOf(currentLesson.id);
@@ -31,6 +36,7 @@ export function useLessonProgress(
     const lessonIndex = updatedLessons.findIndex(l => l.id === currentLesson.id);
     if (lessonIndex !== -1) {
       updatedLessons[lessonIndex] = { ...updatedLessons[lessonIndex], isCompleted: true };
+      console.log(`Lesson marked as completed: ${currentLesson.title}`);
     }
     
     // Determine which lesson to unlock next
@@ -40,6 +46,7 @@ export function useLessonProgress(
     if (currentLessonIndexInModule < currentModule.lessonIds.length - 1) {
       // Unlock the next lesson in the same module
       nextLessonToUnlock = currentModule.lessonIds[currentLessonIndexInModule + 1];
+      console.log(`Next lesson to unlock is in the same module: ${nextLessonToUnlock}`);
     } else {
       // If it's the last lesson of the current module and there are more modules
       if (currentModuleIndex < modules.length - 1) {
@@ -53,6 +60,7 @@ export function useLessonProgress(
           // Unlock the first lesson of the next module
           const nextModule = modules[currentModuleIndex + 1];
           nextLessonToUnlock = nextModule.lessonIds[0];
+          console.log(`Next lesson to unlock is in the next module: ${nextLessonToUnlock}`);
         }
       }
     }
@@ -62,6 +70,7 @@ export function useLessonProgress(
       const nextLessonIndex = updatedLessons.findIndex(l => l.id === nextLessonToUnlock);
       if (nextLessonIndex !== -1) {
         updatedLessons[nextLessonIndex] = { ...updatedLessons[nextLessonIndex], isLocked: false };
+        console.log(`Lesson unlocked: ${updatedLessons[nextLessonIndex].title}`);
       }
     }
     

@@ -43,9 +43,10 @@ const Course = () => {
         // Mark current lesson as complete first
         handleLessonComplete();
         
-        // Then advance to next lesson immediately with minimal delay
-        // This is the crucial part - we're removing complex timeouts
-        advanceToNextLesson();
+        // Then advance to next lesson immediately
+        setTimeout(() => {
+          advanceToNextLesson();
+        }, 100); // Very short delay to ensure completion state is saved first
       }
     };
     

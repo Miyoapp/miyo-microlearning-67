@@ -39,9 +39,20 @@ export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcas
   // Wrapper for advanceToNextLesson that passes the setCurrentLesson callback
   const advanceToNextLessonWrapper = () => {
     console.log("Wrapper for advanceToNextLesson called - advancing from:", currentLesson?.title);
+    
+    // Get the next lesson using the callback approach to ensure it happens
     advanceToNextLesson((nextLesson) => {
-      console.log("Setting next lesson:", nextLesson.title);
-      setCurrentLesson(nextLesson);
+      if (nextLesson) {
+        console.log("Setting next lesson:", nextLesson.title);
+        setCurrentLesson(nextLesson);
+        
+        // Ensure the UI updates by forcing the isPlaying state after a brief moment
+        setTimeout(() => {
+          setIsPlaying(true);
+        }, 300);
+      } else {
+        console.log("No next lesson available to advance to");
+      }
     });
   };
 

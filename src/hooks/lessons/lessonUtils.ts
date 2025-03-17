@@ -15,26 +15,32 @@ export function getFirstAvailableLesson(podcast: Podcast | null): Lesson | null 
 export function getNextLesson(podcast: Podcast | null, currentLessonId: string): Lesson | null {
   if (!podcast) return null;
   
-  // Find all unlocked lesson IDs in the correct order from modules
-  const allAvailableLessons: Lesson[] = [];
+  // Find all modules and their lessons in order
+  const orderedLessonIds: string[] = [];
   podcast.modules.forEach(module => {
     module.lessonIds.forEach(lessonId => {
-      const lesson = podcast.lessons.find(l => l.id === lessonId);
-      if (lesson && !lesson.isLocked) {
-        allAvailableLessons.push(lesson);
-      }
+      orderedLessonIds.push(lessonId);
     });
   });
-
-  // Find the index of the current lesson
-  const currentIndex = allAvailableLessons.findIndex(lesson => lesson.id === currentLessonId);
   
-  // If we found the current lesson and there's a next one available
-  if (currentIndex !== -1 && currentIndex < allAvailableLessons.length - 1) {
-    console.log(`Found next lesson: ${allAvailableLessons[currentIndex + 1].title} at index ${currentIndex + 1} of ${allAvailableLessons.length}`);
-    return allAvailableLessons[currentIndex + 1];
+  // Find current lesson index in the ordered list
+  const currentIndex = orderedLessonIds.indexOf(currentLessonId);
+  
+  // If we found the current lesson and there's a next one
+  if (currentIndex !== -1 && currentIndex < orderedLessonIds.length - 1) {
+    const nextLessonId = orderedLessonIds[currentIndex + 1];
+    const nextLesson = podcast.lessons.find(l => l.id === nextLessonId);
+    
+    // Important: Mark the next lesson as unlocked to ensure it can be played
+    if (nextLesson) {
+      console.log(`Found next lesson: ${nextLesson.title}`);
+      
+      // Return a copy of the lesson with isLocked set to false
+      // This ensures the player can access it
+      return { ...nextLesson, isLocked: false };
+    }
   }
   
-  console.log(`No next lesson found after index ${currentIndex} of ${allAvailableLessons.length} available lessons`);
+  console.log(`No next lesson found after index ${currentIndex}`);
   return null;
 }

@@ -31,37 +31,48 @@ export function useLessonPlayback({ currentLesson, podcast }: UseLessonPlaybackP
 
   // Advance to the next lesson
   const advanceToNextLesson = useCallback((callback: (nextLesson: Lesson) => void) => {
-    if (!currentLesson || !podcast || isTransitioning) return;
+    if (!currentLesson || !podcast || isTransitioning) {
+      console.log("Cannot advance: missing lesson, podcast, or already transitioning");
+      return;
+    }
     
     console.log("Advancing to next lesson from", currentLesson.title);
     setIsTransitioning(true);
     
+    // Get the next lesson to play
     const nextLesson = getNextLesson(podcast, currentLesson.id);
+    
     if (nextLesson) {
-      console.log("Next lesson found:", nextLesson.title);
+      console.log("Next lesson found:", nextLesson.title, "- isLocked:", nextLesson.isLocked);
       
-      // First pause current audio to avoid conflicts
+      // Important: Pause current audio first
       setIsPlaying(false);
       
-      // Simpler approach: set next lesson and then start playing after short delay
+      // Call the callback with the next lesson - ensure it's unlocked
       setTimeout(() => {
         console.log("Changing to next lesson:", nextLesson.title);
         callback(nextLesson);
         
-        // Allow a moment for the new lesson to be set before playing
+        // Allow a moment for the UI to update before starting playback
         setTimeout(() => {
           console.log("Starting playback of next lesson:", nextLesson.title);
           setIsPlaying(true);
           setIsTransitioning(false);
-        }, 300);
-      }, 200);
+        }, 500);
+      }, 300);
     } else {
       console.log("No more lessons available");
-      // No more lessons available - don't show any message
       setIsPlaying(false);
       setIsTransitioning(false);
+      
+      // Optional: Show a toast when the course is complete
+      toast({
+        title: "Lección completada",
+        description: "Has terminado todas las lecciones disponibles.",
+        variant: "default"
+      });
     }
-  }, [currentLesson, podcast, isTransitioning]);
+  }, [currentLesson, podcast, isTransitioning, toast]);
 
   return {
     isPlaying,
