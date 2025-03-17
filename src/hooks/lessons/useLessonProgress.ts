@@ -1,7 +1,6 @@
 
 import { useCallback } from 'react';
 import { Podcast, Lesson } from '@/types';
-import { useToast } from "@/components/ui/use-toast";
 
 /**
  * Hook to handle lesson completion and progression
@@ -11,8 +10,6 @@ export function useLessonProgress(
   setPodcast: (podcast: Podcast) => void,
   currentLesson: Lesson | null
 ) {
-  const { toast } = useToast();
-
   const handleLessonComplete = useCallback(() => {
     if (!podcast || !currentLesson) return;
     
@@ -38,13 +35,11 @@ export function useLessonProgress(
     
     // Determine which lesson to unlock next
     let nextLessonToUnlock: string | null = null;
-    let unlockDescription = "";
     
     // If there are more lessons in the current module
     if (currentLessonIndexInModule < currentModule.lessonIds.length - 1) {
       // Unlock the next lesson in the same module
       nextLessonToUnlock = currentModule.lessonIds[currentLessonIndexInModule + 1];
-      unlockDescription = "La siguiente lección ha sido desbloqueada.";
     } else {
       // If it's the last lesson of the current module and there are more modules
       if (currentModuleIndex < modules.length - 1) {
@@ -58,11 +53,7 @@ export function useLessonProgress(
           // Unlock the first lesson of the next module
           const nextModule = modules[currentModuleIndex + 1];
           nextLessonToUnlock = nextModule.lessonIds[0];
-          unlockDescription = "¡Módulo completado! La primera lección del siguiente módulo ha sido desbloqueada.";
         }
-      } else {
-        // It was the last lesson of the last module
-        unlockDescription = "¡Has completado todas las lecciones del curso!";
       }
     }
     
@@ -76,14 +67,7 @@ export function useLessonProgress(
     
     // Update the podcast with the new lessons
     setPodcast({ ...podcast, lessons: updatedLessons });
-    
-    // Mostrar el mensaje de lección completada
-    toast({
-      title: "¡Lección completada!",
-      description: unlockDescription,
-      variant: "default"
-    });
-  }, [podcast, currentLesson, setPodcast, toast]);
+  }, [podcast, currentLesson, setPodcast]);
 
   return {
     handleLessonComplete

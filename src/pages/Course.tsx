@@ -40,9 +40,7 @@ const Course = () => {
       if (event.detail && event.detail.lessonId === currentLesson?.id) {
         console.log("Confirmed current lesson ended, advancing to next");
         handleLessonComplete();
-        setTimeout(() => {
-          advanceToNextLesson();
-        }, 100);
+        advanceToNextLesson();
       }
     };
     

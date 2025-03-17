@@ -53,12 +53,6 @@ export function useLessonPlayback({ currentLesson, podcast }: UseLessonPlaybackP
           // Start playing the next lesson
           setIsPlaying(true);
           setIsTransitioning(false);
-          
-          toast({
-            title: "Reproduciendo siguiente lección",
-            description: nextLesson.title,
-            variant: "default"
-          });
         }, 200);
       }, 500);
     } else {
@@ -66,7 +60,7 @@ export function useLessonPlayback({ currentLesson, podcast }: UseLessonPlaybackP
       setIsPlaying(false);
       setIsTransitioning(false);
     }
-  }, [currentLesson, podcast, isTransitioning, toast]);
+  }, [currentLesson, podcast, isTransitioning]);
 
   return {
     isPlaying,
