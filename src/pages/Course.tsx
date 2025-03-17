@@ -36,7 +36,7 @@ const Course = () => {
     const handleLessonEnded = (e: Event) => {
       const event = e as CustomEvent;
       if (event.detail && event.detail.lessonId === currentLesson?.id) {
-        // The current lesson has ended naturally, advance to next
+        // The current lesson has ended naturally at 100%, advance to next
         advanceToNextLesson();
       }
     };

@@ -8,13 +8,13 @@ export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcas
   const { toast } = useToast();
 
   // Initialize with first available lesson
-  const initializeCurrentLesson = () => {
+  const initializeCurrentLesson = useCallback(() => {
     if (!podcast) return;
     const firstLesson = getFirstAvailableLesson(podcast);
     if (firstLesson) {
       setCurrentLesson(firstLesson);
     }
-  };
+  }, [podcast]);
 
   // Handle selecting a lesson
   const handleSelectLesson = (lesson: Lesson) => {
@@ -39,7 +39,7 @@ export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcas
   };
 
   // Get the next lesson in sequence (used for autoplay and navigation)
-  const getNextLesson = (currentLessonId: string): Lesson | null => {
+  const getNextLesson = useCallback((currentLessonId: string): Lesson | null => {
     if (!podcast) return null;
     
     // Find all unlocked lesson IDs in the correct order from modules
@@ -62,7 +62,7 @@ export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcas
     }
     
     return null;
-  };
+  }, [podcast]);
 
   // Advance to the next lesson and keep playing
   const advanceToNextLesson = useCallback(() => {
@@ -70,15 +70,21 @@ export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcas
     
     const nextLesson = getNextLesson(currentLesson.id);
     if (nextLesson) {
-      setCurrentLesson(nextLesson);
-      // Keep playing
-      setIsPlaying(true);
+      // First pause current audio to avoid conflicts
+      setIsPlaying(false);
       
-      toast({
-        title: "Reproduciendo siguiente lección",
-        description: nextLesson.title,
-        variant: "default"
-      });
+      // Short delay before switching to next lesson and starting playback
+      setTimeout(() => {
+        setCurrentLesson(nextLesson);
+        // Start playing the next lesson
+        setIsPlaying(true);
+        
+        toast({
+          title: "Reproduciendo siguiente lección",
+          description: nextLesson.title,
+          variant: "default"
+        });
+      }, 300);
     } else {
       // No more lessons available
       setIsPlaying(false);
@@ -88,7 +94,7 @@ export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcas
         variant: "default"
       });
     }
-  }, [currentLesson, toast]);
+  }, [currentLesson, getNextLesson, toast]);
 
   // Handle toggling play state
   const handleTogglePlay = () => {
@@ -96,7 +102,7 @@ export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcas
   };
 
   // Handle lesson completion
-  const handleLessonComplete = () => {
+  const handleLessonComplete = useCallback(() => {
     if (!podcast || !currentLesson) return;
     
     // Create a copy of the lessons to modify
@@ -166,7 +172,7 @@ export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcas
       description: unlockDescription,
       variant: "default"
     });
-  };
+  }, [podcast, currentLesson, setPodcast, toast]);
 
   return {
     currentLesson,

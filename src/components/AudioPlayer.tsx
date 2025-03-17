@@ -21,7 +21,6 @@ const AudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: AudioPlaye
   const [volume, setVolume] = useState(0.7);
   const [playbackRate, setPlaybackRate] = useState(1);
   const [hasCompleted, setHasCompleted] = useState(false);
-  const [isEnded, setIsEnded] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   
   // Reset player when lesson changes
@@ -29,7 +28,6 @@ const AudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: AudioPlaye
     if (lesson) {
       setCurrentTime(0);
       setHasCompleted(false);
-      setIsEnded(false);
       
       if (audioRef.current) {
         audioRef.current.currentTime = 0;
@@ -49,7 +47,7 @@ const AudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: AudioPlaye
                 });
               }
             }
-          }, 100);
+          }, 300); // Increased delay for better stability
           
           return () => clearTimeout(timer);
         }
@@ -63,7 +61,7 @@ const AudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: AudioPlaye
     
     const handlePlay = async () => {
       try {
-        if (isPlaying && !isEnded) {
+        if (isPlaying) {
           await audioRef.current?.play();
         } else {
           audioRef.current?.pause();
@@ -77,7 +75,7 @@ const AudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: AudioPlaye
     };
     
     handlePlay();
-  }, [isPlaying, onTogglePlay, lesson, isEnded]);
+  }, [isPlaying, onTogglePlay, lesson]);
   
   // Update volume, mute state, and playback rate
   useEffect(() => {
@@ -95,7 +93,7 @@ const AudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: AudioPlaye
       // Mark lesson as complete at 95% but don't advance yet
       if (!hasCompleted && audioRef.current.currentTime >= audioRef.current.duration * 0.95) {
         setHasCompleted(true);
-        onComplete(); // This will mark the lesson as complete in the system
+        onComplete(); // This marks the lesson as complete in the system
       }
     }
   };
@@ -143,13 +141,11 @@ const AudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: AudioPlaye
           onTimeUpdate={updateTime}
           onLoadedMetadata={handleMetadata}
           onEnded={() => {
-            setIsEnded(true);
-            // Only trigger automatic advance to next lesson on actual audio end (100%)
-            if (isPlaying) {
-              // The audio has naturally ended, let's proceed to next lesson
-              const event = new CustomEvent('lessonEnded', { detail: { lessonId: lesson.id } });
-              window.dispatchEvent(event);
-            }
+            // The audio has naturally ended at 100%, let's proceed to next lesson
+            const event = new CustomEvent('lessonEnded', { 
+              detail: { lessonId: lesson.id }
+            });
+            window.dispatchEvent(event);
           }}
         />
         
