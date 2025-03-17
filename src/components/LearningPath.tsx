@@ -44,9 +44,7 @@ const LearningPath = ({ lessons, onSelectLesson, currentLessonId }: LearningPath
             {/* Título del módulo */}
             <div className="flex items-center mb-4">
               <Separator className="flex-grow" />
-              <div className="px-4 text-center">
-                <h3 className="text-lg font-medium text-gray-600 whitespace-normal">{module.title}</h3>
-              </div>
+              <h3 className="text-lg font-medium px-4 text-gray-600">{module.title}</h3>
               <Separator className="flex-grow" />
             </div>
             
@@ -73,8 +71,8 @@ const LearningPath = ({ lessons, onSelectLesson, currentLessonId }: LearningPath
                 
                 // Alternar posición para crear efecto zigzag
                 const containerAlignment = lessonIndex % 2 === 0 
-                  ? "justify-start" 
-                  : "justify-end";
+                  ? "justify-center" 
+                  : "justify-center ml-[45px]";
                 
                 return (
                   <div key={lesson.id} className={`flex ${containerAlignment}`}>
