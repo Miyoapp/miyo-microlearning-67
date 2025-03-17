@@ -53,7 +53,7 @@ const Course = () => {
           }
           
           // Asegurar que todas las lecciones tengan el estado correcto
-          const updatedLessons = initializeLessonsState(podcastData.lessons);
+          const updatedLessons = initializeLessonsState(podcastData);
           podcastData.lessons = updatedLessons;
           
           setPodcast(podcastData);
@@ -80,11 +80,21 @@ const Course = () => {
     cargarCurso();
   }, [id, toast]);
   
-  // Inicializar el estado de las lecciones (solo la primera desbloqueada)
-  const initializeLessonsState = (lessons: Lesson[]): Lesson[] => {
-    return lessons.map((lesson, index) => {
-      if (index === 0) {
-        // Primera lección desbloqueada
+  // Inicializar el estado de las lecciones (solo la primera lección del primer módulo desbloqueada)
+  const initializeLessonsState = (podcast: Podcast): Lesson[] => {
+    // Si no hay módulos, devolver las lecciones tal cual
+    if (!podcast.modules || podcast.modules.length === 0) {
+      return podcast.lessons;
+    }
+    
+    // Obtener el ID de la primera lección del primer módulo
+    const firstModule = podcast.modules[0];
+    const firstLessonId = firstModule.lessonIds[0];
+    
+    // Actualizar el estado de todas las lecciones
+    return podcast.lessons.map(lesson => {
+      if (lesson.id === firstLessonId) {
+        // Primera lección del primer módulo desbloqueada
         return { ...lesson, isLocked: false, isCompleted: false };
       } else {
         // Resto de lecciones bloqueadas

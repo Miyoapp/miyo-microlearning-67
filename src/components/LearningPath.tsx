@@ -12,11 +12,12 @@ interface LearningPathProps {
 }
 
 const LearningPath = ({ lessons, modules, onSelectLesson, currentLessonId }: LearningPathProps) => {
-  // Group lessons by module
+  // Group lessons by module and ensure they are in the correct order
   const getLessonsForModule = (moduleId: string) => {
     const module = modules.find(m => m.id === moduleId);
     if (!module) return [];
     
+    // Get lessons in the order defined by lessonIds array
     return module.lessonIds
       .map(id => lessons.find(lesson => lesson.id === id))
       .filter((lesson): lesson is Lesson => lesson !== undefined);
