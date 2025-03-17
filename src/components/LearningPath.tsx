@@ -41,8 +41,10 @@ const LearningPath = ({ lessons, onSelectLesson, currentLessonId }: LearningPath
               }
             );
             
-            // Even more reduced horizontal offset for right-side icons - creates very subtle zigzag
-            const containerAlignment = index % 2 === 0 ? "justify-start" : "justify-end pr-[10px]";
+            // Reduce offset for right-side icons even more to create a cascade effect
+            const containerAlignment = index % 2 === 0 
+              ? "justify-start" 
+              : "justify-start ml-[30px]";
             
             return (
               <div key={lesson.id} className={`flex ${containerAlignment}`}>
@@ -59,7 +61,7 @@ const LearningPath = ({ lessons, onSelectLesson, currentLessonId }: LearningPath
                       style={{ 
                         width: '2px', 
                         height: '25px',
-                        transform: `rotate(${index % 2 === 0 ? '5deg' : '-5deg'})` 
+                        transform: `rotate(${index % 2 === 0 ? '15deg' : '-5deg'})` 
                       }}
                     />
                   )}
