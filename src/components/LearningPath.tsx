@@ -19,8 +19,8 @@ const LearningPath = ({ lessons, onSelectLesson, currentLessonId }: LearningPath
     <div className="py-6">
       <h2 className="text-2xl font-bold mb-4 text-center">Tu Ruta de Aprendizaje</h2>
       
-      <div className="relative max-w-2xl mx-auto">
-        {/* More compact zigzag path with reduced vertical spacing */}
+      <div className="relative max-w-md mx-auto">
+        {/* Compressed cascading path with minimal horizontal spacing */}
         <div className="space-y-2">
           {lessons.map((lesson, index) => {
             const isCompleted = lesson.isCompleted;
@@ -30,10 +30,9 @@ const LearningPath = ({ lessons, onSelectLesson, currentLessonId }: LearningPath
             
             // Determine node styles based on lesson state
             let nodeClasses = cn(
-              "flex items-center justify-center w-14 h-14 rounded-full shadow-md transition-all duration-300",
+              "flex items-center justify-center w-12 h-12 rounded-full shadow-md transition-all duration-300",
               {
                 "bg-green-500 text-white": isCompleted,
-                // Fix: Combine these conditions to avoid duplicate properties
                 "bg-miyo-800 text-white": isCurrent && !isCompleted,
                 "bg-miyo-600 text-white": isAvailable && !isCurrent && !isCompleted,
                 "bg-gray-300 text-gray-500": !isAvailable,
@@ -42,8 +41,8 @@ const LearningPath = ({ lessons, onSelectLesson, currentLessonId }: LearningPath
               }
             );
             
-            // Zigzag pattern - even indices go left, odd go right
-            const containerAlignment = index % 2 === 0 ? "justify-start pl-8" : "justify-end pr-8";
+            // Dramatically compressed horizontal spacing - small offset for zigzag effect
+            const containerAlignment = index % 2 === 0 ? "justify-start pl-3" : "justify-end pr-3";
             
             return (
               <div key={lesson.id} className={`flex ${containerAlignment}`}>
@@ -53,24 +52,24 @@ const LearningPath = ({ lessons, onSelectLesson, currentLessonId }: LearningPath
                   onMouseEnter={() => setHoveredLesson(lesson.id)}
                   onMouseLeave={() => setHoveredLesson(null)}
                 >
-                  {/* Connect to next lesson with shorter dotted line (except for last lesson) */}
+                  {/* Connect to next lesson with steeper line for cascade effect */}
                   {index < lessons.length - 1 && (
                     <div 
-                      className={`absolute ${index % 2 === 0 ? 'left-1/2 -translate-x-1/2 rotate-45' : 'left-1/2 -translate-x-1/2 -rotate-45'} h-6 border-r-2 border-dashed border-gray-200 top-full`}
-                      style={{ width: '2px' }}
+                      className={`absolute ${index % 2 === 0 ? 'left-1/2 -translate-x-1/2 rotate-25' : 'left-1/2 -translate-x-1/2 -rotate-25'} h-6 border-r-2 border-dashed border-gray-200 top-full`}
+                      style={{ width: '2px', transform: `rotate(${index % 2 === 0 ? '25deg' : '-25deg'})` }}
                     />
                   )}
                   
                   {/* Lesson circle */}
                   <div className={nodeClasses}>
                     {isCompleted ? (
-                      <Trophy size={24} />
+                      <Trophy size={20} />
                     ) : isCurrent ? (
-                      <Play size={24} fill="white" />
+                      <Play size={20} fill="white" />
                     ) : isAvailable ? (
-                      <Play size={24} fill="white" />
+                      <Play size={20} fill="white" />
                     ) : (
-                      <Lock size={24} />
+                      <Lock size={20} />
                     )}
                   </div>
                   
