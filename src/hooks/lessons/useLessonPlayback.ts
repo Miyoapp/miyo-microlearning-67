@@ -33,30 +33,28 @@ export function useLessonPlayback({ currentLesson, podcast }: UseLessonPlaybackP
   const advanceToNextLesson = useCallback((callback: (nextLesson: Lesson) => void) => {
     if (!currentLesson || !podcast || isTransitioning) return;
     
-    console.log("Advancing to next lesson from", currentLesson.id);
+    console.log("Advancing to next lesson from", currentLesson.title);
     setIsTransitioning(true);
     
     const nextLesson = getNextLesson(podcast, currentLesson.id);
     if (nextLesson) {
-      console.log("Next lesson found:", nextLesson.id, nextLesson.title);
+      console.log("Next lesson found:", nextLesson.title);
       
       // First pause current audio to avoid conflicts
       setIsPlaying(false);
       
-      // Short delay before switching to next lesson and starting playback
+      // Simpler approach: set next lesson and then start playing after short delay
       setTimeout(() => {
-        console.log("Invoking callback with next lesson");
-        // Invoke callback with the next lesson
+        console.log("Changing to next lesson:", nextLesson.title);
         callback(nextLesson);
         
-        // Wait for lesson to be set before playing
+        // Allow a moment for the new lesson to be set before playing
         setTimeout(() => {
-          console.log("Starting playback of next lesson");
-          // Start playing the next lesson
+          console.log("Starting playback of next lesson:", nextLesson.title);
           setIsPlaying(true);
           setIsTransitioning(false);
-        }, 800);
-      }, 1000);
+        }, 300);
+      }, 200);
     } else {
       console.log("No more lessons available");
       // No more lessons available - don't show any message

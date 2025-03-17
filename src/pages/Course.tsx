@@ -31,7 +31,7 @@ const Course = () => {
     }
   }, [podcast, initializeCurrentLesson]);
   
-  // Listen for lesson ended event to advance to next lesson
+  // Listen for lesson ended event to advance to next lesson - direct approach
   useEffect(() => {
     const handleLessonEnded = (e: Event) => {
       const event = e as CustomEvent;
@@ -43,11 +43,9 @@ const Course = () => {
         // Mark current lesson as complete first
         handleLessonComplete();
         
-        // Then advance to next lesson with a short delay
-        setTimeout(() => {
-          console.log("Calling advanceToNextLesson after delay");
-          advanceToNextLesson();
-        }, 500);
+        // Then advance to next lesson immediately with minimal delay
+        // This is the crucial part - we're removing complex timeouts
+        advanceToNextLesson();
       }
     };
     

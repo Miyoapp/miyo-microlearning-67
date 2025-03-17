@@ -38,7 +38,7 @@ export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcas
   
   // Wrapper for advanceToNextLesson that passes the setCurrentLesson callback
   const advanceToNextLessonWrapper = () => {
-    console.log("Wrapper for advanceToNextLesson called");
+    console.log("Wrapper for advanceToNextLesson called - advancing from:", currentLesson?.title);
     advanceToNextLesson((nextLesson) => {
       console.log("Setting next lesson:", nextLesson.title);
       setCurrentLesson(nextLesson);

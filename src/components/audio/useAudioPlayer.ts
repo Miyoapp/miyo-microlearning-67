@@ -20,6 +20,7 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: UseAudi
   // Reset player when lesson changes
   useEffect(() => {
     if (lesson) {
+      console.log("Lesson changed to:", lesson.title);
       setCurrentTime(0);
       
       if (audioRef.current) {
@@ -30,6 +31,7 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: UseAudi
         if (isPlaying) {
           const timer = setTimeout(() => {
             if (audioRef.current) {
+              console.log("Auto-playing new lesson:", lesson.title);
               const playPromise = audioRef.current.play();
               if (playPromise !== undefined) {
                 playPromise.catch(error => {
@@ -41,7 +43,7 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: UseAudi
                 });
               }
             }
-          }, 800); // Increased delay for better stability
+          }, 300); // Reduced delay for better responsiveness
           
           return () => clearTimeout(timer);
         }
@@ -56,6 +58,7 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: UseAudi
     const handlePlay = async () => {
       try {
         if (isPlaying) {
+          console.log("Playing audio for lesson:", lesson.title);
           await audioRef.current?.play();
         } else {
           audioRef.current?.pause();
@@ -98,7 +101,7 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: UseAudi
   const handleAudioEnded = () => {
     // Mark the lesson as complete
     if (lesson) {
-      console.log("Audio ended naturally, marking lesson complete");
+      console.log("Audio ended naturally, marking lesson complete:", lesson.title);
       onComplete();
       
       // Dispatch custom event to signal lesson ended for auto-advancing
