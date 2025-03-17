@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Lesson } from '../types';
 import { Play, Lock, Trophy } from 'lucide-react';
@@ -41,8 +40,9 @@ const LearningPath = ({ lessons, onSelectLesson, currentLessonId }: LearningPath
               }
             );
             
-            // Dramatically compressed horizontal spacing - small offset for zigzag effect
-            const containerAlignment = index % 2 === 0 ? "justify-start pl-3" : "justify-end pr-3";
+            // Reduced horizontal separation - right circles moved closer to center
+            // Left circles keep a small offset, right circles have less offset than before
+            const containerAlignment = index % 2 === 0 ? "justify-start pl-3" : "justify-end pr-1";
             
             return (
               <div key={lesson.id} className={`flex ${containerAlignment}`}>
@@ -55,8 +55,8 @@ const LearningPath = ({ lessons, onSelectLesson, currentLessonId }: LearningPath
                   {/* Connect to next lesson with steeper line for cascade effect */}
                   {index < lessons.length - 1 && (
                     <div 
-                      className={`absolute ${index % 2 === 0 ? 'left-1/2 -translate-x-1/2 rotate-25' : 'left-1/2 -translate-x-1/2 -rotate-25'} h-6 border-r-2 border-dashed border-gray-200 top-full`}
-                      style={{ width: '2px', transform: `rotate(${index % 2 === 0 ? '25deg' : '-25deg'})` }}
+                      className={`absolute ${index % 2 === 0 ? 'left-1/2 -translate-x-1/2 rotate-15' : 'left-1/2 -translate-x-1/2 -rotate-15'} h-6 border-r-2 border-dashed border-gray-200 top-full`}
+                      style={{ width: '2px', transform: `rotate(${index % 2 === 0 ? '15deg' : '-15deg'})` }}
                     />
                   )}
                   
