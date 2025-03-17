@@ -13,7 +13,7 @@ export function formatMinutesToTime(minutes: number): string {
   if (hours > 0) {
     return `${hours}:${mins < 10 ? '0' : ''}${mins}`;
   } else {
-    return `0:${mins < 10 ? '0' : ''}${mins}`;
+    return `${mins}:${0}${0}`;  // Always shows minutes:00 format
   }
 }
 
@@ -29,7 +29,11 @@ export function formatMinutesToHumanReadable(minutes: number): string {
   const mins = Math.floor(minutes % 60);
   
   if (hours > 0) {
-    return `${hours}:${mins < 10 ? '0' : ''}${mins} min`;
+    if (mins > 0) {
+      return `${hours}h ${mins}min`;
+    } else {
+      return `${hours}h`;
+    }
   } else {
     return `${mins} min`;
   }

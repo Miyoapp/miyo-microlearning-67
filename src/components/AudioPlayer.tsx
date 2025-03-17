@@ -50,7 +50,7 @@ const AudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: AudioPlaye
             <LessonInfo 
               title={lesson.title} 
               currentTime={currentTime} 
-              duration={`${lesson.duration}:00`} 
+              duration={duration || lesson.duration} 
             />
           </div>
           
