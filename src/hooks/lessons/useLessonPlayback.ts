@@ -31,7 +31,7 @@ export function useLessonPlayback({ currentLesson, podcast }: UseLessonPlaybackP
 
   // Advance to the next lesson
   const advanceToNextLesson = useCallback((callback: (nextLesson: Lesson) => void) => {
-    if (!currentLesson || isTransitioning) return;
+    if (!currentLesson || !podcast || isTransitioning) return;
     
     console.log("Advancing to next lesson from", currentLesson.id);
     setIsTransitioning(true);
@@ -53,7 +53,7 @@ export function useLessonPlayback({ currentLesson, podcast }: UseLessonPlaybackP
           // Start playing the next lesson
           setIsPlaying(true);
           setIsTransitioning(false);
-        }, 200);
+        }, 300);
       }, 500);
     } else {
       // No more lessons available - don't show any message

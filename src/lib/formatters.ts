@@ -13,7 +13,7 @@ export function formatMinutesToTime(minutes: number): string {
   if (hours > 0) {
     return `${hours}:${mins < 10 ? '0' : ''}${mins}`;
   } else {
-    return `${mins}:${0}${0}`;  // This should be fixed to show proper minutes:seconds
+    return `${mins}:00`;  // Format minutes with seconds as 00
   }
 }
 
