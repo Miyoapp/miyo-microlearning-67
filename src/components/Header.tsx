@@ -40,30 +40,9 @@ const Header = () => {
                 : 'text-gray-600 hover:text-miyo-800'
             }`}
           >
-            Home
+            Inicio
           </Link>
-          <a 
-            href="#" 
-            className="font-medium text-gray-600 hover:text-miyo-800 transition-colors"
-          >
-            Explore
-          </a>
-          <a 
-            href="#" 
-            className="font-medium text-gray-600 hover:text-miyo-800 transition-colors"
-          >
-            About
-          </a>
         </nav>
-        
-        <div className="flex items-center space-x-4">
-          <button className="hidden md:block px-4 py-2 text-miyo-800 border border-miyo-800 rounded-full hover:bg-miyo-50 transition-colors">
-            Sign In
-          </button>
-          <button className="px-4 py-2 bg-miyo-800 text-white rounded-full hover:bg-miyo-700 transition-colors">
-            Get Started
-          </button>
-        </div>
       </div>
     </header>
   );

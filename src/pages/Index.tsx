@@ -38,22 +38,14 @@ const Index = () => {
         <div className="miyo-container">
           <div className="max-w-3xl mx-auto text-center">
             <span className="inline-block py-1 px-3 rounded-full bg-miyo-100 text-miyo-800 text-sm font-medium mb-4 animate-fade-in">
-              Learn anytime, anywhere
+              Aprende en cualquier momento y lugar
             </span>
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 animate-slide-down">
-              Microlearning, <span className="text-miyo-800">macro impact</span>
+              Microaprendizaje, <span className="text-miyo-800">impacto macro</span>
             </h1>
             <p className="text-xl text-gray-600 mb-8 animate-slide-up">
-              Expand your knowledge in bite-sized audio lessons designed for busy people. Learn from experts in just minutes a day.
+              Expande tu conocimiento con lecciones de audio breves diseñadas para personas ocupadas. Aprende de expertos en minutos al día.
             </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-4 animate-scale-in">
-              <button className="px-6 py-3 bg-miyo-800 text-white rounded-full font-medium hover:bg-miyo-700 transition-colors shadow-lg shadow-miyo-800/20">
-                Start Learning
-              </button>
-              <button className="px-6 py-3 bg-white text-miyo-800 border border-miyo-800 rounded-full font-medium hover:bg-miyo-50 transition-colors">
-                Browse Courses
-              </button>
-            </div>
           </div>
         </div>
       </section>
@@ -64,7 +56,7 @@ const Index = () => {
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-12">
               <h2 className="text-3xl font-bold text-gray-900 mb-4 md:mb-0">
-                Featured Podcasts
+                Podcasts Destacados
               </h2>
               
               <CategoryFilter 
@@ -88,7 +80,7 @@ const Index = () => {
             
             {filteredPodcasts.length === 0 && (
               <div className="text-center py-12">
-                <p className="text-lg text-gray-600">No podcasts found in this category.</p>
+                <p className="text-lg text-gray-600">No se encontraron podcasts en esta categoría.</p>
               </div>
             )}
           </div>
@@ -100,7 +92,7 @@ const Index = () => {
         <div className="miyo-container">
           <div className="text-center">
             <p className="text-gray-600 text-sm">
-              © {new Date().getFullYear()} Miyo. All rights reserved.
+              © {new Date().getFullYear()} Miyo. Todos los derechos reservados.
             </p>
           </div>
         </div>
