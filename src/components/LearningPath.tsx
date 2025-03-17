@@ -49,13 +49,12 @@ const LearningPath = ({ lessons, modules, onSelectLesson, currentLessonId }: Lea
                   const isAvailable = !lesson.isLocked;
                   const isCurrent = currentLessonId === lesson.id;
                   
-                  // Determine node styles based on lesson state
+                  // Fix: Remove duplicate property declarations
                   let nodeClasses = cn(
                     "flex items-center justify-center w-12 h-12 rounded-full shadow-md transition-all duration-300 relative",
                     {
                       "bg-yellow-500 text-white": isCompleted, // Trofeo dorado/amarillo
-                      "bg-[#5e16ea] text-white": isCurrent && !isCompleted, // Color morado específico
-                      "bg-[#5e16ea] text-white": isAvailable && !isCurrent && !isCompleted, // Color morado específico
+                      "bg-[#5e16ea] text-white": !isCompleted && (isCurrent || isAvailable), // Color morado específico
                       "bg-gray-300 text-gray-500": !isAvailable, // Lecciones bloqueadas en gris
                     }
                   );
