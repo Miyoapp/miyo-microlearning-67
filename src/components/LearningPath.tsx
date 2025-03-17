@@ -54,17 +54,7 @@ const LearningPath = ({ lessons, onSelectLesson, currentLessonId }: LearningPath
                   onMouseEnter={() => setHoveredLesson(lesson.id)}
                   onMouseLeave={() => setHoveredLesson(null)}
                 >
-                  {/* Connect to next lesson with shorter lines */}
-                  {index < lessons.length - 1 && (
-                    <div 
-                      className="absolute left-1/2 -translate-x-1/2 border-r-2 border-dashed border-gray-200 top-full"
-                      style={{ 
-                        width: '2px', 
-                        height: '25px',
-                        transform: `rotate(${index % 2 === 0 ? '15deg' : '-5deg'})` 
-                      }}
-                    />
-                  )}
+                  {/* Removed connecting lines */}
                   
                   {/* Lesson circle - larger */}
                   <div className={nodeClasses}>

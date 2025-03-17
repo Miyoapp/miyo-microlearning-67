@@ -1,51 +1,104 @@
 
 import { Podcast } from '../../types';
+import { Star, Flame, Zap, Trophy, Target } from 'lucide-react';
+import { Progress } from "@/components/ui/progress";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 
 interface CourseStatsProps {
   podcast: Podcast;
 }
 
 const CourseStats = ({ podcast }: CourseStatsProps) => {
+  const completedLessons = podcast.lessons.filter(l => l.isCompleted).length;
+  const percentComplete = Math.round((completedLessons / podcast.lessonCount) * 100);
+  const streakDays = 3; // Placeholder, should come from user data in a real app
+  const xpPoints = completedLessons * 25; // Simple calculation for XP points
+  
   return (
-    <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm sticky top-32">
-      <h3 className="text-xl font-bold mb-4">Course Statistics</h3>
+    <Card className="border-2 border-indigo-100 shadow-md overflow-hidden">
+      <CardHeader className="bg-gradient-to-r from-[#E5DEFF] to-[#D6BCFA] pb-2">
+        <CardTitle className="flex items-center justify-between">
+          <span className="text-xl font-bold text-indigo-900">Tu Progreso</span>
+          <Badge variant="outline" className="bg-white font-semibold text-indigo-700 border-indigo-200">
+            Nivel 2
+          </Badge>
+        </CardTitle>
+      </CardHeader>
       
-      <div className="space-y-4">
-        <div className="flex justify-between items-center pb-3 border-b border-gray-100">
-          <span className="text-gray-600">Total Duration</span>
-          <span className="font-medium">{podcast.duration} minutes</span>
+      <CardContent className="pt-4">
+        {/* XP and Streak Stats */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="bg-amber-50 rounded-lg p-3 border border-amber-100 flex flex-col items-center">
+            <div className="flex items-center gap-2 text-amber-600 mb-1">
+              <Flame size={18} className="text-amber-500" />
+              <span className="font-bold">Racha</span>
+            </div>
+            <span className="text-2xl font-bold text-amber-700">{streakDays} días</span>
+          </div>
+          
+          <div className="bg-indigo-50 rounded-lg p-3 border border-indigo-100 flex flex-col items-center">
+            <div className="flex items-center gap-2 text-indigo-600 mb-1">
+              <Zap size={18} className="text-indigo-500" />
+              <span className="font-bold">XP</span>
+            </div>
+            <span className="text-2xl font-bold text-indigo-700">{xpPoints}</span>
+          </div>
         </div>
         
-        <div className="flex justify-between items-center pb-3 border-b border-gray-100">
-          <span className="text-gray-600">Lessons</span>
-          <span className="font-medium">{podcast.lessonCount}</span>
+        {/* Course Progress */}
+        <div className="mb-4">
+          <div className="flex justify-between items-center mb-2">
+            <span className="font-medium text-gray-700">Progreso del curso</span>
+            <span className="font-bold text-indigo-800">{percentComplete}%</span>
+          </div>
+          <Progress value={percentComplete} className="h-3 bg-gray-200" />
+          <div className="mt-1 text-xs text-gray-500 text-right">
+            {completedLessons} de {podcast.lessonCount} lecciones completadas
+          </div>
         </div>
         
-        <div className="flex justify-between items-center pb-3 border-b border-gray-100">
-          <span className="text-gray-600">Completed</span>
-          <span className="font-medium">{podcast.lessons.filter(l => l.isCompleted).length} / {podcast.lessonCount}</span>
+        {/* Achievements */}
+        <div className="mt-6">
+          <div className="flex items-center gap-2 mb-3">
+            <Trophy size={18} className="text-indigo-600" />
+            <span className="font-bold text-gray-800">Logros</span>
+          </div>
+          
+          <div className="grid grid-cols-3 gap-2">
+            <div className={`flex flex-col items-center p-2 rounded-lg ${completedLessons > 0 ? 'bg-green-50 border border-green-100' : 'bg-gray-100 border border-gray-200 opacity-60'}`}>
+              <Star size={24} className={completedLessons > 0 ? 'text-yellow-500' : 'text-gray-400'} />
+              <span className="text-xs mt-1 text-center">Primera Lección</span>
+            </div>
+            
+            <div className={`flex flex-col items-center p-2 rounded-lg ${percentComplete >= 50 ? 'bg-purple-50 border border-purple-100' : 'bg-gray-100 border border-gray-200 opacity-60'}`}>
+              <Target size={24} className={percentComplete >= 50 ? 'text-purple-500' : 'text-gray-400'} />
+              <span className="text-xs mt-1 text-center">Mitad del Camino</span>
+            </div>
+            
+            <div className={`flex flex-col items-center p-2 rounded-lg ${percentComplete === 100 ? 'bg-blue-50 border border-blue-100' : 'bg-gray-100 border border-gray-200 opacity-60'}`}>
+              <Trophy size={24} className={percentComplete === 100 ? 'text-blue-500' : 'text-gray-400'} />
+              <span className="text-xs mt-1 text-center">¡Completado!</span>
+            </div>
+          </div>
         </div>
         
-        <div className="flex justify-between items-center">
-          <span className="text-gray-600">Category</span>
-          <span className="font-medium">{podcast.category}</span>
+        <Separator className="my-4" />
+        
+        {/* Course Info */}
+        <div className="text-sm text-gray-600">
+          <div className="flex justify-between py-1">
+            <span>Categoría</span>
+            <span className="font-medium text-gray-800">{podcast.category}</span>
+          </div>
+          <div className="flex justify-between py-1">
+            <span>Duración total</span>
+            <span className="font-medium text-gray-800">{podcast.duration} minutos</span>
+          </div>
         </div>
-      </div>
-      
-      <div className="mt-8">
-        <div className="w-full bg-gray-200 rounded-full h-2.5">
-          <div 
-            className="bg-miyo-800 h-2.5 rounded-full transition-all duration-500" 
-            style={{ 
-              width: `${(podcast.lessons.filter(l => l.isCompleted).length / podcast.lessonCount) * 100}%`
-            }}
-          ></div>
-        </div>
-        <p className="text-sm text-gray-500 mt-2 text-right">
-          {Math.round((podcast.lessons.filter(l => l.isCompleted).length / podcast.lessonCount) * 100)}% Complete
-        </p>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
