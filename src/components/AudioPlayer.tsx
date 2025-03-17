@@ -1,7 +1,10 @@
 
 import { useState, useRef, useEffect } from 'react';
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Headphones } from 'lucide-react';
 import { Lesson } from '../types';
+import LessonInfo from './audio/LessonInfo';
+import AudioControls from './audio/AudioControls';
+import ProgressBar from './audio/ProgressBar';
+import VolumeControl from './audio/VolumeControl';
 
 interface AudioPlayerProps {
   lesson: Lesson | null;
@@ -69,16 +72,13 @@ const AudioPlayer = ({ lesson, onComplete }: AudioPlayerProps) => {
     }
   };
   
-  // Format time display (mm:ss)
-  const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  // Handle play/pause toggle
+  const handlePlayPause = () => {
+    setIsPlaying(!isPlaying);
   };
   
   // Handle seek
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseFloat(e.target.value);
+  const handleSeek = (value: number) => {
     setCurrentTime(value);
     if (audioRef.current) {
       audioRef.current.currentTime = value;
@@ -112,63 +112,32 @@ const AudioPlayer = ({ lesson, onComplete }: AudioPlayerProps) => {
         
         <div className="flex flex-col md:flex-row md:items-center justify-between">
           <div className="flex items-center mb-3 md:mb-0">
-            <div className="w-10 h-10 bg-miyo-100 rounded-full flex items-center justify-center mr-3">
-              <Headphones size={20} className="text-miyo-800" />
-            </div>
-            <div>
-              <p className="font-medium text-gray-800">{lesson.title}</p>
-              <p className="text-sm text-gray-500">{formatTime(currentTime)} / {lesson.duration}:00</p>
-            </div>
+            <LessonInfo 
+              title={lesson.title} 
+              currentTime={currentTime} 
+              duration={`${lesson.duration}:00`} 
+            />
           </div>
           
           <div className="flex-1 mx-0 md:mx-6">
-            <div className="flex items-center justify-center space-x-4">
-              <button className="text-gray-600 hover:text-miyo-800 transition-colors" aria-label="Previous">
-                <SkipBack size={22} />
-              </button>
-              
-              <button 
-                onClick={() => setIsPlaying(!isPlaying)}
-                className="w-10 h-10 bg-miyo-800 rounded-full flex items-center justify-center text-white hover:bg-miyo-700 transition-colors"
-                aria-label={isPlaying ? "Pause" : "Play"}
-              >
-                {isPlaying ? <Pause size={18} /> : <Play size={18} className="ml-1" />}
-              </button>
-              
-              <button className="text-gray-600 hover:text-miyo-800 transition-colors" aria-label="Next">
-                <SkipForward size={22} />
-              </button>
-            </div>
+            <AudioControls 
+              isPlaying={isPlaying} 
+              onPlayPause={handlePlayPause} 
+            />
             
-            <div className="w-full mt-3">
-              <input
-                type="range"
-                min={0}
-                max={duration || lesson.duration * 60}
-                value={currentTime}
-                onChange={handleSeek}
-                className="w-full accent-miyo-800 h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer"
-              />
-            </div>
+            <ProgressBar 
+              currentTime={currentTime} 
+              duration={duration || lesson.duration * 60} 
+              onSeek={handleSeek} 
+            />
           </div>
           
           <div className="flex items-center mt-3 md:mt-0">
-            <button 
-              onClick={toggleMute}
-              className="text-gray-600 hover:text-miyo-800 mr-2"
-              aria-label={isMuted ? "Unmute" : "Mute"}
-            >
-              {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
-            </button>
-            
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.01}
-              value={volume}
-              onChange={handleVolumeChange}
-              className="w-20 accent-miyo-800 h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer"
+            <VolumeControl 
+              volume={volume} 
+              isMuted={isMuted} 
+              onVolumeChange={handleVolumeChange} 
+              onToggleMute={toggleMute} 
             />
           </div>
         </div>

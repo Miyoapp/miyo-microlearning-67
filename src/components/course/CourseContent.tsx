@@ -32,3 +32,4 @@ const CourseContent = ({ podcast, currentLessonId, onSelectLesson }: CourseConte
 };
 
 export default CourseContent;
+
