@@ -66,6 +66,23 @@ export const podcasts: Podcast[] = [
         isCompleted: false,
         isLocked: true
       }
+    ],
+    modules: [
+      {
+        id: 'module-1-1',
+        title: 'Conceptos Básicos',
+        lessonIds: ['l1-1', 'l1-2']
+      },
+      {
+        id: 'module-1-2',
+        title: 'Técnicas Intermedias',
+        lessonIds: ['l1-3', 'l1-4']
+      },
+      {
+        id: 'module-1-3',
+        title: 'Aplicación Práctica',
+        lessonIds: ['l1-5']
+      }
     ]
   },
   {
@@ -113,6 +130,18 @@ export const podcasts: Podcast[] = [
         audioUrl: '/placeholder.mp3',
         isCompleted: false,
         isLocked: true
+      }
+    ],
+    modules: [
+      {
+        id: 'module-2-1',
+        title: 'Conceptos Básicos',
+        lessonIds: ['l2-1', 'l2-2']
+      },
+      {
+        id: 'module-2-2',
+        title: 'Técnicas Intermedias',
+        lessonIds: ['l2-3', 'l2-4']
       }
     ]
   },
@@ -170,6 +199,23 @@ export const podcasts: Podcast[] = [
         isCompleted: false,
         isLocked: true
       }
+    ],
+    modules: [
+      {
+        id: 'module-3-1',
+        title: 'Conceptos Básicos',
+        lessonIds: ['l3-1', 'l3-2']
+      },
+      {
+        id: 'module-3-2',
+        title: 'Técnicas Intermedias',
+        lessonIds: ['l3-3', 'l3-4']
+      },
+      {
+        id: 'module-3-3',
+        title: 'Aplicación Práctica',
+        lessonIds: ['l3-5']
+      }
     ]
   },
   {
@@ -217,6 +263,18 @@ export const podcasts: Podcast[] = [
         audioUrl: '/placeholder.mp3',
         isCompleted: false,
         isLocked: true
+      }
+    ],
+    modules: [
+      {
+        id: 'module-4-1',
+        title: 'Conceptos Básicos',
+        lessonIds: ['l4-1', 'l4-2']
+      },
+      {
+        id: 'module-4-2',
+        title: 'Técnicas Avanzadas',
+        lessonIds: ['l4-3', 'l4-4']
       }
     ]
   },
@@ -273,6 +331,23 @@ export const podcasts: Podcast[] = [
         audioUrl: '/placeholder.mp3',
         isCompleted: false,
         isLocked: true
+      }
+    ],
+    modules: [
+      {
+        id: 'module-5-1',
+        title: 'Conceptos Básicos',
+        lessonIds: ['l5-1', 'l5-2']
+      },
+      {
+        id: 'module-5-2',
+        title: 'Técnicas Intermedias',
+        lessonIds: ['l5-3', 'l5-4']
+      },
+      {
+        id: 'module-5-3',
+        title: 'Aplicación Práctica',
+        lessonIds: ['l5-5']
       }
     ]
   },
@@ -338,6 +413,23 @@ export const podcasts: Podcast[] = [
         isCompleted: false,
         isLocked: true
       }
+    ],
+    modules: [
+      {
+        id: 'module-6-1',
+        title: 'Conceptos Básicos',
+        lessonIds: ['l6-1', 'l6-2']
+      },
+      {
+        id: 'module-6-2',
+        title: 'Planificación',
+        lessonIds: ['l6-3', 'l6-4']
+      },
+      {
+        id: 'module-6-3',
+        title: 'Implementación',
+        lessonIds: ['l6-5', 'l6-6']
+      }
     ]
   },
   {
@@ -394,6 +486,23 @@ export const podcasts: Podcast[] = [
         isCompleted: false,
         isLocked: true
       }
+    ],
+    modules: [
+      {
+        id: 'module-7-1',
+        title: 'Fundamentos Financieros',
+        lessonIds: ['l7-1', 'l7-2']
+      },
+      {
+        id: 'module-7-2',
+        title: 'Ahorro e Inversión',
+        lessonIds: ['l7-3', 'l7-4']
+      },
+      {
+        id: 'module-7-3',
+        title: 'Planificación a Largo Plazo',
+        lessonIds: ['l7-5']
+      }
     ]
   },
   {
@@ -441,6 +550,18 @@ export const podcasts: Podcast[] = [
         audioUrl: '/placeholder.mp3',
         isCompleted: false,
         isLocked: true
+      }
+    ],
+    modules: [
+      {
+        id: 'module-8-1',
+        title: 'Preparación Mental',
+        lessonIds: ['l8-1', 'l8-2']
+      },
+      {
+        id: 'module-8-2',
+        title: 'Técnicas de Presentación',
+        lessonIds: ['l8-3', 'l8-4']
       }
     ]
   }
