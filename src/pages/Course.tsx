@@ -39,6 +39,7 @@ const Course = () => {
       
       if (event.detail && event.detail.lessonId === currentLesson?.id) {
         console.log("Confirmed current lesson ended, advancing to next");
+        handleLessonComplete();
         advanceToNextLesson();
       }
     };
@@ -48,7 +49,7 @@ const Course = () => {
     return () => {
       window.removeEventListener('lessonEnded', handleLessonEnded);
     };
-  }, [currentLesson, advanceToNextLesson]);
+  }, [currentLesson, advanceToNextLesson, handleLessonComplete]);
   
   if (isLoading) {
     return <CourseLoading />;
