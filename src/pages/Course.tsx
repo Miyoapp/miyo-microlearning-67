@@ -35,9 +35,14 @@ const Course = () => {
   useEffect(() => {
     const handleLessonEnded = (e: Event) => {
       const event = e as CustomEvent;
+      console.log("Lesson ended event received:", event.detail);
+      
       if (event.detail && event.detail.lessonId === currentLesson?.id) {
-        // The current lesson has ended naturally at 100%, advance to next
-        advanceToNextLesson();
+        console.log("Confirmed current lesson ended, advancing to next");
+        // Short delay to ensure clean transition
+        setTimeout(() => {
+          advanceToNextLesson();
+        }, 200);
       }
     };
     

@@ -6,6 +6,7 @@ import { useToast } from "@/components/ui/use-toast";
 export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcast) => void) {
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const { toast } = useToast();
 
   // Initialize with first available lesson
@@ -67,9 +68,10 @@ export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcas
 
   // Advance to the next lesson and keep playing
   const advanceToNextLesson = useCallback(() => {
-    if (!currentLesson) return;
+    if (!currentLesson || isTransitioning) return;
     
     console.log("Advancing to next lesson from", currentLesson.id);
+    setIsTransitioning(true);
     
     const nextLesson = getNextLesson(currentLesson.id);
     if (nextLesson) {
@@ -81,28 +83,35 @@ export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcas
       // Short delay before switching to next lesson and starting playback
       setTimeout(() => {
         setCurrentLesson(nextLesson);
-        // Start playing the next lesson
-        setIsPlaying(true);
         
-        toast({
-          title: "Reproduciendo siguiente lección",
-          description: nextLesson.title,
-          variant: "default"
-        });
-      }, 500); // Increased delay for better stability
+        // Wait for lesson to be set before playing
+        setTimeout(() => {
+          // Start playing the next lesson
+          setIsPlaying(true);
+          setIsTransitioning(false);
+          
+          toast({
+            title: "Reproduciendo siguiente lección",
+            description: nextLesson.title,
+            variant: "default"
+          });
+        }, 200);
+      }, 500);
     } else {
       // No more lessons available
       setIsPlaying(false);
+      setIsTransitioning(false);
       toast({
         title: "Fin de las lecciones disponibles",
         description: "Has completado todas las lecciones disponibles.",
         variant: "default"
       });
     }
-  }, [currentLesson, getNextLesson, toast]);
+  }, [currentLesson, getNextLesson, toast, isTransitioning]);
 
   // Handle toggling play state
   const handleTogglePlay = () => {
+    if (isTransitioning) return;
     setIsPlaying(!isPlaying);
   };
 
