@@ -29,12 +29,22 @@ const AudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: AudioPlaye
       setCurrentTime(0);
       setHasCompleted(false);
       
-      // No iniciar reproducción automáticamente cuando cambia la lección
       if (audioRef.current) {
         audioRef.current.currentTime = 0;
+        
+        // Si isPlaying es true, iniciar reproducción automáticamente
+        if (isPlaying) {
+          const playPromise = audioRef.current.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(error => {
+              console.error("Audio playback failed:", error);
+              onTogglePlay(); // Turn off play state if playback fails
+            });
+          }
+        }
       }
     }
-  }, [lesson]);
+  }, [lesson, isPlaying]);
   
   // Handle play/pause
   useEffect(() => {
@@ -118,7 +128,6 @@ const AudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: AudioPlaye
           onTimeUpdate={updateTime}
           onLoadedMetadata={handleMetadata}
           onEnded={() => {
-            onTogglePlay(); // Pause when audio ends
             if (!hasCompleted) {
               setHasCompleted(true);
               onComplete();

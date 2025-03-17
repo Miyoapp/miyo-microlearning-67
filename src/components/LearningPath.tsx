@@ -49,13 +49,13 @@ const LearningPath = ({ lessons, modules, onSelectLesson, currentLessonId }: Lea
                   const isAvailable = !lesson.isLocked;
                   const isCurrent = currentLessonId === lesson.id;
                   
-                  // Fix: Remove duplicate property declarations
                   let nodeClasses = cn(
                     "flex items-center justify-center w-12 h-12 rounded-full shadow-md transition-all duration-300 relative",
                     {
                       "bg-yellow-500 text-white": isCompleted, // Trofeo dorado/amarillo
                       "bg-[#5e16ea] text-white": !isCompleted && (isCurrent || isAvailable), // Color morado específico
                       "bg-gray-300 text-gray-500": !isAvailable, // Lecciones bloqueadas en gris
+                      "hover:scale-110": isAvailable // Efecto hover solo para lecciones disponibles
                     }
                   );
                   
@@ -83,7 +83,13 @@ const LearningPath = ({ lessons, modules, onSelectLesson, currentLessonId }: Lea
                       </div>
                       
                       {/* Lesson title */}
-                      <div className="ml-3">
+                      <div 
+                        className={cn(
+                          "ml-3 cursor-pointer", 
+                          { "cursor-not-allowed": !isAvailable }
+                        )}
+                        onClick={() => isAvailable && onSelectLesson(lesson)}
+                      >
                         <div className={cn(
                           "text-sm transition-colors", 
                           {

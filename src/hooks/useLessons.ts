@@ -29,8 +29,34 @@ export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcas
     }
     
     setCurrentLesson(lesson);
-    // No iniciar reproducción automáticamente al seleccionar
-    setIsPlaying(false);
+    // Iniciar reproducción automáticamente al seleccionar desde la ruta de aprendizaje
+    setIsPlaying(true);
+  };
+
+  // Get the next lesson in sequence (used for autoplay and navigation)
+  const getNextLesson = (currentLessonId: string): Lesson | null => {
+    if (!podcast) return null;
+    
+    // Encontrar todos los IDs de lecciones desbloqueadas en el orden correcto de los módulos
+    const allAvailableLessons: Lesson[] = [];
+    podcast.modules.forEach(module => {
+      module.lessonIds.forEach(lessonId => {
+        const lesson = podcast.lessons.find(l => l.id === lessonId);
+        if (lesson && !lesson.isLocked) {
+          allAvailableLessons.push(lesson);
+        }
+      });
+    });
+
+    // Encontrar el índice de la lección actual
+    const currentIndex = allAvailableLessons.findIndex(lesson => lesson.id === currentLessonId);
+    
+    // Si encontramos la lección actual y hay una siguiente disponible
+    if (currentIndex !== -1 && currentIndex < allAvailableLessons.length - 1) {
+      return allAvailableLessons[currentIndex + 1];
+    }
+    
+    return null;
   };
 
   // Handle toggling play state
@@ -109,6 +135,14 @@ export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcas
       description: unlockDescription,
       variant: "default"
     });
+    
+    // Avanzar a la siguiente lección disponible
+    const nextLesson = getNextLesson(currentLesson.id);
+    if (nextLesson) {
+      setCurrentLesson(nextLesson);
+      // Mantener el estado de reproducción
+      setIsPlaying(true);
+    }
   };
 
   return {
@@ -119,7 +153,8 @@ export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcas
     initializeCurrentLesson,
     handleSelectLesson,
     handleTogglePlay,
-    handleLessonComplete
+    handleLessonComplete,
+    getNextLesson
   };
 }
 
