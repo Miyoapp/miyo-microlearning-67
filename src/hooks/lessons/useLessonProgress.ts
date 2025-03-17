@@ -77,7 +77,7 @@ export function useLessonProgress(
     // Update the podcast with the new lessons
     setPodcast({ ...podcast, lessons: updatedLessons });
     
-    // Notify the user
+    // Mostrar el mensaje de lección completada
     toast({
       title: "¡Lección completada!",
       description: unlockDescription,
