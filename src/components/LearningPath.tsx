@@ -20,8 +20,8 @@ const LearningPath = ({ lessons, onSelectLesson, currentLessonId }: LearningPath
       <h2 className="text-2xl font-bold mb-12 text-center">Tu Ruta de Aprendizaje</h2>
       
       <div className="relative max-w-2xl mx-auto">
-        {/* Zigzag path */}
-        <div className="space-y-16">
+        {/* Zigzag path with reduced spacing */}
+        <div className="space-y-8">
           {lessons.map((lesson, index) => {
             const isCompleted = lesson.isCompleted;
             const isAvailable = !lesson.isLocked;
@@ -55,7 +55,7 @@ const LearningPath = ({ lessons, onSelectLesson, currentLessonId }: LearningPath
                   {/* Connect to next lesson with dotted line (except for last lesson) */}
                   {index < lessons.length - 1 && (
                     <div 
-                      className={`absolute ${index % 2 === 0 ? 'left-1/2 -translate-x-1/2 rotate-45' : 'left-1/2 -translate-x-1/2 -rotate-45'} h-24 border-r-2 border-dashed border-gray-200 top-full`}
+                      className={`absolute ${index % 2 === 0 ? 'left-1/2 -translate-x-1/2 rotate-45' : 'left-1/2 -translate-x-1/2 -rotate-45'} h-12 border-r-2 border-dashed border-gray-200 top-full`}
                       style={{ width: '2px' }}
                     />
                   )}
