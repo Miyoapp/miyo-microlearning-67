@@ -28,7 +28,8 @@ const AudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: AudioPlaye
     toggleMute,
     handlePlaybackRateChange,
     handleMetadata,
-    updateTime
+    updateTime,
+    handleAudioEnded
   } = useAudioPlayer({ lesson, isPlaying, onTogglePlay, onComplete });
   
   // If no lesson is selected, don't render the player
@@ -42,13 +43,7 @@ const AudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: AudioPlaye
           src={lesson.audioUrl || "https://assets.codepen.io/4358584/Anitek_-_Komorebi.mp3"}
           onTimeUpdate={updateTime}
           onLoadedMetadata={handleMetadata}
-          onEnded={() => {
-            // The audio has naturally ended at 100%, let's proceed to next lesson
-            const event = new CustomEvent('lessonEnded', { 
-              detail: { lessonId: lesson.id }
-            });
-            window.dispatchEvent(event);
-          }}
+          onEnded={handleAudioEnded}
         />
         
         <div className="flex flex-col md:flex-row md:items-center justify-between">

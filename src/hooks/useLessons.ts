@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { Podcast, Lesson } from '@/types';
 import { useToast } from "@/components/ui/use-toast";
@@ -68,8 +69,12 @@ export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcas
   const advanceToNextLesson = useCallback(() => {
     if (!currentLesson) return;
     
+    console.log("Advancing to next lesson from", currentLesson.id);
+    
     const nextLesson = getNextLesson(currentLesson.id);
     if (nextLesson) {
+      console.log("Next lesson found:", nextLesson.id, nextLesson.title);
+      
       // First pause current audio to avoid conflicts
       setIsPlaying(false);
       
@@ -84,7 +89,7 @@ export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcas
           description: nextLesson.title,
           variant: "default"
         });
-      }, 300);
+      }, 500); // Increased delay for better stability
     } else {
       // No more lessons available
       setIsPlaying(false);

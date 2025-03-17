@@ -100,6 +100,18 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: UseAudi
     }
   };
   
+  // Handle audio ended event (when it reaches 100%)
+  const handleAudioEnded = () => {
+    // The audio has naturally ended, let's proceed to next lesson
+    console.log("Audio ended naturally, dispatching lessonEnded event");
+    if (lesson) {
+      const event = new CustomEvent('lessonEnded', { 
+        detail: { lessonId: lesson.id }
+      });
+      window.dispatchEvent(event);
+    }
+  };
+  
   // Handle seek
   const handleSeek = (value: number) => {
     setCurrentTime(value);
@@ -137,7 +149,8 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: UseAudi
     toggleMute,
     handlePlaybackRateChange,
     handleMetadata,
-    updateTime
+    updateTime,
+    handleAudioEnded
   };
 };
 
