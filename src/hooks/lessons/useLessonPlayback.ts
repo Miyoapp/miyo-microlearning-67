@@ -62,14 +62,9 @@ export function useLessonPlayback({ currentLesson, podcast }: UseLessonPlaybackP
         }, 200);
       }, 500);
     } else {
-      // No more lessons available
+      // No more lessons available - don't show any message
       setIsPlaying(false);
       setIsTransitioning(false);
-      toast({
-        title: "Fin de las lecciones disponibles",
-        description: "Has completado todas las lecciones disponibles.",
-        variant: "default"
-      });
     }
   }, [currentLesson, podcast, isTransitioning, toast]);
 
