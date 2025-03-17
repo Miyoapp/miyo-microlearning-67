@@ -59,7 +59,7 @@ const Course = () => {
           setPodcast(podcastData);
           
           // Establecer la primera lección como actual, pero no iniciar reproducción
-          const firstLesson = updatedLessons[0];
+          const firstLesson = getFirstAvailableLesson(podcastData);
           if (firstLesson) {
             setCurrentLesson(firstLesson);
           }
@@ -79,6 +79,11 @@ const Course = () => {
     
     cargarCurso();
   }, [id, toast]);
+  
+  // Obtener la primera lección disponible (no bloqueada)
+  const getFirstAvailableLesson = (podcast: Podcast): Lesson | null => {
+    return podcast.lessons.find(lesson => !lesson.isLocked) || null;
+  };
   
   // Inicializar el estado de las lecciones (solo la primera lección del primer módulo desbloqueada)
   const initializeLessonsState = (podcast: Podcast): Lesson[] => {
@@ -128,19 +133,62 @@ const Course = () => {
   const handleLessonComplete = () => {
     if (!podcast || !currentLesson) return;
     
-    // Obtener el índice de la lección actual
-    const currentIndex = podcast.lessons.findIndex(lesson => lesson.id === currentLesson.id);
-    if (currentIndex === -1) return;
-    
     // Crear una copia de las lecciones para modificar
     const updatedLessons = [...podcast.lessons];
+    const modules = [...podcast.modules];
+    
+    // Encontrar el módulo actual y el índice de la lección actual dentro de ese módulo
+    const currentModuleIndex = modules.findIndex(module => 
+      module.lessonIds.includes(currentLesson.id)
+    );
+    
+    if (currentModuleIndex === -1) return;
+    
+    const currentModule = modules[currentModuleIndex];
+    const currentLessonIndexInModule = currentModule.lessonIds.indexOf(currentLesson.id);
     
     // Marcar la lección actual como completada
-    updatedLessons[currentIndex] = { ...updatedLessons[currentIndex], isCompleted: true };
+    const lessonIndex = updatedLessons.findIndex(l => l.id === currentLesson.id);
+    if (lessonIndex !== -1) {
+      updatedLessons[lessonIndex] = { ...updatedLessons[lessonIndex], isCompleted: true };
+    }
     
-    // Desbloquear la siguiente lección si existe
-    if (currentIndex + 1 < updatedLessons.length) {
-      updatedLessons[currentIndex + 1] = { ...updatedLessons[currentIndex + 1], isLocked: false };
+    // Determinar qué lección desbloquear a continuación
+    let nextLessonToUnlock: string | null = null;
+    let unlockDescription = "";
+    
+    // Si hay más lecciones en el módulo actual
+    if (currentLessonIndexInModule < currentModule.lessonIds.length - 1) {
+      // Desbloquear la siguiente lección del mismo módulo
+      nextLessonToUnlock = currentModule.lessonIds[currentLessonIndexInModule + 1];
+      unlockDescription = "La siguiente lección ha sido desbloqueada.";
+    } else {
+      // Si es la última lección del módulo actual y hay más módulos
+      if (currentModuleIndex < modules.length - 1) {
+        // Verificar si todas las lecciones del módulo actual están completadas
+        const allLessonsInModuleCompleted = currentModule.lessonIds.every(lessonId => {
+          const lesson = updatedLessons.find(l => l.id === lessonId);
+          return lesson && (lesson.id === currentLesson.id || lesson.isCompleted);
+        });
+        
+        if (allLessonsInModuleCompleted) {
+          // Desbloquear la primera lección del siguiente módulo
+          const nextModule = modules[currentModuleIndex + 1];
+          nextLessonToUnlock = nextModule.lessonIds[0];
+          unlockDescription = "¡Módulo completado! La primera lección del siguiente módulo ha sido desbloqueada.";
+        }
+      } else {
+        // Era la última lección del último módulo
+        unlockDescription = "¡Has completado todas las lecciones del curso!";
+      }
+    }
+    
+    // Desbloquear la siguiente lección si corresponde
+    if (nextLessonToUnlock) {
+      const nextLessonIndex = updatedLessons.findIndex(l => l.id === nextLessonToUnlock);
+      if (nextLessonIndex !== -1) {
+        updatedLessons[nextLessonIndex] = { ...updatedLessons[nextLessonIndex], isLocked: false };
+      }
     }
     
     // Actualizar el podcast con las nuevas lecciones
@@ -149,9 +197,7 @@ const Course = () => {
     // Notificar al usuario
     toast({
       title: "¡Lección completada!",
-      description: currentIndex + 1 < updatedLessons.length 
-        ? "La siguiente lección ha sido desbloqueada." 
-        : "¡Has completado todas las lecciones!",
+      description: unlockDescription,
       variant: "default"
     });
   };

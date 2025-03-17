@@ -54,9 +54,9 @@ const LearningPath = ({ lessons, modules, onSelectLesson, currentLessonId }: Lea
                     "flex items-center justify-center w-12 h-12 rounded-full shadow-md transition-all duration-300 relative",
                     {
                       "bg-yellow-500 text-white": isCompleted, // Trofeo dorado/amarillo
-                      "bg-miyo-800 text-white": isCurrent && !isCompleted,
-                      "bg-miyo-600 text-white": isAvailable && !isCurrent && !isCompleted,
-                      "bg-gray-300 text-gray-500": !isAvailable,
+                      "bg-[#5e16ea] text-white": isCurrent && !isCompleted, // Color morado específico
+                      "bg-[#5e16ea] text-white": isAvailable && !isCurrent && !isCompleted, // Color morado específico
+                      "bg-gray-300 text-gray-500": !isAvailable, // Lecciones bloqueadas en gris
                     }
                   );
                   
@@ -75,8 +75,6 @@ const LearningPath = ({ lessons, modules, onSelectLesson, currentLessonId }: Lea
                         <div className={nodeClasses}>
                           {isCompleted ? (
                             <Trophy size={16} />
-                          ) : isCurrent ? (
-                            <Play size={16} fill="white" />
                           ) : isAvailable ? (
                             <Play size={16} fill="white" />
                           ) : (
@@ -91,7 +89,7 @@ const LearningPath = ({ lessons, modules, onSelectLesson, currentLessonId }: Lea
                           "text-sm transition-colors", 
                           {
                             "text-yellow-600": isCompleted, // Color de texto para lecciones completadas
-                            "text-miyo-800 font-semibold": isCurrent,
+                            "text-[#5e16ea] font-semibold": isCurrent && !isCompleted, // Color morado específico
                             "text-gray-800": isAvailable && !isCurrent && !isCompleted,
                             "text-gray-400": !isAvailable
                           }
