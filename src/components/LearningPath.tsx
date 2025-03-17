@@ -30,7 +30,7 @@ const LearningPath = ({ lessons, onSelectLesson, currentLessonId }: LearningPath
             
             // Determine node styles based on lesson state
             let nodeClasses = cn(
-              "flex items-center justify-center w-9 h-9 rounded-full shadow-md transition-all duration-300",
+              "flex items-center justify-center w-12 h-12 rounded-full shadow-md transition-all duration-300",
               {
                 "bg-green-500 text-white": isCompleted,
                 "bg-miyo-800 text-white": isCurrent && !isCompleted,
@@ -66,16 +66,16 @@ const LearningPath = ({ lessons, onSelectLesson, currentLessonId }: LearningPath
                     />
                   )}
                   
-                  {/* Lesson circle - smaller */}
+                  {/* Lesson circle - larger */}
                   <div className={nodeClasses}>
                     {isCompleted ? (
-                      <Trophy size={16} />
+                      <Trophy size={24} />
                     ) : isCurrent ? (
-                      <Play size={16} fill="white" />
+                      <Play size={24} fill="white" />
                     ) : isAvailable ? (
-                      <Play size={16} fill="white" />
+                      <Play size={24} fill="white" />
                     ) : (
-                      <Lock size={16} />
+                      <Lock size={24} />
                     )}
                   </div>
                   
