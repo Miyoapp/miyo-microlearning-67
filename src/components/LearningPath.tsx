@@ -12,10 +12,6 @@ interface LearningPathProps {
 }
 
 const LearningPath = ({ lessons, modules, onSelectLesson, currentLessonId }: LearningPathProps) => {
-  const [hoveredLesson, setHoveredLesson] = useState<string | null>(null);
-  
-  if (!lessons.length) return null;
-  
   // Group lessons by module
   const getLessonsForModule = (moduleId: string) => {
     const module = modules.find(m => m.id === moduleId);
@@ -30,7 +26,7 @@ const LearningPath = ({ lessons, modules, onSelectLesson, currentLessonId }: Lea
     <div className="py-3">
       <h2 className="text-2xl font-bold mb-2 text-center">Tu Ruta de Aprendizaje</h2>
       
-      <div className="relative max-w-[220px] mx-auto">
+      <div className="relative max-w-[400px] mx-auto">
         {modules.map((module, moduleIndex) => {
           const moduleLessons = getLessonsForModule(module.id);
           
@@ -51,18 +47,15 @@ const LearningPath = ({ lessons, modules, onSelectLesson, currentLessonId }: Lea
                   const isCompleted = lesson.isCompleted;
                   const isAvailable = !lesson.isLocked;
                   const isCurrent = currentLessonId === lesson.id;
-                  const isHovered = hoveredLesson === lesson.id;
                   
                   // Determine node styles based on lesson state
                   let nodeClasses = cn(
-                    "flex items-center justify-center w-12 h-12 rounded-full shadow-md transition-all duration-300",
+                    "flex items-center justify-center w-12 h-12 rounded-full shadow-md transition-all duration-300 relative",
                     {
                       "bg-green-500 text-white": isCompleted,
                       "bg-miyo-800 text-white": isCurrent && !isCompleted,
                       "bg-miyo-600 text-white": isAvailable && !isCurrent && !isCompleted,
                       "bg-gray-300 text-gray-500": !isAvailable,
-                      "scale-110": isHovered && isAvailable,
-                      "animate-pulse": isCurrent
                     }
                   );
                   
@@ -72,30 +65,42 @@ const LearningPath = ({ lessons, modules, onSelectLesson, currentLessonId }: Lea
                     : "justify-start ml-[45px]";
                   
                   return (
-                    <div key={lesson.id} className={`flex ${containerAlignment}`}>
+                    <div key={lesson.id} className={`flex ${containerAlignment} items-center`}>
                       <div 
                         className={`relative ${isAvailable ? 'cursor-pointer' : 'cursor-not-allowed'}`}
                         onClick={() => isAvailable && onSelectLesson(lesson)}
-                        onMouseEnter={() => setHoveredLesson(lesson.id)}
-                        onMouseLeave={() => setHoveredLesson(null)}
                       >
-                        {/* Lesson circle - larger */}
+                        {/* Lesson circle with icon and duration */}
                         <div className={nodeClasses}>
-                          {isCompleted ? (
-                            <Trophy size={24} />
-                          ) : isCurrent ? (
-                            <Play size={24} fill="white" />
-                          ) : isAvailable ? (
-                            <Play size={24} fill="white" />
-                          ) : (
-                            <Lock size={24} />
-                          )}
+                          <div className="flex flex-col items-center">
+                            {isCompleted ? (
+                              <Trophy size={16} className="mb-1" />
+                            ) : isCurrent ? (
+                              <Play size={16} fill="white" className="mb-1" />
+                            ) : isAvailable ? (
+                              <Play size={16} fill="white" className="mb-1" />
+                            ) : (
+                              <Lock size={16} className="mb-1" />
+                            )}
+                            
+                            {/* Duration inside the circle */}
+                            <span className="text-[10px] font-medium">{lesson.duration} min</span>
+                          </div>
                         </div>
-                        
-                        {/* Lesson title tooltip */}
-                        <div className={`absolute z-10 mt-2 px-3 py-1 bg-white shadow-md rounded-md text-sm transition-opacity duration-200 whitespace-nowrap ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
-                          <div className="font-medium">{lesson.title}</div>
-                          <div className="text-xs text-gray-500">{lesson.duration} min</div>
+                      </div>
+                      
+                      {/* Lesson title always visible */}
+                      <div className="ml-3">
+                        <div className={cn(
+                          "font-medium text-sm transition-colors", 
+                          {
+                            "text-green-600": isCompleted,
+                            "text-miyo-800 font-semibold": isCurrent,
+                            "text-gray-800": isAvailable && !isCurrent && !isCompleted,
+                            "text-gray-400": !isAvailable
+                          }
+                        )}>
+                          {lesson.title}
                         </div>
                       </div>
                     </div>
