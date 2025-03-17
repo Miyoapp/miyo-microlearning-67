@@ -33,6 +33,7 @@ const LearningPath = ({ lessons, onSelectLesson, currentLessonId }: LearningPath
               "flex items-center justify-center w-14 h-14 rounded-full shadow-md transition-all duration-300",
               {
                 "bg-green-500 text-white": isCompleted,
+                // Fix: Combine these conditions to avoid duplicate properties
                 "bg-miyo-800 text-white": isCurrent && !isCompleted,
                 "bg-miyo-600 text-white": isAvailable && !isCurrent && !isCompleted,
                 "bg-gray-300 text-gray-500": !isAvailable,
