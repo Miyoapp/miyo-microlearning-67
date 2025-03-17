@@ -40,7 +40,7 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: UseAudi
                 });
               }
             }
-          }, 300); // Increased delay for better stability
+          }, 500); // Increased delay for better stability
           
           return () => clearTimeout(timer);
         }
@@ -100,6 +100,7 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: UseAudi
       onComplete();
       
       // Dispatch custom event to signal lesson ended for auto-advancing
+      console.log("Dispatching lessonEnded event for lesson:", lesson.id);
       const event = new CustomEvent('lessonEnded', { 
         detail: { lessonId: lesson.id }
       });

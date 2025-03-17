@@ -44,7 +44,10 @@ const Course = () => {
         handleLessonComplete();
         
         // Then advance to next lesson
-        advanceToNextLesson();
+        setTimeout(() => {
+          console.log("Calling advanceToNextLesson after delay");
+          advanceToNextLesson();
+        }, 300);
       }
     };
     

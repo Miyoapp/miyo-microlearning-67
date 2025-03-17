@@ -43,6 +43,7 @@ const AudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: AudioPlaye
           onTimeUpdate={updateTime}
           onLoadedMetadata={handleMetadata}
           onEnded={handleAudioEnded}
+          preload="auto"
         />
         
         <div className="flex flex-col md:flex-row md:items-center justify-between">

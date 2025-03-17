@@ -45,17 +45,20 @@ export function useLessonPlayback({ currentLesson, podcast }: UseLessonPlaybackP
       
       // Short delay before switching to next lesson and starting playback
       setTimeout(() => {
+        console.log("Invoking callback with next lesson");
         // Invoke callback with the next lesson
         callback(nextLesson);
         
         // Wait for lesson to be set before playing
         setTimeout(() => {
+          console.log("Starting playback of next lesson");
           // Start playing the next lesson
           setIsPlaying(true);
           setIsTransitioning(false);
-        }, 300);
-      }, 500);
+        }, 500);
+      }, 700);
     } else {
+      console.log("No more lessons available");
       // No more lessons available - don't show any message
       setIsPlaying(false);
       setIsTransitioning(false);
