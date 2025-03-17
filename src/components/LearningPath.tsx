@@ -17,11 +17,11 @@ const LearningPath = ({ lessons, onSelectLesson, currentLessonId }: LearningPath
   
   return (
     <div className="py-8">
-      <h2 className="text-2xl font-bold mb-12 text-center">Tu Ruta de Aprendizaje</h2>
+      <h2 className="text-2xl font-bold mb-6 text-center">Tu Ruta de Aprendizaje</h2>
       
       <div className="relative max-w-2xl mx-auto">
-        {/* Zigzag path with reduced spacing */}
-        <div className="space-y-8">
+        {/* More compact zigzag path */}
+        <div className="space-y-4">
           {lessons.map((lesson, index) => {
             const isCompleted = lesson.isCompleted;
             const isAvailable = !lesson.isLocked;
@@ -30,7 +30,7 @@ const LearningPath = ({ lessons, onSelectLesson, currentLessonId }: LearningPath
             
             // Determine node styles based on lesson state
             let nodeClasses = cn(
-              "flex items-center justify-center w-16 h-16 rounded-full shadow-md transition-all duration-300",
+              "flex items-center justify-center w-14 h-14 rounded-full shadow-md transition-all duration-300",
               {
                 "bg-green-500 text-white": isCompleted,
                 "bg-miyo-800 text-white": isCurrent && !isCompleted,
@@ -42,7 +42,7 @@ const LearningPath = ({ lessons, onSelectLesson, currentLessonId }: LearningPath
             );
             
             // Zigzag pattern - even indices go left, odd go right
-            const containerAlignment = index % 2 === 0 ? "justify-start" : "justify-end";
+            const containerAlignment = index % 2 === 0 ? "justify-start pl-8" : "justify-end pr-8";
             
             return (
               <div key={lesson.id} className={`flex ${containerAlignment}`}>
@@ -55,7 +55,7 @@ const LearningPath = ({ lessons, onSelectLesson, currentLessonId }: LearningPath
                   {/* Connect to next lesson with dotted line (except for last lesson) */}
                   {index < lessons.length - 1 && (
                     <div 
-                      className={`absolute ${index % 2 === 0 ? 'left-1/2 -translate-x-1/2 rotate-45' : 'left-1/2 -translate-x-1/2 -rotate-45'} h-12 border-r-2 border-dashed border-gray-200 top-full`}
+                      className={`absolute ${index % 2 === 0 ? 'left-1/2 -translate-x-1/2 rotate-45' : 'left-1/2 -translate-x-1/2 -rotate-45'} h-8 border-r-2 border-dashed border-gray-200 top-full`}
                       style={{ width: '2px' }}
                     />
                   )}
@@ -63,13 +63,13 @@ const LearningPath = ({ lessons, onSelectLesson, currentLessonId }: LearningPath
                   {/* Lesson circle */}
                   <div className={nodeClasses}>
                     {isCompleted ? (
-                      <Trophy size={28} />
+                      <Trophy size={24} />
                     ) : isCurrent ? (
-                      <Play size={28} fill="white" />
+                      <Play size={24} fill="white" />
                     ) : isAvailable ? (
-                      <Play size={28} fill="white" />
+                      <Play size={24} fill="white" />
                     ) : (
-                      <Lock size={28} />
+                      <Lock size={24} />
                     )}
                   </div>
                   
