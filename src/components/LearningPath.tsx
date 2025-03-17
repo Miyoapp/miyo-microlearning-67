@@ -52,7 +52,7 @@ const LearningPath = ({ lessons, modules, onSelectLesson, currentLessonId }: Lea
                   let nodeClasses = cn(
                     "flex items-center justify-center w-12 h-12 rounded-full shadow-md transition-all duration-300 relative",
                     {
-                      "bg-green-500 text-white": isCompleted,
+                      "bg-yellow-500 text-white": isCompleted, // Trofeo dorado/amarillo
                       "bg-miyo-800 text-white": isCurrent && !isCompleted,
                       "bg-miyo-600 text-white": isAvailable && !isCurrent && !isCompleted,
                       "bg-gray-300 text-gray-500": !isAvailable,
@@ -89,7 +89,7 @@ const LearningPath = ({ lessons, modules, onSelectLesson, currentLessonId }: Lea
                         <div className={cn(
                           "text-sm transition-colors", 
                           {
-                            "text-green-600": isCompleted,
+                            "text-yellow-600": isCompleted, // Color de texto para lecciones completadas
                             "text-miyo-800 font-semibold": isCurrent,
                             "text-gray-800": isAvailable && !isCurrent && !isCompleted,
                             "text-gray-400": !isAvailable

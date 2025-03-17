@@ -15,6 +15,7 @@ const Course = () => {
   const navigate = useNavigate();
   const [podcast, setPodcast] = useState<Podcast | null>(null);
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   
@@ -51,12 +52,16 @@ const Course = () => {
             podcastData.modules = defaultModules;
           }
           
+          // Asegurar que todas las lecciones tengan el estado correcto
+          const updatedLessons = initializeLessonsState(podcastData.lessons);
+          podcastData.lessons = updatedLessons;
+          
           setPodcast(podcastData);
           
-          // Set first unlocked lesson as current
-          const firstAvailableLesson = podcastData.lessons.find(lesson => !lesson.isLocked);
-          if (firstAvailableLesson) {
-            setCurrentLesson(firstAvailableLesson);
+          // Establecer la primera lección como actual, pero no iniciar reproducción
+          const firstLesson = updatedLessons[0];
+          if (firstLesson) {
+            setCurrentLesson(firstLesson);
           }
         }
         
@@ -75,34 +80,70 @@ const Course = () => {
     cargarCurso();
   }, [id, toast]);
   
+  // Inicializar el estado de las lecciones (solo la primera desbloqueada)
+  const initializeLessonsState = (lessons: Lesson[]): Lesson[] => {
+    return lessons.map((lesson, index) => {
+      if (index === 0) {
+        // Primera lección desbloqueada
+        return { ...lesson, isLocked: false, isCompleted: false };
+      } else {
+        // Resto de lecciones bloqueadas
+        return { ...lesson, isLocked: true, isCompleted: false };
+      }
+    });
+  };
+  
   // Handle selecting a lesson
   const handleSelectLesson = (lesson: Lesson) => {
+    if (lesson.isLocked) {
+      toast({
+        title: "Lección bloqueada",
+        description: "Completa las lecciones anteriores para desbloquear esta.",
+        variant: "default"
+      });
+      return;
+    }
+    
     setCurrentLesson(lesson);
+    // No iniciar reproducción automáticamente al seleccionar
+    setIsPlaying(false);
+  };
+  
+  // Handle toggling play state
+  const handleTogglePlay = () => {
+    setIsPlaying(!isPlaying);
   };
   
   // Handle lesson completion
   const handleLessonComplete = () => {
     if (!podcast || !currentLesson) return;
     
-    // Mark current lesson as completed
-    const updatedLessons = podcast.lessons.map(lesson => {
-      if (lesson.id === currentLesson.id) {
-        return { ...lesson, isCompleted: true };
-      }
-      return lesson;
-    });
+    // Obtener el índice de la lección actual
+    const currentIndex = podcast.lessons.findIndex(lesson => lesson.id === currentLesson.id);
+    if (currentIndex === -1) return;
     
-    // Find the next lesson index
-    const currentIndex = updatedLessons.findIndex(lesson => lesson.id === currentLesson.id);
-    const nextIndex = currentIndex + 1;
+    // Crear una copia de las lecciones para modificar
+    const updatedLessons = [...podcast.lessons];
     
-    // Unlock the next lesson if it exists
-    if (nextIndex < updatedLessons.length) {
-      updatedLessons[nextIndex].isLocked = false;
+    // Marcar la lección actual como completada
+    updatedLessons[currentIndex] = { ...updatedLessons[currentIndex], isCompleted: true };
+    
+    // Desbloquear la siguiente lección si existe
+    if (currentIndex + 1 < updatedLessons.length) {
+      updatedLessons[currentIndex + 1] = { ...updatedLessons[currentIndex + 1], isLocked: false };
     }
     
-    // Update podcast with new lesson states
+    // Actualizar el podcast con las nuevas lecciones
     setPodcast({ ...podcast, lessons: updatedLessons });
+    
+    // Notificar al usuario
+    toast({
+      title: "¡Lección completada!",
+      description: currentIndex + 1 < updatedLessons.length 
+        ? "La siguiente lección ha sido desbloqueada." 
+        : "¡Has completado todas las lecciones!",
+      variant: "default"
+    });
   };
   
   if (isLoading) {
@@ -140,6 +181,8 @@ const Course = () => {
       />
       <AudioPlayer 
         lesson={currentLesson}
+        isPlaying={isPlaying}
+        onTogglePlay={handleTogglePlay}
         onComplete={handleLessonComplete}
       />
       <CourseFooter />

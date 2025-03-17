@@ -9,28 +9,30 @@ import SpeedControl from './audio/SpeedControl';
 
 interface AudioPlayerProps {
   lesson: Lesson | null;
+  isPlaying: boolean;
+  onTogglePlay: () => void;
   onComplete: () => void;
 }
 
-const AudioPlayer = ({ lesson, onComplete }: AudioPlayerProps) => {
-  const [isPlaying, setIsPlaying] = useState(false);
+const AudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: AudioPlayerProps) => {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(0.7);
   const [playbackRate, setPlaybackRate] = useState(1);
+  const [hasCompleted, setHasCompleted] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   
   // Reset player when lesson changes
   useEffect(() => {
     if (lesson) {
       setCurrentTime(0);
-      setIsPlaying(false);
+      setHasCompleted(false);
       
-      // Small delay to ensure UI updates before playing
-      setTimeout(() => {
-        setIsPlaying(true);
-      }, 300);
+      // No iniciar reproducción automáticamente cuando cambia la lección
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+      }
     }
   }, [lesson]);
   
@@ -43,14 +45,14 @@ const AudioPlayer = ({ lesson, onComplete }: AudioPlayerProps) => {
         if (playPromise !== undefined) {
           playPromise.catch(error => {
             console.error("Audio playback failed:", error);
-            setIsPlaying(false);
+            onTogglePlay(); // Turn off play state if playback fails
           });
         }
       } else {
         audioRef.current.pause();
       }
     }
-  }, [isPlaying]);
+  }, [isPlaying, onTogglePlay]);
   
   // Update volume, mute state, and playback rate
   useEffect(() => {
@@ -60,13 +62,14 @@ const AudioPlayer = ({ lesson, onComplete }: AudioPlayerProps) => {
     }
   }, [volume, isMuted, playbackRate]);
   
-  // Update time display
+  // Update time display and check for completion
   const updateTime = () => {
     if (audioRef.current) {
       setCurrentTime(audioRef.current.currentTime);
       
-      // Check if the lesson is complete (95% listened)
-      if (audioRef.current.currentTime >= audioRef.current.duration * 0.95) {
+      // Check if the lesson is complete (95% listened) and hasn't been marked as completed yet
+      if (!hasCompleted && audioRef.current.currentTime >= audioRef.current.duration * 0.95) {
+        setHasCompleted(true);
         onComplete();
       }
     }
@@ -77,11 +80,6 @@ const AudioPlayer = ({ lesson, onComplete }: AudioPlayerProps) => {
     if (audioRef.current) {
       setDuration(audioRef.current.duration);
     }
-  };
-  
-  // Handle play/pause toggle
-  const handlePlayPause = () => {
-    setIsPlaying(!isPlaying);
   };
   
   // Handle seek
@@ -119,7 +117,13 @@ const AudioPlayer = ({ lesson, onComplete }: AudioPlayerProps) => {
           src={lesson.audioUrl || "https://assets.codepen.io/4358584/Anitek_-_Komorebi.mp3"}
           onTimeUpdate={updateTime}
           onLoadedMetadata={handleMetadata}
-          onEnded={() => setIsPlaying(false)}
+          onEnded={() => {
+            onTogglePlay(); // Pause when audio ends
+            if (!hasCompleted) {
+              setHasCompleted(true);
+              onComplete();
+            }
+          }}
         />
         
         <div className="flex flex-col md:flex-row md:items-center justify-between">
@@ -135,7 +139,7 @@ const AudioPlayer = ({ lesson, onComplete }: AudioPlayerProps) => {
             <div className="flex items-center justify-center">
               <AudioControls 
                 isPlaying={isPlaying} 
-                onPlayPause={handlePlayPause} 
+                onPlayPause={onTogglePlay} 
               />
               <div className="ml-4">
                 <SpeedControl 
