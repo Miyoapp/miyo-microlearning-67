@@ -11,10 +11,10 @@ interface CourseContentProps {
 
 const CourseContent = ({ podcast, currentLessonId, onSelectLesson }: CourseContentProps) => {
   return (
-    <section className="py-12 px-4 sm:px-6 lg:px-8">
+    <section className="py-8 px-4 sm:px-6 lg:px-8">
       <div className="miyo-container">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-8">
+          <div className="lg:col-span-9">
             <LearningPath 
               lessons={podcast.lessons}
               onSelectLesson={onSelectLesson}
@@ -22,7 +22,7 @@ const CourseContent = ({ podcast, currentLessonId, onSelectLesson }: CourseConte
             />
           </div>
           
-          <div className="lg:col-span-4">
+          <div className="lg:col-span-3">
             <CourseStats podcast={podcast} />
           </div>
         </div>
@@ -32,4 +32,3 @@ const CourseContent = ({ podcast, currentLessonId, onSelectLesson }: CourseConte
 };
 
 export default CourseContent;
-
