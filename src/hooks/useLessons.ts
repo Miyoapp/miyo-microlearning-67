@@ -17,7 +17,7 @@ export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcas
     isPlaying,
     setIsPlaying,
     handleTogglePlay,
-    advanceToNextLesson: advanceLesson
+    advanceToNextLesson
   } = useLessonPlayback({ 
     currentLesson, 
     podcast 
@@ -36,9 +36,9 @@ export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcas
     handleSelectLesson(lesson, setIsPlaying);
   };
   
-  // Wrapper for advanceToNextLesson to include setCurrentLesson
-  const advanceToNextLesson = () => {
-    advanceLesson(setCurrentLesson);
+  // Wrapper for advanceToNextLesson that passes the setCurrentLesson callback
+  const advanceToNextLessonWrapper = () => {
+    advanceToNextLesson(setCurrentLesson);
   };
 
   return {
@@ -50,6 +50,6 @@ export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcas
     handleSelectLesson: selectLesson,
     handleTogglePlay,
     handleLessonComplete,
-    advanceToNextLesson
+    advanceToNextLesson: advanceToNextLessonWrapper
   };
 }

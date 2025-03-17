@@ -1,11 +1,12 @@
+
 import { useState, useCallback } from 'react';
-import { Lesson } from '@/types';
+import { Lesson, Podcast } from '@/types';
 import { useToast } from "@/components/ui/use-toast";
 import { getNextLesson } from './lessonUtils';
 
 interface UseLessonPlaybackProps {
   currentLesson: Lesson | null;
-  podcast: any;
+  podcast: Podcast | null;
 }
 
 /**
@@ -22,8 +23,14 @@ export function useLessonPlayback({ currentLesson, podcast }: UseLessonPlaybackP
     setIsPlaying(!isPlaying);
   };
 
-  // Advance to the next lesson and keep playing
-  const advanceToNextLesson = useCallback((setCurrentLesson: (lesson: Lesson) => void) => {
+  // Get the next lesson without immediately advancing to it
+  const getNextLessonToPlay = useCallback(() => {
+    if (!currentLesson || !podcast) return null;
+    return getNextLesson(podcast, currentLesson.id);
+  }, [currentLesson, podcast]);
+
+  // Advance to the next lesson
+  const advanceToNextLesson = useCallback((callback: (nextLesson: Lesson) => void) => {
     if (!currentLesson || isTransitioning) return;
     
     console.log("Advancing to next lesson from", currentLesson.id);
@@ -38,7 +45,8 @@ export function useLessonPlayback({ currentLesson, podcast }: UseLessonPlaybackP
       
       // Short delay before switching to next lesson and starting playback
       setTimeout(() => {
-        setCurrentLesson(nextLesson);
+        // Invoke callback with the next lesson
+        callback(nextLesson);
         
         // Wait for lesson to be set before playing
         setTimeout(() => {
@@ -70,6 +78,7 @@ export function useLessonPlayback({ currentLesson, podcast }: UseLessonPlaybackP
     setIsPlaying,
     isTransitioning,
     handleTogglePlay,
-    advanceToNextLesson
+    advanceToNextLesson,
+    getNextLessonToPlay
   };
 }
