@@ -4,10 +4,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import AudioPlayer from '../components/AudioPlayer';
 import { Podcast, Lesson, Module } from '../types';
-import { getPodcastById } from '../data/podcasts';
 import CourseHero from '../components/course/CourseHero';
 import CourseContent from '../components/course/CourseContent';
 import CourseFooter from '../components/course/CourseFooter';
+import { obtenerCursoPorId } from '@/lib/api';
+import { useToast } from "@/components/ui/use-toast";
 
 const Course = () => {
   const { id } = useParams<{ id: string }>();
@@ -15,51 +16,64 @@ const Course = () => {
   const [podcast, setPodcast] = useState<Podcast | null>(null);
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
   
   // Fetch podcast data
   useEffect(() => {
-    if (id) {
-      const podcastData = getPodcastById(id);
+    const cargarCurso = async () => {
+      if (!id) return;
       
-      if (podcastData) {
-        // Generate modules if they don't exist
-        if (!podcastData.modules || podcastData.modules.length === 0) {
-          const defaultModules: Module[] = [
-            {
-              id: 'module-1',
-              title: 'Conceptos Básicos',
-              lessonIds: podcastData.lessons.slice(0, 2).map(l => l.id)
-            },
-            {
-              id: 'module-2',
-              title: 'Técnicas Intermedias',
-              lessonIds: podcastData.lessons.slice(2, 4).map(l => l.id)
-            },
-            {
-              id: 'module-3',
-              title: 'Aplicación Práctica',
-              lessonIds: podcastData.lessons.slice(4).map(l => l.id)
-            }
-          ];
+      try {
+        setIsLoading(true);
+        const podcastData = await obtenerCursoPorId(id);
+        
+        if (podcastData) {
+          // Generate modules if they don't exist
+          if (!podcastData.modules || podcastData.modules.length === 0) {
+            const defaultModules: Module[] = [
+              {
+                id: 'module-1',
+                title: 'Conceptos Básicos',
+                lessonIds: podcastData.lessons.slice(0, 2).map(l => l.id)
+              },
+              {
+                id: 'module-2',
+                title: 'Técnicas Intermedias',
+                lessonIds: podcastData.lessons.slice(2, 4).map(l => l.id)
+              },
+              {
+                id: 'module-3',
+                title: 'Aplicación Práctica',
+                lessonIds: podcastData.lessons.slice(4).map(l => l.id)
+              }
+            ];
+            
+            podcastData.modules = defaultModules;
+          }
           
-          podcastData.modules = defaultModules;
+          setPodcast(podcastData);
+          
+          // Set first unlocked lesson as current
+          const firstAvailableLesson = podcastData.lessons.find(lesson => !lesson.isLocked);
+          if (firstAvailableLesson) {
+            setCurrentLesson(firstAvailableLesson);
+          }
         }
         
-        setPodcast(podcastData);
-        
-        // Set first unlocked lesson as current
-        const firstAvailableLesson = podcastData.lessons.find(lesson => !lesson.isLocked);
-        if (firstAvailableLesson) {
-          setCurrentLesson(firstAvailableLesson);
-        }
-      }
-      
-      // Simulate loading
-      setTimeout(() => {
         setIsLoading(false);
-      }, 500);
-    }
-  }, [id]);
+      } catch (error) {
+        console.error("Error al cargar curso:", error);
+        toast({
+          title: "Error al cargar curso",
+          description: "No se pudo cargar el curso solicitado. Por favor, intenta de nuevo.",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+      }
+    };
+    
+    cargarCurso();
+  }, [id, toast]);
   
   // Handle selecting a lesson
   const handleSelectLesson = (lesson: Lesson) => {

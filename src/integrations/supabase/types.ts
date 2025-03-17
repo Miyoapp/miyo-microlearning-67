@@ -9,7 +9,133 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      cursos: {
+        Row: {
+          categoria: Database["public"]["Enums"]["categoria_curso"]
+          creador_imagen: string
+          creador_nombre: string
+          descripcion: string
+          duracion_total: number
+          fecha_actualizacion: string
+          fecha_creacion: string
+          id: string
+          imagen_portada: string
+          numero_lecciones: number
+          titulo: string
+        }
+        Insert: {
+          categoria: Database["public"]["Enums"]["categoria_curso"]
+          creador_imagen: string
+          creador_nombre: string
+          descripcion: string
+          duracion_total: number
+          fecha_actualizacion?: string
+          fecha_creacion?: string
+          id?: string
+          imagen_portada: string
+          numero_lecciones?: number
+          titulo: string
+        }
+        Update: {
+          categoria?: Database["public"]["Enums"]["categoria_curso"]
+          creador_imagen?: string
+          creador_nombre?: string
+          descripcion?: string
+          duracion_total?: number
+          fecha_actualizacion?: string
+          fecha_creacion?: string
+          id?: string
+          imagen_portada?: string
+          numero_lecciones?: number
+          titulo?: string
+        }
+        Relationships: []
+      }
+      lecciones: {
+        Row: {
+          descripcion: string | null
+          duracion: number
+          estado_inicial: Database["public"]["Enums"]["estado_leccion"]
+          fecha_actualizacion: string
+          fecha_creacion: string
+          id: string
+          modulo_id: string
+          orden: number
+          titulo: string
+          url_audio: string
+        }
+        Insert: {
+          descripcion?: string | null
+          duracion: number
+          estado_inicial?: Database["public"]["Enums"]["estado_leccion"]
+          fecha_actualizacion?: string
+          fecha_creacion?: string
+          id?: string
+          modulo_id: string
+          orden: number
+          titulo: string
+          url_audio: string
+        }
+        Update: {
+          descripcion?: string | null
+          duracion?: number
+          estado_inicial?: Database["public"]["Enums"]["estado_leccion"]
+          fecha_actualizacion?: string
+          fecha_creacion?: string
+          id?: string
+          modulo_id?: string
+          orden?: number
+          titulo?: string
+          url_audio?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lecciones_modulo_id_fkey"
+            columns: ["modulo_id"]
+            isOneToOne: false
+            referencedRelation: "modulos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      modulos: {
+        Row: {
+          curso_id: string
+          descripcion: string | null
+          fecha_actualizacion: string
+          fecha_creacion: string
+          id: string
+          orden: number
+          titulo: string
+        }
+        Insert: {
+          curso_id: string
+          descripcion?: string | null
+          fecha_actualizacion?: string
+          fecha_creacion?: string
+          id?: string
+          orden: number
+          titulo: string
+        }
+        Update: {
+          curso_id?: string
+          descripcion?: string | null
+          fecha_actualizacion?: string
+          fecha_creacion?: string
+          id?: string
+          orden?: number
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "modulos_curso_id_fkey"
+            columns: ["curso_id"]
+            isOneToOne: false
+            referencedRelation: "cursos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +144,15 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      categoria_curso:
+        | "Productividad"
+        | "Negocios"
+        | "Tecnología"
+        | "Desarrollo Personal"
+        | "Salud"
+        | "Diseño"
+        | "Marketing"
+      estado_leccion: "disponible" | "bloqueado"
     }
     CompositeTypes: {
       [_ in never]: never

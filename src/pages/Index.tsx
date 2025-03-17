@@ -4,12 +4,40 @@ import Header from '../components/Header';
 import CategoryFilter from '../components/CategoryFilter';
 import PodcastCard from '../components/PodcastCard';
 import { Podcast, Category } from '../types';
-import { podcasts, categories } from '../data/podcasts';
+import { categories } from '../data/podcasts';
+import { obtenerCursos } from '@/lib/api';
+import { useToast } from "@/components/ui/use-toast";
 
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  const [filteredPodcasts, setFilteredPodcasts] = useState<Podcast[]>(podcasts);
+  const [podcasts, setPodcasts] = useState<Podcast[]>([]);
+  const [filteredPodcasts, setFilteredPodcasts] = useState<Podcast[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+  
+  // Cargar datos desde Supabase
+  useEffect(() => {
+    const cargarCursos = async () => {
+      try {
+        setIsLoading(true);
+        const cursosData = await obtenerCursos();
+        setPodcasts(cursosData);
+        setFilteredPodcasts(cursosData);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error al cargar cursos:", error);
+        toast({
+          title: "Error al cargar cursos",
+          description: "No se pudieron cargar los cursos. Por favor, intenta de nuevo.",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+      }
+    };
+    
+    cargarCursos();
+  }, [toast]);
   
   // Filter podcasts when category changes
   useEffect(() => {
@@ -18,7 +46,7 @@ const Index = () => {
     } else {
       setFilteredPodcasts(podcasts);
     }
-  }, [selectedCategory]);
+  }, [selectedCategory, podcasts]);
   
   // Simulate loading for smooth animations
   useEffect(() => {
@@ -66,19 +94,41 @@ const Index = () => {
               />
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredPodcasts.map((podcast, index) => (
-                <div 
-                  key={podcast.id} 
-                  className={`opacity-0 ${isLoaded ? 'animate-scale-in opacity-100' : ''}`} 
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  <PodcastCard podcast={podcast} />
-                </div>
-              ))}
-            </div>
+            {isLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {[...Array(4)].map((_, index) => (
+                  <div key={index} className="bg-white rounded-2xl overflow-hidden shadow-sm animate-pulse">
+                    <div className="aspect-[4/3] bg-gray-200"></div>
+                    <div className="p-5">
+                      <div className="h-6 bg-gray-200 rounded mb-2"></div>
+                      <div className="h-4 bg-gray-200 rounded w-1/2 mb-3"></div>
+                      <div className="flex space-x-2 mb-3">
+                        <div className="h-6 w-6 bg-gray-200 rounded-full"></div>
+                        <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+                      </div>
+                      <div className="flex space-x-3">
+                        <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                        <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {filteredPodcasts.map((podcast, index) => (
+                  <div 
+                    key={podcast.id} 
+                    className={`opacity-0 ${isLoaded ? 'animate-scale-in opacity-100' : ''}`} 
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                  >
+                    <PodcastCard podcast={podcast} />
+                  </div>
+                ))}
+              </div>
+            )}
             
-            {filteredPodcasts.length === 0 && (
+            {!isLoading && filteredPodcasts.length === 0 && (
               <div className="text-center py-12">
                 <p className="text-lg text-gray-600">No se encontraron podcasts en esta categoría.</p>
               </div>

@@ -41,3 +41,41 @@ export type Category =
   | 'Health' 
   | 'Design'
   | 'Marketing';
+
+// Tipos para la integración con Supabase
+export interface SupabaseCurso {
+  id: string;
+  titulo: string;
+  descripcion: string;
+  imagen_portada: string;
+  categoria: string;
+  creador_nombre: string;
+  creador_imagen: string;
+  duracion_total: number;
+  numero_lecciones: number;
+  fecha_creacion: string;
+  fecha_actualizacion: string;
+}
+
+export interface SupabaseModulo {
+  id: string;
+  titulo: string;
+  descripcion: string | null;
+  curso_id: string;
+  orden: number;
+  fecha_creacion: string;
+  fecha_actualizacion: string;
+}
+
+export interface SupabaseLeccion {
+  id: string;
+  titulo: string;
+  descripcion: string | null;
+  duracion: number;
+  url_audio: string;
+  modulo_id: string;
+  orden: number;
+  estado_inicial: 'disponible' | 'bloqueado';
+  fecha_creacion: string;
+  fecha_actualizacion: string;
+}
