@@ -71,27 +71,6 @@
     @apply transform -translate-y-1 shadow-card-hover;
   }
   
-  /* Learning path styles */
-  .path-connector {
-    @apply absolute h-full w-1 bg-miyo-200 left-1/2 -translate-x-1/2 z-0;
-  }
-  
-  .path-node {
-    @apply relative z-10 flex items-center justify-center w-12 h-12 rounded-full shadow-md;
-  }
-  
-  .path-node-completed {
-    @apply bg-miyo-500 text-white;
-  }
-  
-  .path-node-current {
-    @apply bg-miyo-800 text-white pulse;
-  }
-  
-  .path-node-locked {
-    @apply bg-gray-200 text-gray-500;
-  }
-  
   @keyframes pulse {
     0%, 100% {
       transform: scale(1);

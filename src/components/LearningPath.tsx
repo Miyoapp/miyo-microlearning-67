@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Lesson } from '../types';
 import { Play, Lock, Trophy } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface LearningPathProps {
   lessons: Lesson[];
@@ -10,77 +11,72 @@ interface LearningPathProps {
 }
 
 const LearningPath = ({ lessons, onSelectLesson, currentLessonId }: LearningPathProps) => {
+  const [hoveredLesson, setHoveredLesson] = useState<string | null>(null);
+  
   if (!lessons.length) return null;
   
   return (
     <div className="py-8">
-      <h2 className="text-2xl font-bold mb-8">Your Learning Path</h2>
+      <h2 className="text-2xl font-bold mb-12 text-center">Tu Ruta de Aprendizaje</h2>
       
-      <div className="relative">
-        {/* Path connector line */}
-        <div className="path-connector" />
-        
-        <div className="space-y-12">
+      <div className="relative max-w-2xl mx-auto">
+        {/* Zigzag path */}
+        <div className="space-y-16">
           {lessons.map((lesson, index) => {
             const isCompleted = lesson.isCompleted;
             const isAvailable = !lesson.isLocked;
             const isCurrent = currentLessonId === lesson.id;
+            const isHovered = hoveredLesson === lesson.id;
             
-            // Determine node style
-            let nodeClasses = 'path-node ';
-            if (isCompleted) nodeClasses += 'path-node-completed';
-            else if (isCurrent) nodeClasses += 'path-node-current';
-            else if (!isAvailable) nodeClasses += 'path-node-locked';
-            else nodeClasses += 'bg-white border border-miyo-200';
+            // Determine node styles based on lesson state
+            let nodeClasses = cn(
+              "flex items-center justify-center w-16 h-16 rounded-full shadow-md transition-all duration-300",
+              {
+                "bg-green-500 text-white": isCompleted,
+                "bg-miyo-800 text-white": isCurrent && !isCompleted,
+                "bg-miyo-600 text-white": isAvailable && !isCurrent && !isCompleted,
+                "bg-gray-300 text-gray-500": !isAvailable,
+                "scale-110": isHovered && isAvailable,
+                "animate-pulse": isCurrent
+              }
+            );
             
             // Zigzag pattern - even indices go left, odd go right
-            const alignment = index % 2 === 0 ? 'flex-row' : 'flex-row-reverse';
+            const containerAlignment = index % 2 === 0 ? "justify-start" : "justify-end";
             
             return (
-              <div key={lesson.id} className={`flex ${alignment} items-center`}>
-                <div className={nodeClasses}>
-                  {isCompleted ? (
-                    <Trophy size={20} />
-                  ) : isCurrent ? (
-                    <Play size={20} />
-                  ) : isAvailable ? (
-                    <Play size={20} className="text-miyo-800" />
-                  ) : (
-                    <Lock size={20} />
-                  )}
-                </div>
-                
+              <div key={lesson.id} className={`flex ${containerAlignment}`}>
                 <div 
-                  className={`flex-1 ${index % 2 === 0 ? 'ml-6' : 'mr-6'} bg-white p-4 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300 ${isAvailable ? 'cursor-pointer' : 'opacity-70'}`}
+                  className={`relative ${isAvailable ? 'cursor-pointer' : 'cursor-not-allowed'}`}
                   onClick={() => isAvailable && onSelectLesson(lesson)}
+                  onMouseEnter={() => setHoveredLesson(lesson.id)}
+                  onMouseLeave={() => setHoveredLesson(null)}
                 >
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h4 className={`font-medium ${isCurrent ? 'text-miyo-800' : 'text-gray-800'}`}>
-                        {lesson.title}
-                      </h4>
-                      <p className="text-sm text-gray-500">{lesson.duration} min</p>
-                    </div>
-                    
-                    <div className="ml-4">
-                      {isCompleted ? (
-                        <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                          Completed
-                        </span>
-                      ) : isCurrent ? (
-                        <span className="text-sm bg-miyo-100 text-miyo-800 px-2 py-1 rounded-full">
-                          In Progress
-                        </span>
-                      ) : isAvailable ? (
-                        <span className="text-sm bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
-                          Available
-                        </span>
-                      ) : (
-                        <span className="text-sm bg-gray-100 text-gray-500 px-2 py-1 rounded-full">
-                          Locked
-                        </span>
-                      )}
-                    </div>
+                  {/* Connect to next lesson with dotted line (except for last lesson) */}
+                  {index < lessons.length - 1 && (
+                    <div 
+                      className={`absolute ${index % 2 === 0 ? 'left-1/2 -translate-x-1/2 rotate-45' : 'left-1/2 -translate-x-1/2 -rotate-45'} h-24 border-r-2 border-dashed border-gray-200 top-full`}
+                      style={{ width: '2px' }}
+                    />
+                  )}
+                  
+                  {/* Lesson circle */}
+                  <div className={nodeClasses}>
+                    {isCompleted ? (
+                      <Trophy size={28} />
+                    ) : isCurrent ? (
+                      <Play size={28} fill="white" />
+                    ) : isAvailable ? (
+                      <Play size={28} fill="white" />
+                    ) : (
+                      <Lock size={28} />
+                    )}
+                  </div>
+                  
+                  {/* Lesson title tooltip */}
+                  <div className={`absolute mt-2 px-3 py-1 bg-white shadow-md rounded-md text-sm transition-opacity duration-200 whitespace-nowrap ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
+                    <div className="font-medium">{lesson.title}</div>
+                    <div className="text-xs text-gray-500">{lesson.duration} min</div>
                   </div>
                 </div>
               </div>
