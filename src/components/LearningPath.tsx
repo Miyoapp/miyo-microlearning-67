@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Lesson, Module } from '../types';
-import { Play, Lock, Trophy, Clock } from 'lucide-react';
+import { Play, Lock, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface LearningPathProps {
@@ -81,20 +81,6 @@ const LearningPath = ({ lessons, modules, onSelectLesson, currentLessonId }: Lea
                           ) : (
                             <Lock size={16} />
                           )}
-                          
-                          {/* Time indicator with clock icon - positioned above the circle */}
-                          <div className={cn(
-                            "absolute -top-5 -right-1 flex items-center text-[10px] font-medium",
-                            {
-                              "text-green-600": isCompleted,
-                              "text-miyo-800": isCurrent,
-                              "text-gray-600": isAvailable && !isCurrent && !isCompleted,
-                              "text-gray-400": !isAvailable
-                            }
-                          )}>
-                            <Clock size={10} className="mr-[2px]" />
-                            <span>{lesson.duration} min</span>
-                          </div>
                         </div>
                       </div>
                       
