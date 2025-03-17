@@ -95,7 +95,7 @@ const CourseHero = ({ podcast }: CourseHeroProps) => {
           className="flex items-center text-gray-600 hover:text-miyo-800 mb-8 transition-colors"
         >
           <ChevronLeft size={20} className="mr-1" />
-          <span>Back to Home</span>
+          <span>Volver al Inicio</span>
         </button>
         
         <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
@@ -151,7 +151,7 @@ const CourseHero = ({ podcast }: CourseHeroProps) => {
                 <h1 className="text-3xl lg:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-miyo-800 to-purple-500 mb-2">
                   {podcast.title}
                 </h1>
-                <p className="text-gray-600 font-medium">By {podcast.creator.name}</p>
+                <p className="text-gray-600 font-medium">Por {podcast.creator.name}</p>
               </div>
               
               {/* Sound equalizer style metrics */}
@@ -172,7 +172,7 @@ const CourseHero = ({ podcast }: CourseHeroProps) => {
                   </div>
                   <div className="flex items-center text-gray-600">
                     <Clock size={16} className="mr-1" />
-                    <span>{podcast.duration} minutes</span>
+                    <span>{podcast.duration} minutos</span>
                   </div>
                 </div>
                 
@@ -192,7 +192,7 @@ const CourseHero = ({ podcast }: CourseHeroProps) => {
                   </div>
                   <div className="flex items-center text-gray-600">
                     <Headphones size={16} className="mr-1" />
-                    <span>{podcast.lessonCount} lessons</span>
+                    <span>{podcast.lessonCount} lecciones</span>
                   </div>
                 </div>
               </div>
@@ -201,7 +201,7 @@ const CourseHero = ({ podcast }: CourseHeroProps) => {
               <div className="mb-8 relative">
                 <div className="absolute top-0 bottom-0 left-0 w-1 bg-gradient-to-b from-miyo-800 to-miyo-600 rounded-full"></div>
                 <div className="pl-6">
-                  <h3 className="text-lg font-medium mb-3 text-gray-800">About this journey</h3>
+                  <h3 className="text-lg font-medium mb-3 text-gray-800">Sobre este viaje</h3>
                   <p className="text-gray-700 leading-relaxed">{podcast.description}</p>
                 </div>
               </div>
@@ -209,10 +209,16 @@ const CourseHero = ({ podcast }: CourseHeroProps) => {
               {/* Start Learning button - stylized play button */}
               <div className="flex justify-center">
                 <Button 
+                  onClick={() => {
+                    const learningPathSection = document.getElementById('learning-path');
+                    if (learningPathSection) {
+                      learningPathSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
                   className="rounded-full px-8 py-6 bg-gradient-to-r from-miyo-800 to-purple-600 hover:from-miyo-700 hover:to-purple-500 shadow-lg shadow-miyo-800/20 group transition-all duration-300 hover:scale-105"
                 >
                   <Play size={24} className="mr-2 group-hover:translate-x-1 transition-transform" />
-                  <span className="text-lg">Start Learning Now</span>
+                  <span className="text-lg">Comenzar a Aprender</span>
                 </Button>
               </div>
             </div>

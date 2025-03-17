@@ -14,7 +14,7 @@ const VolumeControl = ({ volume, isMuted, onVolumeChange, onToggleMute }: Volume
       <button 
         onClick={onToggleMute}
         className="text-gray-600 hover:text-miyo-800 mr-2"
-        aria-label={isMuted ? "Unmute" : "Mute"}
+        aria-label={isMuted ? "Activar sonido" : "Silenciar"}
       >
         {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
       </button>

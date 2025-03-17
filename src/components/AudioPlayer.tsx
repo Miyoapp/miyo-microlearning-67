@@ -5,6 +5,7 @@ import LessonInfo from './audio/LessonInfo';
 import AudioControls from './audio/AudioControls';
 import ProgressBar from './audio/ProgressBar';
 import VolumeControl from './audio/VolumeControl';
+import SpeedControl from './audio/SpeedControl';
 
 interface AudioPlayerProps {
   lesson: Lesson | null;
@@ -17,6 +18,7 @@ const AudioPlayer = ({ lesson, onComplete }: AudioPlayerProps) => {
   const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(0.7);
+  const [playbackRate, setPlaybackRate] = useState(1);
   const audioRef = useRef<HTMLAudioElement>(null);
   
   // Reset player when lesson changes
@@ -36,22 +38,27 @@ const AudioPlayer = ({ lesson, onComplete }: AudioPlayerProps) => {
   useEffect(() => {
     if (audioRef.current) {
       if (isPlaying) {
-        audioRef.current.play().catch(error => {
-          console.error("Audio playback failed:", error);
-          setIsPlaying(false);
-        });
+        const playPromise = audioRef.current.play();
+        
+        if (playPromise !== undefined) {
+          playPromise.catch(error => {
+            console.error("Audio playback failed:", error);
+            setIsPlaying(false);
+          });
+        }
       } else {
         audioRef.current.pause();
       }
     }
   }, [isPlaying]);
   
-  // Update volume and mute state
+  // Update volume, mute state, and playback rate
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = isMuted ? 0 : volume;
+      audioRef.current.playbackRate = playbackRate;
     }
-  }, [volume, isMuted]);
+  }, [volume, isMuted, playbackRate]);
   
   // Update time display
   const updateTime = () => {
@@ -96,6 +103,11 @@ const AudioPlayer = ({ lesson, onComplete }: AudioPlayerProps) => {
     setIsMuted(!isMuted);
   };
   
+  // Handle playback rate change
+  const handlePlaybackRateChange = (rate: number) => {
+    setPlaybackRate(rate);
+  };
+  
   // If no lesson is selected, don't render the player
   if (!lesson) return null;
   
@@ -104,7 +116,7 @@ const AudioPlayer = ({ lesson, onComplete }: AudioPlayerProps) => {
       <div className="miyo-container py-4">
         <audio
           ref={audioRef}
-          src={lesson.audioUrl || "https://download.samplelib.com/mp3/sample-15s.mp3"}
+          src={lesson.audioUrl || "https://assets.codepen.io/4358584/Anitek_-_Komorebi.mp3"}
           onTimeUpdate={updateTime}
           onLoadedMetadata={handleMetadata}
           onEnded={() => setIsPlaying(false)}
@@ -120,10 +132,18 @@ const AudioPlayer = ({ lesson, onComplete }: AudioPlayerProps) => {
           </div>
           
           <div className="flex-1 mx-0 md:mx-6">
-            <AudioControls 
-              isPlaying={isPlaying} 
-              onPlayPause={handlePlayPause} 
-            />
+            <div className="flex items-center justify-center">
+              <AudioControls 
+                isPlaying={isPlaying} 
+                onPlayPause={handlePlayPause} 
+              />
+              <div className="ml-4">
+                <SpeedControl 
+                  playbackRate={playbackRate}
+                  onPlaybackRateChange={handlePlaybackRateChange}
+                />
+              </div>
+            </div>
             
             <ProgressBar 
               currentTime={currentTime} 
