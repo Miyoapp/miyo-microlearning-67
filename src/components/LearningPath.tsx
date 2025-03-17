@@ -16,12 +16,12 @@ const LearningPath = ({ lessons, onSelectLesson, currentLessonId }: LearningPath
   if (!lessons.length) return null;
   
   return (
-    <div className="py-4">
-      <h2 className="text-2xl font-bold mb-3 text-center">Tu Ruta de Aprendizaje</h2>
+    <div className="py-3">
+      <h2 className="text-2xl font-bold mb-2 text-center">Tu Ruta de Aprendizaje</h2>
       
-      <div className="relative max-w-xs mx-auto">
-        {/* Ultra-compressed cascading path with minimal spacing */}
-        <div className="space-y-1">
+      <div className="relative max-w-[180px] mx-auto">
+        {/* Ultra-compressed vertical path with minimal zigzag */}
+        <div className="space-y-[25px]">
           {lessons.map((lesson, index) => {
             const isCompleted = lesson.isCompleted;
             const isAvailable = !lesson.isLocked;
@@ -30,7 +30,7 @@ const LearningPath = ({ lessons, onSelectLesson, currentLessonId }: LearningPath
             
             // Determine node styles based on lesson state
             let nodeClasses = cn(
-              "flex items-center justify-center w-10 h-10 rounded-full shadow-md transition-all duration-300",
+              "flex items-center justify-center w-9 h-9 rounded-full shadow-md transition-all duration-300",
               {
                 "bg-green-500 text-white": isCompleted,
                 "bg-miyo-800 text-white": isCurrent && !isCompleted,
@@ -41,8 +41,8 @@ const LearningPath = ({ lessons, onSelectLesson, currentLessonId }: LearningPath
               }
             );
             
-            // Further reduced horizontal separation - right circles almost aligned with center
-            const containerAlignment = index % 2 === 0 ? "justify-start pl-2" : "justify-end pr-0.5";
+            // Minimal horizontal offset - creates subtle zigzag
+            const containerAlignment = index % 2 === 0 ? "justify-start" : "justify-end pr-[25px]";
             
             return (
               <div key={lesson.id} className={`flex ${containerAlignment}`}>
@@ -55,26 +55,30 @@ const LearningPath = ({ lessons, onSelectLesson, currentLessonId }: LearningPath
                   {/* Connect to next lesson with shorter lines */}
                   {index < lessons.length - 1 && (
                     <div 
-                      className={`absolute ${index % 2 === 0 ? 'left-1/2 -translate-x-1/2 rotate-10' : 'left-1/2 -translate-x-1/2 -rotate-10'} h-4 border-r-2 border-dashed border-gray-200 top-full`}
-                      style={{ width: '2px', transform: `rotate(${index % 2 === 0 ? '10deg' : '-10deg'})` }}
+                      className="absolute left-1/2 -translate-x-1/2 border-r-2 border-dashed border-gray-200 top-full"
+                      style={{ 
+                        width: '2px', 
+                        height: '25px',
+                        transform: `rotate(${index % 2 === 0 ? '7deg' : '-7deg'})` 
+                      }}
                     />
                   )}
                   
-                  {/* Lesson circle - slightly smaller */}
+                  {/* Lesson circle - smaller */}
                   <div className={nodeClasses}>
                     {isCompleted ? (
-                      <Trophy size={18} />
+                      <Trophy size={16} />
                     ) : isCurrent ? (
-                      <Play size={18} fill="white" />
+                      <Play size={16} fill="white" />
                     ) : isAvailable ? (
-                      <Play size={18} fill="white" />
+                      <Play size={16} fill="white" />
                     ) : (
-                      <Lock size={18} />
+                      <Lock size={16} />
                     )}
                   </div>
                   
                   {/* Lesson title tooltip */}
-                  <div className={`absolute mt-2 px-3 py-1 bg-white shadow-md rounded-md text-sm transition-opacity duration-200 whitespace-nowrap ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
+                  <div className={`absolute z-10 mt-2 px-3 py-1 bg-white shadow-md rounded-md text-sm transition-opacity duration-200 whitespace-nowrap ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
                     <div className="font-medium">{lesson.title}</div>
                     <div className="text-xs text-gray-500">{lesson.duration} min</div>
                   </div>
