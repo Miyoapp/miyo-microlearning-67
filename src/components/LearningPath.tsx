@@ -41,10 +41,10 @@ const LearningPath = ({ lessons, onSelectLesson, currentLessonId }: LearningPath
               }
             );
             
-            // Reduce offset for right-side icons even more to create a cascade effect
+            // Increase offset for right-side icons to create more distance
             const containerAlignment = index % 2 === 0 
               ? "justify-start" 
-              : "justify-start ml-[30px]";
+              : "justify-start ml-[45px]";
             
             return (
               <div key={lesson.id} className={`flex ${containerAlignment}`}>
