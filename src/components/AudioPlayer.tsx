@@ -70,7 +70,7 @@ const AudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: AudioPlaye
             
             <ProgressBar 
               currentTime={currentTime} 
-              duration={duration || lesson.duration * 60} 
+              duration={duration || (lesson.duration * 60)} // Convert minutes to seconds for the progress bar
               onSeek={handleSeek} 
             />
           </div>

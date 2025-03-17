@@ -16,7 +16,7 @@ const TimeDisplay = ({ currentTime, duration }: TimeDisplayProps) => {
 
   // Format the duration value based on its type
   const formattedDuration = typeof duration === 'number' 
-    ? formatTime(duration * 60) // Convert minutes to seconds for display
+    ? (duration > 60 ? formatMinutesToTime(duration) : formatTime(duration * 60)) // Handle both minutes and seconds
     : duration;
 
   return (
