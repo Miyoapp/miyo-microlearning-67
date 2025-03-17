@@ -14,7 +14,18 @@ const CourseStats = ({ podcast }: CourseStatsProps) => {
   const completedLessons = podcast.lessons.filter(l => l.isCompleted).length;
   const percentComplete = Math.round((completedLessons / podcast.lessonCount) * 100);
   const streakDays = 3; // Placeholder, should come from user data in a real app
-  const xpPoints = completedLessons * 25; // Simple calculation for XP points
+  
+  // Calculate XP based on actual minutes listened
+  const totalMinutesListened = podcast.lessons
+    .filter(l => l.isCompleted)
+    .reduce((total, lesson) => total + lesson.duration, 0);
+    
+  // Add partial progress for the current lesson that's not complete
+  const currentLessonProgress = podcast.lessons
+    .find(l => !l.isCompleted && !l.isLocked)?.duration * 0.5 || 0;
+  
+  // Calculate XP (10 XP per minute listened)
+  const xpPoints = Math.round((totalMinutesListened + currentLessonProgress) * 10);
   
   return (
     <Card className="border-2 border-indigo-100 shadow-md overflow-hidden">
@@ -22,7 +33,7 @@ const CourseStats = ({ podcast }: CourseStatsProps) => {
         <CardTitle className="flex items-center justify-between">
           <span className="text-xl font-bold text-indigo-900">Tu Progreso</span>
           <Badge variant="outline" className="bg-white font-semibold text-indigo-700 border-indigo-200">
-            Nivel 2
+            Nivel {Math.floor(xpPoints / 500) + 1}
           </Badge>
         </CardTitle>
       </CardHeader>
@@ -44,6 +55,7 @@ const CourseStats = ({ podcast }: CourseStatsProps) => {
               <span className="font-bold">XP</span>
             </div>
             <span className="text-2xl font-bold text-indigo-700">{xpPoints}</span>
+            <span className="text-xs text-indigo-500">{totalMinutesListened} min escuchados</span>
           </div>
         </div>
         

@@ -41,7 +41,7 @@ const LearningPath = ({ lessons, onSelectLesson, currentLessonId }: LearningPath
               }
             );
             
-            // Increase offset for right-side icons to create more distance
+            // Alternate positions to create zigzag effect 
             const containerAlignment = index % 2 === 0 
               ? "justify-start" 
               : "justify-start ml-[45px]";
@@ -54,8 +54,6 @@ const LearningPath = ({ lessons, onSelectLesson, currentLessonId }: LearningPath
                   onMouseEnter={() => setHoveredLesson(lesson.id)}
                   onMouseLeave={() => setHoveredLesson(null)}
                 >
-                  {/* Removed connecting lines */}
-                  
                   {/* Lesson circle - larger */}
                   <div className={nodeClasses}>
                     {isCompleted ? (
