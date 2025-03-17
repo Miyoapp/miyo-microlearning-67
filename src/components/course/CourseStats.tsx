@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { formatMinutesToHumanReadable } from '@/lib/formatters';
 
 interface CourseStatsProps {
   podcast: Podcast;
@@ -106,7 +107,7 @@ const CourseStats = ({ podcast }: CourseStatsProps) => {
           </div>
           <div className="flex justify-between py-1">
             <span>Duración total</span>
-            <span className="font-medium text-gray-800">{podcast.duration} minutos</span>
+            <span className="font-medium text-gray-800">{formatMinutesToHumanReadable(podcast.duration)}</span>
           </div>
         </div>
       </CardContent>

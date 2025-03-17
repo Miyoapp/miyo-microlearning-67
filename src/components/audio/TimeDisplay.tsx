@@ -1,4 +1,6 @@
 
+import { formatMinutesToTime } from '@/lib/formatters';
+
 interface TimeDisplayProps {
   currentTime: number;
   duration: string | number;
@@ -12,8 +14,13 @@ const TimeDisplay = ({ currentTime, duration }: TimeDisplayProps) => {
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
 
+  // Format the duration value based on its type
+  const formattedDuration = typeof duration === 'number' 
+    ? formatMinutesToTime(duration)
+    : duration;
+
   return (
-    <p className="text-sm text-gray-500">{formatTime(currentTime)} / {duration}</p>
+    <p className="text-sm text-gray-500">{formatTime(currentTime)} / {formattedDuration}</p>
   );
 };
 

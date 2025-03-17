@@ -2,6 +2,7 @@
 import { Link } from 'react-router-dom';
 import { Podcast } from '../types';
 import { Clock, Headphones, Tag } from 'lucide-react';
+import { formatMinutesToHumanReadable } from '@/lib/formatters';
 
 interface PodcastCardProps {
   podcast: Podcast;
@@ -41,7 +42,7 @@ const PodcastCard = ({ podcast }: PodcastCardProps) => {
         <div className="flex flex-wrap gap-y-2">
           <div className="flex items-center mr-4 text-sm text-gray-500">
             <Clock size={16} className="mr-1" />
-            <span>{podcast.duration} min</span>
+            <span>{formatMinutesToHumanReadable(podcast.duration)}</span>
           </div>
           
           <div className="flex items-center mr-4 text-sm text-gray-500">

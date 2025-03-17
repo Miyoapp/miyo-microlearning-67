@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Play, Clock, Headphones } from 'lucide-react';
 import { Podcast } from '../../types';
 import SoundEqualizer from './SoundEqualizer';
+import { formatMinutesToHumanReadable } from '@/lib/formatters';
 
 interface CourseInfoProps {
   podcast: Podcast;
@@ -25,7 +26,7 @@ const CourseInfo = ({ podcast }: CourseInfoProps) => {
       <div className="flex items-center gap-6 mb-8">
         <SoundEqualizer 
           icon={<Clock size={16} className="mr-1" />} 
-          text={`${podcast.duration} minutos`} 
+          text={formatMinutesToHumanReadable(podcast.duration)} 
         />
         
         <SoundEqualizer 
