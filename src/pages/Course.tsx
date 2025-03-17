@@ -20,7 +20,8 @@ const Course = () => {
     initializeCurrentLesson,
     handleSelectLesson, 
     handleTogglePlay, 
-    handleLessonComplete 
+    handleLessonComplete,
+    getNextLesson 
   } = useLessons(podcast, setPodcast);
   
   // Set initial lesson once podcast data is loaded
