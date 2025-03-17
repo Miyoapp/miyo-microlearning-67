@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Lesson, Module } from '../types';
-import { Play, Lock, Trophy } from 'lucide-react';
+import { Play, Lock, Trophy, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface LearningPathProps {
@@ -70,29 +70,38 @@ const LearningPath = ({ lessons, modules, onSelectLesson, currentLessonId }: Lea
                         className={`relative ${isAvailable ? 'cursor-pointer' : 'cursor-not-allowed'}`}
                         onClick={() => isAvailable && onSelectLesson(lesson)}
                       >
-                        {/* Lesson circle with icon and duration */}
+                        {/* Lesson circle with icon */}
                         <div className={nodeClasses}>
-                          <div className="flex flex-col items-center">
-                            {isCompleted ? (
-                              <Trophy size={16} className="mb-1" />
-                            ) : isCurrent ? (
-                              <Play size={16} fill="white" className="mb-1" />
-                            ) : isAvailable ? (
-                              <Play size={16} fill="white" className="mb-1" />
-                            ) : (
-                              <Lock size={16} className="mb-1" />
-                            )}
-                            
-                            {/* Duration inside the circle */}
-                            <span className="text-[10px] font-medium">{lesson.duration} min</span>
+                          {isCompleted ? (
+                            <Trophy size={16} />
+                          ) : isCurrent ? (
+                            <Play size={16} fill="white" />
+                          ) : isAvailable ? (
+                            <Play size={16} fill="white" />
+                          ) : (
+                            <Lock size={16} />
+                          )}
+                          
+                          {/* Time indicator with clock icon - positioned above the circle */}
+                          <div className={cn(
+                            "absolute -top-5 -right-1 flex items-center text-[10px] font-medium",
+                            {
+                              "text-green-600": isCompleted,
+                              "text-miyo-800": isCurrent,
+                              "text-gray-600": isAvailable && !isCurrent && !isCompleted,
+                              "text-gray-400": !isAvailable
+                            }
+                          )}>
+                            <Clock size={10} className="mr-[2px]" />
+                            <span>{lesson.duration} min</span>
                           </div>
                         </div>
                       </div>
                       
-                      {/* Lesson title always visible */}
+                      {/* Lesson title */}
                       <div className="ml-3">
                         <div className={cn(
-                          "font-medium text-sm transition-colors", 
+                          "text-sm transition-colors", 
                           {
                             "text-green-600": isCompleted,
                             "text-miyo-800 font-semibold": isCurrent,
