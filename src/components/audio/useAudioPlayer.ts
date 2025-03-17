@@ -24,6 +24,7 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: UseAudi
       
       if (audioRef.current) {
         audioRef.current.currentTime = 0;
+        audioRef.current.load(); // Force reload of the audio element
         
         // Delay auto-play to avoid race conditions
         if (isPlaying) {
@@ -40,7 +41,7 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: UseAudi
                 });
               }
             }
-          }, 500); // Increased delay for better stability
+          }, 800); // Increased delay for better stability
           
           return () => clearTimeout(timer);
         }
@@ -88,6 +89,7 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: UseAudi
   // Handle metadata loaded
   const handleMetadata = () => {
     if (audioRef.current) {
+      console.log("Audio metadata loaded, duration:", audioRef.current.duration);
       setDuration(audioRef.current.duration);
     }
   };

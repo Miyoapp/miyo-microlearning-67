@@ -31,8 +31,10 @@ export function getNextLesson(podcast: Podcast | null, currentLessonId: string):
   
   // If we found the current lesson and there's a next one available
   if (currentIndex !== -1 && currentIndex < allAvailableLessons.length - 1) {
+    console.log(`Found next lesson: ${allAvailableLessons[currentIndex + 1].title} at index ${currentIndex + 1} of ${allAvailableLessons.length}`);
     return allAvailableLessons[currentIndex + 1];
   }
   
+  console.log(`No next lesson found after index ${currentIndex} of ${allAvailableLessons.length} available lessons`);
   return null;
 }

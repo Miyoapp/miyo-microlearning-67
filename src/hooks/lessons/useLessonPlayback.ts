@@ -55,8 +55,8 @@ export function useLessonPlayback({ currentLesson, podcast }: UseLessonPlaybackP
           // Start playing the next lesson
           setIsPlaying(true);
           setIsTransitioning(false);
-        }, 500);
-      }, 700);
+        }, 800);
+      }, 1000);
     } else {
       console.log("No more lessons available");
       // No more lessons available - don't show any message
