@@ -21,7 +21,8 @@ const Course = () => {
     handleSelectLesson, 
     handleTogglePlay, 
     handleLessonComplete,
-    getNextLesson 
+    getNextLesson,
+    advanceToNextLesson
   } = useLessons(podcast, setPodcast);
   
   // Set initial lesson once podcast data is loaded
@@ -30,6 +31,23 @@ const Course = () => {
       initializeCurrentLesson();
     }
   }, [podcast]);
+  
+  // Listen for lesson ended event to advance to next lesson
+  useEffect(() => {
+    const handleLessonEnded = (e: Event) => {
+      const event = e as CustomEvent;
+      if (event.detail && event.detail.lessonId === currentLesson?.id) {
+        // The current lesson has ended naturally, advance to next
+        advanceToNextLesson();
+      }
+    };
+    
+    window.addEventListener('lessonEnded', handleLessonEnded);
+    
+    return () => {
+      window.removeEventListener('lessonEnded', handleLessonEnded);
+    };
+  }, [currentLesson, advanceToNextLesson]);
   
   if (isLoading) {
     return <CourseLoading />;

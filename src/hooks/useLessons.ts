@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Podcast, Lesson } from '@/types';
 import { useToast } from "@/components/ui/use-toast";
@@ -57,6 +56,32 @@ export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcas
     }
     
     return null;
+  };
+
+  // Advance to the next lesson and keep playing
+  const advanceToNextLesson = () => {
+    if (!currentLesson) return;
+    
+    const nextLesson = getNextLesson(currentLesson.id);
+    if (nextLesson) {
+      setCurrentLesson(nextLesson);
+      // Keep playing
+      setIsPlaying(true);
+      
+      toast({
+        title: "Reproduciendo siguiente lección",
+        description: nextLesson.title,
+        variant: "default"
+      });
+    } else {
+      // No more lessons available
+      setIsPlaying(false);
+      toast({
+        title: "Fin de las lecciones disponibles",
+        description: "Has completado todas las lecciones disponibles.",
+        variant: "default"
+      });
+    }
   };
 
   // Handle toggling play state
@@ -154,7 +179,8 @@ export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcas
     handleSelectLesson,
     handleTogglePlay,
     handleLessonComplete,
-    getNextLesson
+    getNextLesson,
+    advanceToNextLesson
   };
 }
 

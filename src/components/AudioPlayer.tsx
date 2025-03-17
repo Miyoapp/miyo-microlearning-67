@@ -77,10 +77,10 @@ const AudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: AudioPlaye
     if (audioRef.current) {
       setCurrentTime(audioRef.current.currentTime);
       
-      // Check if the lesson is complete (95% listened) and hasn't been marked as completed yet
+      // Mark lesson as complete at 95% but don't advance yet
       if (!hasCompleted && audioRef.current.currentTime >= audioRef.current.duration * 0.95) {
         setHasCompleted(true);
-        onComplete();
+        onComplete(); // This will mark the lesson as complete in the system
       }
     }
   };
@@ -128,9 +128,11 @@ const AudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: AudioPlaye
           onTimeUpdate={updateTime}
           onLoadedMetadata={handleMetadata}
           onEnded={() => {
-            if (!hasCompleted) {
-              setHasCompleted(true);
-              onComplete();
+            // Only trigger automatic advance to next lesson on actual audio end (100%)
+            if (isPlaying) {
+              // The audio has naturally ended, let's proceed to next lesson
+              const event = new CustomEvent('lessonEnded', { detail: { lessonId: lesson.id } });
+              window.dispatchEvent(event);
             }
           }}
         />
