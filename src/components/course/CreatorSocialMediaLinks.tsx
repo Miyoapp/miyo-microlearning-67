@@ -3,8 +3,9 @@ import { CreatorSocialMedia } from '@/types';
 import { 
   Globe, 
   Video, 
-  Code, 
-  ExternalLink 
+  Code,
+  ExternalLink,
+  Twitter,  // Added Twitter icon instead of Share2
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -67,6 +68,23 @@ const LinkedInIcon = ({ size = 16, className = "" }) => (
   </svg>
 );
 
+// Custom Twitter icon component with blue background
+const TwitterIcon = ({ size = 16, className = "" }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width={size} 
+    height={size} 
+    viewBox="0 0 24 24" 
+    className={className}
+  >
+    <circle cx="12" cy="12" r="11" fill="#1DA1F2" />
+    <path 
+      d="M19.2,7.9 C18.7,8.1 18.1,8.3 17.5,8.4 C18.1,8 18.6,7.4 18.8,6.6 C18.2,7 17.6,7.2 16.9,7.4 C16.3,6.8 15.5,6.4 14.6,6.4 C12.9,6.4 11.5,7.8 11.5,9.5 C11.5,9.7 11.5,10 11.6,10.2 C9.1,10.1 6.8,8.8 5.3,6.9 C5,7.4 4.9,7.9 4.9,8.5 C4.9,9.6 5.4,10.5 6.3,11 C5.8,11 5.3,10.9 4.9,10.6 C4.9,10.6 4.9,10.6 4.9,10.7 C4.9,12.2 6,13.3 7.3,13.6 C7.1,13.7 6.8,13.7 6.5,13.7 C6.3,13.7 6.1,13.7 5.9,13.6 C6.3,14.7 7.3,15.6 8.6,15.6 C7.6,16.4 6.4,16.8 5,16.8 C4.8,16.8 4.5,16.8 4.3,16.7 C5.6,17.6 7.1,18.1 8.7,18.1 C14.6,18.1 17.8,13.2 17.8,9 C17.8,8.9 17.8,8.7 17.8,8.6 C18.4,8.2 19,7.6 19.5,7 L19.2,7.9 Z" 
+      fill="white" 
+    />
+  </svg>
+);
+
 interface CreatorSocialMediaLinksProps {
   socialMedia?: CreatorSocialMedia[];
 }
@@ -89,7 +107,7 @@ const CreatorSocialMediaLinks = ({ socialMedia }: CreatorSocialMediaLinksProps) 
       case 'linkedin':
         return <LinkedInIcon size={iconSize} className={iconClassName} />;
       case 'twitter':
-        return <Share2 size={16} className="text-[#1DA1F2] hover:text-[#1DA1F2]/80 transition-colors" />;
+        return <TwitterIcon size={iconSize} className={iconClassName} />; // Using our custom Twitter icon
       case 'youtube':
         return <Video size={16} className="text-[#FF0000] hover:text-[#FF0000]/80 transition-colors" />;
       case 'github':
