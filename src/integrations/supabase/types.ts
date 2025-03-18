@@ -233,7 +233,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_creator_social_media: {
+        Args: {
+          creator_id: string
+        }
+        Returns: {
+          platform: string
+          url: string
+        }[]
+      }
     }
     Enums: {
       estado_leccion: "disponible" | "bloqueado"
