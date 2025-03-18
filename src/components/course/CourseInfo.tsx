@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Play, Clock, Headphones } from 'lucide-react';
 import { Podcast } from '../../types';
 import SoundEqualizer from './SoundEqualizer';
-import CreatorSocialMediaLinks from '../CreatorSocialMedia';
 import { formatMinutesToHumanReadable } from '@/lib/formatters';
 
 interface CourseInfoProps {
@@ -23,25 +22,16 @@ const CourseInfo = ({ podcast }: CourseInfoProps) => {
           />
           
           {/* Creator info below image on mobile, beside image on desktop */}
-          <div className="mt-4 lg:mt-6">
-            <div className="flex items-center">
-              <img 
-                src={podcast.creator.imageUrl} 
-                alt={podcast.creator.name}
-                className="w-12 h-12 rounded-full border-2 border-white shadow-md"
-              />
-              <div className="ml-3">
-                <p className="text-sm text-gray-500">Creado por</p>
-                <p className="font-medium text-gray-800">{podcast.creator.name}</p>
-              </div>
+          <div className="mt-4 lg:mt-6 flex items-center">
+            <img 
+              src={podcast.creator.imageUrl} 
+              alt={podcast.creator.name}
+              className="w-12 h-12 rounded-full border-2 border-white shadow-md"
+            />
+            <div className="ml-3">
+              <p className="text-sm text-gray-500">Creado por</p>
+              <p className="font-medium text-gray-800">{podcast.creator.name}</p>
             </div>
-            
-            {/* Social Media Links */}
-            {podcast.creator.socialMedia && podcast.creator.socialMedia.length > 0 && (
-              <div className="mt-2 ml-1">
-                <CreatorSocialMediaLinks socialMedia={podcast.creator.socialMedia} />
-              </div>
-            )}
           </div>
         </div>
         

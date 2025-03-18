@@ -1,16 +1,15 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Podcast, 
   Module, 
   Lesson, 
   Creator,
-  CreatorSocialMedia,
   SupabaseCurso, 
   SupabaseModulo, 
   SupabaseLeccion,
   SupabaseCategoria,
   SupabaseCreador,
-  SupabaseCreadorSocialMedia,
   CategoryModel
 } from "@/types";
 
@@ -30,19 +29,6 @@ export const obtenerCategorias = async (): Promise<CategoryModel[]> => {
     id: cat.id,
     nombre: cat.nombre
   }));
-};
-
-// Obtener redes sociales de un creador
-export const obtenerRedesSocialesCreador = async (creadorId: string): Promise<CreatorSocialMedia[]> => {
-  const { data, error } = await supabase
-    .rpc('get_creator_social_media', { creator_id: creadorId });
-    
-  if (error) {
-    console.error("Error al obtener redes sociales del creador:", error);
-    return [];
-  }
-  
-  return data || [];
 };
 
 // Convertir datos de Supabase al formato de la aplicación
@@ -76,15 +62,11 @@ export const transformarCursoAModelo = async (curso: SupabaseCurso): Promise<Pod
     throw creadorError;
   }
   
-  // Obtener las redes sociales del creador
-  const redesSociales = await obtenerRedesSocialesCreador(creadorData.id);
-  
   // Construir el creador
   const creator: Creator = {
     id: creadorData.id,
     name: creadorData.nombre,
-    imageUrl: creadorData.imagen_url,
-    socialMedia: redesSociales
+    imageUrl: creadorData.imagen_url
   };
   
   // Obtener módulos para este curso
