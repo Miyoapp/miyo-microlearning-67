@@ -46,7 +46,7 @@ const CreatorSocialMediaLinks = ({ socialMedia }: CreatorSocialMediaLinksProps) 
                 href={item.url} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="p-1.5 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+                className="p-1.5 transition-colors"
                 aria-label={`${item.platform} link`}
               >
                 {getPlatformIcon(item.platform)}
