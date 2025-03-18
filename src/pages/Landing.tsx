@@ -1,423 +1,220 @@
 
-import { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Headphones, BookOpen, Clock, Award, Briefcase, Users, Zap, CheckCircle2, ArrowRight } from "lucide-react";
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const Landing = () => {
-  const [activeTab, setActiveTab] = useState<string>("personas");
-
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Navbar */}
-      <nav className="bg-white py-4 border-b border-gray-100 fixed w-full z-50">
-        <div className="miyo-container flex items-center justify-between">
-          <div className="flex items-center">
-            <span className="text-3xl font-bold tracking-tight text-miyo-800">MIYO</span>
-          </div>
-          <div className="hidden md:flex items-center space-x-8">
-            <a href="#como-funciona" className="text-gray-600 hover:text-miyo-800 font-medium">¿Cómo funciona?</a>
-            <a href="#beneficios" className="text-gray-600 hover:text-miyo-800 font-medium">Beneficios</a>
-            <Tabs 
-              value={activeTab} 
-              onValueChange={setActiveTab}
-              className="w-auto"
-            >
-              <TabsList className="bg-gray-100 h-10">
-                <TabsTrigger value="personas" className="px-6">Para personas</TabsTrigger>
-                <TabsTrigger value="empresas" className="px-6">Para empresas</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-          <div className="flex items-center space-x-4">
-            <Link to="/login">
-              <Button variant="outline" className="border-miyo-800 text-miyo-800 hover:bg-miyo-50">
-                Iniciar sesión
-              </Button>
-            </Link>
-            <Link to="/register">
-              <Button className="bg-miyo-800 hover:bg-miyo-700">
-                Registrarse
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </nav>
-
+    <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <section className="pt-32 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-white via-gray-50 to-miyo-50">
-        <div className="miyo-container">
-          <div className="flex flex-col lg:flex-row items-center">
-            <div className="lg:w-1/2 mb-10 lg:mb-0">
-              <span className="inline-block py-1 px-3 rounded-full bg-miyo-100 text-miyo-800 text-sm font-medium mb-4 animate-fade-in">
-                La nueva forma de aprender
-              </span>
-              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 animate-slide-down">
-                Aprende mientras <span className="text-miyo-800">escuchas</span>
+      <section className="relative pt-20 pb-16 overflow-hidden bg-gradient-to-br from-miyo-50 to-white">
+        <div className="container px-4 mx-auto">
+          <div className="flex flex-wrap items-center -mx-4">
+            <div className="w-full px-4 mb-16 md:w-1/2 md:mb-0">
+              <h1 className="mb-6 text-4xl font-bold leading-tight md:text-5xl lg:text-6xl text-gray-900">
+                Microaprendizaje. <br />
+                <span className="text-miyo-800">Impacto macro.</span>
               </h1>
-              <p className="text-xl text-gray-600 mb-8 animate-slide-up">
-                Microaprendizaje a través de podcast para personas ocupadas. Expande tu conocimiento con lecciones de audio breves diseñadas para tu ritmo de vida.
+              <p className="mb-8 text-lg text-gray-600 md:text-xl">
+                Aprende nuevas habilidades en minutos, no horas. Lecciones de audio concisas diseñadas para adaptarse a tu vida ocupada.
               </p>
-              <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+              <div className="flex flex-wrap gap-4">
                 <Link to="/register">
-                  <Button className="w-full sm:w-auto bg-miyo-800 hover:bg-miyo-700 text-white px-8 py-3 rounded-md font-medium">
-                    Comenzar ahora <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
-                </Link>
-                <a href="#como-funciona">
-                  <Button variant="outline" className="w-full sm:w-auto border-miyo-800 text-miyo-800 hover:bg-miyo-50 px-8 py-3 rounded-md font-medium">
-                    Cómo funciona
-                  </Button>
-                </a>
-              </div>
-            </div>
-            <div className="lg:w-1/2 relative animate-fade-in">
-              <div className="relative">
-                <div className="absolute -top-6 -left-6 w-24 h-24 bg-miyo-100 rounded-full opacity-70"></div>
-                <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-miyo-200 rounded-full opacity-70"></div>
-                <img 
-                  src="/placeholder.svg" 
-                  alt="Persona aprendiendo con auriculares" 
-                  className="relative z-10 rounded-lg shadow-xl max-w-full mx-auto"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Qué es Miyo */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
-        <div className="miyo-container">
-          <div className="max-w-3xl mx-auto text-center">
-            <span className="inline-block py-1 px-3 rounded-full bg-miyo-100 text-miyo-800 text-sm font-medium mb-4">
-              Sobre Miyo
-            </span>
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">
-              ¿Qué es Miyo?
-            </h2>
-            <p className="text-lg text-gray-600 mb-8">
-              Miyo es una plataforma de microaprendizaje que transforma contenido educativo extenso en breves episodios de audio 
-              diseñados para adaptarse a tu agenda diaria. Aprende conceptos nuevos, mejora tus habilidades y mantente al día con las 
-              últimas tendencias en tan solo 5-10 minutos al día, estés donde estés.
-            </p>
-            <div className="flex justify-center">
-              <div className="w-20 h-20 rounded-full bg-miyo-100 flex items-center justify-center">
-                <Headphones className="h-10 w-10 text-miyo-800" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Cómo Funciona */}
-      <section id="como-funciona" className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
-        <div className="miyo-container">
-          <div className="max-w-3xl mx-auto text-center mb-12">
-            <span className="inline-block py-1 px-3 rounded-full bg-miyo-100 text-miyo-800 text-sm font-medium mb-4">
-              Proceso Simple
-            </span>
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">
-              ¿Cómo funciona?
-            </h2>
-            <p className="text-lg text-gray-600">
-              Transformamos el aprendizaje tradicional en un proceso simple, flexible y efectivo
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                icon: <BookOpen className="h-10 w-10 text-miyo-800" />,
-                title: "Regístrate",
-                description: "Crea tu cuenta en menos de un minuto y accede a nuestra biblioteca de contenido."
-              },
-              {
-                icon: <Headphones className="h-10 w-10 text-miyo-800" />,
-                title: "Elige tus temas de interés",
-                description: "Selecciona entre una amplia variedad de temas y categorías según tus objetivos."
-              },
-              {
-                icon: <Clock className="h-10 w-10 text-miyo-800" />,
-                title: "Aprende en minutos",
-                description: "Escucha lecciones concisas de 5-10 minutos mientras realizas tus actividades diarias."
-              }
-            ].map((step, index) => (
-              <Card key={index} className="border-none shadow-md hover:shadow-lg transition-shadow">
-                <CardContent className="p-6 text-center">
-                  <div className="w-16 h-16 rounded-full bg-miyo-100 flex items-center justify-center mx-auto mb-4">
-                    {step.icon}
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                    {step.title}
-                  </h3>
-                  <p className="text-gray-600">
-                    {step.description}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Beneficios */}
-      <section id="beneficios" className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
-        <div className="miyo-container">
-          <div className="max-w-3xl mx-auto text-center mb-12">
-            <span className="inline-block py-1 px-3 rounded-full bg-miyo-100 text-miyo-800 text-sm font-medium mb-4">
-              Por qué elegirnos
-            </span>
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">
-              Beneficios del microaprendizaje
-            </h2>
-            <p className="text-lg text-gray-600">
-              Descubre cómo el aprendizaje en pequeñas dosis puede transformar tu desarrollo personal y profesional
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {[
-              {
-                icon: <Clock className="h-8 w-8 text-miyo-800" />,
-                title: "Aprendizaje flexible",
-                description: "Aprende a tu ritmo, cuando y donde quieras, sin importar lo ocupado que estés."
-              },
-              {
-                icon: <Zap className="h-8 w-8 text-miyo-800" />,
-                title: "Mayor retención",
-                description: "Las lecciones breves y enfocadas mejoran la comprensión y retención de información."
-              },
-              {
-                icon: <Award className="h-8 w-8 text-miyo-800" />,
-                title: "Expertos en cada tema",
-                description: "Contenido creado y revisado por profesionales líderes en sus respectivos campos."
-              },
-              {
-                icon: <CheckCircle2 className="h-8 w-8 text-miyo-800" />,
-                title: "Resultados rápidos",
-                description: "Aplica lo aprendido de inmediato para ver resultados tangibles en poco tiempo."
-              }
-            ].map((benefit, index) => (
-              <div key={index} className="flex items-start p-4 rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="mr-4 p-3 rounded-full bg-miyo-100">
-                  {benefit.icon}
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    {benefit.title}
-                  </h3>
-                  <p className="text-gray-600">
-                    {benefit.description}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Tabs Personas/Empresas */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
-        <div className="miyo-container">
-          <div className="max-w-3xl mx-auto text-center mb-12">
-            <span className="inline-block py-1 px-3 rounded-full bg-miyo-100 text-miyo-800 text-sm font-medium mb-4">
-              Soluciones a medida
-            </span>
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">
-              Para personas y empresas
-            </h2>
-            <p className="text-lg text-gray-600 mb-8">
-              Ofrecemos soluciones adaptadas tanto a necesidades individuales como corporativas
-            </p>
-
-            <Tabs 
-              defaultValue="personas" 
-              value={activeTab} 
-              onValueChange={setActiveTab} 
-              className="w-full max-w-md mx-auto"
-            >
-              <TabsList className="grid w-full grid-cols-2 bg-gray-100 h-12">
-                <TabsTrigger value="personas" className="text-base">Para personas</TabsTrigger>
-                <TabsTrigger value="empresas" className="text-base">Para empresas</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-
-          <TabsContent value="personas" className={activeTab === "personas" ? "block" : "hidden"}>
-            <div className="flex flex-col md:flex-row items-center gap-8">
-              <div className="md:w-1/2">
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                  Desarrollo personal y profesional
-                </h3>
-                <p className="text-gray-600 mb-6">
-                  Transforma tus momentos disponibles en oportunidades de aprendizaje. 
-                  Ya sea que busques desarrollo profesional, adquirir nuevas habilidades 
-                  o simplemente ampliar tus conocimientos, Miyo te ofrece contenido 
-                  premium en un formato eficiente.
-                </p>
-                <ul className="space-y-3 mb-6">
-                  {[
-                    "Contenido variado y actualizado regularmente",
-                    "Seguimiento de tu progreso personal",
-                    "Acceso ilimitado a todas las categorías",
-                    "Posibilidad de descargar contenido para escucha offline"
-                  ].map((item, index) => (
-                    <li key={index} className="flex items-start">
-                      <CheckCircle2 className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                      <span className="text-gray-700">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Link to="/register">
-                  <Button className="bg-miyo-800 hover:bg-miyo-700 text-white">
+                  <Button size="lg" className="bg-miyo-800 hover:bg-miyo-700">
                     Comenzar gratis
                   </Button>
                 </Link>
-              </div>
-              <div className="md:w-1/2">
-                <img 
-                  src="/placeholder.svg" 
-                  alt="Persona aprendiendo" 
-                  className="rounded-lg shadow-lg"
-                />
+                <Link to="/login">
+                  <Button size="lg" variant="outline" className="border-miyo-800 text-miyo-800 hover:bg-miyo-50">
+                    Iniciar sesión
+                  </Button>
+                </Link>
               </div>
             </div>
-          </TabsContent>
-
-          <TabsContent value="empresas" className={activeTab === "empresas" ? "block" : "hidden"}>
-            <div className="flex flex-col md:flex-row items-center gap-8">
-              <div className="md:w-1/2 order-2 md:order-1">
-                <img 
-                  src="/placeholder.svg" 
-                  alt="Formación para empresas" 
-                  className="rounded-lg shadow-lg"
-                />
-              </div>
-              <div className="md:w-1/2 order-1 md:order-2">
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                  Formación corporativa eficiente
-                </h3>
-                <p className="text-gray-600 mb-6">
-                  Optimiza el desarrollo profesional de tu equipo con nuestra solución 
-                  corporativa. Miyo para empresas ofrece un enfoque de aprendizaje flexible 
-                  que se adapta a los horarios ocupados de tus colaboradores y mejora 
-                  la productividad.
-                </p>
-                <ul className="space-y-3 mb-6">
-                  {[
-                    "Contenido personalizado para las necesidades de tu empresa",
-                    "Análisis detallado del progreso del equipo",
-                    "Panel de administración para gestionar usuarios",
-                    "Soporte prioritario y asesoramiento especializado"
-                  ].map((item, index) => (
-                    <li key={index} className="flex items-start">
-                      <CheckCircle2 className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                      <span className="text-gray-700">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Button className="bg-miyo-800 hover:bg-miyo-700 text-white">
-                  Contactar ventas
-                </Button>
-              </div>
+            <div className="w-full px-4 md:w-1/2">
+              <img 
+                src="/placeholder.svg" 
+                alt="Miyo Learning Platform" 
+                className="mx-auto rounded-lg shadow-xl w-full max-w-md" 
+              />
             </div>
-          </TabsContent>
+          </div>
         </div>
       </section>
 
-      {/* CTA Final */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-miyo-800 text-white">
-        <div className="miyo-container">
-          <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-6">
-              Comienza tu viaje de aprendizaje hoy
+      {/* Tabs Section */}
+      <section className="py-16 bg-gray-50">
+        <div className="container px-4 mx-auto">
+          <div className="max-w-3xl mx-auto mb-12 text-center">
+            <h2 className="mb-4 text-3xl font-bold text-gray-900">
+              Diseñado para todos
             </h2>
-            <p className="text-xl opacity-90 mb-8">
-              Transforma tus momentos libres en oportunidades para crecer personal y profesionalmente
+            <p className="text-lg text-gray-600">
+              Soluciones de microaprendizaje para individuos y empresas
             </p>
-            <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
-              <Link to="/register">
-                <Button className="w-full sm:w-auto bg-white text-miyo-800 hover:bg-gray-100 px-8 py-3 rounded-md font-medium">
-                  Registrarse gratis
+          </div>
+
+          <Tabs defaultValue="individuals" className="max-w-4xl mx-auto">
+            <TabsList className="grid w-full grid-cols-2 mb-8">
+              <TabsTrigger value="individuals" className="text-lg py-3">Para individuos</TabsTrigger>
+              <TabsTrigger value="businesses" className="text-lg py-3">Para empresas</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="individuals" className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="space-y-4">
+                <h3 className="text-2xl font-bold text-gray-900">Crecimiento personal, a tu ritmo</h3>
+                <p className="text-gray-600">
+                  Aprende nuevas habilidades, desarrolla tus talentos y mejora tu carrera profesional con lecciones de audio de alta calidad que puedes escuchar en cualquier momento y lugar.
+                </p>
+                <ul className="space-y-2">
+                  <li className="flex items-start">
+                    <svg className="w-5 h-5 mt-1 text-miyo-800" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    <span className="ml-2">Acceso a cientos de temas</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg className="w-5 h-5 mt-1 text-miyo-800" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    <span className="ml-2">Contenido actualizado regularmente</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg className="w-5 h-5 mt-1 text-miyo-800" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    <span className="ml-2">Sigue tu progreso personal</span>
+                  </li>
+                </ul>
+                <Link to="/register">
+                  <Button className="mt-4 bg-miyo-800 hover:bg-miyo-700">
+                    Empieza tu viaje
+                  </Button>
+                </Link>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="businesses" className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="space-y-4">
+                <h3 className="text-2xl font-bold text-gray-900">Desarrollo de talento corporativo</h3>
+                <p className="text-gray-600">
+                  Mejora las habilidades de tu equipo con soluciones de microaprendizaje diseñadas para empresas. Formación efectiva sin interferir con la productividad.
+                </p>
+                <ul className="space-y-2">
+                  <li className="flex items-start">
+                    <svg className="w-5 h-5 mt-1 text-miyo-800" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    <span className="ml-2">Panel de administración para equipos</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg className="w-5 h-5 mt-1 text-miyo-800" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    <span className="ml-2">Contenido personalizado para tu industria</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg className="w-5 h-5 mt-1 text-miyo-800" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    <span className="ml-2">Analíticas detalladas de progreso</span>
+                  </li>
+                </ul>
+                <Button className="mt-4 bg-miyo-800 hover:bg-miyo-700">
+                  Contactar ventas
                 </Button>
-              </Link>
-              <Link to="/login">
-                <Button variant="outline" className="w-full sm:w-auto border-white text-white hover:bg-miyo-700 px-8 py-3 rounded-md font-medium">
-                  Iniciar sesión
-                </Button>
-              </Link>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-16 bg-white">
+        <div className="container px-4 mx-auto">
+          <div className="max-w-3xl mx-auto mb-16 text-center">
+            <h2 className="mb-4 text-3xl font-bold text-gray-900">
+              ¿Por qué elegir Miyo?
+            </h2>
+            <p className="text-lg text-gray-600">
+              Nuestro enfoque único de microaprendizaje está diseñado para maximizar la retención y minimizar el tiempo invertido
+            </p>
+          </div>
+
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {/* Feature 1 */}
+            <div className="p-6 bg-white rounded-lg shadow-sm border border-gray-100">
+              <div className="w-12 h-12 mb-4 text-white bg-miyo-800 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              </div>
+              <h3 className="mb-3 text-xl font-bold text-gray-900">Aprendizaje eficiente</h3>
+              <p className="text-gray-600">
+                Lecciones breves y concisas de 5-10 minutos que se adaptan a tu agenda ocupada.
+              </p>
+            </div>
+
+            {/* Feature 2 */}
+            <div className="p-6 bg-white rounded-lg shadow-sm border border-gray-100">
+              <div className="w-12 h-12 mb-4 text-white bg-miyo-800 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                </svg>
+              </div>
+              <h3 className="mb-3 text-xl font-bold text-gray-900">Contenido de calidad</h3>
+              <p className="text-gray-600">
+                Creado por expertos en la industria para garantizar información precisa y actualizada.
+              </p>
+            </div>
+
+            {/* Feature 3 */}
+            <div className="p-6 bg-white rounded-lg shadow-sm border border-gray-100">
+              <div className="w-12 h-12 mb-4 text-white bg-miyo-800 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                </svg>
+              </div>
+              <h3 className="mb-3 text-xl font-bold text-gray-900">Aprende a tu ritmo</h3>
+              <p className="text-gray-600">
+                Accede al contenido cuando lo necesites, desde cualquier dispositivo, en cualquier momento.
+              </p>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-miyo-800 text-white">
+        <div className="container px-4 mx-auto text-center">
+          <h2 className="mb-6 text-3xl font-bold">
+            Comienza tu viaje de aprendizaje hoy
+          </h2>
+          <p className="max-w-xl mx-auto mb-8 text-lg">
+            Únete a miles de personas que están mejorando sus habilidades en minutos al día
+          </p>
+          <Link to="/register">
+            <Button size="lg" variant="secondary" className="bg-white text-miyo-800 hover:bg-gray-100">
+              Registrarse gratis
+            </Button>
+          </Link>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 py-12">
-        <div className="miyo-container">
-          <div className="flex flex-col md:flex-row justify-between mb-8">
-            <div className="mb-8 md:mb-0">
-              <span className="text-2xl font-bold text-miyo-800 mb-4 block">MIYO</span>
-              <p className="text-gray-600 max-w-xs">
-                Transformando el aprendizaje tradicional en experiencias breves y efectivas.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-8">
-              <div>
-                <h4 className="text-gray-900 font-semibold mb-4">Empresa</h4>
-                <ul className="space-y-2">
-                  {["Sobre nosotros", "Contacto", "Carreras", "Blog"].map((item, i) => (
-                    <li key={i}>
-                      <a href="#" className="text-gray-600 hover:text-miyo-800 transition-colors">
-                        {item}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <h4 className="text-gray-900 font-semibold mb-4">Legal</h4>
-                <ul className="space-y-2">
-                  {["Términos", "Privacidad", "Cookies", "Licencias"].map((item, i) => (
-                    <li key={i}>
-                      <a href="#" className="text-gray-600 hover:text-miyo-800 transition-colors">
-                        {item}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <h4 className="text-gray-900 font-semibold mb-4">Soluciones</h4>
-                <ul className="space-y-2">
-                  {["Para personas", "Para empresas", "Para educadores", "API"].map((item, i) => (
-                    <li key={i}>
-                      <a href="#" className="text-gray-600 hover:text-miyo-800 transition-colors">
-                        {item}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-          <div className="pt-8 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center">
-            <p className="text-gray-600 text-sm mb-4 sm:mb-0">
+      <footer className="py-10 bg-gray-50">
+        <div className="container px-4 mx-auto">
+          <div className="flex flex-col items-center justify-between space-y-4 md:flex-row md:space-y-0">
+            <div className="text-xl font-bold text-miyo-800">MIYO</div>
+            <div className="text-sm text-gray-600">
               © {new Date().getFullYear()} Miyo. Todos los derechos reservados.
-            </p>
-            <div className="flex space-x-6">
-              {["twitter", "facebook", "instagram", "linkedin"].map((social, i) => (
-                <a 
-                  key={i} 
-                  href="#" 
-                  className="text-gray-400 hover:text-miyo-800 transition-colors"
-                >
-                  <span className="sr-only">{social}</span>
-                  <div className="w-6 h-6 bg-gray-200 rounded-full"></div>
-                </a>
-              ))}
+            </div>
+            <div className="flex space-x-4">
+              <a href="#" className="text-gray-600 hover:text-miyo-800">Términos</a>
+              <a href="#" className="text-gray-600 hover:text-miyo-800">Privacidad</a>
+              <a href="#" className="text-gray-600 hover:text-miyo-800">Contacto</a>
             </div>
           </div>
         </div>
