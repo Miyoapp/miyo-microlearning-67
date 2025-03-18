@@ -21,20 +21,6 @@ const CourseDisc = ({ podcast, percentComplete }: CourseDiscProps) => {
           />
         </div>
         
-        {/* Progress circular indicator */}
-        <svg className="absolute inset-0 w-full h-full rotate-[-90deg]" viewBox="0 0 100 100">
-          <circle 
-            cx="50" 
-            cy="50" 
-            r="48" 
-            fill="none" 
-            stroke="#5e16ea" 
-            strokeWidth="2" 
-            strokeDasharray={`${percentComplete * 3.02} 302`} 
-            className="transition-all duration-1000"
-          />
-        </svg>
-        
         {/* Center hole */}
         <div className="absolute w-[10%] h-[10%] rounded-full bg-gray-800 z-10"></div>
       </div>
