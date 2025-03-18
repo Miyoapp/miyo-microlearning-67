@@ -87,10 +87,9 @@ const TwitterIcon = ({ size = 16, className = "" }) => (
 
 interface CreatorSocialMediaLinksProps {
   socialMedia?: CreatorSocialMedia[];
-  className?: string;
 }
 
-const CreatorSocialMediaLinks = ({ socialMedia, className = "" }: CreatorSocialMediaLinksProps) => {
+const CreatorSocialMediaLinks = ({ socialMedia }: CreatorSocialMediaLinksProps) => {
   if (!socialMedia || socialMedia.length === 0) {
     return null;
   }
@@ -122,7 +121,7 @@ const CreatorSocialMediaLinks = ({ socialMedia, className = "" }: CreatorSocialM
 
   return (
     <TooltipProvider>
-      <div className={`flex gap-2 mt-2 ${className}`}>
+      <div className="flex gap-2 mt-2">
         {socialMedia.map((item, index) => (
           <Tooltip key={index}>
             <TooltipTrigger asChild>

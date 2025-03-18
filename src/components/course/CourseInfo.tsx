@@ -34,12 +34,10 @@ const CourseInfo = ({ podcast }: CourseInfoProps) => {
                 <p className="text-sm text-gray-500">Creado por</p>
                 <p className="font-medium text-gray-800">{podcast.creator.name}</p>
               </div>
-              
-              {/* Social media links with right alignment */}
-              <div className="ml-auto">
-                <CreatorSocialMediaLinks socialMedia={podcast.creator.socialMedia} />
-              </div>
             </div>
+            
+            {/* Social media links */}
+            <CreatorSocialMediaLinks socialMedia={podcast.creator.socialMedia} />
           </div>
         </div>
         
