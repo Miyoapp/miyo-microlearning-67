@@ -61,8 +61,8 @@ const Landing = () => {
             </div>
             <div className="flex justify-center">
               <img 
-                src="/placeholder.svg" 
-                alt="Persona aprendiendo con auriculares" 
+                src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
+                alt="Persona escuchando podcast con auriculares" 
                 className="max-w-full h-auto rounded-lg shadow-lg"
               />
             </div>
