@@ -14,7 +14,6 @@ interface CourseStatsProps {
 const CourseStats = ({ podcast }: CourseStatsProps) => {
   const completedLessons = podcast.lessons.filter(l => l.isCompleted).length;
   const percentComplete = Math.round((completedLessons / podcast.lessonCount) * 100);
-  const streakDays = 3; // Placeholder, should come from user data in a real app
   
   // Calculate XP based on actual minutes listened
   const totalMinutesListened = podcast.lessons
@@ -40,16 +39,8 @@ const CourseStats = ({ podcast }: CourseStatsProps) => {
       </CardHeader>
       
       <CardContent className="pt-4">
-        {/* XP and Streak Stats */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className="bg-amber-50 rounded-lg p-3 border border-amber-100 flex flex-col items-center">
-            <div className="flex items-center gap-2 text-amber-600 mb-1">
-              <Flame size={18} className="text-amber-500" />
-              <span className="font-bold">Racha</span>
-            </div>
-            <span className="text-2xl font-bold text-amber-700">{streakDays} días</span>
-          </div>
-          
+        {/* XP Stats */}
+        <div className="mb-4">
           <div className="bg-indigo-50 rounded-lg p-3 border border-indigo-100 flex flex-col items-center">
             <div className="flex items-center gap-2 text-indigo-600 mb-1">
               <Zap size={18} className="text-indigo-500" />
