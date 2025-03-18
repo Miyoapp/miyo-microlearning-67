@@ -1,6 +1,6 @@
 
 import { CreatorSocialMedia } from '@/types';
-import { Facebook, Twitter, Linkedin, Globe, Youtube, Github, ExternalLink } from 'lucide-react';
+import { Facebook, Twitter, Linkedin, Globe, Youtube, Github, ExternalLink, Instagram } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface CreatorSocialMediaLinksProps {
@@ -20,21 +20,7 @@ const CreatorSocialMediaLinks = ({ socialMedia }: CreatorSocialMediaLinksProps) 
       case 'facebook':
         return <Facebook {...iconProps} />;
       case 'instagram':
-        // Using a more reliable approach for Instagram icon
-        return (
-          <svg 
-            width="16" 
-            height="16" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            xmlns="http://www.w3.org/2000/svg"
-            className="text-gray-500 hover:text-miyo-600 transition-colors"
-          >
-            <rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" strokeWidth="2" />
-            <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="2" />
-            <circle cx="18" cy="6" r="1.5" fill="currentColor" />
-          </svg>
-        );
+        return <Instagram {...iconProps} />;
       case 'twitter':
         return <Twitter {...iconProps} />;
       case 'linkedin':
