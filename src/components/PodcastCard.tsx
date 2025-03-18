@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { Podcast } from '../types';
 import { Clock, Headphones, Tag } from 'lucide-react';
 import { formatMinutesToHumanReadable } from '@/lib/formatters';
-import CreatorSocialMediaLinks from './course/CreatorSocialMediaLinks';
 
 interface PodcastCardProps {
   podcast: Podcast;
@@ -41,12 +40,7 @@ const PodcastCard = ({ podcast }: PodcastCardProps) => {
             <span className="text-sm text-gray-600">{podcast.creator.name}</span>
           </div>
           
-          {/* Only show mini social media links in card if available */}
-          {podcast.creator.socialMedia && podcast.creator.socialMedia.length > 0 && (
-            <div className="mt-1 ml-8">
-              <CreatorSocialMediaLinks socialMedia={podcast.creator.socialMedia} />
-            </div>
-          )}
+          {/* Removed social media links from card view */}
         </div>
         
         <div className="flex flex-wrap gap-y-2">
