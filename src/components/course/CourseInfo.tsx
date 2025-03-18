@@ -14,7 +14,7 @@ const CourseInfo = ({ podcast }: CourseInfoProps) => {
     <div className="glass rounded-3xl p-8 backdrop-blur-md">
       <div className="mb-6">
         <span className="inline-block py-1 px-3 rounded-full bg-miyo-100 text-miyo-800 text-sm font-medium mb-4">
-          {podcast.category}
+          {podcast.category.nombre}
         </span>
         <h1 className="text-3xl lg:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-miyo-800 to-purple-500 mb-2">
           {podcast.title}

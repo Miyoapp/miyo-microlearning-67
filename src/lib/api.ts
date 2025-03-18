@@ -8,26 +8,47 @@ import {
   SupabaseCurso, 
   SupabaseModulo, 
   SupabaseLeccion,
-  Category
+  SupabaseCategoria,
+  CategoryModel
 } from "@/types";
 
-// Mapear categorías españolas a inglesas
-const mapCategoria = (categoria: string): Category => {
-  const categoriaMap: Record<string, Category> = {
-    'Productividad': 'Productivity',
-    'Negocios': 'Business',
-    'Tecnología': 'Technology',
-    'Desarrollo Personal': 'Personal Development',
-    'Salud': 'Health',
-    'Diseño': 'Design',
-    'Marketing': 'Marketing'
-  };
+// Función para obtener todas las categorías
+export const obtenerCategorias = async (): Promise<CategoryModel[]> => {
+  const { data, error } = await supabase
+    .from('categorias')
+    .select('*')
+    .order('nombre');
+    
+  if (error) {
+    console.error("Error al obtener categorías:", error);
+    throw error;
+  }
   
-  return categoriaMap[categoria] || 'Technology';
+  return data.map((cat: SupabaseCategoria) => ({
+    id: cat.id,
+    nombre: cat.nombre
+  }));
 };
 
 // Convertir datos de Supabase al formato de la aplicación
 export const transformarCursoAModelo = async (curso: SupabaseCurso): Promise<Podcast> => {
+  // Obtener la categoría para este curso
+  const { data: categoriaData, error: categoriaError } = await supabase
+    .from('categorias')
+    .select('*')
+    .eq('id', curso.categoria_id)
+    .single();
+    
+  if (categoriaError) {
+    console.error("Error al obtener categoría:", categoriaError);
+    throw categoriaError;
+  }
+  
+  const categoria: CategoryModel = {
+    id: categoriaData.id,
+    nombre: categoriaData.nombre
+  };
+  
   // Obtener módulos para este curso
   const { data: modulos, error: modulosError } = await supabase
     .from('modulos')
@@ -93,7 +114,7 @@ export const transformarCursoAModelo = async (curso: SupabaseCurso): Promise<Pod
     creator: creator,
     duration: curso.duracion_total,
     lessonCount: curso.numero_lecciones,
-    category: mapCategoria(curso.categoria),
+    category: categoria,
     imageUrl: curso.imagen_portada,
     description: curso.descripcion,
     lessons: lecciones,

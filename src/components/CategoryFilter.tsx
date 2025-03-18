@@ -1,11 +1,11 @@
 
 import { useState } from 'react';
-import { Category } from '../types';
+import { CategoryModel } from '../types';
 
 interface CategoryFilterProps {
-  categories: Category[];
-  selectedCategory: Category | null;
-  onSelectCategory: (category: Category | null) => void;
+  categories: CategoryModel[];
+  selectedCategory: CategoryModel | null;
+  onSelectCategory: (category: CategoryModel | null) => void;
 }
 
 const CategoryFilter = ({ 
@@ -30,15 +30,15 @@ const CategoryFilter = ({
         
         {categories.map((category) => (
           <button
-            key={category}
+            key={category.id}
             onClick={() => onSelectCategory(category)}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-              selectedCategory === category
+              selectedCategory?.id === category.id
                 ? 'bg-miyo-800 text-white shadow-md'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            {category}
+            {category.nombre}
           </button>
         ))}
       </div>

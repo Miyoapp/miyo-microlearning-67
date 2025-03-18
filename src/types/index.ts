@@ -1,4 +1,3 @@
-
 export interface Creator {
   id: string;
   name: string;
@@ -11,7 +10,7 @@ export interface Podcast {
   creator: Creator;
   duration: number; // in minutes
   lessonCount: number;
-  category: Category;
+  category: CategoryModel;
   imageUrl: string;
   description: string;
   lessons: Lesson[];
@@ -33,6 +32,13 @@ export interface Lesson {
   isLocked: boolean;
 }
 
+// New CategoryModel interface to match the database table
+export interface CategoryModel {
+  id: string;
+  nombre: string;
+}
+
+// Keep the old Category type for backward compatibility
 export type Category = 
   | 'Productivity' 
   | 'Business' 
@@ -48,11 +54,18 @@ export interface SupabaseCurso {
   titulo: string;
   descripcion: string;
   imagen_portada: string;
-  categoria: string;
+  categoria_id: string;
   creador_nombre: string;
   creador_imagen: string;
   duracion_total: number;
   numero_lecciones: number;
+  fecha_creacion: string;
+  fecha_actualizacion: string;
+}
+
+export interface SupabaseCategoria {
+  id: string;
+  nombre: string;
   fecha_creacion: string;
   fecha_actualizacion: string;
 }

@@ -3,46 +3,52 @@ import { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import CategoryFilter from '../components/CategoryFilter';
 import PodcastCard from '../components/PodcastCard';
-import { Podcast, Category } from '../types';
-import { categories } from '../data/podcasts';
-import { obtenerCursos } from '@/lib/api';
+import { Podcast, CategoryModel } from '../types';
+import { obtenerCursos, obtenerCategorias } from '@/lib/api';
 import { useToast } from "@/components/ui/use-toast";
 
 const Index = () => {
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<CategoryModel | null>(null);
   const [podcasts, setPodcasts] = useState<Podcast[]>([]);
   const [filteredPodcasts, setFilteredPodcasts] = useState<Podcast[]>([]);
+  const [categories, setCategories] = useState<CategoryModel[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   
   // Cargar datos desde Supabase
   useEffect(() => {
-    const cargarCursos = async () => {
+    const cargarDatos = async () => {
       try {
         setIsLoading(true);
-        const cursosData = await obtenerCursos();
+        // Cargar categorías y cursos en paralelo
+        const [categoriasData, cursosData] = await Promise.all([
+          obtenerCategorias(),
+          obtenerCursos()
+        ]);
+        
+        setCategories(categoriasData);
         setPodcasts(cursosData);
         setFilteredPodcasts(cursosData);
         setIsLoading(false);
       } catch (error) {
-        console.error("Error al cargar cursos:", error);
+        console.error("Error al cargar datos:", error);
         toast({
-          title: "Error al cargar cursos",
-          description: "No se pudieron cargar los cursos. Por favor, intenta de nuevo.",
+          title: "Error al cargar datos",
+          description: "No se pudieron cargar los datos. Por favor, intenta de nuevo.",
           variant: "destructive"
         });
         setIsLoading(false);
       }
     };
     
-    cargarCursos();
+    cargarDatos();
   }, [toast]);
   
   // Filter podcasts when category changes
   useEffect(() => {
     if (selectedCategory) {
-      setFilteredPodcasts(podcasts.filter(podcast => podcast.category === selectedCategory));
+      setFilteredPodcasts(podcasts.filter(podcast => podcast.category.id === selectedCategory.id));
     } else {
       setFilteredPodcasts(podcasts);
     }

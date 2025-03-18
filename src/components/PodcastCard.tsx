@@ -22,7 +22,7 @@ const PodcastCard = ({ podcast }: PodcastCardProps) => {
         />
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
           <span className="inline-block px-3 py-1 bg-miyo-800/90 text-white text-xs font-medium rounded-full">
-            {podcast.category}
+            {podcast.category.nombre}
           </span>
         </div>
       </div>

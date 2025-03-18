@@ -9,9 +9,30 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      categorias: {
+        Row: {
+          fecha_actualizacion: string
+          fecha_creacion: string
+          id: string
+          nombre: string
+        }
+        Insert: {
+          fecha_actualizacion?: string
+          fecha_creacion?: string
+          id?: string
+          nombre: string
+        }
+        Update: {
+          fecha_actualizacion?: string
+          fecha_creacion?: string
+          id?: string
+          nombre?: string
+        }
+        Relationships: []
+      }
       cursos: {
         Row: {
-          categoria: Database["public"]["Enums"]["categoria_curso"]
+          categoria_id: string
           creador_imagen: string
           creador_nombre: string
           descripcion: string
@@ -24,7 +45,7 @@ export type Database = {
           titulo: string
         }
         Insert: {
-          categoria: Database["public"]["Enums"]["categoria_curso"]
+          categoria_id: string
           creador_imagen: string
           creador_nombre: string
           descripcion: string
@@ -37,7 +58,7 @@ export type Database = {
           titulo: string
         }
         Update: {
-          categoria?: Database["public"]["Enums"]["categoria_curso"]
+          categoria_id?: string
           creador_imagen?: string
           creador_nombre?: string
           descripcion?: string
@@ -49,7 +70,15 @@ export type Database = {
           numero_lecciones?: number
           titulo?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "cursos_categoria_id_fkey"
+            columns: ["categoria_id"]
+            isOneToOne: false
+            referencedRelation: "categorias"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lecciones: {
         Row: {
@@ -144,14 +173,6 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      categoria_curso:
-        | "Productividad"
-        | "Negocios"
-        | "Tecnología"
-        | "Desarrollo Personal"
-        | "Salud"
-        | "Diseño"
-        | "Marketing"
       estado_leccion: "disponible" | "bloqueado"
     }
     CompositeTypes: {
