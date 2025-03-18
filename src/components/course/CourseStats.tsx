@@ -3,7 +3,6 @@ import { Podcast } from '../../types';
 import { Star, Trophy, Target } from 'lucide-react';
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { formatMinutesToHumanReadable } from '@/lib/formatters';
 
@@ -20,9 +19,6 @@ const CourseStats = ({ podcast }: CourseStatsProps) => {
       <CardHeader className="bg-gradient-to-r from-[#E5DEFF] to-[#D6BCFA] pb-2">
         <CardTitle className="flex items-center justify-between">
           <span className="text-xl font-bold text-indigo-900">Tu Progreso</span>
-          <Badge variant="outline" className="bg-white font-semibold text-indigo-700 border-indigo-200">
-            Nivel {Math.floor(completedLessons + 1)}
-          </Badge>
         </CardTitle>
       </CardHeader>
       
