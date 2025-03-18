@@ -1,3 +1,4 @@
+
 import { CreatorSocialMedia } from '@/types';
 import { 
   Globe, 
@@ -107,7 +108,7 @@ const CreatorSocialMediaLinks = ({ socialMedia, className = "" }: CreatorSocialM
       case 'linkedin':
         return <LinkedInIcon size={iconSize} className={iconClassName} />;
       case 'twitter':
-        return <TwitterIcon size={iconSize} className={iconClassName} />;
+        return <Twitter size={16} className="text-[#1DA1F2] hover:text-[#1DA1F2]/80 transition-colors" />;
       case 'youtube':
         return <Video size={16} className="text-[#FF0000] hover:text-[#FF0000]/80 transition-colors" />;
       case 'github':
