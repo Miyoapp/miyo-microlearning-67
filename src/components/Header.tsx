@@ -1,11 +1,16 @@
 
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Button } from './ui/button';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const Header = () => {
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   
   // Add scroll event listener to add shadow when scrolled
   useEffect(() => {
@@ -21,6 +26,17 @@ const Header = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
   
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast.success('Sesión cerrada con éxito');
+      navigate('/landing');
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+      toast.error('Error al cerrar sesión');
+    }
+  };
+  
   return (
     <header 
       className={`fixed top-0 left-0 right-0 z-50 py-4 transition-all duration-300 bg-white ${
@@ -32,47 +48,30 @@ const Header = () => {
           <span className="text-3xl font-bold tracking-tight text-miyo-800">MIYO</span>
         </Link>
         
-        <nav className="hidden md:flex space-x-8 items-center">
+        <nav className="flex items-center space-x-8">
           <Link 
             to="/" 
-            className="font-medium transition-colors text-gray-600 hover:text-miyo-800"
+            className={`hidden md:block font-medium transition-colors ${
+              location.pathname === '/' 
+                ? 'text-miyo-800 border-b-2 border-miyo-800' 
+                : 'text-gray-600 hover:text-miyo-800'
+            }`}
           >
-            Características
+            Inicio
           </Link>
-          <Link 
-            to="/" 
-            className="font-medium transition-colors text-gray-600 hover:text-miyo-800"
-          >
-            Podcasts
-          </Link>
-          <Link 
-            to="/" 
-            className="font-medium transition-colors text-gray-600 hover:text-miyo-800"
-          >
-            Recursos
-          </Link>
-          <Link 
-            to="/" 
-            className="font-medium transition-colors text-gray-600 hover:text-miyo-800"
-          >
-            Precios
-          </Link>
-          <div className="flex items-center gap-3 ml-4">
-            <Button variant="outline" className="font-medium">
-              Iniciar sesión
+          
+          {user ? (
+            <Button variant="outline" onClick={handleLogout}>
+              Cerrar sesión
             </Button>
-            <Button className="bg-miyo-700 hover:bg-miyo-800 text-white font-medium">
-              Registrarse
-            </Button>
-          </div>
+          ) : (
+            <Link to="/landing">
+              <Button variant="outline">
+                Iniciar sesión
+              </Button>
+            </Link>
+          )}
         </nav>
-        
-        {/* Mobile menu button - to be implemented */}
-        <div className="md:hidden">
-          <Button variant="ghost" size="icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-menu"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
-          </Button>
-        </div>
       </div>
     </header>
   );
