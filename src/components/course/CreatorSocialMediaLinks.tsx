@@ -1,12 +1,10 @@
-
 import { CreatorSocialMedia } from '@/types';
 import { 
   Globe, 
   Video, 
   Code,
   ExternalLink,
-  Twitter,
-  Instagram 
+  Twitter
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
