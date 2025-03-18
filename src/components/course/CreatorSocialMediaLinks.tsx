@@ -5,7 +5,8 @@ import {
   Video, 
   Code,
   ExternalLink,
-  Twitter,  // Added Twitter icon instead of Share2
+  Twitter,
+  Instagram 
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -87,9 +88,10 @@ const TwitterIcon = ({ size = 16, className = "" }) => (
 
 interface CreatorSocialMediaLinksProps {
   socialMedia?: CreatorSocialMedia[];
+  className?: string;
 }
 
-const CreatorSocialMediaLinks = ({ socialMedia }: CreatorSocialMediaLinksProps) => {
+const CreatorSocialMediaLinks = ({ socialMedia, className = "" }: CreatorSocialMediaLinksProps) => {
   if (!socialMedia || socialMedia.length === 0) {
     return null;
   }
@@ -107,7 +109,7 @@ const CreatorSocialMediaLinks = ({ socialMedia }: CreatorSocialMediaLinksProps) 
       case 'linkedin':
         return <LinkedInIcon size={iconSize} className={iconClassName} />;
       case 'twitter':
-        return <TwitterIcon size={iconSize} className={iconClassName} />; // Using our custom Twitter icon
+        return <TwitterIcon size={iconSize} className={iconClassName} />;
       case 'youtube':
         return <Video size={16} className="text-[#FF0000] hover:text-[#FF0000]/80 transition-colors" />;
       case 'github':
@@ -121,7 +123,7 @@ const CreatorSocialMediaLinks = ({ socialMedia }: CreatorSocialMediaLinksProps) 
 
   return (
     <TooltipProvider>
-      <div className="flex gap-2 mt-2">
+      <div className={`flex gap-2 mt-2 ${className}`}>
         {socialMedia.map((item, index) => (
           <Tooltip key={index}>
             <TooltipTrigger asChild>
