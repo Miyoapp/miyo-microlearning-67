@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { Button } from './ui/button';
 
 const Header = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -31,18 +32,47 @@ const Header = () => {
           <span className="text-3xl font-bold tracking-tight text-miyo-800">MIYO</span>
         </Link>
         
-        <nav className="hidden md:flex space-x-8">
+        <nav className="hidden md:flex space-x-8 items-center">
           <Link 
             to="/" 
-            className={`font-medium transition-colors ${
-              location.pathname === '/' 
-                ? 'text-miyo-800 border-b-2 border-miyo-800' 
-                : 'text-gray-600 hover:text-miyo-800'
-            }`}
+            className="font-medium transition-colors text-gray-600 hover:text-miyo-800"
           >
-            Inicio
+            Características
           </Link>
+          <Link 
+            to="/" 
+            className="font-medium transition-colors text-gray-600 hover:text-miyo-800"
+          >
+            Podcasts
+          </Link>
+          <Link 
+            to="/" 
+            className="font-medium transition-colors text-gray-600 hover:text-miyo-800"
+          >
+            Recursos
+          </Link>
+          <Link 
+            to="/" 
+            className="font-medium transition-colors text-gray-600 hover:text-miyo-800"
+          >
+            Precios
+          </Link>
+          <div className="flex items-center gap-3 ml-4">
+            <Button variant="outline" className="font-medium">
+              Iniciar sesión
+            </Button>
+            <Button className="bg-miyo-700 hover:bg-miyo-800 text-white font-medium">
+              Registrarse
+            </Button>
+          </div>
         </nav>
+        
+        {/* Mobile menu button - to be implemented */}
+        <div className="md:hidden">
+          <Button variant="ghost" size="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-menu"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+          </Button>
+        </div>
       </div>
     </header>
   );
