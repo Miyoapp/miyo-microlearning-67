@@ -98,4 +98,21 @@
   ::-webkit-scrollbar-thumb {
     @apply bg-gray-300 rounded-full hover:bg-gray-400 transition-colors;
   }
+
+  /* Landing page specific styles */
+  .landing-section {
+    @apply py-16 px-4 sm:px-6 lg:px-8;
+  }
+
+  .landing-title {
+    @apply text-3xl md:text-4xl font-bold text-gray-900 mb-4;
+  }
+
+  .landing-subtitle {
+    @apply text-lg text-gray-600 mb-8;
+  }
+
+  .feature-icon {
+    @apply w-16 h-16 rounded-full bg-miyo-100 flex items-center justify-center mx-auto mb-4;
+  }
 }
