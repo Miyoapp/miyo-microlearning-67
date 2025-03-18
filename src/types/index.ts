@@ -3,6 +3,12 @@ export interface Creator {
   id: string;
   name: string;
   imageUrl: string;
+  socialMedia?: CreatorSocialMedia[];
+}
+
+export interface CreatorSocialMedia {
+  platform: string;
+  url: string;
 }
 
 export interface Podcast {

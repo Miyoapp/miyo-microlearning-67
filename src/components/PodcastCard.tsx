@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Podcast } from '../types';
 import { Clock, Headphones, Tag } from 'lucide-react';
 import { formatMinutesToHumanReadable } from '@/lib/formatters';
+import CreatorSocialMediaLinks from './CreatorSocialMedia';
 
 interface PodcastCardProps {
   podcast: Podcast;
@@ -30,13 +31,22 @@ const PodcastCard = ({ podcast }: PodcastCardProps) => {
       <div className="p-5">
         <h3 className="text-xl font-bold mb-2 line-clamp-2">{podcast.title}</h3>
         
-        <div className="flex items-center gap-2 mb-3">
-          <img 
-            src={podcast.creator.imageUrl} 
-            alt={podcast.creator.name}
-            className="w-6 h-6 rounded-full object-cover"
-          />
-          <span className="text-sm text-gray-600">{podcast.creator.name}</span>
+        <div className="mb-3">
+          <div className="flex items-center gap-2">
+            <img 
+              src={podcast.creator.imageUrl} 
+              alt={podcast.creator.name}
+              className="w-6 h-6 rounded-full object-cover"
+            />
+            <span className="text-sm text-gray-600">{podcast.creator.name}</span>
+          </div>
+          
+          {/* Social Media Links */}
+          {podcast.creator.socialMedia && podcast.creator.socialMedia.length > 0 && (
+            <div className="mt-2 ml-1">
+              <CreatorSocialMediaLinks socialMedia={podcast.creator.socialMedia} />
+            </div>
+          )}
         </div>
         
         <div className="flex flex-wrap gap-y-2">
