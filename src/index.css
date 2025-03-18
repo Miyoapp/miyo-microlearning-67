@@ -13,7 +13,6 @@
     --card-foreground: 224 71.4% 4.1%;
     --popover: 0 0% 100%;
     --popover-foreground: 224 71.4% 4.1%;
-    --primary: 262.1 83.3% 57.8%;
     --primary-foreground: 210 20% 98%;
     --secondary: 220 14.3% 95.9%;
     --secondary-foreground: 220.9 39.3% 11%;
@@ -27,19 +26,6 @@
     --input: 220 13% 91%;
     --ring: 262.1 83.3% 50.4%;
     --radius: 0.75rem;
-    
-    /* Miyo Color Theme */
-    --miyo-50: 240 80% 97%;
-    --miyo-100: 240 70% 94%;
-    --miyo-200: 240 70% 90%;
-    --miyo-300: 240 70% 80%;
-    --miyo-400: 240 60% 70%;
-    --miyo-500: 240 60% 60%;
-    --miyo-600: 240 50% 50%;
-    --miyo-700: 240 50% 40%;
-    --miyo-800: 240 50% 30%;
-    --miyo-900: 240 50% 20%;
-    --miyo-950: 240 50% 10%;
   }
 
   * {
@@ -111,81 +97,5 @@
   
   ::-webkit-scrollbar-thumb {
     @apply bg-gray-300 rounded-full hover:bg-gray-400 transition-colors;
-  }
-
-  /* Landing page specific styles */
-  .landing-section {
-    @apply py-16 px-4 sm:px-6 lg:px-8;
-  }
-
-  .landing-title {
-    @apply text-3xl md:text-4xl font-bold text-gray-900 mb-4;
-  }
-
-  .landing-subtitle {
-    @apply text-lg text-gray-600 mb-8;
-  }
-
-  .feature-icon {
-    @apply w-16 h-16 rounded-full bg-miyo-100 flex items-center justify-center mx-auto mb-4;
-  }
-  
-  /* Animations */
-  @keyframes scale-in {
-    0% {
-      transform: scale(0.95);
-      opacity: 0;
-    }
-    100% {
-      transform: scale(1);
-      opacity: 1;
-    }
-  }
-  
-  @keyframes slide-up {
-    0% {
-      transform: translateY(20px);
-      opacity: 0;
-    }
-    100% {
-      transform: translateY(0);
-      opacity: 1;
-    }
-  }
-  
-  @keyframes slide-down {
-    0% {
-      transform: translateY(-20px);
-      opacity: 0;
-    }
-    100% {
-      transform: translateY(0);
-      opacity: 1;
-    }
-  }
-  
-  @keyframes fade-in {
-    0% {
-      opacity: 0;
-    }
-    100% {
-      opacity: 1;
-    }
-  }
-  
-  .animate-scale-in {
-    animation: scale-in 0.5s ease-out forwards;
-  }
-  
-  .animate-slide-up {
-    animation: slide-up 0.6s ease-out forwards;
-  }
-  
-  .animate-slide-down {
-    animation: slide-down 0.6s ease-out forwards;
-  }
-  
-  .animate-fade-in {
-    animation: fade-in 0.8s ease-out forwards;
   }
 }
