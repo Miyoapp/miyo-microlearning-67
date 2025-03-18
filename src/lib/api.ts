@@ -9,6 +9,7 @@ import {
   SupabaseModulo, 
   SupabaseLeccion,
   SupabaseCategoria,
+  SupabaseCreador,
   CategoryModel
 } from "@/types";
 
@@ -47,6 +48,25 @@ export const transformarCursoAModelo = async (curso: SupabaseCurso): Promise<Pod
   const categoria: CategoryModel = {
     id: categoriaData.id,
     nombre: categoriaData.nombre
+  };
+  
+  // Obtener el creador para este curso
+  const { data: creadorData, error: creadorError } = await supabase
+    .from('creadores')
+    .select('*')
+    .eq('id', curso.creador_id)
+    .single();
+    
+  if (creadorError) {
+    console.error("Error al obtener creador:", creadorError);
+    throw creadorError;
+  }
+  
+  // Construir el creador
+  const creator: Creator = {
+    id: creadorData.id,
+    name: creadorData.nombre,
+    imageUrl: creadorData.imagen_url
   };
   
   // Obtener módulos para este curso
@@ -99,13 +119,6 @@ export const transformarCursoAModelo = async (curso: SupabaseCurso): Promise<Pod
     title: m.titulo,
     lessonIds: leccionesPorModulo[m.id] || []
   }));
-  
-  // Construir el creador
-  const creator: Creator = {
-    id: `creator-${curso.id}`,
-    name: curso.creador_nombre,
-    imageUrl: curso.creador_imagen
-  };
   
   // Construir el podcast (curso)
   return {

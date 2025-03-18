@@ -30,11 +30,69 @@ export type Database = {
         }
         Relationships: []
       }
+      creador_social_media: {
+        Row: {
+          creador_id: string
+          fecha_actualizacion: string
+          fecha_creacion: string
+          id: string
+          platform: string
+          url: string
+        }
+        Insert: {
+          creador_id: string
+          fecha_actualizacion?: string
+          fecha_creacion?: string
+          id?: string
+          platform: string
+          url: string
+        }
+        Update: {
+          creador_id?: string
+          fecha_actualizacion?: string
+          fecha_creacion?: string
+          id?: string
+          platform?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creador_social_media_creador_id_fkey"
+            columns: ["creador_id"]
+            isOneToOne: false
+            referencedRelation: "creadores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creadores: {
+        Row: {
+          fecha_actualizacion: string
+          fecha_creacion: string
+          id: string
+          imagen_url: string
+          nombre: string
+        }
+        Insert: {
+          fecha_actualizacion?: string
+          fecha_creacion?: string
+          id?: string
+          imagen_url: string
+          nombre: string
+        }
+        Update: {
+          fecha_actualizacion?: string
+          fecha_creacion?: string
+          id?: string
+          imagen_url?: string
+          nombre?: string
+        }
+        Relationships: []
+      }
       cursos: {
         Row: {
           categoria_id: string
-          creador_imagen: string
-          creador_nombre: string
+          creador_id: string
           descripcion: string
           duracion_total: number
           fecha_actualizacion: string
@@ -46,8 +104,7 @@ export type Database = {
         }
         Insert: {
           categoria_id: string
-          creador_imagen: string
-          creador_nombre: string
+          creador_id: string
           descripcion: string
           duracion_total: number
           fecha_actualizacion?: string
@@ -59,8 +116,7 @@ export type Database = {
         }
         Update: {
           categoria_id?: string
-          creador_imagen?: string
-          creador_nombre?: string
+          creador_id?: string
           descripcion?: string
           duracion_total?: number
           fecha_actualizacion?: string
@@ -76,6 +132,13 @@ export type Database = {
             columns: ["categoria_id"]
             isOneToOne: false
             referencedRelation: "categorias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_curso_creador"
+            columns: ["creador_id"]
+            isOneToOne: false
+            referencedRelation: "creadores"
             referencedColumns: ["id"]
           },
         ]

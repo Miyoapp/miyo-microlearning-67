@@ -1,3 +1,4 @@
+
 export interface Creator {
   id: string;
   name: string;
@@ -55,8 +56,7 @@ export interface SupabaseCurso {
   descripcion: string;
   imagen_portada: string;
   categoria_id: string;
-  creador_nombre: string;
-  creador_imagen: string;
+  creador_id: string;
   duracion_total: number;
   numero_lecciones: number;
   fecha_creacion: string;
@@ -66,6 +66,23 @@ export interface SupabaseCurso {
 export interface SupabaseCategoria {
   id: string;
   nombre: string;
+  fecha_creacion: string;
+  fecha_actualizacion: string;
+}
+
+export interface SupabaseCreador {
+  id: string;
+  nombre: string;
+  imagen_url: string;
+  fecha_creacion: string;
+  fecha_actualizacion: string;
+}
+
+export interface SupabaseCreadorSocialMedia {
+  id: string;
+  creador_id: string;
+  platform: string;
+  url: string;
   fecha_creacion: string;
   fecha_actualizacion: string;
 }
