@@ -1,6 +1,14 @@
 
 import { CreatorSocialMedia } from '@/types';
-import { Facebook, Twitter, Linkedin, Globe, Youtube, Github, ExternalLink } from 'lucide-react';
+import { 
+  MessageCircle, 
+  Share2, 
+  Link, 
+  Globe, 
+  Video, 
+  Code, 
+  ExternalLink 
+} from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // Custom Instagram icon component that matches Lucide style
@@ -38,17 +46,17 @@ const CreatorSocialMediaLinks = ({ socialMedia }: CreatorSocialMediaLinksProps) 
     
     switch (platform.toLowerCase()) {
       case 'facebook':
-        return <Facebook {...iconProps} />;
+        return <MessageCircle {...iconProps} />;
       case 'instagram':
         return <InstagramIcon {...iconProps} />;
       case 'twitter':
-        return <Twitter {...iconProps} />;
+        return <Share2 {...iconProps} />;
       case 'linkedin':
-        return <Linkedin {...iconProps} />;
+        return <Link {...iconProps} />;
       case 'youtube':
-        return <Youtube {...iconProps} />;
+        return <Video {...iconProps} />;
       case 'github':
-        return <Github {...iconProps} />;
+        return <Code {...iconProps} />;
       case 'website':
         return <Globe {...iconProps} />;
       default:
