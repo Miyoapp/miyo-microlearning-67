@@ -2,8 +2,6 @@
 import { Podcast } from '../../types';
 import { ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import AudioWaveCanvas from './AudioWaveCanvas';
-import CourseDisc from './CourseDisc';
 import CourseInfo from './CourseInfo';
 import CourseAnimations from './CourseAnimations';
 
@@ -20,11 +18,6 @@ const CourseHero = ({ podcast }: CourseHeroProps) => {
   
   return (
     <section className="pt-32 pb-16 overflow-hidden relative bg-gradient-to-br from-indigo-50 to-purple-50">
-      {/* Background elements */}
-      <div className="absolute inset-0 opacity-20">
-        <AudioWaveCanvas />
-      </div>
-      
       <div className="miyo-container relative z-10">
         <button 
           onClick={() => navigate('/')}
@@ -34,14 +27,9 @@ const CourseHero = ({ podcast }: CourseHeroProps) => {
           <span>Volver al Inicio</span>
         </button>
         
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
-          {/* Left circular section - Vinyl/CD style course representation */}
-          <div className="w-full lg:w-1/2 flex justify-center">
-            <CourseDisc podcast={podcast} percentComplete={percentComplete} />
-          </div>
-          
-          {/* Right section with course details */}
-          <div className="w-full lg:w-1/2">
+        <div className="flex justify-center">
+          {/* Full width section with course details */}
+          <div className="w-full max-w-4xl">
             <CourseInfo podcast={podcast} />
           </div>
         </div>
