@@ -26,28 +26,29 @@ const FacebookIcon = ({ size = 16, className = "" }) => (
   </svg>
 );
 
-// Custom Instagram icon component with gradient background
+// Instagram icon with proper gradient fill and icon display
 const InstagramIcon = ({ size = 16, className = "" }) => (
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
-    width={size} 
-    height={size} 
+    width={size}
+    height={size}
     viewBox="0 0 24 24" 
     className={className}
+    fill="none"
   >
+    <rect width="24" height="24" rx="12" fill="url(#instagram-gradient)" />
+    <path d="M12 7.5C10.9 7.5 10.5 7.5 9.7 7.5C8.9 7.5 8.5 7.6 8.1 7.8C7.7 8 7.4 8.2 7.1 8.5C6.8 8.8 6.6 9.1 6.5 9.5C6.3 9.9 6.2 10.3 6.2 11.1C6.2 11.9 6.2 12.3 6.2 13.4C6.2 14.5 6.2 14.9 6.2 15.7C6.2 16.5 6.3 16.9 6.5 17.3C6.7 17.7 6.9 18 7.2 18.3C7.5 18.6 7.8 18.8 8.2 18.9C8.6 19.1 9 19.2 9.8 19.2C10.6 19.2 11 19.2 12.1 19.2C13.2 19.2 13.6 19.2 14.4 19.2C15.2 19.2 15.6 19.1 16 18.9C16.4 18.7 16.7 18.5 17 18.2C17.3 17.9 17.5 17.6 17.6 17.2C17.8 16.8 17.9 16.4 17.9 15.6C17.9 14.8 17.9 14.4 17.9 13.3C17.9 12.2 17.9 11.8 17.9 11C17.9 10.2 17.8 9.8 17.6 9.4C17.4 9 17.2 8.7 16.9 8.4C16.6 8.1 16.3 7.9 15.9 7.8C15.5 7.6 15.1 7.5 14.3 7.5C13.5 7.5 13.1 7.5 12 7.5ZM12 6C13.1 6 13.5 6 14.3 6C15.1 6 15.7 6.1 16.2 6.3C16.7 6.5 17.2 6.8 17.7 7.3C18.2 7.8 18.5 8.3 18.7 8.8C18.9 9.3 19 9.9 19 10.7C19 11.5 19 11.9 19 13C19 14.1 19 14.5 19 15.3C19 16.1 18.9 16.7 18.7 17.2C18.5 17.7 18.2 18.2 17.7 18.7C17.2 19.2 16.7 19.5 16.2 19.7C15.7 19.9 15.1 20 14.3 20C13.5 20 13.1 20 12 20C10.9 20 10.5 20 9.7 20C8.9 20 8.3 19.9 7.8 19.7C7.3 19.5 6.8 19.2 6.3 18.7C5.8 18.2 5.5 17.7 5.3 17.2C5.1 16.7 5 16.1 5 15.3C5 14.5 5 14.1 5 13C5 11.9 5 11.5 5 10.7C5 9.9 5.1 9.3 5.3 8.8C5.5 8.3 5.8 7.8 6.3 7.3C6.8 6.8 7.3 6.5 7.8 6.3C8.3 6.1 8.9 6 9.7 6C10.5 6 10.9 6 12 6Z" fill="white"/>
+    <path d="M12 15.25C10.25 15.25 8.8 13.8 8.8 12.05C8.8 10.3 10.25 8.85 12 8.85C13.75 8.85 15.2 10.3 15.2 12.05C15.2 13.8 13.75 15.25 12 15.25ZM12 13.75C12.95 13.75 13.7 13 13.7 12.05C13.7 11.1 12.95 10.35 12 10.35C11.05 10.35 10.3 11.1 10.3 12.05C10.3 13 11.05 13.75 12 13.75Z" fill="white"/>
+    <circle cx="15.4" cy="8.69995" r="0.75" fill="white"/>
     <defs>
-      <radialGradient id="instagramGradient" cx="30%" cy="107%" r="150%">
-        <stop offset="0%" stopColor="#fdf497"/>
-        <stop offset="5%" stopColor="#fdf497"/>
-        <stop offset="45%" stopColor="#fd5949"/>
-        <stop offset="60%" stopColor="#d6249f"/>
-        <stop offset="90%" stopColor="#285AEB"/>
+      <radialGradient id="instagram-gradient" cx="6" cy="18" r="20" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stopColor="#FFDD55"/>
+        <stop offset="0.1" stopColor="#FFDD55"/>
+        <stop offset="0.5" stopColor="#FF543E"/>
+        <stop offset="0.7" stopColor="#C837AB"/>
+        <stop offset="1" stopColor="#4168C9"/>
       </radialGradient>
     </defs>
-    <circle cx="12" cy="12" r="11" fill="url(#instagramGradient)" />
-    <circle cx="12" cy="12" r="3" stroke="white" strokeWidth="2" fill="none" />
-    <circle cx="16.5" cy="7.5" r="1" fill="white" />
-    <rect x="7" y="7" width="10" height="10" rx="3" stroke="white" strokeWidth="2" fill="none" />
   </svg>
 );
 
@@ -108,7 +109,7 @@ const CreatorSocialMediaLinks = ({ socialMedia, className = "" }: CreatorSocialM
       case 'linkedin':
         return <LinkedInIcon size={iconSize} className={iconClassName} />;
       case 'twitter':
-        return <Twitter size={16} className="text-[#1DA1F2] hover:text-[#1DA1F2]/80 transition-colors" />;
+        return <TwitterIcon size={iconSize} className={iconClassName} />;
       case 'youtube':
         return <Video size={16} className="text-[#FF0000] hover:text-[#FF0000]/80 transition-colors" />;
       case 'github':
