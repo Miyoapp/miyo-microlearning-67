@@ -11,7 +11,10 @@ export const mindfulnessPodcast: Podcast = {
   },
   duration: 40,
   lessonCount: 4,
-  category: 'Health',
+  category: {
+    id: '5',
+    nombre: 'Health'
+  },
   imageUrl: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80',
   description: 'Learn practical mindfulness techniques to reduce stress, improve focus, and enhance overall well-being in your daily life.',
   lessons: [

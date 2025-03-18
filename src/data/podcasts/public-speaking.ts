@@ -11,7 +11,10 @@ export const speakingPodcast: Podcast = {
   },
   duration: 42,
   lessonCount: 4,
-  category: 'Personal Development',
+  category: {
+    id: '4',
+    nombre: 'Personal Development'
+  },
   imageUrl: 'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80',
   description: 'Overcome your fear of public speaking and learn to deliver powerful presentations that engage and inspire your audience.',
   lessons: [

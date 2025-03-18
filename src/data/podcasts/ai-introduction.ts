@@ -11,7 +11,10 @@ export const aiPodcast: Podcast = {
   },
   duration: 53,
   lessonCount: 5,
-  category: 'Technology',
+  category: {
+    id: '3',
+    nombre: 'Technology'
+  },
   imageUrl: 'https://images.unsplash.com/photo-1555255707-c07966088b7b?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80',
   description: 'Understand the basics of artificial intelligence and machine learning, and how these technologies are transforming our world.',
   lessons: [

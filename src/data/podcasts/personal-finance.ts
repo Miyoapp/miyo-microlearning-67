@@ -11,7 +11,10 @@ export const financePodcast: Podcast = {
   },
   duration: 50,
   lessonCount: 5,
-  category: 'Personal Development',
+  category: {
+    id: '4',
+    nombre: 'Personal Development'
+  },
   imageUrl: 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80',
   description: 'Learn how to manage your personal finances, save effectively, invest wisely, and build long-term wealth.',
   lessons: [

@@ -103,7 +103,7 @@ const CourseStats = ({ podcast }: CourseStatsProps) => {
         <div className="text-sm text-gray-600">
           <div className="flex justify-between py-1">
             <span>Categoría</span>
-            <span className="font-medium text-gray-800">{podcast.category}</span>
+            <span className="font-medium text-gray-800">{podcast.category.nombre}</span>
           </div>
           <div className="flex justify-between py-1">
             <span>Duración total</span>

@@ -11,7 +11,10 @@ export const marketingPodcast: Podcast = {
   },
   duration: 58,
   lessonCount: 5,
-  category: 'Marketing',
+  category: {
+    id: '7',
+    nombre: 'Marketing'
+  },
   imageUrl: 'https://images.unsplash.com/photo-1557838923-2985c318be48?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80',
   description: 'Master the basics of digital marketing including social media, SEO, content marketing, and analytics.',
   lessons: [

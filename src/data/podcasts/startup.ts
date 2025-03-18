@@ -11,7 +11,10 @@ export const startupPodcast: Podcast = {
   },
   duration: 65,
   lessonCount: 6,
-  category: 'Business',
+  category: {
+    id: '2',
+    nombre: 'Business'
+  },
   imageUrl: 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80',
   description: 'Everything you need to know to start your own business, from ideation to launch and beyond.',
   lessons: [

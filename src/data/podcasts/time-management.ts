@@ -11,7 +11,10 @@ export const timePodcast: Podcast = {
   },
   duration: 62, // 62 minutes total
   lessonCount: 5,
-  category: 'Productivity',
+  category: {
+    id: '1',
+    nombre: 'Productivity'
+  },
   imageUrl: 'https://images.unsplash.com/photo-1584661156681-540e80a161d3?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80',
   description: 'Learn the most effective techniques to manage your time efficiently and boost your productivity like never before.',
   lessons: [

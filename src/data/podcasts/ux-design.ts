@@ -11,7 +11,10 @@ export const uxPodcast: Podcast = {
   },
   duration: 45,
   lessonCount: 4,
-  category: 'Design',
+  category: {
+    id: '6',
+    nombre: 'Design'
+  },
   imageUrl: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80',
   description: 'A comprehensive introduction to user experience design principles that will help you create more intuitive and user-friendly interfaces.',
   lessons: [
