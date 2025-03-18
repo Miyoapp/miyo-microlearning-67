@@ -20,7 +20,7 @@ const CreatorSocialMediaLinks = ({ socialMedia }: CreatorSocialMediaLinksProps) 
       case 'facebook':
         return <Facebook {...iconProps} />;
       case 'instagram':
-        // Completely new SVG implementation for Instagram
+        // Custom SVG for Instagram that matches lucide style
         return (
           <svg 
             xmlns="http://www.w3.org/2000/svg" 
@@ -29,12 +29,14 @@ const CreatorSocialMediaLinks = ({ socialMedia }: CreatorSocialMediaLinksProps) 
             viewBox="0 0 24 24" 
             fill="none" 
             stroke="currentColor" 
-            strokeWidth="1.5" 
+            strokeWidth="2" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
             className="text-gray-500 hover:text-miyo-600 transition-colors"
           >
-            <rect width="20" height="20" x="2" y="2" rx="5" />
-            <circle cx="12" cy="12" r="3.5" />
-            <circle cx="17.5" cy="6.5" r="1.5" />
+            <rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect>
+            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
           </svg>
         );
       case 'twitter':
