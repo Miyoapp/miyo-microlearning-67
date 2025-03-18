@@ -1,6 +1,6 @@
 
 import { Podcast } from '../../types';
-import { Star, Flame, Zap, Trophy, Target } from 'lucide-react';
+import { Star, Trophy, Target } from 'lucide-react';
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,42 +15,18 @@ const CourseStats = ({ podcast }: CourseStatsProps) => {
   const completedLessons = podcast.lessons.filter(l => l.isCompleted).length;
   const percentComplete = Math.round((completedLessons / podcast.lessonCount) * 100);
   
-  // Calculate XP based on actual minutes listened
-  const totalMinutesListened = podcast.lessons
-    .filter(l => l.isCompleted)
-    .reduce((total, lesson) => total + lesson.duration, 0);
-    
-  // Add partial progress for the current lesson that's not complete
-  const currentLessonProgress = podcast.lessons
-    .find(l => !l.isCompleted && !l.isLocked)?.duration * 0.5 || 0;
-  
-  // Calculate XP (10 XP per minute listened)
-  const xpPoints = Math.round((totalMinutesListened + currentLessonProgress) * 10);
-  
   return (
     <Card className="border-2 border-indigo-100 shadow-md overflow-hidden">
       <CardHeader className="bg-gradient-to-r from-[#E5DEFF] to-[#D6BCFA] pb-2">
         <CardTitle className="flex items-center justify-between">
           <span className="text-xl font-bold text-indigo-900">Tu Progreso</span>
           <Badge variant="outline" className="bg-white font-semibold text-indigo-700 border-indigo-200">
-            Nivel {Math.floor(xpPoints / 500) + 1}
+            Nivel {Math.floor(completedLessons + 1)}
           </Badge>
         </CardTitle>
       </CardHeader>
       
       <CardContent className="pt-4">
-        {/* XP Stats */}
-        <div className="mb-4">
-          <div className="bg-indigo-50 rounded-lg p-3 border border-indigo-100 flex flex-col items-center">
-            <div className="flex items-center gap-2 text-indigo-600 mb-1">
-              <Zap size={18} className="text-indigo-500" />
-              <span className="font-bold">XP</span>
-            </div>
-            <span className="text-2xl font-bold text-indigo-700">{xpPoints}</span>
-            <span className="text-xs text-indigo-500">{totalMinutesListened} min escuchados</span>
-          </div>
-        </div>
-        
         {/* Course Progress */}
         <div className="mb-4">
           <div className="flex justify-between items-center mb-2">
