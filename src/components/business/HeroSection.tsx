@@ -13,7 +13,7 @@ const HeroSection = () => {
               Innovación en Capacitación
             </span>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight animate-slide-down">
-              Transforma información en <span className="text-miyo-800">micropodcasts</span> de aprendizaje
+              Transformamos información en <span className="text-miyo-800">micropodcasts</span> de aprendizaje
             </h1>
             <p className="text-xl text-gray-600 mb-8 max-w-3xl animate-slide-up">
               Plataforma de microaprendizaje que convierte información en contenido audible para capacitar clientes y partners comerciales de forma efectiva.
