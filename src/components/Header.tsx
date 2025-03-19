@@ -17,6 +17,7 @@ import {
   NavigationMenuLink
 } from '@/components/ui/navigation-menu';
 import { navigationMenuTriggerStyle } from '@/components/ui/navigation-menu';
+import { cn } from '@/lib/utils';
 
 const Header = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -71,6 +72,17 @@ const Header = () => {
       e.preventDefault();
     }
   };
+
+  // Function to check if a route is active
+  const isRouteActive = (path) => {
+    if (path === '/' && location.pathname === '/') {
+      return true;
+    }
+    if (path === '/business' && location.pathname === '/business') {
+      return true;
+    }
+    return false;
+  };
   
   return (
     <header 
@@ -87,12 +99,24 @@ const Header = () => {
           <NavigationMenu>
             <NavigationMenuList>
               <NavigationMenuItem>
-                <Link to="/" className={navigationMenuTriggerStyle()}>
+                <Link 
+                  to="/" 
+                  className={cn(
+                    navigationMenuTriggerStyle(),
+                    isRouteActive('/') && 'border-b-2 border-miyo-800 text-miyo-800'
+                  )}
+                >
                   Personas
                 </Link>
               </NavigationMenuItem>
               <NavigationMenuItem>
-                <Link to="/business" className={navigationMenuTriggerStyle()}>
+                <Link 
+                  to="/business" 
+                  className={cn(
+                    navigationMenuTriggerStyle(),
+                    isRouteActive('/business') && 'border-b-2 border-miyo-800 text-miyo-800'
+                  )}
+                >
                   Empresas
                 </Link>
               </NavigationMenuItem>
