@@ -8,6 +8,8 @@ import Index from "./pages/Index";
 import Business from "./pages/Business";
 import Course from "./pages/Course";
 import NotFound from "./pages/NotFound";
+import CompanyDashboard from "./pages/CompanyDashboard";
+import { RequireAuth } from "./components/auth/RequireAuth";
 
 const queryClient = new QueryClient();
 
@@ -21,6 +23,11 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/business" element={<Business />} />
           <Route path="/course/:id" element={<Course />} />
+          <Route path="/company/dashboard" element={
+            <RequireAuth>
+              <CompanyDashboard />
+            </RequireAuth>
+          } />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

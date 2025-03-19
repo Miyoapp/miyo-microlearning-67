@@ -1,9 +1,14 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, LogIn } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { LoginDialog } from "@/components/auth/LoginDialog";
 
 const HeroSection = () => {
+  const navigate = useNavigate();
+  const [showLoginDialog, setShowLoginDialog] = React.useState(false);
+  
   const scrollToContact = () => {
     const contactSection = document.getElementById('contact-section');
     if (contactSection) {
@@ -33,10 +38,20 @@ const HeroSection = () => {
               >
                 Solicitar demo <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="border-miyo-800 text-miyo-800 hover:bg-miyo-50"
+                onClick={() => setShowLoginDialog(true)}
+              >
+                Iniciar sesión <LogIn className="ml-2 h-4 w-4" />
+              </Button>
             </div>
           </div>
         </div>
       </div>
+      
+      <LoginDialog open={showLoginDialog} onOpenChange={setShowLoginDialog} />
     </section>
   );
 };
