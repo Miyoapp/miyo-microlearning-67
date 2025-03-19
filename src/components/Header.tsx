@@ -45,7 +45,7 @@ const Header = () => {
                 : 'text-gray-600 hover:text-miyo-800'
             }`}
           >
-            Inicio
+            Personas
           </Link>
           <Link 
             to="/business" 
