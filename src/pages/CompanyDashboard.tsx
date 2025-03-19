@@ -1,143 +1,145 @@
 
-import React, { useEffect, useState } from "react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import { LogOut, BookOpen, BarChart, Users } from "lucide-react";
-import { podcasts } from "@/data/podcasts";
-import PodcastCard from "@/components/PodcastCard";
-
-// Simulate fetching company-specific courses
-const getCompanyCourses = () => {
-  // Just use existing podcasts but limit and modify them to fit the finance theme
-  return podcasts.slice(0, 4).map((podcast, index) => ({
-    ...podcast,
-    title: index === 0 
-      ? "Fundamentos de Inversión en Bolsa" 
-      : index === 1 
-        ? "Análisis Técnico para Principiantes" 
-        : index === 2 
-          ? "Gestión de Riesgos en Inversiones" 
-          : "Finanzas Personales e Inversión",
-    category: { ...podcast.category, nombre: "Finanzas" }
-  }));
-};
+import { useEffect, useState } from "react";
+import Header from "@/components/Header";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
+import { 
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Building, GraduationCap, User } from "lucide-react";
+import CompanyCourseCard from "@/components/company/CompanyCourseCard";
+import { Podcast } from "@/types";
+import { obtenerCursos } from "@/lib/api";
 
 const CompanyDashboard = () => {
-  const navigate = useNavigate();
-  const [user, setUser] = useState<any>(null);
-  const [company, setCompany] = useState<string>("");
-  const [courses, setCourses] = useState<any[]>([]);
+  const [courses, setCourses] = useState<Podcast[]>([]);
+  const [loading, setLoading] = useState(true);
+  const userData = JSON.parse(localStorage.getItem("user") || "{}");
+  const companyName = localStorage.getItem("company") || "Demo";
 
   useEffect(() => {
-    // Get user data from localStorage
-    const userData = localStorage.getItem("user");
-    const companyName = localStorage.getItem("company");
+    const fetchCourses = async () => {
+      try {
+        setLoading(true);
+        const allCourses = await obtenerCursos();
+        
+        // Filter to just a few courses for the demo
+        const filteredCourses = allCourses.slice(0, 4);
+        
+        // Add company specific information and update titles for investment theme
+        const companyCourses = filteredCourses.map(course => ({
+          ...course,
+          title: course.title.includes("Finanzas") ? course.title : 
+            course.id.includes("ai") ? "Inteligencia Artificial para Inversiones" :
+            course.id.includes("ux") ? "Experiencia de Usuario en Plataformas de Inversión" :
+            course.id.includes("startup") ? "Análisis Técnico para Inversiones" : 
+            "Fundamentos de Inversión Bursátil",
+          description: "Curso especializado en inversiones para clientes de " + companyName + ".",
+        }));
+        
+        setCourses(companyCourses);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error loading courses:', error);
+        setLoading(false);
+      }
+    };
     
-    if (userData) {
-      setUser(JSON.parse(userData));
-    }
-    
-    if (companyName) {
-      setCompany(companyName);
-    }
-    
-    // Get courses data
-    setCourses(getCompanyCourses());
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem("isAuthenticated");
-    localStorage.removeItem("user");
-    localStorage.removeItem("company");
-    navigate("/");
-  };
+    fetchCourses();
+  }, [companyName]);
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="miyo-container py-4 flex items-center justify-between">
-          <div className="flex items-center">
-            <div className="text-3xl font-bold text-miyo-800 mr-2">MIYO</div>
-            <div className="px-3 py-1 rounded bg-miyo-100 text-miyo-800 text-sm font-medium">
-              {company.charAt(0).toUpperCase() + company.slice(1)}
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <div className="text-sm text-gray-700">
-              Hola, <span className="font-medium">{user?.name || 'Usuario'}</span>
-            </div>
-            <Button variant="outline" size="sm" onClick={handleLogout} className="gap-2">
-              <LogOut size={16} /> Salir
-            </Button>
-          </div>
-        </div>
-      </header>
+      <Header />
       
-      {/* Main content */}
-      <main className="miyo-container py-8">
-        <div className="mb-12">
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">Bienvenido a Demo</h1>
-          <p className="text-lg text-gray-600 max-w-4xl">
-            Democratizando las inversiones en bolsa en Latinoamérica a través del conocimiento. 
-            Explora nuestros cursos diseñados específicamente para ayudarte a capacitar a tus clientes sobre finanzas e inversiones.
-          </p>
-        </div>
+      <main className="container mx-auto px-4 pt-28 pb-16">
+        <Breadcrumb className="mb-6">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/">Inicio</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Panel de {companyName}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
         
-        {/* Stats cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Cursos Disponibles</CardTitle>
-              <BookOpen className="h-4 w-4 text-miyo-800" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">4</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Cursos Completados</CardTitle>
-              <BarChart className="h-4 w-4 text-miyo-800" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">0</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Usuarios Activos</CardTitle>
-              <Users className="h-4 w-4 text-miyo-800" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">1</div>
-            </CardContent>
-          </Card>
-        </div>
-        
-        {/* Courses section */}
-        <section>
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Cursos de Inversión</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {courses.map((course) => (
-              <PodcastCard key={course.id} podcast={course} />
-            ))}
+        <div className="flex flex-col md:flex-row gap-8">
+          {/* Sidebar */}
+          <div className="w-full md:w-1/4">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex flex-col items-center text-center">
+                  <div className="w-20 h-20 bg-miyo-100 rounded-full flex items-center justify-center mb-4">
+                    <User size={40} className="text-miyo-800" />
+                  </div>
+                  <h2 className="text-xl font-bold mb-1">{userData.name || "Usuario"}</h2>
+                  <p className="text-sm text-gray-500 mb-4">{userData.email || "usuario@ejemplo.com"}</p>
+                  
+                  <div className="w-full pt-4 border-t">
+                    <div className="flex items-center gap-3 py-2">
+                      <Building size={18} className="text-gray-500" />
+                      <span className="text-sm">Empresa: <strong>{companyName}</strong></span>
+                    </div>
+                    <div className="flex items-center gap-3 py-2">
+                      <GraduationCap size={18} className="text-gray-500" />
+                      <span className="text-sm">Cursos completados: <strong>0</strong></span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        </section>
+          
+          {/* Main content */}
+          <div className="w-full md:w-3/4">
+            <h1 className="text-3xl font-bold mb-8">Bienvenido al portal de {companyName}</h1>
+            
+            <Tabs defaultValue="cursos">
+              <TabsList className="mb-6">
+                <TabsTrigger value="cursos">Cursos de Inversión</TabsTrigger>
+                <TabsTrigger value="progreso">Mi Progreso</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="cursos">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {loading ? (
+                    Array(4).fill(0).map((_, i) => (
+                      <Card key={i} className="h-[280px] animate-pulse">
+                        <div className="bg-gray-200 aspect-video"></div>
+                        <CardContent className="p-4">
+                          <div className="h-5 bg-gray-200 rounded mb-4 w-1/3"></div>
+                          <div className="h-6 bg-gray-200 rounded mb-2"></div>
+                          <div className="h-4 bg-gray-200 rounded mb-4"></div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  ) : (
+                    courses.map((podcast) => (
+                      <CompanyCourseCard key={podcast.id} podcast={podcast} />
+                    ))
+                  )}
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="progreso">
+                <div className="rounded-lg border bg-card p-8 text-center">
+                  <h3 className="text-lg font-semibold mb-2">No hay progreso aún</h3>
+                  <p className="text-gray-500">
+                    Comienza tomando alguno de nuestros cursos de inversión para ver tu progreso aquí.
+                  </p>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
       </main>
-      
-      {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 py-8 mt-12">
-        <div className="miyo-container text-center">
-          <p className="text-gray-600 text-sm">
-            © 2023 MIYO para Demo. Todos los derechos reservados.
-          </p>
-        </div>
-      </footer>
     </div>
   );
 };
