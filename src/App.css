@@ -1,4 +1,3 @@
-
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -6,22 +5,19 @@
   text-align: center;
 }
 
-.miyo-container {
-  width: 100%;
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 0 1rem;
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
 }
 
-/* Glass effect for cards */
-.glass {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
-}
-
-/* Animation keyframes */
 @keyframes logo-spin {
   from {
     transform: rotate(0deg);
@@ -37,16 +33,10 @@
   }
 }
 
-/* Custom Miyo colors */
-:root {
-  --miyo-50: #f3f0ff;
-  --miyo-100: #e9e3ff;
-  --miyo-200: #d6ceff;
-  --miyo-300: #baa7ff;
-  --miyo-400: #9a7cff;
-  --miyo-500: #7c4dff;
-  --miyo-600: #6e3afb;
-  --miyo-700: #5e16ea;
-  --miyo-800: #4e0bc5;
-  --miyo-900: #4209a0;
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
 }

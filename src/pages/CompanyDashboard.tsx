@@ -11,7 +11,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Building, GraduationCap, User, TrendingUp, BarChart } from "lucide-react";
+import { Building, GraduationCap, User } from "lucide-react";
 import CompanyCourseCard from "@/components/company/CompanyCourseCard";
 import { Podcast } from "@/types";
 import { obtenerCursos } from "@/lib/api";
@@ -20,7 +20,7 @@ const CompanyDashboard = () => {
   const [courses, setCourses] = useState<Podcast[]>([]);
   const [loading, setLoading] = useState(true);
   const userData = JSON.parse(localStorage.getItem("user") || "{}");
-  const companyName = localStorage.getItem("company") || "Inversiones Demo";
+  const companyName = localStorage.getItem("company") || "Demo";
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -36,9 +36,9 @@ const CompanyDashboard = () => {
           ...course,
           title: course.title.includes("Finanzas") ? course.title : 
             course.id.includes("ai") ? "Inteligencia Artificial para Inversiones" :
-            course.id.includes("ux") ? "Estrategias para Inversión Bursátil" :
+            course.id.includes("ux") ? "Experiencia de Usuario en Plataformas de Inversión" :
             course.id.includes("startup") ? "Análisis Técnico para Inversiones" : 
-            "Fundamentos de Inversión",
+            "Fundamentos de Inversión Bursátil",
           description: "Curso especializado en inversiones para clientes de " + companyName + ".",
         }));
         
@@ -65,7 +65,7 @@ const CompanyDashboard = () => {
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage>Portal de Inversiones de {companyName}</BreadcrumbPage>
+              <BreadcrumbPage>Panel de {companyName}</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
@@ -79,8 +79,8 @@ const CompanyDashboard = () => {
                   <div className="w-20 h-20 bg-miyo-100 rounded-full flex items-center justify-center mb-4">
                     <User size={40} className="text-miyo-800" />
                   </div>
-                  <h2 className="text-xl font-bold mb-1">{userData.name || "Inversionista"}</h2>
-                  <p className="text-sm text-gray-500 mb-4">{userData.email || "inversionista@ejemplo.com"}</p>
+                  <h2 className="text-xl font-bold mb-1">{userData.name || "Usuario"}</h2>
+                  <p className="text-sm text-gray-500 mb-4">{userData.email || "usuario@ejemplo.com"}</p>
                   
                   <div className="w-full pt-4 border-t">
                     <div className="flex items-center gap-3 py-2">
@@ -91,10 +91,6 @@ const CompanyDashboard = () => {
                       <GraduationCap size={18} className="text-gray-500" />
                       <span className="text-sm">Cursos completados: <strong>0</strong></span>
                     </div>
-                    <div className="flex items-center gap-3 py-2">
-                      <TrendingUp size={18} className="text-gray-500" />
-                      <span className="text-sm">Rendimiento: <strong>+12.4%</strong></span>
-                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -103,12 +99,12 @@ const CompanyDashboard = () => {
           
           {/* Main content */}
           <div className="w-full md:w-3/4">
-            <h1 className="text-3xl font-bold mb-8">Bienvenido al portal de inversiones</h1>
+            <h1 className="text-3xl font-bold mb-8">Bienvenido al portal de {companyName}</h1>
             
             <Tabs defaultValue="cursos">
               <TabsList className="mb-6">
                 <TabsTrigger value="cursos">Cursos de Inversión</TabsTrigger>
-                <TabsTrigger value="progreso">Mi Portafolio</TabsTrigger>
+                <TabsTrigger value="progreso">Mi Progreso</TabsTrigger>
               </TabsList>
               
               <TabsContent value="cursos">
@@ -133,52 +129,11 @@ const CompanyDashboard = () => {
               </TabsContent>
               
               <TabsContent value="progreso">
-                <div className="rounded-lg border bg-card p-8">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-semibold">Resumen de inversiones</h3>
-                    <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                      +12.4% este mes
-                    </span>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div className="p-4 border rounded-lg bg-white">
-                      <div className="flex items-center">
-                        <BarChart className="text-blue-500 mr-3" />
-                        <div>
-                          <h4 className="font-medium">Acciones diversificadas</h4>
-                          <p className="text-sm text-gray-500">60% de su portafolio</p>
-                        </div>
-                        <span className="ml-auto text-green-600 font-semibold">+8.2%</span>
-                      </div>
-                    </div>
-                    
-                    <div className="p-4 border rounded-lg bg-white">
-                      <div className="flex items-center">
-                        <TrendingUp className="text-purple-500 mr-3" />
-                        <div>
-                          <h4 className="font-medium">Bonos corporativos</h4>
-                          <p className="text-sm text-gray-500">25% de su portafolio</p>
-                        </div>
-                        <span className="ml-auto text-green-600 font-semibold">+3.5%</span>
-                      </div>
-                    </div>
-                    
-                    <div className="p-4 border rounded-lg bg-white">
-                      <div className="flex items-center">
-                        <Building className="text-amber-500 mr-3" />
-                        <div>
-                          <h4 className="font-medium">Bienes raíces</h4>
-                          <p className="text-sm text-gray-500">15% de su portafolio</p>
-                        </div>
-                        <span className="ml-auto text-red-600 font-semibold">-1.8%</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-6 text-center text-sm text-gray-500">
-                    Complete nuestros cursos de inversión para mejorar sus estrategias y rendimientos
-                  </div>
+                <div className="rounded-lg border bg-card p-8 text-center">
+                  <h3 className="text-lg font-semibold mb-2">No hay progreso aún</h3>
+                  <p className="text-gray-500">
+                    Comienza tomando alguno de nuestros cursos de inversión para ver tu progreso aquí.
+                  </p>
                 </div>
               </TabsContent>
             </Tabs>

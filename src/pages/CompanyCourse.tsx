@@ -27,26 +27,9 @@ const CompanyCourse = () => {
   // Set initial lesson once podcast data is loaded
   useEffect(() => {
     if (podcast) {
-      // Customize the podcast for the investment theme
-      const investmentPodcast = {
-        ...podcast,
-        title: podcast.title.includes("Finanzas") ? podcast.title : 
-          podcast.id.includes("ai") ? "Inteligencia Artificial para Inversiones" :
-          podcast.id.includes("ux") ? "Estrategias para Inversión Bursátil" :
-          podcast.id.includes("startup") ? "Análisis Técnico para Inversiones" : 
-          "Fundamentos de Inversión",
-        description: podcast.description.includes("inversión") ? podcast.description :
-          "Aprenda los principios fundamentales para invertir en bolsa de valores y maximizar sus rendimientos financieros.",
-        category: {
-          ...podcast.category,
-          nombre: "Finanzas e Inversión"
-        }
-      };
-      
-      setPodcast(investmentPodcast);
       initializeCurrentLesson();
     }
-  }, [podcast, initializeCurrentLesson, setPodcast]);
+  }, [podcast, initializeCurrentLesson]);
   
   // Listen for lesson ended event to advance to next lesson
   useEffect(() => {
