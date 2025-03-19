@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import CategoryFilter from '../components/CategoryFilter';
@@ -146,13 +147,6 @@ const Index = () => {
       <footer className="bg-white border-t border-gray-200 py-8">
         <div className="miyo-container">
           <div className="text-center">
-            <div className="flex justify-center mb-4">
-              <img 
-                src="/lovable-uploads/a3bff82c-9fc2-4a71-b47b-10507de23dc1.png" 
-                alt="MIYO Logo" 
-                className="h-6 w-auto" 
-              />
-            </div>
             <p className="text-gray-600 text-sm">
               © {new Date().getFullYear()} Miyo. Todos los derechos reservados.
             </p>
