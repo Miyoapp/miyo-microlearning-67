@@ -4,6 +4,13 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 
 const HeroSection = () => {
+  const scrollToContact = () => {
+    const contactSection = document.getElementById('contact-section');
+    if (contactSection) {
+      contactSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <section className="pt-28 pb-16 md:pt-36 md:pb-24 bg-gradient-to-br from-white via-gray-50 to-miyo-50/30">
       <div className="miyo-container">
@@ -19,7 +26,11 @@ const HeroSection = () => {
               Plataforma de microaprendizaje que convierte información en contenido audible para capacitar clientes y partners comerciales de forma efectiva.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" className="bg-miyo-800 hover:bg-miyo-900 text-white font-medium">
+              <Button 
+                size="lg" 
+                className="bg-miyo-800 hover:bg-miyo-900 text-white font-medium"
+                onClick={scrollToContact}
+              >
                 Solicitar demo <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
