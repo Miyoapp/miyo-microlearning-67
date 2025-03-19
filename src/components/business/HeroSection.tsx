@@ -24,17 +24,6 @@ const HeroSection = () => {
               </Button>
             </div>
           </div>
-          
-          <div className="relative mt-16 mb-4 p-6 max-w-4xl mx-auto">
-            <div className="absolute inset-0 bg-gradient-to-r from-miyo-100/80 to-miyo-200/60 rounded-2xl blur-3xl opacity-70 -z-10"></div>
-            <div className="glass rounded-2xl overflow-hidden p-1">
-              <img 
-                src="https://lovable.dev/projects/ee45312b-936a-450e-8d0c-12e0d4e4391d/platform-dashboard.png" 
-                alt="MIYO Platform Dashboard" 
-                className="w-full h-auto rounded-xl shadow-lg animate-scale-in"
-              />
-            </div>
-          </div>
         </div>
       </div>
     </section>
