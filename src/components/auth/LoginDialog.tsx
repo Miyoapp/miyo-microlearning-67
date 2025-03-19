@@ -21,29 +21,31 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate that email and password fields are not empty
+    if (!email.trim() || !password.trim()) {
+      toast.error("Por favor ingresa tu correo y contraseña");
+      return;
+    }
+    
     // Simulate loading
     setIsLoading(true);
     
     // Simulate a delay for API call
     setTimeout(() => {
-      // Hardcoded demo credentials
-      if (email === "demo@example.com" && password === "password") {
-        // Simulate saving user session to localStorage
-        localStorage.setItem("isAuthenticated", "true");
-        localStorage.setItem("company", "demo");
-        localStorage.setItem("user", JSON.stringify({
-          id: "demo-user-id",
-          email: email,
-          name: "Demo Usuario",
-          role: "usuario"
-        }));
-        
-        toast.success("Inicio de sesión exitoso");
-        onOpenChange(false);
-        navigate("/company/dashboard");
-      } else {
-        toast.error("Credenciales inválidas. Intenta con demo@example.com / password");
-      }
+      // Accept any email/password combination
+      // Store user data in localStorage
+      localStorage.setItem("isAuthenticated", "true");
+      localStorage.setItem("company", "demo");
+      localStorage.setItem("user", JSON.stringify({
+        id: "demo-user-id",
+        email: email,
+        name: email.split('@')[0], // Generate a name from the email
+        role: "usuario"
+      }));
+      
+      toast.success("Inicio de sesión exitoso");
+      onOpenChange(false);
+      navigate("/company/dashboard");
       setIsLoading(false);
     }, 1000);
   };
@@ -93,9 +95,7 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
           </div>
           
           <div className="text-center text-sm text-gray-500 mt-4">
-            <p>Para probar, usa:</p>
-            <p><strong>Email:</strong> demo@example.com</p>
-            <p><strong>Contraseña:</strong> password</p>
+            <p>Ingresa cualquier correo y contraseña para acceder.</p>
           </div>
         </form>
       </DialogContent>
