@@ -71,7 +71,7 @@ const CourseInfo = ({ podcast }: CourseInfoProps) => {
           <div className="mb-8 relative">
             <div className="absolute top-0 bottom-0 left-0 w-1 bg-gradient-to-b from-miyo-800 to-miyo-600 rounded-full"></div>
             <div className="pl-6">
-              <h3 className="text-lg font-medium mb-3 text-gray-800">Sobre este viaje</h3>
+              <h3 className="text-lg font-medium mb-3 text-gray-800">Sobre este curso</h3>
               <p className="text-gray-700 leading-relaxed">{podcast.description}</p>
             </div>
           </div>
@@ -88,7 +88,7 @@ const CourseInfo = ({ podcast }: CourseInfoProps) => {
               className="rounded-full px-8 py-6 bg-gradient-to-r from-miyo-800 to-purple-600 hover:from-miyo-700 hover:to-purple-500 shadow-lg shadow-miyo-800/20 group transition-all duration-300 hover:scale-105"
             >
               <Play size={24} className="mr-2 group-hover:translate-x-1 transition-transform" />
-              <span className="text-lg">Comenzar a Aprender</span>
+              <span className="text-lg">Comenzar a Invertir</span>
             </Button>
           </div>
         </div>
