@@ -33,7 +33,11 @@ const Header = () => {
     >
       <div className="miyo-container flex items-center justify-between">
         <Link to="/" className="flex items-center">
-          <span className="text-3xl font-bold tracking-tight text-miyo-800">MIYO</span>
+          <img 
+            src="/lovable-uploads/661e5ba0-8e3a-4eea-b468-cb234428cb1e.png" 
+            alt="MIYO Logo" 
+            className="h-10 w-auto"
+          />
         </Link>
         
         <nav className="hidden md:flex space-x-8">

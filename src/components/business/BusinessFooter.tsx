@@ -9,7 +9,11 @@ const BusinessFooter = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
             <div>
               <div className="mb-4">
-                <span className="text-2xl font-bold tracking-tight text-miyo-800">MIYO</span>
+                <img 
+                  src="/lovable-uploads/661e5ba0-8e3a-4eea-b468-cb234428cb1e.png" 
+                  alt="MIYO Logo" 
+                  className="h-8 w-auto" 
+                />
               </div>
               <p className="text-gray-600 mb-6 max-w-md">
                 Transformamos la capacitación corporativa con microaprendizaje en formato podcast. 
