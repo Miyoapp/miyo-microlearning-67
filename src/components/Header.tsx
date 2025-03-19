@@ -17,7 +17,6 @@ import {
   NavigationMenuLink
 } from '@/components/ui/navigation-menu';
 import { navigationMenuTriggerStyle } from '@/components/ui/navigation-menu';
-import { cn } from '@/lib/utils';
 
 const Header = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -73,17 +72,6 @@ const Header = () => {
     }
   };
   
-  // Function to determine if a navigation item is active
-  const isRouteActive = (path) => {
-    if (path === '/' && location.pathname === '/') {
-      return true;
-    }
-    if (path === '/business' && location.pathname === '/business') {
-      return true;
-    }
-    return false;
-  };
-  
   return (
     <header 
       className={`fixed top-0 left-0 right-0 z-50 py-4 transition-all duration-300 bg-white ${
@@ -99,24 +87,12 @@ const Header = () => {
           <NavigationMenu>
             <NavigationMenuList>
               <NavigationMenuItem>
-                <Link 
-                  to="/" 
-                  className={cn(
-                    navigationMenuTriggerStyle(),
-                    isRouteActive('/') ? 'text-miyo-800 after:content-[""] after:absolute after:w-full after:h-[3px] after:bg-miyo-800 after:bottom-0 after:left-0' : ''
-                  )}
-                >
+                <Link to="/" className={navigationMenuTriggerStyle()}>
                   Personas
                 </Link>
               </NavigationMenuItem>
               <NavigationMenuItem>
-                <Link 
-                  to="/business" 
-                  className={cn(
-                    navigationMenuTriggerStyle(),
-                    isRouteActive('/business') ? 'text-miyo-800 after:content-[""] after:absolute after:w-full after:h-[3px] after:bg-miyo-800 after:bottom-0 after:left-0' : ''
-                  )}
-                >
+                <Link to="/business" className={navigationMenuTriggerStyle()}>
                   Empresas
                 </Link>
               </NavigationMenuItem>
