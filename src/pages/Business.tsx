@@ -91,18 +91,7 @@ const Business = () => {
               </div>
             </div>
 
-            {/* Trusted by Section */}
-            <div className="mt-16 text-center">
-              <p className="text-gray-500 text-lg mb-8">CONFÍAN EN MIYO</p>
-              <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12">
-                {/* Company logos would go here - using gray placeholders for now */}
-                {[1, 2, 3, 4, 5].map((_, index) => (
-                  <div key={index} className="w-28 h-12 bg-gray-200/50 rounded-md flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity">
-                    <span className="text-gray-400 font-medium">LOGO {index + 1}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            {/* Removed the "Trusted by" section as requested */}
           </div>
         </div>
       </section>
