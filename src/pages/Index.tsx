@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import CategoryFilter from '../components/CategoryFilter';
@@ -149,7 +148,7 @@ const Index = () => {
           <div className="text-center">
             <div className="flex justify-center mb-4">
               <img 
-                src="/lovable-uploads/661e5ba0-8e3a-4eea-b468-cb234428cb1e.png" 
+                src="/lovable-uploads/a3bff82c-9fc2-4a71-b47b-10507de23dc1.png" 
                 alt="MIYO Logo" 
                 className="h-6 w-auto" 
               />
