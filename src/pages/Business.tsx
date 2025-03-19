@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -285,28 +284,6 @@ const Business = () => {
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
-      
-      {/* CTA Section */}
-      <section className="py-16 md:py-20 bg-gradient-to-br from-miyo-700 to-miyo-900 text-white">
-        <div className="miyo-container">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              Transforma el desarrollo profesional de tu equipo
-            </h2>
-            <p className="text-xl mb-8 text-miyo-100">
-              Solicita una demostración personalizada para tu empresa y descubre todo el potencial de MIYO.
-            </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Button size="lg" className="bg-white text-miyo-900 hover:bg-miyo-100">
-                Solicitar demo
-              </Button>
-              <Button variant="outline" size="lg" className="border-miyo-300 text-white hover:bg-miyo-800">
-                Contactar con ventas
-              </Button>
             </div>
           </div>
         </div>
