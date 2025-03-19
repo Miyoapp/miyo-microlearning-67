@@ -19,6 +19,11 @@ const Header = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Check if path is active
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
   
   return (
     <header 
@@ -35,12 +40,22 @@ const Header = () => {
           <Link 
             to="/" 
             className={`font-medium transition-colors ${
-              location.pathname === '/' 
+              isActive('/') 
                 ? 'text-miyo-800 border-b-2 border-miyo-800' 
                 : 'text-gray-600 hover:text-miyo-800'
             }`}
           >
             Inicio
+          </Link>
+          <Link 
+            to="/business" 
+            className={`font-medium transition-colors ${
+              isActive('/business') 
+                ? 'text-miyo-800 border-b-2 border-miyo-800' 
+                : 'text-gray-600 hover:text-miyo-800'
+            }`}
+          >
+            Empresas
           </Link>
         </nav>
       </div>
