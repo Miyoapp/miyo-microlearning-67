@@ -103,7 +103,7 @@ const CompanyDashboard = () => {
             
             <Tabs defaultValue="cursos">
               <TabsList className="mb-6">
-                <TabsTrigger value="cursos">Cursos de Inversión</TabsTrigger>
+                <TabsTrigger value="cursos">Cursos</TabsTrigger>
                 <TabsTrigger value="progreso">Mi Progreso</TabsTrigger>
               </TabsList>
               
