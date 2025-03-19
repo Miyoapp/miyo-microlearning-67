@@ -65,6 +65,13 @@ const Header = () => {
     }
   };
   
+  const handleLogoClick = (e) => {
+    // If user is authenticated and on the company dashboard, prevent default navigation
+    if (isAuthenticated && location.pathname.includes('/company')) {
+      e.preventDefault();
+    }
+  };
+  
   return (
     <header 
       className={`fixed top-0 left-0 right-0 z-50 py-4 transition-all duration-300 bg-white ${
@@ -72,7 +79,7 @@ const Header = () => {
       }`}
     >
       <div className="miyo-container flex items-center justify-between">
-        <Link to="/" className="flex items-center">
+        <Link to="/" className="flex items-center" onClick={handleLogoClick}>
           <span className="text-3xl font-bold tracking-tight text-miyo-800">MIYO</span>
         </Link>
         
