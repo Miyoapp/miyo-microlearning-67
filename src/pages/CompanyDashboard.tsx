@@ -39,7 +39,7 @@ const CompanyDashboard = () => {
             course.id.includes("ux") ? "Experiencia de Usuario en Plataformas de Inversión" :
             course.id.includes("startup") ? "Análisis Técnico para Inversiones" : 
             "Fundamentos de Inversión Bursátil",
-          description: "Curso especializado en inversiones para clientes de " + companyName + ".",
+          description: "Curso especializado para profesionales de " + companyName + ".",
         }));
         
         setCourses(companyCourses);
