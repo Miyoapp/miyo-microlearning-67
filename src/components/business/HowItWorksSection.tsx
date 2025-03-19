@@ -9,7 +9,7 @@ const HowItWorksSection = () => {
       <div className="miyo-container">
         <div className="max-w-3xl mx-auto text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Transformamos su información en micropodcasts
+            Transformamos información en micropodcasts
           </h2>
           <p className="text-xl text-gray-600">
             Nuestra tecnología permite clonar voces personalizadas. Distribuimos el contenido en rutas de aprendizaje efectivas.
@@ -20,7 +20,7 @@ const HowItWorksSection = () => {
           <StepCard 
             icon={<FileText className="h-10 w-10 text-miyo-700" />} 
             title="Información a micropodcasts"
-            description="Convertimos su información en contenido de audio de alta calidad utilizando IA avanzada."
+            description="Convertimos información en contenido de audio de alta calidad utilizando IA avanzada."
             step="Paso 1"
           />
           <StepCard 
