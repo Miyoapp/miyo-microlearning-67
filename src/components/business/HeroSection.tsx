@@ -32,7 +32,7 @@ const HeroSection = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               size="lg" 
-              className="bg-miyo-800 hover:bg-miyo-700 text-white font-medium w-40 py-6 h-auto"
+              className="bg-miyo-800 hover:bg-miyo-700 text-white font-medium w-32 py-4 h-auto"
               onClick={scrollToContact}
             >
               Demo <ArrowRight className="ml-2 h-4 w-4" />
@@ -40,7 +40,7 @@ const HeroSection = () => {
             <Button 
               variant="outline" 
               size="lg" 
-              className="border-miyo-800 text-miyo-800 hover:bg-miyo-50 w-40 py-6 h-auto"
+              className="border-miyo-800 text-miyo-800 hover:bg-miyo-50 w-32 py-4 h-auto"
               onClick={() => setShowLoginDialog(true)}
             >
               Login <LogIn className="ml-2 h-4 w-4" />
