@@ -33,7 +33,7 @@ const ValueProposition = () => {
         <div className="max-w-3xl mx-auto text-center mb-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Solución integral</h2>
           <p className="text-lg text-gray-600">
-            Personal o empresarial, MIYO es la plataforma ideal para el aprendizaje moderno.
+            Personal o empresarial, Miyo es la plataforma ideal para el aprendizaje moderno.
           </p>
         </div>
         

@@ -5,19 +5,19 @@ import { Card, CardContent } from '@/components/ui/card';
 
 const testimonials = [
   {
-    quote: "MIYO ha transformado mi rutina diaria. Ahora aprovecho mi trayecto al trabajo para aprender algo nuevo cada día.",
+    quote: "Miyo ha transformado mi rutina diaria. Ahora aprovecho mi trayecto al trabajo para aprender algo nuevo cada día.",
     author: "Ana García",
     role: "Profesional de Marketing",
     avatar: ""
   },
   {
-    quote: "Como director de formación, MIYO nos ha permitido convertir nuestros manuales en contenido de audio accesible para todo el equipo.",
+    quote: "Como director de formación, Miyo nos ha permitido convertir nuestros manuales en contenido de audio accesible para todo el equipo.",
     author: "Carlos Martínez",
     role: "Director de RR.HH",
     avatar: ""
   },
   {
-    quote: "La calidad del contenido y la flexibilidad del formato de audio han hecho de MIYO mi plataforma de aprendizaje favorita.",
+    quote: "La calidad del contenido y la flexibilidad del formato de audio han hecho de Miyo mi plataforma de aprendizaje favorita.",
     author: "Laura Rodríguez",
     role: "Emprendedora",
     avatar: ""
@@ -34,7 +34,7 @@ const Testimonials = () => {
           </span>
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Lo que dicen nuestros usuarios</h2>
           <p className="text-lg text-gray-600">
-            Descubre cómo MIYO está transformando la forma en que las personas y empresas aprenden.
+            Descubre cómo Miyo está transformando la forma en que las personas y empresas aprenden.
           </p>
         </div>
         
