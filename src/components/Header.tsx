@@ -78,6 +78,9 @@ const Header = () => {
     if (path === '/' && location.pathname === '/') {
       return true;
     }
+    if (path === '/personas' && location.pathname === '/personas') {
+      return true;
+    }
     if (path === '/business' && location.pathname === '/business') {
       return true;
     }
@@ -107,8 +110,24 @@ const Header = () => {
                   )}
                 >
                   <span className="relative">
-                    Personas
+                    Home
                     {isRouteActive('/') && (
+                      <span className="absolute left-0 -bottom-1 w-full h-[3px] bg-miyo-800"></span>
+                    )}
+                  </span>
+                </Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <Link 
+                  to="/personas" 
+                  className={cn(
+                    "px-4 py-2 relative text-sm font-medium transition-colors",
+                    isRouteActive('/personas') ? 'text-miyo-800' : 'text-gray-600 hover:text-miyo-600'
+                  )}
+                >
+                  <span className="relative">
+                    Personas
+                    {isRouteActive('/personas') && (
                       <span className="absolute left-0 -bottom-1 w-full h-[3px] bg-miyo-800"></span>
                     )}
                   </span>
