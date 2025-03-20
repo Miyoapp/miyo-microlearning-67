@@ -14,7 +14,7 @@ const Logo: React.FC<LogoProps> = ({ className = '', linkClassName = '', onClick
       <img 
         src="/lovable-uploads/4e6c4cb4-598d-409c-ace0-0a58fd3f2abc.png" 
         alt="MIYO Logo" 
-        className={`h-10 ${className}`}
+        className={`h-10 w-auto ${className}`}
       />
     </Link>
   );
