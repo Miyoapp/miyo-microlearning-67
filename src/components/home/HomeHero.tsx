@@ -10,7 +10,7 @@ const HomeHero = () => {
       <div className="miyo-container">
         <div className="max-w-3xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 animate-slide-down">
-            Aprendizaje en <span className="text-miyo-800">audio</span>
+            Microaprendizaje en <span className="text-miyo-800">audio</span>
           </h1>
           <p className="text-xl text-gray-600 mb-8 animate-slide-up">
             Microaprendizaje para personas y empresas.
