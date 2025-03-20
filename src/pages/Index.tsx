@@ -6,6 +6,8 @@ import PodcastCard from '../components/PodcastCard';
 import { Podcast, CategoryModel } from '../types';
 import { obtenerCursos, obtenerCategorias } from '@/lib/api';
 import { useToast } from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
 
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState<CategoryModel | null>(null);
@@ -68,18 +70,24 @@ const Index = () => {
       <Header />
       
       {/* Hero Section */}
-      <section className="pt-32 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-white to-gray-50">
+      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-white to-gray-50">
         <div className="miyo-container">
           <div className="max-w-3xl mx-auto text-center">
-            <span className="inline-block py-1 px-3 rounded-full bg-miyo-100 text-miyo-800 text-sm font-medium mb-4 animate-fade-in">
+            <span className="inline-block py-1 px-8 rounded-full bg-purple-100 text-purple-800 text-sm font-medium mb-4 animate-fade-in">
               Aprende en cualquier momento y lugar
             </span>
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 animate-slide-down">
-              Microaprendizaje, <span className="text-miyo-800">impacto macro</span>
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 animate-slide-down">
+              Microaprendizaje en <span className="text-purple-600">audio</span>
             </h1>
-            <p className="text-xl text-gray-600 mb-8 animate-slide-up">
-              Expande tu conocimiento con lecciones de audio breves diseñadas para personas ocupadas. Aprende de expertos en minutos al día.
+            <p className="text-xl text-gray-600 mb-12 animate-slide-up">
+              Expande tu conocimiento con lecciones breves diseñadas para tu ritmo de vida.
             </p>
+            <div className="flex justify-center">
+              <Button className="bg-purple-600 hover:bg-purple-700 text-white w-60 py-6 h-auto rounded-lg shadow-sm">
+                Explorar cursos
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </section>
