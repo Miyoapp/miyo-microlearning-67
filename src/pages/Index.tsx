@@ -83,7 +83,7 @@ const Index = () => {
               Expande tu conocimiento con lecciones breves diseñadas para tu ritmo de vida.
             </p>
             <div className="flex justify-center">
-              <Button className="bg-miyo-800 hover:bg-miyo-700 text-white w-60 py-6 h-auto rounded-lg shadow-sm">
+              <Button className="bg-miyo-800 hover:bg-miyo-700 text-white w-32 py-6 h-auto rounded-lg shadow-sm">
                 Explorar cursos
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
