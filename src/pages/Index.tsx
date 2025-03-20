@@ -84,7 +84,7 @@ const Index = () => {
             </p>
             <div className="flex justify-center">
               <Button className="bg-miyo-800 hover:bg-miyo-700 text-white w-32 py-4 h-auto rounded-lg shadow-sm">
-                Explorar cursos
+                Explorar
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
