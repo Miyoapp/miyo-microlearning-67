@@ -13,7 +13,7 @@ const HomeHero = () => {
             Microaprendizaje en <span className="text-miyo-800">audio</span>
           </h1>
           <p className="text-xl text-gray-600 mb-8 animate-slide-up">
-            Microaprendizaje para personas y empresas.
+            Conocimiento que se adapta a tu ritmo de vida
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/personas">
