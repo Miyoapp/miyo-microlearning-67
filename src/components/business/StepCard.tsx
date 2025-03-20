@@ -15,7 +15,7 @@ const StepCard = ({ icon, title, description, step }: StepCardProps) => {
       <CardContent className="p-8">
         <div className="flex flex-col items-center text-center">
           <span className="text-xs font-semibold text-miyo-700 bg-miyo-50 px-3 py-1 rounded-full mb-4">
-            {step}
+            Paso {step}
           </span>
           <div className="mb-4 p-3 bg-miyo-100 rounded-full">
             {icon}

@@ -13,7 +13,7 @@ const Footer = () => {
           <div className="col-span-1 md:col-span-1">
             <Logo className="mb-4" />
             <p className="text-gray-600 mb-4">
-              Transformando el aprendizaje a través del audio.
+              Aprendizaje a través del audio.
             </p>
             <div className="flex space-x-4">
               <a href="#" className="text-gray-400 hover:text-miyo-600 transition-colors">
@@ -34,9 +34,8 @@ const Footer = () => {
           <div>
             <h3 className="font-semibold text-gray-900 mb-4">Plataforma</h3>
             <ul className="space-y-3">
-              <li><Link to="/personas" className="text-gray-600 hover:text-miyo-800 transition-colors">Para Individuos</Link></li>
-              <li><Link to="/business" className="text-gray-600 hover:text-miyo-800 transition-colors">Para Empresas</Link></li>
-              <li><a href="#" className="text-gray-600 hover:text-miyo-800 transition-colors">Características</a></li>
+              <li><Link to="/personas" className="text-gray-600 hover:text-miyo-800 transition-colors">Personas</Link></li>
+              <li><Link to="/business" className="text-gray-600 hover:text-miyo-800 transition-colors">Empresas</Link></li>
               <li><a href="#" className="text-gray-600 hover:text-miyo-800 transition-colors">Precios</a></li>
             </ul>
           </div>
@@ -46,18 +45,16 @@ const Footer = () => {
             <ul className="space-y-3">
               <li><a href="#" className="text-gray-600 hover:text-miyo-800 transition-colors">Blog</a></li>
               <li><a href="#" className="text-gray-600 hover:text-miyo-800 transition-colors">Guías</a></li>
-              <li><a href="#" className="text-gray-600 hover:text-miyo-800 transition-colors">Webinars</a></li>
-              <li><a href="#" className="text-gray-600 hover:text-miyo-800 transition-colors">Centro de ayuda</a></li>
+              <li><a href="#" className="text-gray-600 hover:text-miyo-800 transition-colors">Ayuda</a></li>
             </ul>
           </div>
           
           <div>
             <h3 className="font-semibold text-gray-900 mb-4">Empresa</h3>
             <ul className="space-y-3">
-              <li><a href="#" className="text-gray-600 hover:text-miyo-800 transition-colors">Sobre nosotros</a></li>
-              <li><a href="#" className="text-gray-600 hover:text-miyo-800 transition-colors">Contáctanos</a></li>
+              <li><a href="#" className="text-gray-600 hover:text-miyo-800 transition-colors">Nosotros</a></li>
+              <li><a href="#" className="text-gray-600 hover:text-miyo-800 transition-colors">Contacto</a></li>
               <li><a href="#" className="text-gray-600 hover:text-miyo-800 transition-colors">Carreras</a></li>
-              <li><a href="#" className="text-gray-600 hover:text-miyo-800 transition-colors">Socios</a></li>
             </ul>
           </div>
         </div>
@@ -66,12 +63,11 @@ const Footer = () => {
         
         <div className="flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-600 text-sm">
-            © {new Date().getFullYear()} MIYO. Todos los derechos reservados.
+            © {new Date().getFullYear()} MIYO
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <a href="#" className="text-gray-600 hover:text-miyo-800 text-sm transition-colors">Términos</a>
             <a href="#" className="text-gray-600 hover:text-miyo-800 text-sm transition-colors">Privacidad</a>
-            <a href="#" className="text-gray-600 hover:text-miyo-800 text-sm transition-colors">Cookies</a>
           </div>
         </div>
       </div>

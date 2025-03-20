@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
@@ -41,11 +42,7 @@ const Header = () => {
   // Add scroll event listener to add shadow when scrolled
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 20) {
-        setScrolled(true);
-      } else {
-        setScrolled(false);
-      }
+      setScrolled(window.scrollY > 20);
     };
     
     window.addEventListener('scroll', handleScroll);
@@ -74,15 +71,9 @@ const Header = () => {
 
   // Function to check if a route is active
   const isRouteActive = (path) => {
-    if (path === '/' && location.pathname === '/') {
-      return true;
-    }
-    if (path === '/personas' && location.pathname === '/personas') {
-      return true;
-    }
-    if (path === '/business' && location.pathname === '/business') {
-      return true;
-    }
+    if (path === '/' && location.pathname === '/') return true;
+    if (path === '/personas' && location.pathname === '/personas') return true;
+    if (path === '/business' && location.pathname === '/business') return true;
     return false;
   };
   
@@ -107,7 +98,7 @@ const Header = () => {
                   )}
                 >
                   <span className="relative">
-                    Home
+                    Inicio
                     {isRouteActive('/') && (
                       <span className="absolute left-0 -bottom-1 w-full h-[3px] bg-miyo-800"></span>
                     )}
@@ -164,7 +155,7 @@ const Header = () => {
                 </div>
                 <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
                   <LogOut className="mr-2 h-4 w-4" />
-                  <span>Cerrar sesión</span>
+                  <span>Salir</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

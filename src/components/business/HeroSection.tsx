@@ -21,14 +21,11 @@ const HeroSection = () => {
       <div className="miyo-container">
         <div className="max-w-5xl mx-auto">
           <div className="flex flex-col items-center text-center mb-12">
-            <span className="inline-block py-1 px-4 rounded-full bg-miyo-100 text-miyo-800 text-sm font-medium mb-4 animate-fade-in">
-              Innovación en Capacitación
-            </span>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight animate-slide-down">
-              Transformamos información en <span className="text-miyo-800">micropodcasts</span> de aprendizaje
+              Información en <span className="text-miyo-800">audio</span>
             </h1>
             <p className="text-xl text-gray-600 mb-8 max-w-3xl animate-slide-up">
-              Plataforma de microaprendizaje que convierte información en contenido audible para capacitar clientes y partners comerciales de forma efectiva.
+              Convierte información en micropodcasts de aprendizaje para capacitar clientes y equipos.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button 
@@ -36,7 +33,7 @@ const HeroSection = () => {
                 className="bg-miyo-800 hover:bg-miyo-900 text-white font-medium"
                 onClick={scrollToContact}
               >
-                Solicitar demo <ArrowRight className="ml-2 h-4 w-4" />
+                Demo <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
               <Button 
                 variant="outline" 
@@ -44,7 +41,7 @@ const HeroSection = () => {
                 className="border-miyo-800 text-miyo-800 hover:bg-miyo-50"
                 onClick={() => setShowLoginDialog(true)}
               >
-                Iniciar sesión <LogIn className="ml-2 h-4 w-4" />
+                Login <LogIn className="ml-2 h-4 w-4" />
               </Button>
             </div>
           </div>

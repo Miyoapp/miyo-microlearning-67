@@ -16,43 +16,43 @@ const BenefitsSection = () => {
       <div className="miyo-container">
         <div className="max-w-3xl mx-auto text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Por qué elegir Miyo para tu capacitación
+            Ventajas
           </h2>
           <p className="text-xl text-gray-600">
-            Transformamos la capacitación empresarial con una experiencia de aprendizaje única y efectiva.
+            Capacitación empresarial eficiente y efectiva.
           </p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <BenefitCard 
             icon={<Zap className="h-6 w-6 text-miyo-600" />}
-            title="Aprendizaje acelerado"
-            description="Formato de audio que facilita la absorción de información y mejora la retención de conocimientos."
+            title="Aprendizaje rápido"
+            description="Mejor absorción y retención de conocimientos."
           />
           <BenefitCard
             icon={<SlidersHorizontal className="h-6 w-6 text-miyo-600" />}
-            title="Contenido inteligente"
-            description="Información adaptada a las necesidades específicas de cada empresa y usuario."
+            title="Personalización"
+            description="Contenido adaptado a necesidades específicas."
           />
           <BenefitCard
             icon={<BarChart3 className="h-6 w-6 text-miyo-600" />}
-            title="Analítica detallada"
-            description="Seguimiento en tiempo real del progreso y comprensión de los usuarios."
+            title="Analítica"
+            description="Seguimiento en tiempo real del progreso."
           />
           <BenefitCard
             icon={<ListChecks className="h-6 w-6 text-miyo-600" />}
-            title="Experiencia atractiva"
-            description="Formato de microaprendizaje que mantiene el interés y reduce la fatiga de aprendizaje."
+            title="Engagement"
+            description="Formato que mantiene el interés del usuario."
           />
           <BenefitCard
             icon={<Clock className="h-6 w-6 text-miyo-600" />}
             title="Ahorro de tiempo"
-            description="Reduce el tiempo de creación de materiales de capacitación y acelera el proceso de aprendizaje."
+            description="Creación rápida y aprendizaje eficiente."
           />
           <BenefitCard
             icon={<TrendingUp className="h-6 w-6 text-miyo-600" />}
             title="Escalabilidad"
-            description="Solución que crece con tu empresa, adaptándose a nuevas necesidades y volúmenes de usuarios."
+            description="Crece con tu empresa y necesidades."
           />
         </div>
       </div>

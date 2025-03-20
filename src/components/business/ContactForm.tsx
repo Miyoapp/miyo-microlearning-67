@@ -35,7 +35,7 @@ const ContactForm = () => {
       message: ""
     });
     // Show success message (would integrate with toast in a real app)
-    alert("Solicitud enviada correctamente. Nos pondremos en contacto contigo pronto.");
+    alert("Solicitud enviada. Te contactaremos pronto.");
   };
 
   return (
@@ -43,7 +43,7 @@ const ContactForm = () => {
       <div className="miyo-container">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6 text-center">
-            ¿Listo para transformar tu capacitación?
+            Contacto
           </h2>
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mt-12">
             <div className="lg:col-span-3">
@@ -65,7 +65,7 @@ const ContactForm = () => {
                     <Input 
                       id="company" 
                       name="company" 
-                      placeholder="Nombre de tu empresa" 
+                      placeholder="Empresa" 
                       value={formData.company}
                       onChange={handleInputChange}
                       required
@@ -97,7 +97,7 @@ const ContactForm = () => {
                   />
                 </div>
                 <Button type="submit" className="w-full md:w-auto bg-miyo-800 hover:bg-miyo-900">
-                  Enviar solicitud
+                  Enviar
                 </Button>
               </form>
             </div>
@@ -129,7 +129,7 @@ const ContactForm = () => {
                 </div>
                 <div>
                   <h3 className="font-bold text-gray-900 mb-1">Dirección</h3>
-                  <p className="text-gray-600">Calle Innovación, 42<br />28001 Madrid, España</p>
+                  <p className="text-gray-600">Calle Innovación, 42<br />Madrid, España</p>
                 </div>
               </div>
             </div>

@@ -7,23 +7,23 @@ const ValueProposition = () => {
   const features = [
     {
       icon: <Headphones className="h-10 w-10 text-miyo-800" />,
-      title: "Microaprendizaje en Audio",
-      description: "Contenido educativo en formato de audio optimizado para una absorción eficiente de conocimiento."
+      title: "Audio",
+      description: "Contenido educativo optimizado para absorción eficiente."
     },
     {
       icon: <Clock className="h-10 w-10 text-miyo-800" />,
-      title: "Aprende a tu Ritmo",
-      description: "Lecciones breves diseñadas para adaptarse a tu agenda diaria, sin importar lo ocupada que sea."
+      title: "A tu ritmo",
+      description: "Lecciones breves adaptadas a tu agenda diaria."
     },
     {
       icon: <Building2 className="h-10 w-10 text-miyo-800" />,
-      title: "Soluciones Empresariales",
-      description: "Transforma la documentación de tu empresa en rutas de aprendizaje para capacitación efectiva."
+      title: "Empresas",
+      description: "Transforma documentación en rutas de aprendizaje."
     },
     {
       icon: <Globe className="h-10 w-10 text-miyo-800" />,
-      title: "Acceso sin Límites",
-      description: "Disponible en cualquier dispositivo, en cualquier momento, incluso sin conexión a internet."
+      title: "Sin límites",
+      description: "Disponible en cualquier dispositivo, en cualquier momento."
     }
   ];
 
@@ -31,10 +31,9 @@ const ValueProposition = () => {
     <section className="py-20 px-4 bg-white sm:px-6 lg:px-8">
       <div className="miyo-container">
         <div className="max-w-3xl mx-auto text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Una solución para todas tus necesidades</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Solución integral</h2>
           <p className="text-lg text-gray-600">
-            Ya sea que busques desarrollo personal o herramientas para capacitar a tu equipo, 
-            MIYO ofrece la plataforma ideal para el aprendizaje moderno.
+            Personal o empresarial, MIYO es la plataforma ideal para el aprendizaje moderno.
           </p>
         </div>
         
