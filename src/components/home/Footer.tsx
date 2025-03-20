@@ -14,7 +14,7 @@ const Footer = () => {
               <span className="text-2xl font-bold tracking-tight text-miyo-800">MIYO</span>
             </Link>
             <p className="text-gray-600 mb-4">
-              Transformando el aprendizaje a través del audio. Microaprendizaje con impacto macro.
+              Transformando el aprendizaje a través del audio.
             </p>
             <div className="flex space-x-4">
               <a href="#" className="text-gray-400 hover:text-miyo-600 transition-colors">
