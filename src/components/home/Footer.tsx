@@ -63,7 +63,7 @@ const Footer = () => {
         
         <div className="flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-600 text-sm">
-            © {new Date().getFullYear()} MIYO
+            © {new Date().getFullYear()} Miyo
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <a href="#" className="text-gray-600 hover:text-miyo-800 text-sm transition-colors">Términos</a>

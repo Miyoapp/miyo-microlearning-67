@@ -56,7 +56,7 @@ const BusinessFooter = () => {
           </div>
           
           <div className="mt-10 pt-8 border-t border-gray-200 text-center">
-            <p className="text-sm text-gray-500">© {new Date().getFullYear()} MIYO for Business. Todos los derechos reservados.</p>
+            <p className="text-sm text-gray-500">© {new Date().getFullYear()} Miyo for Business. Todos los derechos reservados.</p>
           </div>
         </div>
       </div>
