@@ -3,6 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Separator } from '@/components/ui/separator';
 import { Instagram, Twitter, Linkedin, Facebook } from 'lucide-react';
+import Logo from '../common/Logo';
 
 const Footer = () => {
   return (
@@ -10,9 +11,7 @@ const Footer = () => {
       <div className="miyo-container">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           <div className="col-span-1 md:col-span-1">
-            <Link to="/" className="inline-block mb-4">
-              <span className="text-2xl font-bold tracking-tight text-miyo-800">MIYO</span>
-            </Link>
+            <Logo className="mb-4" />
             <p className="text-gray-600 mb-4">
               Transformando el aprendizaje a través del audio.
             </p>

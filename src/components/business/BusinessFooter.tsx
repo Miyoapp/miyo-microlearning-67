@@ -1,5 +1,6 @@
 
 import React from "react";
+import Logo from "../common/Logo";
 
 const BusinessFooter = () => {
   return (
@@ -9,7 +10,7 @@ const BusinessFooter = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
             <div>
               <div className="mb-4">
-                <span className="text-2xl font-bold tracking-tight text-miyo-800">MIYO</span>
+                <Logo />
               </div>
               <p className="text-gray-600 mb-6 max-w-md">
                 Transformamos la capacitación corporativa con microaprendizaje en formato podcast. 

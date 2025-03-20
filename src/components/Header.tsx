@@ -1,6 +1,6 @@
-
 import { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { 
   DropdownMenu, 
@@ -8,16 +8,15 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
-import { User, LogOut } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   NavigationMenu,
   NavigationMenuList,
-  NavigationMenuItem,
-  NavigationMenuLink
+  NavigationMenuItem
 } from '@/components/ui/navigation-menu';
-import { navigationMenuTriggerStyle } from '@/components/ui/navigation-menu';
 import { cn } from '@/lib/utils';
+import Logo from './common/Logo';
 
 const Header = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -94,9 +93,7 @@ const Header = () => {
       }`}
     >
       <div className="miyo-container flex items-center justify-between">
-        <Link to="/" className="flex items-center" onClick={handleLogoClick}>
-          <span className="text-3xl font-bold tracking-tight text-miyo-800">MIYO</span>
-        </Link>
+        <Logo linkClassName="flex items-center" onClick={handleLogoClick} />
         
         {!isAuthenticated ? (
           <NavigationMenu>
