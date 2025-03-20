@@ -102,22 +102,32 @@ const Header = () => {
                 <Link 
                   to="/" 
                   className={cn(
-                    navigationMenuTriggerStyle(),
-                    isRouteActive('/') && 'border-b-2 border-miyo-800 text-miyo-800'
+                    "px-4 py-2 relative text-sm font-medium transition-colors",
+                    isRouteActive('/') ? 'text-miyo-800' : 'text-gray-600 hover:text-miyo-600'
                   )}
                 >
-                  Personas
+                  <span className="relative">
+                    Personas
+                    {isRouteActive('/') && (
+                      <span className="absolute left-0 -bottom-1 w-full h-[3px] bg-miyo-800"></span>
+                    )}
+                  </span>
                 </Link>
               </NavigationMenuItem>
               <NavigationMenuItem>
                 <Link 
                   to="/business" 
                   className={cn(
-                    navigationMenuTriggerStyle(),
-                    isRouteActive('/business') && 'border-b-2 border-miyo-800 text-miyo-800'
+                    "px-4 py-2 relative text-sm font-medium transition-colors",
+                    isRouteActive('/business') ? 'text-miyo-800' : 'text-gray-600 hover:text-miyo-600'
                   )}
                 >
-                  Empresas
+                  <span className="relative">
+                    Empresas
+                    {isRouteActive('/business') && (
+                      <span className="absolute left-0 -bottom-1 w-full h-[3px] bg-miyo-800"></span>
+                    )}
+                  </span>
                 </Link>
               </NavigationMenuItem>
             </NavigationMenuList>
