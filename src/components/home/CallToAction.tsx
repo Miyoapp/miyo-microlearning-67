@@ -16,13 +16,13 @@ const CallToAction = () => {
             Únete y descubre el poder del microaprendizaje en audio.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/personas" className="w-full sm:w-32">
+            <Link to="/personas" className="w-full sm:w-40">
               <Button className="bg-miyo-800 hover:bg-miyo-700 text-white w-full py-6 h-auto rounded-lg shadow-sm">
                 Personas
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
-            <Link to="/business" className="w-full sm:w-32">
+            <Link to="/business" className="w-full sm:w-40">
               <Button variant="outline" className="border-miyo-800 text-miyo-800 hover:bg-miyo-100 w-full py-6 h-auto rounded-lg">
                 Empresas
                 <ArrowRight className="ml-2 h-4 w-4" />
