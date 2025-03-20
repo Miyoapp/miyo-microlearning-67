@@ -12,7 +12,7 @@ const Logo: React.FC<LogoProps> = ({ className = '', linkClassName = '', onClick
   return (
     <Link to="/" className={`inline-block ${linkClassName}`} onClick={onClick}>
       <img 
-        src="/lovable-uploads/4e6c4cb4-598d-409c-ace0-0a58fd3f2abc.png" 
+        src="https://res.cloudinary.com/dyjx9cjat/image/upload/v1742489122/image/ojzibpintzrwyjtwherz.svg" 
         alt="MIYO Logo" 
         className={`h-10 w-auto ${className}`}
       />
