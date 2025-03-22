@@ -6,35 +6,17 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, AlertTriangle, RefreshCw } from 'lucide-react';
 import { obtenerCursos } from '@/lib/api';
 import { Podcast } from '@/types';
+import { useToast } from '@/components/ui/use-toast';
 
 const FeaturedCourses = () => {
   const [featuredCourses, setFeaturedCourses] = useState<Podcast[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
-    const loadFeaturedCourses = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const cursos = await obtenerCursos();
-        // Get just 4 random courses for featured section
-        const randomCourses = cursos.sort(() => Math.random() - 0.5).slice(0, 4);
-        setFeaturedCourses(randomCourses);
-        setIsLoading(false);
-      } catch (err) {
-        console.error("Error al cargar cursos destacados:", err);
-        setError("No se pudieron cargar los cursos destacados");
-        setIsLoading(false);
-      }
-    };
-
     loadFeaturedCourses();
   }, []);
-
-  const handleRetry = () => {
-    loadFeaturedCourses();
-  };
 
   const loadFeaturedCourses = async () => {
     try {
@@ -44,12 +26,31 @@ const FeaturedCourses = () => {
       // Get just 4 random courses for featured section
       const randomCourses = cursos.sort(() => Math.random() - 0.5).slice(0, 4);
       setFeaturedCourses(randomCourses);
+      
+      if (randomCourses.some(course => course.creator.name === 'Creador Desconocido')) {
+        console.warn("Algunos cursos no tienen información de creador");
+        toast({
+          title: "Información parcial",
+          description: "Algunos cursos pueden mostrar información incompleta",
+          variant: "default"
+        });
+      }
+      
       setIsLoading(false);
     } catch (err) {
       console.error("Error al cargar cursos destacados:", err);
       setError("No se pudieron cargar los cursos destacados");
       setIsLoading(false);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los cursos destacados",
+        variant: "destructive"
+      });
     }
+  };
+
+  const handleRetry = () => {
+    loadFeaturedCourses();
   };
 
   return (

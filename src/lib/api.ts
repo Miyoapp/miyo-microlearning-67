@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Podcast, 
@@ -78,17 +77,25 @@ export const transformarCursoAModelo = async (curso: SupabaseCurso): Promise<Pod
       .from('creadores')
       .select('*')
       .eq('id', curso.creador_id)
-      .maybeSingle(); // Usar maybeSingle en lugar de single para evitar errores
+      .single();
       
     let creator: Creator;
-    if (creadorError || !creadorData) {
-      console.warn("Error al obtener creador, usando valor por defecto:", creadorError);
-      creator = {
-        id: curso.creador_id || 'unknown',
-        name: 'Creador Desconocido',
-        imageUrl: '/placeholder.svg',
-        socialMedia: []
-      };
+    if (creadorError) {
+      console.error("Error al obtener creador:", creadorError);
+      
+      // Buscar en datos de muestra si existe el curso
+      const sampleCourse = podcasts.find(p => p.id === curso.id);
+      if (sampleCourse) {
+        console.log("Usando datos de creador de la muestra para:", curso.titulo);
+        creator = sampleCourse.creator;
+      } else {
+        creator = {
+          id: curso.creador_id || 'unknown',
+          name: 'Creador Desconocido',
+          imageUrl: '/placeholder.svg',
+          socialMedia: []
+        };
+      }
     } else {
       // Obtener las redes sociales del creador
       const { data: socialMediaData, error: socialMediaError } = await supabase
@@ -211,6 +218,14 @@ export const transformarCursoAModelo = async (curso: SupabaseCurso): Promise<Pod
     };
   } catch (error) {
     console.error("Error al transformar curso, devolviendo una versión simplificada:", error);
+    
+    // Intentar encontrar el curso en los datos de muestra
+    const sampleCourse = podcasts.find(p => p.id === curso.id);
+    if (sampleCourse) {
+      console.log("Usando datos de muestra completos para:", curso.titulo);
+      return sampleCourse;
+    }
+    
     // Crear una versión simplificada del curso en caso de error
     return {
       id: curso.id,
