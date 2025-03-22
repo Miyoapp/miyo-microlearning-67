@@ -16,6 +16,7 @@ const Index = () => {
   const [categories, setCategories] = useState<CategoryModel[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const { toast } = useToast();
   
   // Cargar datos desde Supabase
@@ -23,6 +24,8 @@ const Index = () => {
     const cargarDatos = async () => {
       try {
         setIsLoading(true);
+        setLoadError(null);
+        
         // Cargar categorías y cursos en paralelo
         const [categoriasData, cursosData] = await Promise.all([
           obtenerCategorias(),
@@ -35,6 +38,7 @@ const Index = () => {
         setIsLoading(false);
       } catch (error) {
         console.error("Error al cargar datos:", error);
+        setLoadError("No se pudieron cargar los datos. Por favor, intenta de nuevo.");
         toast({
           title: "Error al cargar datos",
           description: "No se pudieron cargar los datos. Por favor, intenta de nuevo.",
@@ -128,6 +132,17 @@ const Index = () => {
                   </div>
                 ))}
               </div>
+            ) : loadError ? (
+              <div className="text-center py-12 bg-red-50 rounded-lg border border-red-100">
+                <p className="text-lg text-red-600 mb-4">{loadError}</p>
+                <Button 
+                  variant="outline" 
+                  onClick={() => window.location.reload()}
+                  className="border-red-300 text-red-700 hover:bg-red-50"
+                >
+                  Intentar de nuevo
+                </Button>
+              </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredPodcasts.map((podcast, index) => (
@@ -142,7 +157,7 @@ const Index = () => {
               </div>
             )}
             
-            {!isLoading && filteredPodcasts.length === 0 && (
+            {!isLoading && !loadError && filteredPodcasts.length === 0 && (
               <div className="text-center py-12">
                 <p className="text-lg text-gray-600">No se encontraron podcasts en esta categoría.</p>
               </div>
