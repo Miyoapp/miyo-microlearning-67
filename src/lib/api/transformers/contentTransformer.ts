@@ -1,154 +1,144 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { Module, Lesson, SupabaseModulo, SupabaseLeccion } from "@/types";
-import { podcasts } from "@/data/podcasts";
+import { Lesson, Module, Podcast, SupabaseCurso, SupabaseLeccion, SupabaseModulo } from "@/types";
+import { obtenerCategoriaPorId } from "./categoryTransformer";
+import { obtenerCreador } from "./creatorTransformer";
+import { podcasts } from "@/data/podcasts"; // Import sample data for fallback
 
 /**
- * Obtiene módulos y lecciones para un curso específico
+ * Transforma un curso de Supabase al modelo de la aplicación
  */
-export const obtenerContenidoCurso = async (cursoId: string): Promise<{
-  modulos: Module[];
-  lecciones: Lesson[];
-}> => {
+export const transformarCursoAModelo = async (curso: SupabaseCurso): Promise<Podcast> => {
   try {
-    // Obtener módulos para este curso
-    const { data: modulos, error: modulosError } = await supabase
-      .from('modulos')
-      .select('*')
-      .eq('curso_id', cursoId)
-      .order('orden');
-      
-    if (modulosError) {
-      console.warn("Error al obtener módulos, usando módulos por defecto:", modulosError);
-    }
+    console.log(`Transformando curso: ${curso.id} - ${curso.titulo}`);
     
-    const modulosArray = modulos || [];
+    // Obtener la categoría del curso
+    const categoria = await obtenerCategoriaPorId(curso.categoria_id);
     
-    // Obtener lecciones para todos los módulos de este curso
-    const moduloIds = modulosArray.map(m => m.id);
-    let lecciones: Lesson[] = [];
-    let leccionesPorModulo: Record<string, string[]> = {};
+    // Obtener el creador del curso
+    const creador = await obtenerCreador(curso.creador_id, curso.id);
     
-    if (moduloIds.length > 0) {
-      const { data: leccionesData, error: leccionesError } = await supabase
-        .from('lecciones')
-        .select('*')
-        .in('modulo_id', moduloIds)
-        .order('orden');
-        
-      if (leccionesError) {
-        console.warn("Error al obtener lecciones:", leccionesError);
-      } else {
-        // Convertir lecciones al formato esperado
-        lecciones = (leccionesData || []).map((l: SupabaseLeccion) => ({
-          id: l.id,
-          title: l.titulo,
-          duration: l.duracion,
-          audioUrl: l.url_audio,
-          isCompleted: false, // Estado inicial
-          isLocked: l.estado_inicial === 'bloqueado'
-        }));
-        
-        // Crear un mapa de lecciones por módulo
-        leccionesData?.forEach((l: SupabaseLeccion) => {
-          if (!leccionesPorModulo[l.modulo_id]) {
-            leccionesPorModulo[l.modulo_id] = [];
-          }
-          leccionesPorModulo[l.modulo_id].push(l.id);
-        });
-      }
-    }
+    // Obtener los módulos y lecciones del curso
+    const [modulos, lecciones] = await Promise.all([
+      obtenerModulos(curso.id),
+      obtenerLecciones(curso.id)
+    ]);
     
-    // Si no hay lecciones, crear algunas de ejemplo o usar datos de muestra
-    if (lecciones.length === 0) {
-      // Buscar en datos de muestra primero
-      const sampleCourse = podcasts.find(p => p.id === cursoId);
-      if (sampleCourse && sampleCourse.lessons.length > 0) {
-        lecciones = sampleCourse.lessons;
-      } else {
-        lecciones = [
-          {
-            id: `${cursoId}-lesson-1`,
-            title: "Introducción al curso",
-            duration: 5,
-            audioUrl: "https://example.com/audio1.mp3",
-            isCompleted: false,
-            isLocked: false
-          },
-          {
-            id: `${cursoId}-lesson-2`,
-            title: "Conceptos básicos",
-            duration: 10,
-            audioUrl: "https://example.com/audio2.mp3",
-            isCompleted: false,
-            isLocked: true
-          }
-        ];
-      }
-    }
-    
-    // Construir módulos
-    let modulosTransformados: Module[];
-    if (modulosArray.length > 0) {
-      modulosTransformados = modulosArray.map((m: SupabaseModulo) => ({
-        id: m.id,
-        title: m.titulo,
-        lessonIds: leccionesPorModulo[m.id] || []
-      }));
-    } else {
-      // Buscar en datos de muestra primero
-      const sampleCourse = podcasts.find(p => p.id === cursoId);
-      if (sampleCourse && sampleCourse.modules.length > 0) {
-        modulosTransformados = sampleCourse.modules;
-      } else {
-        // Crear módulos por defecto si no hay
-        modulosTransformados = [
-          {
-            id: `${cursoId}-module-1`,
-            title: 'Conceptos Básicos',
-            lessonIds: lecciones.map(l => l.id)
-          }
-        ];
-      }
-    }
-    
+    // Construir el objeto Podcast
     return {
-      modulos: modulosTransformados,
-      lecciones
+      id: curso.id,
+      title: curso.titulo,
+      description: curso.descripcion,
+      imageUrl: curso.imagen_portada,
+      creator: creador,
+      category: categoria,
+      duration: curso.duracion_total,
+      lessonCount: curso.numero_lecciones,
+      lessons: lecciones,
+      modules: modulos
     };
   } catch (error) {
-    console.error("Error al obtener contenido del curso:", error);
+    console.error(`Error al transformar curso ${curso.id}:`, error);
     
-    // Usar datos de muestra en caso de error
-    const sampleCourse = podcasts.find(p => p.id === cursoId);
-    if (sampleCourse) {
-      return {
-        modulos: sampleCourse.modules,
-        lecciones: sampleCourse.lessons
-      };
+    // Intentar encontrar un podcast de muestra con el mismo ID
+    const podcastMuestra = podcasts.find(p => p.id === curso.id);
+    if (podcastMuestra) {
+      console.log(`Usando datos de muestra para curso ${curso.id}`);
+      return podcastMuestra;
     }
     
-    // Datos mínimos por defecto
-    const leccionesDefecto = [
-      {
-        id: `${cursoId}-lesson-1`,
-        title: "Introducción al curso",
-        duration: 5,
-        audioUrl: "https://example.com/audio1.mp3",
-        isCompleted: false,
-        isLocked: false
-      }
-    ];
-    
+    // Si no se encuentra, crear un objeto con los datos disponibles
+    console.log(`Creando objeto Podcast mínimo para curso ${curso.id}`);
     return {
-      modulos: [
-        {
-          id: `${cursoId}-module-1`,
-          title: 'Conceptos Básicos',
-          lessonIds: leccionesDefecto.map(l => l.id)
-        }
-      ],
-      lecciones: leccionesDefecto
+      id: curso.id,
+      title: curso.titulo || "Curso sin título",
+      description: curso.descripcion || "Sin descripción",
+      imageUrl: curso.imagen_portada || "/placeholder.svg",
+      creator: {
+        id: "unknown",
+        name: "Creador Desconocido",
+        imageUrl: "/placeholder.svg",
+        socialMedia: []
+      },
+      category: {
+        id: "unknown",
+        nombre: "Sin categoría"
+      },
+      duration: curso.duracion_total || 0,
+      lessonCount: curso.numero_lecciones || 0,
+      lessons: [],
+      modules: []
     };
+  }
+};
+
+/**
+ * Obtiene los módulos para un curso específico
+ */
+const obtenerModulos = async (cursoId: string): Promise<Module[]> => {
+  try {
+    console.log(`Obteniendo módulos para curso: ${cursoId}`);
+    
+    // Aquí iría la lógica para obtener los módulos de la base de datos
+    // Por ahora, devolvemos un array vacío
+    // Ejemplo:
+    // const { data, error } = await supabase
+    //   .from('modulos')
+    //   .select('*')
+    //   .eq('curso_id', cursoId)
+    //   .order('orden', { ascending: true });
+    
+    // Usar datos de muestra como fallback
+    const podcastMuestra = podcasts.find(p => p.id === cursoId);
+    if (podcastMuestra) {
+      return podcastMuestra.modules;
+    }
+    
+    return [];
+  } catch (error) {
+    console.error(`Error al obtener módulos para curso ${cursoId}:`, error);
+    
+    // Usar datos de muestra como fallback
+    const podcastMuestra = podcasts.find(p => p.id === cursoId);
+    if (podcastMuestra) {
+      return podcastMuestra.modules;
+    }
+    
+    return [];
+  }
+};
+
+/**
+ * Obtiene las lecciones para un curso específico
+ */
+const obtenerLecciones = async (cursoId: string): Promise<Lesson[]> => {
+  try {
+    console.log(`Obteniendo lecciones para curso: ${cursoId}`);
+    
+    // Aquí iría la lógica para obtener las lecciones de la base de datos
+    // Por ahora, devolvemos un array vacío
+    // Ejemplo:
+    // const { data, error } = await supabase
+    //   .from('lecciones')
+    //   .select('*')
+    //   .eq('curso_id', cursoId)
+    //   .order('orden', { ascending: true });
+    
+    // Usar datos de muestra como fallback
+    const podcastMuestra = podcasts.find(p => p.id === cursoId);
+    if (podcastMuestra) {
+      return podcastMuestra.lessons;
+    }
+    
+    return [];
+  } catch (error) {
+    console.error(`Error al obtener lecciones para curso ${cursoId}:`, error);
+    
+    // Usar datos de muestra como fallback
+    const podcastMuestra = podcasts.find(p => p.id === cursoId);
+    if (podcastMuestra) {
+      return podcastMuestra.lessons;
+    }
+    
+    return [];
   }
 };
