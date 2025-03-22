@@ -8,32 +8,31 @@ import { podcasts } from "@/data/podcasts";
  */
 export const obtenerCreador = async (creadorId: string, cursoId?: string): Promise<Creator> => {
   try {
+    console.log(`Obteniendo creador con ID: ${creadorId} para curso: ${cursoId || 'no especificado'}`);
+    
+    // Verificar si el ID del creador es válido
+    if (!creadorId || creadorId === 'unknown') {
+      console.warn("ID de creador no válido:", creadorId);
+      return buscarCreadorEnDatosDeMuestra(cursoId) || crearCreadorPorDefecto(creadorId);
+    }
+    
     const { data: creadorData, error: creadorError } = await supabase
       .from('creadores')
       .select('*')
       .eq('id', creadorId)
       .maybeSingle();
       
-    if (creadorError || !creadorData) {
-      console.error("Error al obtener creador:", creadorError);
-      
-      // Buscar en datos de muestra si existe el curso
-      if (cursoId) {
-        const sampleCourse = podcasts.find(p => p.id === cursoId);
-        if (sampleCourse) {
-          console.log("Usando datos de creador de la muestra para curso ID:", cursoId);
-          return sampleCourse.creator;
-        }
-      }
-      
-      // Creador por defecto si no se encuentra
-      return {
-        id: creadorId || 'unknown',
-        name: 'Creador Desconocido',
-        imageUrl: '/placeholder.svg',
-        socialMedia: []
-      };
+    if (creadorError) {
+      console.error("Error al obtener creador de Supabase:", creadorError);
+      return buscarCreadorEnDatosDeMuestra(cursoId) || crearCreadorPorDefecto(creadorId);
     }
+    
+    if (!creadorData) {
+      console.warn(`No se encontró el creador con ID: ${creadorId} en la base de datos`);
+      return buscarCreadorEnDatosDeMuestra(cursoId) || crearCreadorPorDefecto(creadorId);
+    }
+    
+    console.log("Datos de creador obtenidos correctamente:", creadorData.nombre);
     
     // Obtener las redes sociales del creador
     let socialMediaData = [];
@@ -59,21 +58,33 @@ export const obtenerCreador = async (creadorId: string, cursoId?: string): Promi
     };
   } catch (error) {
     console.error("Error al procesar creador:", error);
-    
-    // Buscar en datos de muestra si existe el curso
-    if (cursoId) {
-      const sampleCourse = podcasts.find(p => p.id === cursoId);
-      if (sampleCourse) {
-        return sampleCourse.creator;
-      }
-    }
-    
-    // Creador por defecto en caso de error
-    return {
-      id: creadorId || 'unknown',
-      name: 'Creador Desconocido',
-      imageUrl: '/placeholder.svg',
-      socialMedia: []
-    };
+    return buscarCreadorEnDatosDeMuestra(cursoId) || crearCreadorPorDefecto(creadorId);
   }
+};
+
+/**
+ * Busca un creador en los datos de muestra para un curso específico
+ */
+const buscarCreadorEnDatosDeMuestra = (cursoId?: string): Creator | null => {
+  if (!cursoId) return null;
+  
+  const sampleCourse = podcasts.find(p => p.id === cursoId);
+  if (sampleCourse) {
+    console.log("Usando datos de creador de la muestra para curso ID:", cursoId);
+    return sampleCourse.creator;
+  }
+  
+  return null;
+};
+
+/**
+ * Crea un objeto creador por defecto
+ */
+const crearCreadorPorDefecto = (creadorId?: string): Creator => {
+  return {
+    id: creadorId || 'unknown',
+    name: 'Creador Desconocido',
+    imageUrl: '/placeholder.svg',
+    socialMedia: []
+  };
 };
