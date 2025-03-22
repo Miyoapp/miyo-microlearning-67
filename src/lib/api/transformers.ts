@@ -1,52 +1,16 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Podcast, 
   Module, 
   Lesson, 
   Creator,
-  CreatorSocialMedia,
+  CategoryModel,
   SupabaseCurso, 
   SupabaseModulo, 
-  SupabaseLeccion,
-  SupabaseCategoria,
-  SupabaseCreador,
-  CategoryModel
+  SupabaseLeccion
 } from "@/types";
 import { podcasts } from "@/data/podcasts"; // Import sample data as fallback
-
-// Función para obtener todas las categorías
-export const obtenerCategorias = async (): Promise<CategoryModel[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('categorias')
-      .select('*')
-      .order('nombre');
-      
-    if (error) {
-      console.error("Error al obtener categorías:", error);
-      throw error;
-    }
-    
-    if (!data || data.length === 0) {
-      console.warn("No se encontraron categorías en la base de datos, utilizando datos de muestra");
-      // Return categories from sample data
-      return podcasts.map(podcast => podcast.category).filter((category, index, self) => 
-        index === self.findIndex(c => c.id === category.id)
-      );
-    }
-    
-    return data.map((cat: SupabaseCategoria) => ({
-      id: cat.id,
-      nombre: cat.nombre
-    }));
-  } catch (error) {
-    console.error("Error al obtener categorías, usando datos de muestra:", error);
-    // Return categories from sample data as fallback
-    return podcasts.map(podcast => podcast.category).filter((category, index, self) => 
-      index === self.findIndex(c => c.id === category.id)
-    );
-  }
-};
 
 // Convertir datos de Supabase al formato de la aplicación
 export const transformarCursoAModelo = async (curso: SupabaseCurso): Promise<Podcast> => {
@@ -56,7 +20,7 @@ export const transformarCursoAModelo = async (curso: SupabaseCurso): Promise<Pod
       .from('categorias')
       .select('*')
       .eq('id', curso.categoria_id)
-      .single();
+      .maybeSingle();
       
     let categoria: CategoryModel;
     if (categoriaError) {
@@ -77,7 +41,7 @@ export const transformarCursoAModelo = async (curso: SupabaseCurso): Promise<Pod
       .from('creadores')
       .select('*')
       .eq('id', curso.creador_id)
-      .single();
+      .maybeSingle();
       
     let creator: Creator;
     if (creadorError) {
@@ -246,67 +210,5 @@ export const transformarCursoAModelo = async (curso: SupabaseCurso): Promise<Pod
       lessons: [],
       modules: []
     };
-  }
-};
-
-// Función para obtener todos los cursos
-export const obtenerCursos = async (): Promise<Podcast[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('cursos')
-      .select('*');
-      
-    if (error) {
-      console.error("Error al obtener cursos, usando datos de muestra:", error);
-      return podcasts; // Devolver datos de muestra en caso de error
-    }
-    
-    if (!data || data.length === 0) {
-      console.warn("No se encontraron cursos en la base de datos, utilizando datos de muestra");
-      return podcasts; // Devolver datos de muestra si no hay cursos
-    }
-    
-    // Transformar cada curso al formato de la aplicación
-    const promesas = data.map((curso: SupabaseCurso) => transformarCursoAModelo(curso));
-    return Promise.all(promesas);
-  } catch (error) {
-    console.error("Error al obtener cursos, usando datos de muestra:", error);
-    return podcasts; // Devolver datos de muestra en caso de error
-  }
-};
-
-// Función para obtener un curso por ID
-export const obtenerCursoPorId = async (id: string): Promise<Podcast | null> => {
-  try {
-    const { data, error } = await supabase
-      .from('cursos')
-      .select('*')
-      .eq('id', id)
-      .maybeSingle(); // Usar maybeSingle en lugar de single para evitar errores
-      
-    if (error) {
-      if (error.code === 'PGRST116') {
-        // No se encontró el curso, intentar buscar en los datos de muestra
-        console.warn("No se encontró el curso en la base de datos, buscando en datos de muestra");
-        const podcastMuestra = podcasts.find(p => p.id === id);
-        return podcastMuestra || null;
-      }
-      console.error("Error al obtener curso:", error);
-      throw error;
-    }
-    
-    if (!data) {
-      // No se encontró el curso, intentar buscar en los datos de muestra
-      console.warn("No se encontró el curso en la base de datos, buscando en datos de muestra");
-      const podcastMuestra = podcasts.find(p => p.id === id);
-      return podcastMuestra || null;
-    }
-    
-    return transformarCursoAModelo(data);
-  } catch (error) {
-    console.error("Error al obtener curso, buscando en datos de muestra:", error);
-    // Intentar buscar en los datos de muestra
-    const podcastMuestra = podcasts.find(p => p.id === id);
-    return podcastMuestra || null;
   }
 };
