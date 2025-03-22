@@ -13,7 +13,11 @@ export const obtenerCategorias = async (): Promise<CategoryModel[]> => {
       
     if (error) {
       console.error("Error al obtener categorías:", error);
-      throw error;
+      console.log("Utilizando datos de muestra para categorías");
+      // Return categories from sample data
+      return podcasts.map(podcast => podcast.category).filter((category, index, self) => 
+        index === self.findIndex(c => c.id === category.id)
+      );
     }
     
     if (!data || data.length === 0) {

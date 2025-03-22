@@ -16,41 +16,95 @@ import { podcasts } from "@/data/podcasts"; // Import sample data as fallback
 export const transformarCursoAModelo = async (curso: SupabaseCurso): Promise<Podcast> => {
   try {
     // Obtener la categoría para este curso
-    const { data: categoriaData, error: categoriaError } = await supabase
-      .from('categorias')
-      .select('*')
-      .eq('id', curso.categoria_id)
-      .maybeSingle();
-      
     let categoria: CategoryModel;
-    if (categoriaError) {
-      console.warn("Error al obtener categoría, usando valor por defecto:", categoriaError);
+    try {
+      const { data: categoriaData, error: categoriaError } = await supabase
+        .from('categorias')
+        .select('*')
+        .eq('id', curso.categoria_id)
+        .maybeSingle();
+        
+      if (categoriaError || !categoriaData) {
+        console.warn("Error al obtener categoría, usando valor por defecto:", categoriaError);
+        categoria = {
+          id: curso.categoria_id || 'unknown',
+          nombre: 'Categoría Desconocida'
+        };
+        
+        // Buscar la categoría en datos de muestra
+        const sampleCourse = podcasts.find(p => p.id === curso.id);
+        if (sampleCourse) {
+          categoria = sampleCourse.category;
+        }
+      } else {
+        categoria = {
+          id: categoriaData.id,
+          nombre: categoriaData.nombre
+        };
+      }
+    } catch (error) {
+      console.error("Error al procesar categoría:", error);
       categoria = {
-        id: curso.categoria_id,
+        id: curso.categoria_id || 'unknown',
         nombre: 'Categoría Desconocida'
-      };
-    } else {
-      categoria = {
-        id: categoriaData.id,
-        nombre: categoriaData.nombre
       };
     }
     
     // Obtener el creador para este curso
-    const { data: creadorData, error: creadorError } = await supabase
-      .from('creadores')
-      .select('*')
-      .eq('id', curso.creador_id)
-      .maybeSingle();
-      
     let creator: Creator;
-    if (creadorError) {
-      console.error("Error al obtener creador:", creadorError);
+    try {
+      const { data: creadorData, error: creadorError } = await supabase
+        .from('creadores')
+        .select('*')
+        .eq('id', curso.creador_id)
+        .maybeSingle();
+        
+      if (creadorError || !creadorData) {
+        console.error("Error al obtener creador:", creadorError);
+        
+        // Buscar en datos de muestra si existe el curso
+        const sampleCourse = podcasts.find(p => p.id === curso.id);
+        if (sampleCourse) {
+          console.log("Usando datos de creador de la muestra para:", curso.titulo);
+          creator = sampleCourse.creator;
+        } else {
+          creator = {
+            id: curso.creador_id || 'unknown',
+            name: 'Creador Desconocido',
+            imageUrl: '/placeholder.svg',
+            socialMedia: []
+          };
+        }
+      } else {
+        // Obtener las redes sociales del creador
+        let socialMediaData = [];
+        try {
+          const { data, error: socialMediaError } = await supabase
+            .rpc('get_creator_social_media', { creator_id: creadorData.id });
+            
+          if (socialMediaError) {
+            console.warn("Error al obtener redes sociales, no se mostrarán:", socialMediaError);
+          } else {
+            socialMediaData = data || [];
+          }
+        } catch (error) {
+          console.error("Error al obtener redes sociales:", error);
+        }
+        
+        // Construir el creador
+        creator = {
+          id: creadorData.id,
+          name: creadorData.nombre,
+          imageUrl: creadorData.imagen_url || '/placeholder.svg',
+          socialMedia: socialMediaData
+        };
+      }
+    } catch (error) {
+      console.error("Error al procesar creador:", error);
       
       // Buscar en datos de muestra si existe el curso
       const sampleCourse = podcasts.find(p => p.id === curso.id);
       if (sampleCourse) {
-        console.log("Usando datos de creador de la muestra para:", curso.titulo);
         creator = sampleCourse.creator;
       } else {
         creator = {
@@ -60,22 +114,6 @@ export const transformarCursoAModelo = async (curso: SupabaseCurso): Promise<Pod
           socialMedia: []
         };
       }
-    } else {
-      // Obtener las redes sociales del creador
-      const { data: socialMediaData, error: socialMediaError } = await supabase
-        .rpc('get_creator_social_media', { creator_id: creadorData.id });
-        
-      if (socialMediaError) {
-        console.warn("Error al obtener redes sociales, no se mostrarán:", socialMediaError);
-      }
-      
-      // Construir el creador
-      creator = {
-        id: creadorData.id,
-        name: creadorData.nombre,
-        imageUrl: creadorData.imagen_url || '/placeholder.svg',
-        socialMedia: socialMediaData || []
-      };
     }
     
     // Obtener módulos para este curso
@@ -128,24 +166,30 @@ export const transformarCursoAModelo = async (curso: SupabaseCurso): Promise<Pod
     
     // Si no hay lecciones, crear algunas de ejemplo
     if (lecciones.length === 0) {
-      lecciones = [
-        {
-          id: `${curso.id}-lesson-1`,
-          title: "Introducción al curso",
-          duration: 5,
-          audioUrl: "https://example.com/audio1.mp3",
-          isCompleted: false,
-          isLocked: false
-        },
-        {
-          id: `${curso.id}-lesson-2`,
-          title: "Conceptos básicos",
-          duration: 10,
-          audioUrl: "https://example.com/audio2.mp3",
-          isCompleted: false,
-          isLocked: true
-        }
-      ];
+      // Buscar en datos de muestra primero
+      const sampleCourse = podcasts.find(p => p.id === curso.id);
+      if (sampleCourse && sampleCourse.lessons.length > 0) {
+        lecciones = sampleCourse.lessons;
+      } else {
+        lecciones = [
+          {
+            id: `${curso.id}-lesson-1`,
+            title: "Introducción al curso",
+            duration: 5,
+            audioUrl: "https://example.com/audio1.mp3",
+            isCompleted: false,
+            isLocked: false
+          },
+          {
+            id: `${curso.id}-lesson-2`,
+            title: "Conceptos básicos",
+            duration: 10,
+            audioUrl: "https://example.com/audio2.mp3",
+            isCompleted: false,
+            isLocked: true
+          }
+        ];
+      }
     }
     
     // Construir módulos
@@ -157,14 +201,20 @@ export const transformarCursoAModelo = async (curso: SupabaseCurso): Promise<Pod
         lessonIds: leccionesPorModulo[m.id] || []
       }));
     } else {
-      // Crear módulos por defecto si no hay
-      modulosTransformados = [
-        {
-          id: `${curso.id}-module-1`,
-          title: 'Conceptos Básicos',
-          lessonIds: lecciones.map(l => l.id)
-        }
-      ];
+      // Buscar en datos de muestra primero
+      const sampleCourse = podcasts.find(p => p.id === curso.id);
+      if (sampleCourse && sampleCourse.modules.length > 0) {
+        modulosTransformados = sampleCourse.modules;
+      } else {
+        // Crear módulos por defecto si no hay
+        modulosTransformados = [
+          {
+            id: `${curso.id}-module-1`,
+            title: 'Conceptos Básicos',
+            lessonIds: lecciones.map(l => l.id)
+          }
+        ];
+      }
     }
     
     // Construir el podcast (curso)
@@ -197,7 +247,8 @@ export const transformarCursoAModelo = async (curso: SupabaseCurso): Promise<Pod
       creator: {
         id: 'unknown',
         name: 'Creador Desconocido',
-        imageUrl: '/placeholder.svg'
+        imageUrl: '/placeholder.svg',
+        socialMedia: []
       },
       duration: curso.duracion_total || 0,
       lessonCount: curso.numero_lecciones || 0,

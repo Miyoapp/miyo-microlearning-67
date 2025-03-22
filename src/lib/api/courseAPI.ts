@@ -7,6 +7,7 @@ import { transformarCursoAModelo } from './transformers';
 // Función para obtener todos los cursos
 export const obtenerCursos = async (): Promise<Podcast[]> => {
   try {
+    console.log("Obteniendo cursos desde Supabase...");
     const { data, error } = await supabase
       .from('cursos')
       .select('*');
@@ -21,6 +22,8 @@ export const obtenerCursos = async (): Promise<Podcast[]> => {
       return podcasts; // Devolver datos de muestra si no hay cursos
     }
     
+    console.log(`Se encontraron ${data.length} cursos en la base de datos`);
+    
     // Transformar cada curso al formato de la aplicación
     const promesas = data.map((curso: SupabaseCurso) => transformarCursoAModelo(curso));
     return Promise.all(promesas);
@@ -33,6 +36,7 @@ export const obtenerCursos = async (): Promise<Podcast[]> => {
 // Función para obtener un curso por ID
 export const obtenerCursoPorId = async (id: string): Promise<Podcast | null> => {
   try {
+    console.log(`Obteniendo curso con ID: ${id}`);
     const { data, error } = await supabase
       .from('cursos')
       .select('*')
