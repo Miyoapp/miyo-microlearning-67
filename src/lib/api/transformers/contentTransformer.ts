@@ -3,6 +3,7 @@ import { Lesson, Module, Podcast, SupabaseCurso, SupabaseLeccion, SupabaseModulo
 import { obtenerCategoria } from "./categoryTransformer";
 import { obtenerCreador } from "./creatorTransformer";
 import { podcasts } from "@/data/podcasts"; // Import sample data for fallback
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Transforma un curso de Supabase al modelo de la aplicación
@@ -18,10 +19,8 @@ export const transformarCursoAModelo = async (curso: SupabaseCurso): Promise<Pod
     const creador = await obtenerCreador(curso.creador_id, curso.id);
     
     // Obtener los módulos y lecciones del curso
-    const [modulos, lecciones] = await Promise.all([
-      obtenerModulos(curso.id),
-      obtenerLecciones(curso.id)
-    ]);
+    const modulos = await obtenerModulos(curso.id);
+    const lecciones = await obtenerLecciones(curso.id);
     
     // Construir el objeto Podcast
     return {
@@ -78,22 +77,59 @@ const obtenerModulos = async (cursoId: string): Promise<Module[]> => {
   try {
     console.log(`Obteniendo módulos para curso: ${cursoId}`);
     
-    // Aquí iría la lógica para obtener los módulos de la base de datos
-    // Por ahora, devolvemos un array vacío
-    // Ejemplo:
-    // const { data, error } = await supabase
-    //   .from('modulos')
-    //   .select('*')
-    //   .eq('curso_id', cursoId)
-    //   .order('orden', { ascending: true });
-    
-    // Usar datos de muestra como fallback
-    const podcastMuestra = podcasts.find(p => p.id === cursoId);
-    if (podcastMuestra) {
-      return podcastMuestra.modules;
+    // Consulta para obtener los módulos de la base de datos
+    const { data: modulosData, error } = await supabase
+      .from('modulos')
+      .select('*')
+      .eq('curso_id', cursoId)
+      .order('orden', { ascending: true });
+      
+    if (error) {
+      console.error(`Error al obtener módulos para curso ${cursoId}:`, error);
+      throw error;
     }
     
-    return [];
+    if (!modulosData || modulosData.length === 0) {
+      console.warn(`No se encontraron módulos para el curso ${cursoId}, usando datos de muestra.`);
+      
+      // Usar datos de muestra como fallback
+      const podcastMuestra = podcasts.find(p => p.id === cursoId);
+      if (podcastMuestra) {
+        return podcastMuestra.modules;
+      }
+      
+      return [];
+    }
+    
+    // Transformar los datos de Supabase al formato de la aplicación
+    console.log(`Se encontraron ${modulosData.length} módulos para el curso ${cursoId}`);
+    
+    // Obtener las lecciones para cada módulo
+    const modulosPromesas = modulosData.map(async (modulo: SupabaseModulo) => {
+      // Obtener las lecciones para este módulo
+      const { data: leccionesModulo, error: errorLecciones } = await supabase
+        .from('lecciones')
+        .select('id')
+        .eq('modulo_id', modulo.id)
+        .order('orden', { ascending: true });
+        
+      if (errorLecciones) {
+        console.error(`Error al obtener lecciones para módulo ${modulo.id}:`, errorLecciones);
+        return {
+          id: modulo.id,
+          title: modulo.titulo,
+          lessonIds: []
+        };
+      }
+      
+      return {
+        id: modulo.id,
+        title: modulo.titulo,
+        lessonIds: leccionesModulo?.map(leccion => leccion.id) || []
+      };
+    });
+    
+    return Promise.all(modulosPromesas);
   } catch (error) {
     console.error(`Error al obtener módulos para curso ${cursoId}:`, error);
     
@@ -114,22 +150,68 @@ const obtenerLecciones = async (cursoId: string): Promise<Lesson[]> => {
   try {
     console.log(`Obteniendo lecciones para curso: ${cursoId}`);
     
-    // Aquí iría la lógica para obtener las lecciones de la base de datos
-    // Por ahora, devolvemos un array vacío
-    // Ejemplo:
-    // const { data, error } = await supabase
-    //   .from('lecciones')
-    //   .select('*')
-    //   .eq('curso_id', cursoId)
-    //   .order('orden', { ascending: true });
-    
-    // Usar datos de muestra como fallback
-    const podcastMuestra = podcasts.find(p => p.id === cursoId);
-    if (podcastMuestra) {
-      return podcastMuestra.lessons;
+    // Primero obtenemos todos los IDs de módulos para este curso
+    const { data: modulosData, error: errorModulos } = await supabase
+      .from('modulos')
+      .select('id')
+      .eq('curso_id', cursoId);
+      
+    if (errorModulos || !modulosData || modulosData.length === 0) {
+      console.warn(`No se encontraron módulos para obtener lecciones del curso ${cursoId}, usando datos de muestra.`);
+      
+      // Usar datos de muestra como fallback
+      const podcastMuestra = podcasts.find(p => p.id === cursoId);
+      if (podcastMuestra) {
+        return podcastMuestra.lessons;
+      }
+      
+      return [];
     }
     
-    return [];
+    // Obtener todas las lecciones que pertenecen a estos módulos
+    const moduloIds = modulosData.map(m => m.id);
+    
+    const { data: leccionesData, error: errorLecciones } = await supabase
+      .from('lecciones')
+      .select('*')
+      .in('modulo_id', moduloIds)
+      .order('orden', { ascending: true });
+      
+    if (errorLecciones) {
+      console.error(`Error al obtener lecciones para curso ${cursoId}:`, errorLecciones);
+      throw errorLecciones;
+    }
+    
+    if (!leccionesData || leccionesData.length === 0) {
+      console.warn(`No se encontraron lecciones para el curso ${cursoId}, usando datos de muestra.`);
+      
+      // Usar datos de muestra como fallback
+      const podcastMuestra = podcasts.find(p => p.id === cursoId);
+      if (podcastMuestra) {
+        return podcastMuestra.lessons;
+      }
+      
+      return [];
+    }
+    
+    // Transformar los datos de Supabase al formato de la aplicación
+    console.log(`Se encontraron ${leccionesData.length} lecciones para el curso ${cursoId}`);
+    
+    // Por defecto, solo la primera lección está desbloqueada
+    const lecciones = leccionesData.map((leccion: SupabaseLeccion, index: number): Lesson => {
+      const isFirstLesson = index === 0;
+      
+      return {
+        id: leccion.id,
+        title: leccion.titulo,
+        duration: leccion.duracion,
+        audioUrl: leccion.url_audio,
+        isCompleted: false,
+        isLocked: leccion.estado_inicial === 'bloqueado' && !isFirstLesson
+      };
+    });
+    
+    return lecciones;
   } catch (error) {
     console.error(`Error al obtener lecciones para curso ${cursoId}:`, error);
     
