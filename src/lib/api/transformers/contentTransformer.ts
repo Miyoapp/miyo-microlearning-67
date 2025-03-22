@@ -1,6 +1,6 @@
 
 import { Lesson, Module, Podcast, SupabaseCurso, SupabaseLeccion, SupabaseModulo } from "@/types";
-import { obtenerCategoriaPorId } from "./categoryTransformer";
+import { obtenerCategoria } from "./categoryTransformer";
 import { obtenerCreador } from "./creatorTransformer";
 import { podcasts } from "@/data/podcasts"; // Import sample data for fallback
 
@@ -12,7 +12,7 @@ export const transformarCursoAModelo = async (curso: SupabaseCurso): Promise<Pod
     console.log(`Transformando curso: ${curso.id} - ${curso.titulo}`);
     
     // Obtener la categoría del curso
-    const categoria = await obtenerCategoriaPorId(curso.categoria_id);
+    const categoria = await obtenerCategoria(curso.categoria_id);
     
     // Obtener el creador del curso
     const creador = await obtenerCreador(curso.creador_id, curso.id);
