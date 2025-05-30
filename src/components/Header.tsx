@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
@@ -11,17 +10,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { LogOut } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  NavigationMenu,
-  NavigationMenuList,
-  NavigationMenuItem
-} from '@/components/ui/navigation-menu';
 import { cn } from '@/lib/utils';
 import Logo from './common/Logo';
+import { LoginDialog } from './auth/LoginDialog';
 
 const Header = () => {
   const [scrolled, setScrolled] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const userName = localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user") || "{}").name || "Usuario" : "Usuario";
@@ -69,12 +65,13 @@ const Header = () => {
     }
   };
 
-  // Function to check if a route is active
-  const isRouteActive = (path) => {
-    if (path === '/' && location.pathname === '/') return true;
-    if (path === '/personas' && location.pathname === '/personas') return true;
-    if (path === '/business' && location.pathname === '/business') return true;
-    return false;
+  const handleLogin = () => {
+    setShowLoginDialog(true);
+  };
+
+  const handleRegister = () => {
+    // Implementar modal o navegación a registro
+    console.log('Registro clicked');
   };
   
   return (
@@ -87,58 +84,20 @@ const Header = () => {
         <Logo linkClassName="flex items-center" onClick={handleLogoClick} />
         
         {!isAuthenticated ? (
-          <NavigationMenu>
-            <NavigationMenuList>
-              <NavigationMenuItem>
-                <Link 
-                  to="/" 
-                  className={cn(
-                    "px-4 py-2 relative text-sm font-medium transition-colors",
-                    isRouteActive('/') ? 'text-miyo-800' : 'text-gray-600 hover:text-miyo-600'
-                  )}
-                >
-                  <span className="relative">
-                    Inicio
-                    {isRouteActive('/') && (
-                      <span className="absolute left-0 -bottom-1 w-full h-[3px] bg-miyo-800"></span>
-                    )}
-                  </span>
-                </Link>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <Link 
-                  to="/personas" 
-                  className={cn(
-                    "px-4 py-2 relative text-sm font-medium transition-colors",
-                    isRouteActive('/personas') ? 'text-miyo-800' : 'text-gray-600 hover:text-miyo-600'
-                  )}
-                >
-                  <span className="relative">
-                    Personas
-                    {isRouteActive('/personas') && (
-                      <span className="absolute left-0 -bottom-1 w-full h-[3px] bg-miyo-800"></span>
-                    )}
-                  </span>
-                </Link>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <Link 
-                  to="/business" 
-                  className={cn(
-                    "px-4 py-2 relative text-sm font-medium transition-colors",
-                    isRouteActive('/business') ? 'text-miyo-800' : 'text-gray-600 hover:text-miyo-600'
-                  )}
-                >
-                  <span className="relative">
-                    Empresas
-                    {isRouteActive('/business') && (
-                      <span className="absolute left-0 -bottom-1 w-full h-[3px] bg-miyo-800"></span>
-                    )}
-                  </span>
-                </Link>
-              </NavigationMenuItem>
-            </NavigationMenuList>
-          </NavigationMenu>
+          <div className="flex items-center space-x-4">
+            <button 
+              onClick={handleLogin}
+              className="text-gray-600 hover:text-miyo-600 font-medium transition-colors"
+            >
+              Iniciar Sesión
+            </button>
+            <button 
+              onClick={handleRegister}
+              className="bg-miyo-800 hover:bg-miyo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            >
+              Registro
+            </button>
+          </div>
         ) : (
           <div className="flex items-center">
             <DropdownMenu>
@@ -162,6 +121,8 @@ const Header = () => {
           </div>
         )}
       </div>
+      
+      <LoginDialog open={showLoginDialog} onOpenChange={setShowLoginDialog} />
     </header>
   );
 };

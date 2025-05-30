@@ -1,53 +1,63 @@
 
 import React from 'react';
-import { Lightbulb, HeadphonesIcon, Gauge } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
+import { Search, Clock, TrendingUp } from 'lucide-react';
 
 const HowItWorks = () => {
   const steps = [
     {
-      icon: <Lightbulb className="h-12 w-12 text-miyo-600" />,
-      title: "Selecciona",
-      description: "Explora nuestro contenido o carga tu documentación."
+      number: "01",
+      icon: <Search className="h-12 w-12 text-miyo-600" />,
+      title: "Elige tu camino",
+      description: "Explora nuestra colección de microcursos en audio"
     },
     {
-      icon: <HeadphonesIcon className="h-12 w-12 text-miyo-600" />,
-      title: "Escucha",
-      description: "Lecciones en audio de 5-10 minutos."
+      number: "02",
+      icon: <Clock className="h-12 w-12 text-miyo-600" />,
+      title: "Escucha en cualquier momento",
+      description: "Los cursos están diseñados en cápsulas de 5 a 15 minutos"
     },
     {
-      icon: <Gauge className="h-12 w-12 text-miyo-600" />,
-      title: "Progresa",
-      description: "Completa módulos a tu ritmo y aprende consistentemente."
+      number: "03",
+      icon: <TrendingUp className="h-12 w-12 text-miyo-600" />,
+      title: "Aprende",
+      description: "Contenido que transforma y te impulsa hacia tu mejor versión"
     },
   ];
 
   return (
     <section className="py-20 px-4 bg-gray-50 sm:px-6 lg:px-8">
       <div className="miyo-container">
-        <div className="max-w-3xl mx-auto text-center mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Cómo funciona</h2>
-          <p className="text-lg text-gray-600">
-            Maximiza el aprendizaje, minimiza el tiempo.
-          </p>
+        <div className="max-w-4xl mx-auto text-center mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            ¿Cómo funciona?
+          </h2>
         </div>
         
-        <div className="flex flex-col md:flex-row justify-between items-center gap-10 max-w-5xl mx-auto">
-          {steps.map((step, index) => (
-            <React.Fragment key={index}>
-              <div className="flex flex-col items-center text-center max-w-xs">
-                <div className="mb-6 p-4 bg-white rounded-full shadow-sm">
-                  {step.icon}
+        <div className="max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8">
+            {steps.map((step, index) => (
+              <div key={index} className="text-center group">
+                {/* Número del paso */}
+                <div className="mb-6">
+                  <div className="text-6xl font-bold text-miyo-200 mb-4 group-hover:text-miyo-300 transition-colors">
+                    {step.number}
+                  </div>
+                  <div className="flex justify-center mb-4">
+                    <div className="p-4 bg-white rounded-full shadow-sm group-hover:shadow-md transition-shadow">
+                      {step.icon}
+                    </div>
+                  </div>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">{step.title}</h3>
-                <p className="text-gray-600">{step.description}</p>
+                
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                  {step.title}
+                </h3>
+                <p className="text-gray-600 leading-relaxed">
+                  {step.description}
+                </p>
               </div>
-              
-              {index < steps.length - 1 && (
-                <Separator className="hidden md:block h-1 w-12 bg-miyo-200" />
-              )}
-            </React.Fragment>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </section>

@@ -1,4 +1,3 @@
-
 export interface Creator {
   id: string;
   name: string;
@@ -115,3 +114,6 @@ export interface SupabaseLeccion {
   fecha_creacion: string;
   fecha_actualizacion: string;
 }
+
+// Importar tipos específicos del landing
+export * from './landing';
