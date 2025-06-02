@@ -1,11 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CategoryCard from './CategoryCard';
 import { CategoriaLanding } from '@/types/landing';
 import { obtenerCategoriasLanding } from '@/lib/api/landingAPI';
-
 const CategoryCarousel: React.FC = () => {
   const [categorias, setCategorias] = useState<CategoriaLanding[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -23,44 +21,31 @@ const CategoryCarousel: React.FC = () => {
         setIsLoading(false);
       }
     };
-
     cargarCategorias();
   }, []);
-
   const itemsPerPage = 3;
   const maxIndex = Math.max(0, categorias.length - itemsPerPage);
-
   const nextSlide = () => {
     setCurrentIndex(prev => Math.min(prev + 1, maxIndex));
   };
-
   const prevSlide = () => {
     setCurrentIndex(prev => Math.max(prev - 1, 0));
   };
-
   const handleCategoryClick = (categoria: CategoriaLanding) => {
     console.log('Categoría seleccionada:', categoria.nombre);
     // Aquí se puede implementar la navegación o modal de registro
   };
-
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center py-20">
+    return <div className="flex justify-center items-center py-20">
         <div className="text-lg text-gray-600">Cargando categorías...</div>
-      </div>
-    );
+      </div>;
   }
-
   if (categorias.length === 0) {
-    return (
-      <div className="flex justify-center items-center py-20">
+    return <div className="flex justify-center items-center py-20">
         <div className="text-lg text-gray-600">No hay categorías disponibles</div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
+  return <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
       <div className="miyo-container">
         <div className="max-w-6xl mx-auto">
           {/* Título y subtítulo */}
@@ -77,68 +62,36 @@ const CategoryCarousel: React.FC = () => {
           <div className="relative">
             {/* Contenedor del carousel */}
             <div className="overflow-hidden">
-              <div 
-                className="flex transition-transform duration-300 ease-in-out gap-6"
-                style={{ 
-                  transform: `translateX(-${currentIndex * (100 / itemsPerPage)}%)`,
-                  width: `${(categorias.length / itemsPerPage) * 100}%`
-                }}
-              >
-                {categorias.map((categoria) => (
-                  <div 
-                    key={categoria.id} 
-                    className="flex-shrink-0"
-                    style={{ width: `${100 / categorias.length}%` }}
-                  >
-                    <CategoryCard 
-                      categoria={categoria} 
-                      onClick={() => handleCategoryClick(categoria)}
-                    />
-                  </div>
-                ))}
+              <div className="flex transition-transform duration-300 ease-in-out gap-6" style={{
+              transform: `translateX(-${currentIndex * (100 / itemsPerPage)}%)`,
+              width: `${categorias.length / itemsPerPage * 100}%`
+            }}>
+                {categorias.map(categoria => <div key={categoria.id} className="flex-shrink-0" style={{
+                width: `${100 / categorias.length}%`
+              }}>
+                    <CategoryCard categoria={categoria} onClick={() => handleCategoryClick(categoria)} />
+                  </div>)}
               </div>
             </div>
 
             {/* Flechas de navegación */}
-            {categorias.length > itemsPerPage && (
-              <>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-white shadow-lg border-gray-200 hover:bg-gray-50 z-10"
-                  onClick={prevSlide}
-                  disabled={currentIndex === 0}
-                >
+            {categorias.length > itemsPerPage && <>
+                <Button variant="outline" size="icon" className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-white shadow-lg border-gray-200 hover:bg-gray-50 z-10" onClick={prevSlide} disabled={currentIndex === 0}>
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
 
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-white shadow-lg border-gray-200 hover:bg-gray-50 z-10"
-                  onClick={nextSlide}
-                  disabled={currentIndex >= maxIndex}
-                >
+                <Button variant="outline" size="icon" className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-white shadow-lg border-gray-200 hover:bg-gray-50 z-10" onClick={nextSlide} disabled={currentIndex >= maxIndex}>
                   <ChevronRight className="h-4 w-4" />
                 </Button>
-              </>
-            )}
+              </>}
           </div>
 
           {/* Botón CTA centrado */}
           <div className="text-center mt-16">
-            <Button 
-              variant="outline" 
-              size="lg"
-              className="border-miyo-800 text-miyo-800 hover:bg-miyo-50 px-8 py-4 h-auto text-lg font-medium"
-            >
-              EMPIEZA AHORA
-            </Button>
+            <Button variant="outline" size="lg" className="border-miyo-800 text-miyo-800 hover:bg-miyo-50 px-8 py-4 h-auto text-lg font-medium">Empieza Ahora</Button>
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default CategoryCarousel;
