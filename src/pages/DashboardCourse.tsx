@@ -13,7 +13,7 @@ import LearningPath from '@/components/LearningPath';
 const DashboardCourse = () => {
   const { id } = useParams<{ id: string }>();
   const { podcast, isLoading } = useCourseData(id);
-  const { userProgress, toggleSaveCourse } = useUserProgress();
+  const { userProgress, toggleSaveCourse, startCourse } = useUserProgress();
   const [currentLessonId, setCurrentLessonId] = useState<string | null>(null);
   
   const courseProgress = userProgress.find(p => p.course_id === id);
@@ -23,6 +23,14 @@ const DashboardCourse = () => {
     setCurrentLessonId(lesson.id);
     // Here you would typically start playing the lesson
     console.log('Selected lesson:', lesson);
+  };
+
+  const handleStartLearning = async () => {
+    if (podcast) {
+      await startCourse(podcast.id);
+      // You could also navigate to the course player or start the first lesson
+      console.log('Started learning course:', podcast.title);
+    }
   };
 
   if (isLoading) {
@@ -84,7 +92,10 @@ const DashboardCourse = () => {
                 </div>
                 
                 <div className="flex items-center space-x-4">
-                  <Button className="bg-miyo-800 hover:bg-miyo-900 flex items-center space-x-2">
+                  <Button 
+                    className="bg-miyo-800 hover:bg-miyo-900 flex items-center space-x-2"
+                    onClick={handleStartLearning}
+                  >
                     <Play className="w-4 h-4" />
                     <span>Comenzar a aprender</span>
                   </Button>

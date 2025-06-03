@@ -28,6 +28,18 @@ const CourseCardWithProgress: React.FC<CourseCardWithProgressProps> = ({
   onToggleSave,
   onClick
 }) => {
+  const handleSaveClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    console.log('Toggling save for course:', podcast.id, 'current saved state:', isSaved);
+    onToggleSave?.();
+  };
+
+  const handlePlayClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    console.log('Playing course:', podcast.id);
+    onPlay?.();
+  };
+
   return (
     <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer">
       <CardContent className="p-0">
@@ -72,10 +84,7 @@ const CourseCardWithProgress: React.FC<CourseCardWithProgressProps> = ({
           <Button
             variant="outline"
             size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              onPlay?.();
-            }}
+            onClick={handlePlayClick}
             className="flex items-center space-x-2"
           >
             {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
@@ -85,10 +94,7 @@ const CourseCardWithProgress: React.FC<CourseCardWithProgressProps> = ({
           <Button
             variant="ghost"
             size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleSave?.();
-            }}
+            onClick={handleSaveClick}
           >
             {isSaved ? 
               <BookmarkCheck className="w-4 h-4 text-miyo-800" /> : 

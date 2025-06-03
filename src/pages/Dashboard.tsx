@@ -13,7 +13,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [allCourses, setAllCourses] = useState<Podcast[]>([]);
   const [loading, setLoading] = useState(true);
-  const { userProgress, toggleSaveCourse } = useUserProgress();
+  const { userProgress, toggleSaveCourse, startCourse } = useUserProgress();
 
   useEffect(() => {
     const loadCourses = async () => {
@@ -63,12 +63,14 @@ const Dashboard = () => {
     .filter(course => course.progress === 0)
     .slice(0, 6);
 
-  const handlePlayCourse = (courseId: string) => {
+  const handlePlayCourse = async (courseId: string) => {
+    // Start the course to add it to continue learning
+    await startCourse(courseId);
     navigate(`/course/${courseId}`);
   };
 
   const handleCourseClick = (courseId: string) => {
-    navigate(`/course/${courseId}`);
+    navigate(`/dashboard/course/${courseId}`);
   };
 
   if (loading) {

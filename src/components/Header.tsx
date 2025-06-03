@@ -40,9 +40,13 @@ const Header = () => {
   };
   
   const handleLogoClick = (e) => {
-    // If user is authenticated and on the dashboard, prevent default navigation
-    if (user && location.pathname.includes('/dashboard')) {
+    // If user is authenticated, always prevent navigation to public landing
+    if (user) {
       e.preventDefault();
+      // If user is already on dashboard, do nothing, otherwise redirect to dashboard
+      if (!location.pathname.includes('/dashboard')) {
+        navigate('/dashboard');
+      }
     }
   };
 

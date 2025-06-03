@@ -51,7 +51,7 @@ export function useUserProgress() {
 
       if (error) throw error;
       
-      // Update local state
+      // Update local state immediately for better UX
       setUserProgress(prev => {
         const existing = prev.find(p => p.course_id === courseId);
         if (existing) {
@@ -81,8 +81,36 @@ export function useUserProgress() {
     const currentProgress = userProgress.find(p => p.course_id === courseId);
     const newSavedState = !currentProgress?.is_saved;
     
+    // Update local state immediately for better UX
+    setUserProgress(prev => {
+      const existing = prev.find(p => p.course_id === courseId);
+      if (existing) {
+        return prev.map(p => 
+          p.course_id === courseId 
+            ? { ...p, is_saved: newSavedState }
+            : p
+        );
+      } else {
+        return [...prev, {
+          course_id: courseId,
+          progress_percentage: 0,
+          is_completed: false,
+          is_saved: newSavedState,
+          last_listened_at: new Date().toISOString()
+        }];
+      }
+    });
+    
     await updateCourseProgress(courseId, { is_saved: newSavedState });
     toast.success(newSavedState ? 'Curso guardado' : 'Curso removido de guardados');
+  };
+
+  const startCourse = async (courseId: string) => {
+    // When a user starts a course, update their progress to show it in "Continue Learning"
+    await updateCourseProgress(courseId, { 
+      progress_percentage: 1, // Small progress to show it started
+      last_listened_at: new Date().toISOString()
+    });
   };
 
   useEffect(() => {
@@ -96,6 +124,7 @@ export function useUserProgress() {
     loading,
     updateCourseProgress,
     toggleSaveCourse,
+    startCourse,
     refetch: fetchUserProgress
   };
 }
