@@ -14,9 +14,16 @@ const DashboardCourse = () => {
   const { id } = useParams<{ id: string }>();
   const { podcast, isLoading } = useCourseData(id);
   const { userProgress, toggleSaveCourse } = useUserProgress();
+  const [currentLessonId, setCurrentLessonId] = useState<string | null>(null);
   
   const courseProgress = userProgress.find(p => p.course_id === id);
   const isSaved = courseProgress?.is_saved || false;
+
+  const handleSelectLesson = (lesson: any) => {
+    setCurrentLessonId(lesson.id);
+    // Here you would typically start playing the lesson
+    console.log('Selected lesson:', lesson);
+  };
 
   if (isLoading) {
     return (
@@ -100,7 +107,12 @@ const DashboardCourse = () => {
             {/* Learning Path */}
             <div className="bg-white rounded-2xl shadow-sm p-6">
               <h2 className="text-2xl font-bold mb-6">Ruta de aprendizaje</h2>
-              <LearningPath podcast={podcast} setPodcast={() => {}} />
+              <LearningPath 
+                lessons={podcast.lessons}
+                modules={podcast.modules}
+                onSelectLesson={handleSelectLesson}
+                currentLessonId={currentLessonId}
+              />
             </div>
           </div>
 
