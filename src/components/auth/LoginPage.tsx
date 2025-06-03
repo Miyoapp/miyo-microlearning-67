@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,10 +12,18 @@ import Logo from '@/components/common/Logo';
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  
+  // Check if we're in signup mode from URL parameter
+  const [isSignUp, setIsSignUp] = useState(searchParams.get('mode') === 'signup');
+
+  // Update signup mode when URL parameter changes
+  useEffect(() => {
+    setIsSignUp(searchParams.get('mode') === 'signup');
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,6 +49,13 @@ const LoginPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const toggleMode = () => {
+    const newMode = !isSignUp;
+    setIsSignUp(newMode);
+    // Update URL parameter
+    navigate(`/login${newMode ? '?mode=signup' : ''}`, { replace: true });
   };
 
   return (
@@ -87,7 +102,7 @@ const LoginPage = () => {
             <div className="text-center">
               <button
                 type="button"
-                onClick={() => setIsSignUp(!isSignUp)}
+                onClick={toggleMode}
                 className="text-miyo-800 hover:underline"
               >
                 {isSignUp 

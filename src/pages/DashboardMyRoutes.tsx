@@ -68,7 +68,8 @@ const DashboardMyRoutes = () => {
     console.log('DashboardMyRoutes: Starting course:', courseId);
     await startCourse(courseId);
     await refetch();
-    navigate(`/course/${courseId}`);
+    // Redirect to the new dashboard course view instead of old course view
+    navigate(`/dashboard/course/${courseId}`);
   };
 
   const handleToggleSave = async (courseId: string) => {

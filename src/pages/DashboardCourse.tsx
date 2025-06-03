@@ -18,6 +18,7 @@ const DashboardCourse = () => {
   
   const courseProgress = userProgress.find(p => p.course_id === id);
   const isSaved = courseProgress?.is_saved || false;
+  const hasStarted = (courseProgress?.progress_percentage || 0) > 0;
 
   const handleSelectLesson = (lesson: any) => {
     setCurrentLessonId(lesson.id);
@@ -28,7 +29,11 @@ const DashboardCourse = () => {
   const handleStartLearning = async () => {
     if (podcast) {
       await startCourse(podcast.id);
-      // You could also navigate to the course player or start the first lesson
+      // Scroll to the learning path section
+      const learningPathElement = document.getElementById('learning-path-section');
+      if (learningPathElement) {
+        learningPathElement.scrollIntoView({ behavior: 'smooth' });
+      }
       console.log('Started learning course:', podcast.title);
     }
   };
@@ -97,7 +102,7 @@ const DashboardCourse = () => {
                     onClick={handleStartLearning}
                   >
                     <Play className="w-4 h-4" />
-                    <span>Comenzar a aprender</span>
+                    <span>{hasStarted ? 'Continuar aprendiendo' : 'Comenzar a aprender'}</span>
                   </Button>
                   
                   <Button
@@ -116,7 +121,7 @@ const DashboardCourse = () => {
             </div>
 
             {/* Learning Path */}
-            <div className="bg-white rounded-2xl shadow-sm p-6">
+            <div id="learning-path-section" className="bg-white rounded-2xl shadow-sm p-6">
               <h2 className="text-2xl font-bold mb-6">Ruta de aprendizaje</h2>
               <LearningPath 
                 lessons={podcast.lessons}

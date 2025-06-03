@@ -33,20 +33,17 @@ const Header = () => {
   const handleLogout = async () => {
     try {
       await signOut();
-      navigate("/");
+      navigate("/"); // Redirect to public landing instead of login
     } catch (error) {
       console.error("Error al cerrar sesión:", error);
     }
   };
   
   const handleLogoClick = (e) => {
-    // If user is authenticated, always prevent navigation to public landing
+    // If user is authenticated, prevent navigation completely
     if (user) {
       e.preventDefault();
-      // If user is already on dashboard, do nothing, otherwise redirect to dashboard
-      if (!location.pathname.includes('/dashboard')) {
-        navigate('/dashboard');
-      }
+      // Do nothing - stay on current page
     }
   };
 
@@ -55,7 +52,7 @@ const Header = () => {
   };
 
   const handleRegister = () => {
-    navigate('/login');
+    navigate('/login?mode=signup'); // Add mode parameter to differentiate
   };
   
   return (

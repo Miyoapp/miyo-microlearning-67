@@ -74,7 +74,8 @@ const Dashboard = () => {
     await startCourse(courseId);
     // Refresh data to show updated state
     await refetch();
-    navigate(`/course/${courseId}`);
+    // Redirect to the new dashboard course view instead of old course view
+    navigate(`/dashboard/course/${courseId}`);
   };
 
   const handleToggleSave = async (courseId: string) => {
