@@ -30,15 +30,17 @@ const CourseCardWithProgress: React.FC<CourseCardWithProgressProps> = ({
 }) => {
   const handleSaveClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log('Toggling save for course:', podcast.id, 'current saved state:', isSaved);
+    console.log('CourseCard: Toggling save for course:', podcast.id, 'current saved state:', isSaved);
     onToggleSave?.();
   };
 
   const handlePlayClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log('Playing course:', podcast.id);
+    console.log('CourseCard: Playing course:', podcast.id);
     onPlay?.();
   };
+
+  console.log('CourseCard render - Course:', podcast.id, 'isSaved:', isSaved, 'progress:', progress);
 
   return (
     <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer">

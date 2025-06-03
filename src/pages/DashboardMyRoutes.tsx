@@ -12,12 +12,13 @@ const DashboardMyRoutes = () => {
   const navigate = useNavigate();
   const [allCourses, setAllCourses] = useState<Podcast[]>([]);
   const [loading, setLoading] = useState(true);
-  const { userProgress, toggleSaveCourse, startCourse } = useUserProgress();
+  const { userProgress, toggleSaveCourse, startCourse, refetch } = useUserProgress();
 
   useEffect(() => {
     const loadCourses = async () => {
       try {
         const courses = await obtenerCursos();
+        console.log('DashboardMyRoutes: Loaded courses:', courses.length);
         setAllCourses(courses);
       } catch (error) {
         console.error('Error loading courses:', error);
@@ -28,6 +29,11 @@ const DashboardMyRoutes = () => {
 
     loadCourses();
   }, []);
+
+  // Refresh when userProgress changes
+  useEffect(() => {
+    console.log('DashboardMyRoutes: User progress updated:', userProgress);
+  }, [userProgress]);
 
   // Get courses in progress
   const continueLearningCourses = allCourses
@@ -46,7 +52,9 @@ const DashboardMyRoutes = () => {
   const savedCourses = allCourses
     .filter(course => {
       const progress = userProgress.find(p => p.course_id === course.id);
-      return progress?.is_saved;
+      const isSaved = progress?.is_saved || false;
+      console.log('DashboardMyRoutes: Course', course.id, 'is saved:', isSaved);
+      return isSaved;
     });
 
   // Get completed courses
@@ -57,13 +65,24 @@ const DashboardMyRoutes = () => {
     });
 
   const handlePlayCourse = async (courseId: string) => {
+    console.log('DashboardMyRoutes: Starting course:', courseId);
     await startCourse(courseId);
+    await refetch();
     navigate(`/course/${courseId}`);
+  };
+
+  const handleToggleSave = async (courseId: string) => {
+    console.log('DashboardMyRoutes: Toggling save for course:', courseId);
+    await toggleSaveCourse(courseId);
+    await refetch();
   };
 
   const handleCourseClick = (courseId: string) => {
     navigate(`/dashboard/course/${courseId}`);
   };
+
+  console.log('DashboardMyRoutes render - Saved courses:', savedCourses.length);
+  console.log('DashboardMyRoutes render - Continue learning:', continueLearningCourses.length);
 
   if (loading) {
     return (
@@ -88,7 +107,7 @@ const DashboardMyRoutes = () => {
           courses={continueLearningCourses}
           showProgress={true}
           onPlayCourse={handlePlayCourse}
-          onToggleSave={toggleSaveCourse}
+          onToggleSave={handleToggleSave}
           onCourseClick={handleCourseClick}
         />
 
@@ -112,7 +131,7 @@ const DashboardMyRoutes = () => {
                     isSaved={true}
                     showProgress={false}
                     onPlay={() => handlePlayCourse(course.id)}
-                    onToggleSave={() => toggleSaveCourse(course.id)}
+                    onToggleSave={() => handleToggleSave(course.id)}
                     onClick={() => handleCourseClick(course.id)}
                   />
                 );
@@ -141,7 +160,7 @@ const DashboardMyRoutes = () => {
                     isSaved={progress?.is_saved || false}
                     showProgress={false}
                     onPlay={() => handlePlayCourse(course.id)}
-                    onToggleSave={() => toggleSaveCourse(course.id)}
+                    onToggleSave={() => handleToggleSave(course.id)}
                     onClick={() => handleCourseClick(course.id)}
                   />
                 );

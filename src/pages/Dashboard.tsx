@@ -3,7 +3,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import CourseCarousel from '@/components/dashboard/CourseCarousel';
-import { useCourseData } from '@/hooks/useCourseData';
 import { useUserProgress } from '@/hooks/useUserProgress';
 import { obtenerCursos } from '@/lib/api';
 import { useState, useEffect } from 'react';
@@ -13,12 +12,13 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [allCourses, setAllCourses] = useState<Podcast[]>([]);
   const [loading, setLoading] = useState(true);
-  const { userProgress, toggleSaveCourse, startCourse } = useUserProgress();
+  const { userProgress, toggleSaveCourse, startCourse, refetch } = useUserProgress();
 
   useEffect(() => {
     const loadCourses = async () => {
       try {
         const courses = await obtenerCursos();
+        console.log('Dashboard: Loaded courses:', courses.length);
         setAllCourses(courses);
       } catch (error) {
         console.error('Error loading courses:', error);
@@ -29,6 +29,11 @@ const Dashboard = () => {
 
     loadCourses();
   }, []);
+
+  // Refresh user progress when userProgress changes
+  useEffect(() => {
+    console.log('Dashboard: User progress updated:', userProgress);
+  }, [userProgress]);
 
   // Get courses with progress
   const continueLearningCourses = allCourses
@@ -64,14 +69,27 @@ const Dashboard = () => {
     .slice(0, 6);
 
   const handlePlayCourse = async (courseId: string) => {
+    console.log('Dashboard: Starting course:', courseId);
     // Start the course to add it to continue learning
     await startCourse(courseId);
+    // Refresh data to show updated state
+    await refetch();
     navigate(`/course/${courseId}`);
+  };
+
+  const handleToggleSave = async (courseId: string) => {
+    console.log('Dashboard: Toggling save for course:', courseId);
+    await toggleSaveCourse(courseId);
+    // Refresh data to show updated state
+    await refetch();
   };
 
   const handleCourseClick = (courseId: string) => {
     navigate(`/dashboard/course/${courseId}`);
   };
+
+  console.log('Dashboard render - Continue learning courses:', continueLearningCourses.length);
+  console.log('Dashboard render - Recommended courses:', recommendedCourses.length);
 
   if (loading) {
     return (
@@ -96,7 +114,7 @@ const Dashboard = () => {
           courses={continueLearningCourses}
           showProgress={true}
           onPlayCourse={handlePlayCourse}
-          onToggleSave={toggleSaveCourse}
+          onToggleSave={handleToggleSave}
           onCourseClick={handleCourseClick}
         />
 
@@ -105,7 +123,7 @@ const Dashboard = () => {
           courses={recommendedCourses}
           showProgress={false}
           onPlayCourse={handlePlayCourse}
-          onToggleSave={toggleSaveCourse}
+          onToggleSave={handleToggleSave}
           onCourseClick={handleCourseClick}
         />
       </div>
