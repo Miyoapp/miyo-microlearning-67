@@ -40,7 +40,7 @@ const CourseCardWithProgress: React.FC<CourseCardWithProgressProps> = ({
     onPlay?.();
   };
 
-  console.log('CourseCard render - Course:', podcast.id, 'isSaved:', isSaved, 'progress:', progress);
+  console.log('CourseCard render - Course:', podcast.id, 'isSaved:', isSaved, 'progress:', progress, 'showProgress:', showProgress);
 
   return (
     <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer">
@@ -73,10 +73,10 @@ const CourseCardWithProgress: React.FC<CourseCardWithProgressProps> = ({
               <span>{podcast.lessonCount} lecciones</span>
             </div>
             
-            {showProgress && (
+            {showProgress && progress > 0 && (
               <div className="mb-3">
                 <Progress value={progress} className="h-2" />
-                <div className="text-xs text-gray-500 mt-1">{progress}% completado</div>
+                <div className="text-xs text-gray-500 mt-1">{Math.round(progress)}% completado</div>
               </div>
             )}
           </div>

@@ -39,9 +39,11 @@ const Dashboard = () => {
   const continueLearningCourses = allCourses
     .map(course => {
       const progress = userProgress.find(p => p.course_id === course.id);
+      const progressPercentage = progress?.progress_percentage || 0;
+      console.log(`Dashboard: Course ${course.id} progress: ${progressPercentage}%`);
       return {
         podcast: course,
-        progress: progress?.progress_percentage || 0,
+        progress: progressPercentage,
         isPlaying: false,
         isSaved: progress?.is_saved || false
       };
@@ -58,9 +60,10 @@ const Dashboard = () => {
   const recommendedCourses = allCourses
     .map(course => {
       const progress = userProgress.find(p => p.course_id === course.id);
+      const progressPercentage = progress?.progress_percentage || 0;
       return {
         podcast: course,
-        progress: progress?.progress_percentage || 0,
+        progress: progressPercentage,
         isPlaying: false,
         isSaved: progress?.is_saved || false
       };

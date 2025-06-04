@@ -39,9 +39,11 @@ const DashboardMyRoutes = () => {
   const continueLearningCourses = allCourses
     .map(course => {
       const progress = userProgress.find(p => p.course_id === course.id);
+      const progressPercentage = progress?.progress_percentage || 0;
+      console.log(`DashboardMyRoutes: Course ${course.id} progress: ${progressPercentage}%`);
       return {
         podcast: course,
-        progress: progress?.progress_percentage || 0,
+        progress: progressPercentage,
         isPlaying: false,
         isSaved: progress?.is_saved || false
       };
@@ -123,14 +125,16 @@ const DashboardMyRoutes = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {savedCourses.map(course => {
                 const progress = userProgress.find(p => p.course_id === course.id);
+                const progressPercentage = progress?.progress_percentage || 0;
+                console.log(`DashboardMyRoutes Saved: Course ${course.id} progress: ${progressPercentage}%`);
                 return (
                   <CourseCardWithProgress
                     key={course.id}
                     podcast={course}
-                    progress={progress?.progress_percentage || 0}
+                    progress={progressPercentage}
                     isPlaying={false}
                     isSaved={true}
-                    showProgress={false}
+                    showProgress={progressPercentage > 0}
                     onPlay={() => handlePlayCourse(course.id)}
                     onToggleSave={() => handleToggleSave(course.id)}
                     onClick={() => handleCourseClick(course.id)}
@@ -159,7 +163,7 @@ const DashboardMyRoutes = () => {
                     progress={100}
                     isPlaying={false}
                     isSaved={progress?.is_saved || false}
-                    showProgress={false}
+                    showProgress={true}
                     onPlay={() => handlePlayCourse(course.id)}
                     onToggleSave={() => handleToggleSave(course.id)}
                     onClick={() => handleCourseClick(course.id)}

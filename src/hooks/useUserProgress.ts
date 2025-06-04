@@ -34,7 +34,7 @@ export function useUserProgress() {
         throw error;
       }
       
-      console.log('Fetched user progress:', data);
+      console.log('Fetched user progress from DB:', data);
       setUserProgress(data || []);
     } catch (error) {
       console.error('Error fetching user progress:', error);
@@ -75,26 +75,33 @@ export function useUserProgress() {
         throw error;
       }
       
-      console.log('Successfully updated course progress:', data);
+      console.log('Successfully updated course progress in DB:', data);
       
       // Update local state immediately for better UX
       setUserProgress(prev => {
         const existing = prev.find(p => p.course_id === courseId);
+        const updatedProgress = {
+          course_id: courseId,
+          progress_percentage: 0,
+          is_completed: false,
+          is_saved: false,
+          last_listened_at: new Date().toISOString(),
+          ...(existing || {}),
+          ...updates
+        };
+        
         if (existing) {
-          return prev.map(p => 
+          const newProgress = prev.map(p => 
             p.course_id === courseId 
-              ? { ...p, ...updates }
+              ? updatedProgress
               : p
           );
+          console.log('Updated local progress state:', newProgress);
+          return newProgress;
         } else {
-          return [...prev, {
-            course_id: courseId,
-            progress_percentage: 0,
-            is_completed: false,
-            is_saved: false,
-            last_listened_at: new Date().toISOString(),
-            ...updates
-          }];
+          const newProgress = [...prev, updatedProgress];
+          console.log('Added new progress to local state:', newProgress);
+          return newProgress;
         }
       });
     } catch (error) {
