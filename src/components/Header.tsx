@@ -33,17 +33,18 @@ const Header = () => {
   const handleLogout = async () => {
     try {
       await signOut();
-      navigate("/"); // Redirect to public landing instead of login
+      navigate("/"); // Redirect to public landing
     } catch (error) {
       console.error("Error al cerrar sesión:", error);
     }
   };
   
   const handleLogoClick = (e) => {
-    // If user is authenticated, prevent navigation completely
+    // If user is authenticated, prevent any navigation
     if (user) {
       e.preventDefault();
       // Do nothing - stay on current page
+      return false;
     }
   };
 
@@ -52,7 +53,7 @@ const Header = () => {
   };
 
   const handleRegister = () => {
-    navigate('/login?mode=signup'); // Add mode parameter to differentiate
+    navigate('/login?mode=signup');
   };
   
   return (
@@ -81,12 +82,6 @@ const Header = () => {
           </div>
         ) : (
           <div className="flex items-center space-x-4">
-            <Link 
-              to="/dashboard"
-              className="text-miyo-800 hover:text-miyo-900 font-medium transition-colors"
-            >
-              Dashboard
-            </Link>
             <DropdownMenu>
               <DropdownMenuTrigger className="flex items-center focus:outline-none">
                 <Avatar className="h-9 w-9 bg-miyo-100">
