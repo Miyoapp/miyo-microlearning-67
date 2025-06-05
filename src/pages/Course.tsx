@@ -9,7 +9,7 @@ import CourseFooter from '../components/course/CourseFooter';
 import CourseLoading from '../components/course/CourseLoading';
 import CourseNotFound from '../components/course/CourseNotFound';
 import { useCourseData } from '@/hooks/useCourseData';
-import { useLessons } from '@/hooks/useLessons';
+import { useConsolidatedLessons } from '@/hooks/useConsolidatedLessons';
 
 const Course = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,45 +17,19 @@ const Course = () => {
   const { 
     currentLesson, 
     isPlaying, 
-    initializeCurrentLesson,
     handleSelectLesson, 
     handleTogglePlay, 
     handleLessonComplete,
-    advanceToNextLesson
-  } = useLessons(podcast, setPodcast);
+    initializePodcastWithProgress
+  } = useConsolidatedLessons(podcast, setPodcast);
   
-  // Set initial lesson once podcast data is loaded
+  // Initialize podcast when data is loaded
   useEffect(() => {
     if (podcast) {
-      initializeCurrentLesson();
+      console.log('Course page: Podcast loaded, initializing...');
+      initializePodcastWithProgress();
     }
-  }, [podcast, initializeCurrentLesson]);
-  
-  // Listen for lesson ended event to advance to next lesson - direct approach
-  useEffect(() => {
-    const handleLessonEnded = (e: Event) => {
-      const event = e as CustomEvent;
-      console.log("Lesson ended event received:", event.detail);
-      
-      if (event.detail && event.detail.lessonId === currentLesson?.id) {
-        console.log("Confirmed current lesson ended, advancing to next");
-        
-        // Mark current lesson as complete first
-        handleLessonComplete();
-        
-        // Then advance to next lesson immediately
-        setTimeout(() => {
-          advanceToNextLesson();
-        }, 100); // Very short delay to ensure completion state is saved first
-      }
-    };
-    
-    window.addEventListener('lessonEnded', handleLessonEnded);
-    
-    return () => {
-      window.removeEventListener('lessonEnded', handleLessonEnded);
-    };
-  }, [currentLesson, advanceToNextLesson, handleLessonComplete]);
+  }, [podcast?.id, initializePodcastWithProgress]);
   
   if (isLoading) {
     return <CourseLoading />;

@@ -6,8 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Bookmark, BookmarkCheck, Play } from 'lucide-react';
 import { useCourseData } from '@/hooks/useCourseData';
 import { useUserProgress } from '@/hooks/useUserProgress';
-import { useUserLessonProgress } from '@/hooks/useUserLessonProgress';
-import { useLessons } from '@/hooks/useLessons';
+import { useConsolidatedLessons } from '@/hooks/useConsolidatedLessons';
 import { formatMinutesToHumanReadable } from '@/lib/formatters';
 import CourseStats from '@/components/course/CourseStats';
 import LearningPath from '@/components/LearningPath';
@@ -17,9 +16,8 @@ const DashboardCourse = () => {
   const { id } = useParams<{ id: string }>();
   const { podcast, setPodcast, isLoading } = useCourseData(id);
   const { userProgress, toggleSaveCourse, startCourse, refetch } = useUserProgress();
-  const { lessonProgress, refetch: refetchLessonProgress } = useUserLessonProgress();
   
-  // Initialize lessons hook
+  // Use consolidated lessons hook
   const { 
     currentLesson, 
     isPlaying, 
@@ -27,59 +25,27 @@ const DashboardCourse = () => {
     handleSelectLesson, 
     handleTogglePlay, 
     handleLessonComplete,
-    advanceToNextLesson,
-    handleProgressUpdate
-  } = useLessons(podcast, setPodcast);
+    handleProgressUpdate,
+    initializePodcastWithProgress
+  } = useConsolidatedLessons(podcast, setPodcast);
   
   const courseProgress = userProgress.find(p => p.course_id === id);
   const isSaved = courseProgress?.is_saved || false;
   const hasStarted = (courseProgress?.progress_percentage || 0) > 0;
 
-  // Set initial lesson once podcast data is loaded
+  // Initialize podcast and current lesson when data is loaded
   useEffect(() => {
     if (podcast) {
-      initializeCurrentLesson();
+      console.log('Podcast loaded, initializing...');
+      initializePodcastWithProgress();
     }
-  }, [podcast, initializeCurrentLesson]);
-
-  // Refresh lesson progress when course progress changes
-  useEffect(() => {
-    refetchLessonProgress();
-  }, [courseProgress, refetchLessonProgress]);
-
-  // Listen for lesson ended event to advance to next lesson
-  useEffect(() => {
-    const handleLessonEnded = (e: Event) => {
-      const event = e as CustomEvent;
-      console.log("Lesson ended event received in DashboardCourse:", event.detail);
-      
-      if (event.detail && event.detail.lessonId === currentLesson?.id) {
-        console.log("Confirmed current lesson ended, advancing to next");
-        
-        // Mark current lesson as complete first
-        handleLessonComplete();
-        
-        // Refresh both course and lesson progress
-        setTimeout(async () => {
-          await Promise.all([refetch(), refetchLessonProgress()]);
-          advanceToNextLesson();
-        }, 100);
-      }
-    };
-    
-    window.addEventListener('lessonEnded', handleLessonEnded);
-    
-    return () => {
-      window.removeEventListener('lessonEnded', handleLessonEnded);
-    };
-  }, [currentLesson, advanceToNextLesson, handleLessonComplete, refetch, refetchLessonProgress]);
+  }, [podcast?.id, initializePodcastWithProgress]);
 
   const handleStartLearning = async () => {
     if (podcast) {
       await startCourse(podcast.id);
-      await refetch(); // Refresh course progress
-      // Initialize the first lesson and start playing
-      initializeCurrentLesson();
+      await refetch();
+      
       // Scroll to the learning path section
       const learningPathElement = document.getElementById('learning-path-section');
       if (learningPathElement) {
@@ -109,19 +75,6 @@ const DashboardCourse = () => {
       </DashboardLayout>
     );
   }
-
-  // Create enhanced podcast with lesson progress for LearningPath
-  const podcastWithProgress = {
-    ...podcast,
-    lessons: podcast.lessons.map(lesson => {
-      const progress = lessonProgress.find(p => p.lesson_id === lesson.id);
-      return {
-        ...lesson,
-        isCompleted: progress?.is_completed || lesson.isCompleted || false,
-        currentPosition: progress?.current_position || 0
-      };
-    })
-  };
 
   return (
     <>
@@ -189,8 +142,8 @@ const DashboardCourse = () => {
               <div id="learning-path-section" className="bg-white rounded-2xl shadow-sm p-6">
                 <h2 className="text-2xl font-bold mb-6">Ruta de aprendizaje</h2>
                 <LearningPath 
-                  lessons={podcastWithProgress.lessons}
-                  modules={podcastWithProgress.modules}
+                  lessons={podcast.lessons}
+                  modules={podcast.modules}
                   onSelectLesson={handleSelectLesson}
                   currentLessonId={currentLesson?.id || null}
                 />

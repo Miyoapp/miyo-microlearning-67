@@ -3,7 +3,8 @@ import { useCallback } from 'react';
 import { Podcast, Lesson } from '@/types';
 
 /**
- * Hook to handle lesson completion and progression
+ * Simplified hook for local lesson progress (used as fallback when no DB)
+ * Main logic is now in useConsolidatedLessons
  */
 export function useLessonProgress(
   podcast: Podcast | null, 
@@ -13,9 +14,8 @@ export function useLessonProgress(
   const handleLessonComplete = useCallback(() => {
     if (!podcast || !currentLesson) return;
     
-    console.log(`Marking lesson complete: ${currentLesson.title}`);
+    console.log(`Local fallback: Marking lesson complete: ${currentLesson.title}`);
     
-    // Create a copy of the lessons to modify
     const updatedLessons = [...podcast.lessons];
     const modules = [...podcast.modules];
     
@@ -44,7 +44,6 @@ export function useLessonProgress(
     
     // If there are more lessons in the current module
     if (currentLessonIndexInModule < currentModule.lessonIds.length - 1) {
-      // Unlock the next lesson in the same module
       nextLessonToUnlock = currentModule.lessonIds[currentLessonIndexInModule + 1];
       console.log(`Next lesson to unlock is in the same module: ${nextLessonToUnlock}`);
     } else {
@@ -57,7 +56,6 @@ export function useLessonProgress(
         });
         
         if (allLessonsInModuleCompleted) {
-          // Unlock the first lesson of the next module
           const nextModule = modules[currentModuleIndex + 1];
           nextLessonToUnlock = nextModule.lessonIds[0];
           console.log(`Next lesson to unlock is in the next module: ${nextLessonToUnlock}`);

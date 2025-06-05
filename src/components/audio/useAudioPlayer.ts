@@ -24,13 +24,13 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgres
       console.log("Lesson changed to:", lesson.title);
       setCurrentTime(0);
       audioRef.current.currentTime = 0;
-      audioRef.current.load(); // Force reload of the audio element
+      audioRef.current.load();
       
       // Set initial volume and playback rate
       audioRef.current.volume = isMuted ? 0 : volume;
       audioRef.current.playbackRate = playbackRate;
     }
-  }, [lesson?.id]); // Only depend on lesson ID to avoid unnecessary reloads
+  }, [lesson?.id]);
   
   // Handle play/pause when isPlaying state changes
   useEffect(() => {
@@ -44,7 +44,7 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgres
       if (playPromise !== undefined) {
         playPromise.catch(error => {
           console.error("Audio playback failed:", error);
-          onTogglePlay(); // Reset the playing state
+          onTogglePlay();
         });
       }
     } else {
@@ -67,7 +67,7 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgres
       const newCurrentTime = audioRef.current.currentTime;
       setCurrentTime(newCurrentTime);
       
-      // Update progress in database every 5 seconds or significant changes
+      // Update progress in database every few seconds
       if (onProgressUpdate && duration > 0) {
         const progressPercent = (newCurrentTime / duration) * 100;
         onProgressUpdate(progressPercent);
@@ -83,18 +83,11 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgres
     }
   };
   
-  // Handle audio ended event - when it reaches 100%
+  // Handle audio ended - simplified without events
   const handleAudioEnded = () => {
     if (lesson) {
       console.log("Audio ended naturally, marking lesson complete:", lesson.title);
       onComplete();
-      
-      // Dispatch custom event to signal lesson ended for auto-advancing
-      console.log("Dispatching lessonEnded event for lesson:", lesson.id);
-      const event = new CustomEvent('lessonEnded', { 
-        detail: { lessonId: lesson.id }
-      });
-      window.dispatchEvent(event);
     }
   };
   
