@@ -30,7 +30,7 @@ export function useLessonPlayback(
       return;
     }
 
-    setCurrentLesson(lesson);
+    // Note: setCurrentLesson will be handled by the parent hook
     setIsPlaying(true);
 
     // Track lesson start in database (only for in-progress courses)
