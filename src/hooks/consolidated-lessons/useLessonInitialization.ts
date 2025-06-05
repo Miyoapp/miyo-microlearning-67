@@ -35,9 +35,17 @@ export function useLessonInitialization(
       const unlockedLessons = unlockLessonsForCompletedCourse(updatedLessons);
       setPodcast({ ...podcast, lessons: unlockedLessons });
     } else {
-      // Normal unlocking logic for in-progress courses
+      // For in-progress courses: unlock based on completion + ensure completed lessons are always unlocked
+      console.log('Course in progress, applying unlock logic for completed and sequential lessons');
       const unlockedLessons = unlockLessonsForInProgressCourse(podcast, updatedLessons);
-      setPodcast({ ...podcast, lessons: unlockedLessons });
+      
+      // CRITICAL FIX: Ensure ALL completed lessons are unlocked regardless of sequence
+      const finalLessons = unlockedLessons.map(lesson => ({
+        ...lesson,
+        isLocked: lesson.isCompleted ? false : lesson.isLocked
+      }));
+      
+      setPodcast({ ...podcast, lessons: finalLessons });
     }
   }, [podcast, lessonProgress, userProgress, user, setPodcast]);
 

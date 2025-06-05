@@ -65,7 +65,7 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     // Allow selection if:
     // 1. Course is completed (can replay any lesson)
     // 2. Lesson is not locked (available for first time)
-    // 3. Lesson is completed (can always replay completed lessons)
+    // 3. Lesson is completed (can ALWAYS replay completed lessons regardless of course status)
     const canSelectLesson = courseCompleted || !lesson.isLocked || lesson.isCompleted;
     
     if (!canSelectLesson) {
@@ -92,13 +92,29 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     }
   }, [podcast?.lessons, userProgress, initializeCurrentLesson]);
 
-  // Add effect to trigger UI updates when lesson progress changes
+  // Enhanced effect to trigger UI updates when lesson progress changes
   useEffect(() => {
-    if (podcast && lessonProgress.length > 0) {
-      console.log('Lesson progress updated, refreshing podcast state for UI updates');
-      initializePodcastWithProgress();
+    if (podcast && lessonProgress.length >= 0) {
+      console.log('Lesson progress updated, refreshing podcast state for real-time UI updates');
+      
+      // Force re-initialization to update UI immediately
+      setTimeout(() => {
+        initializePodcastWithProgress();
+      }, 100);
     }
   }, [lessonProgress, initializePodcastWithProgress]);
+
+  // Additional effect to ensure UI updates when progress changes
+  useEffect(() => {
+    if (podcast && userProgress.length >= 0) {
+      console.log('User progress updated, refreshing podcast state for real-time UI updates');
+      
+      // Force re-initialization to update UI immediately
+      setTimeout(() => {
+        initializePodcastWithProgress();
+      }, 100);
+    }
+  }, [userProgress, initializePodcastWithProgress]);
 
   return {
     currentLesson,

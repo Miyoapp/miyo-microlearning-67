@@ -21,10 +21,11 @@ export function useLessonCompletion(
     console.log('Lesson completion triggered for:', currentLesson.title, 'isCompleted:', currentLesson.isCompleted);
 
     // If lesson is already completed, we should still advance to next lesson for auto-play
+    // This applies to ALL courses (completed or in progress)
     if (currentLesson.isCompleted) {
       console.log('Lesson already completed, advancing to next lesson for auto-play:', currentLesson.title);
       
-      // Find next lesson for auto-play
+      // Find next lesson for auto-play (same logic for all courses)
       const currentModule = podcast.modules.find(module => 
         module.lessonIds.includes(currentLesson.id)
       );
@@ -47,21 +48,29 @@ export function useLessonCompletion(
           }
         }
 
-        // Auto-advance to next lesson if available
+        // Auto-advance to next lesson if available and accessible
         if (nextLessonId) {
           const nextLesson = podcast.lessons.find(l => l.id === nextLessonId);
           if (nextLesson) {
-            console.log('Auto-advancing to next lesson:', nextLesson.title);
-            setCurrentLesson(nextLesson);
+            // Check if next lesson can be played (not locked OR completed)
+            const canPlayNext = !nextLesson.isLocked || nextLesson.isCompleted;
             
-            // Small delay to ensure state update, then auto-play
-            setTimeout(() => {
-              setIsPlaying(true);
-              // Track next lesson start if it's not completed
-              if (user && !nextLesson.isCompleted) {
-                updateLessonPosition(nextLesson.id, podcast.id, 1);
-              }
-            }, 500);
+            if (canPlayNext) {
+              console.log('Auto-advancing to next lesson:', nextLesson.title);
+              setCurrentLesson(nextLesson);
+              
+              // Small delay to ensure state update, then auto-play
+              setTimeout(() => {
+                setIsPlaying(true);
+                // Track next lesson start if it's not completed
+                if (user && !nextLesson.isCompleted) {
+                  updateLessonPosition(nextLesson.id, podcast.id, 1);
+                }
+              }, 500);
+            } else {
+              console.log('Next lesson is locked, stopping auto-play:', nextLesson.title);
+              setIsPlaying(false);
+            }
           }
         } else {
           console.log('No more lessons available for auto-play');

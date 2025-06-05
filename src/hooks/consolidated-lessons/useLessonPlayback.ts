@@ -21,8 +21,8 @@ export function useLessonPlayback(
 
     // Allow selection if:
     // 1. Course is completed (can replay any lesson)
-    // 2. Lesson is not locked (available for first time or replay)
-    // 3. Lesson is completed (can always replay completed lessons)
+    // 2. Lesson is not locked (available for first time)
+    // 3. Lesson is completed (can ALWAYS replay completed lessons regardless of course status)
     const canSelectLesson = courseCompleted || !lesson.isLocked || lesson.isCompleted;
 
     if (!canSelectLesson) {
