@@ -58,15 +58,18 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
 
   // Enhanced lesson selection that updates current lesson and handles playback
   const handleSelectLesson = (lesson: any) => {
-    console.log('handleSelectLesson called with:', lesson.title, 'isCompleted:', lesson.isCompleted, 'isLocked:', lesson.isLocked);
+    console.log('🎯 handleSelectLesson called with:', lesson.title, 'isCompleted:', lesson.isCompleted, 'isLocked:', lesson.isLocked);
     
-    // CORRECCIÓN: Lógica simplificada - lecciones completadas SIEMPRE reproducibles
+    // CORRECCIÓN FINAL: Lógica clara y consistente
+    // Lecciones completadas SIEMPRE pueden ser reproducidas, sin importar el estado del curso
     const canSelectLesson = lesson.isCompleted || !lesson.isLocked;
     
     if (!canSelectLesson) {
-      console.log('Lesson is locked and not completed, cannot select');
+      console.log('⚠️ Lesson is locked and not completed, cannot select');
       return;
     }
+    
+    console.log('✅ Lesson can be selected, updating current lesson and starting playback');
     
     // Update current lesson and handle playback
     setCurrentLesson(lesson);
@@ -76,6 +79,7 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
   // Initialize when podcast or lesson progress changes
   useEffect(() => {
     if (podcast && lessonProgress.length >= 0) { // >= 0 to handle empty arrays
+      console.log('📊 Initializing podcast with progress data...');
       initializePodcastWithProgress();
     }
   }, [podcast?.id, lessonProgress, userProgress, initializePodcastWithProgress]);
@@ -83,26 +87,27 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
   // Initialize current lesson when podcast is ready
   useEffect(() => {
     if (podcast && podcast.lessons.length > 0) {
+      console.log('🎯 Initializing current lesson...');
       initializeCurrentLesson();
     }
   }, [podcast?.lessons, userProgress, initializeCurrentLesson]);
 
-  // MEJORADO: Actualizaciones en tiempo real más agresivas
+  // MEJORA CRÍTICA: Actualizaciones en tiempo real más agresivas y eficientes
   useEffect(() => {
     if (podcast && lessonProgress.length >= 0) {
-      console.log('Lesson progress updated, refreshing podcast state for real-time UI updates');
+      console.log('⚡ Lesson progress updated, triggering IMMEDIATE UI refresh for real-time updates');
       
-      // Refresh inmediato sin timeout para actualizaciones más rápidas
+      // Refresh inmediato sin timeout para actualizaciones instantáneas
       initializePodcastWithProgress();
     }
   }, [lessonProgress, initializePodcastWithProgress]);
 
-  // MEJORADO: Actualizaciones inmediatas para progreso de curso
+  // MEJORA CRÍTICA: Actualizaciones inmediatas para progreso de curso
   useEffect(() => {
     if (podcast && userProgress.length >= 0) {
-      console.log('User progress updated, refreshing podcast state for real-time UI updates');
+      console.log('⚡ User course progress updated, triggering IMMEDIATE UI refresh for real-time updates');
       
-      // Refresh inmediato sin timeout para actualizaciones más rápidas
+      // Refresh inmediato sin timeout para actualizaciones instantáneas
       initializePodcastWithProgress();
     }
   }, [userProgress, initializePodcastWithProgress]);

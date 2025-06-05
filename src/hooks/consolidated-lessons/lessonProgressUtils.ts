@@ -14,8 +14,8 @@ export function updateLessonsWithProgress(
     return {
       ...lesson,
       isCompleted,
-      // CRÍTICO: Las lecciones completadas NUNCA deben estar bloqueadas
-      isLocked: isCompleted ? false : true // Se desbloqueará en la lógica posterior si corresponde
+      // CORRECCIÓN CRÍTICA: Las lecciones completadas NUNCA deben estar bloqueadas
+      isLocked: !isCompleted // Si está completada, NO está bloqueada
     };
   });
 }
@@ -69,10 +69,10 @@ export function unlockLessonsForInProgressCourse(
     });
   });
 
-  // CRÍTICO: Verificación final para asegurar que TODAS las lecciones completadas estén desbloqueadas
-  // Esta es la corrección principal que faltaba
+  // VERIFICACIÓN FINAL MEJORADA: Garantizar que TODAS las lecciones completadas estén desbloqueadas
   const finalLessons = updatedLessons.map(lesson => ({
     ...lesson,
+    // Si la lección está completada, NUNCA puede estar bloqueada
     isLocked: lesson.isCompleted ? false : lesson.isLocked
   }));
 

@@ -13,20 +13,22 @@ export function useLessonPlayback(
 ) {
   const [isPlaying, setIsPlaying] = useState(false);
 
-  // Handle lesson selection (CORRECCIÓN: Lecciones completadas SIEMPRE reproducibles)
+  // Handle lesson selection (CORRECCIÓN: Lógica simplificada y clara)
   const handleSelectLesson = useCallback((lesson: Lesson) => {
     console.log('Selecting lesson:', lesson.title, 'isCompleted:', lesson.isCompleted, 'isLocked:', lesson.isLocked);
 
-    // NUEVA LÓGICA SIMPLIFICADA:
-    // 1. Si la lección está completada -> SIEMPRE se puede reproducir
-    // 2. Si la lección no está bloqueada -> se puede reproducir  
+    // LÓGICA SIMPLIFICADA Y CLARA:
+    // 1. Si la lección está completada -> SIEMPRE se puede reproducir (sin importar el estado del curso)
+    // 2. Si la lección no está bloqueada -> se puede reproducir
     // 3. Solo bloquear si está bloqueada Y no completada
     const canSelectLesson = lesson.isCompleted || !lesson.isLocked;
 
     if (!canSelectLesson) {
-      console.log('Lesson is locked and not completed, cannot select:', lesson.title);
+      console.log('⚠️ Lesson is locked and not completed, cannot select:', lesson.title);
       return;
     }
+
+    console.log('✅ Lesson can be selected and played:', lesson.title);
 
     // If selecting the same lesson that's already playing, just toggle play/pause
     if (currentLesson && lesson.id === currentLesson.id && isPlaying) {
@@ -38,10 +40,10 @@ export function useLessonPlayback(
 
     // Track lesson start in database (only for incomplete lessons)
     if (podcast && user && !lesson.isCompleted) {
-      console.log('Tracking lesson start for incomplete lesson:', lesson.title);
+      console.log('📊 Tracking lesson start for incomplete lesson:', lesson.title);
       updateLessonPosition(lesson.id, podcast.id, 1);
     } else if (lesson.isCompleted) {
-      console.log('Replaying completed lesson, not tracking start:', lesson.title);
+      console.log('🔄 Replaying completed lesson, not tracking start:', lesson.title);
     }
   }, [currentLesson, isPlaying, podcast, user, updateLessonPosition]);
 
@@ -56,13 +58,13 @@ export function useLessonPlayback(
     
     // Never update progress for already completed lessons
     if (currentLesson.isCompleted) {
-      console.log('Lesson already completed, not updating progress:', currentLesson.title);
+      console.log('📝 Lesson already completed, not updating progress:', currentLesson.title);
       return;
     }
 
     // Only update progress for incomplete lessons when position > 5%
     if (position > 5) {
-      console.log('Updating progress for incomplete lesson:', currentLesson.title, 'position:', position);
+      console.log('📈 Updating progress for incomplete lesson:', currentLesson.title, 'position:', position);
       updateLessonPosition(currentLesson.id, podcast.id, position);
     }
   }, [currentLesson, podcast, user, updateLessonPosition]);

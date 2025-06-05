@@ -18,7 +18,7 @@ export function useLessonCompletion(
   const handleLessonComplete = useCallback(async () => {
     if (!currentLesson || !podcast || !user) return;
 
-    console.log('Lesson completion triggered for:', currentLesson.title, 'isCompleted:', currentLesson.isCompleted);
+    console.log('🎯 Lesson completion triggered for:', currentLesson.title, 'isCompleted:', currentLesson.isCompleted);
 
     // LÓGICA UNIFICADA: Misma lógica de auto-advance para TODOS los cursos
     const findNextLesson = () => {
@@ -50,7 +50,7 @@ export function useLessonCompletion(
 
     // Si la lección ya está completada, solo hacer auto-advance
     if (currentLesson.isCompleted) {
-      console.log('Lesson already completed, advancing to next lesson for auto-play:', currentLesson.title);
+      console.log('🔄 Lesson already completed, advancing to next lesson for auto-play:', currentLesson.title);
       
       const nextLesson = findNextLesson();
       
@@ -60,7 +60,7 @@ export function useLessonCompletion(
         const canPlayNext = nextLesson.isCompleted || !nextLesson.isLocked;
         
         if (canPlayNext) {
-          console.log('Auto-advancing to next lesson:', nextLesson.title);
+          console.log('⏭️ Auto-advancing to next lesson:', nextLesson.title);
           setCurrentLesson(nextLesson);
           
           // Small delay to ensure state update, then auto-play
@@ -72,26 +72,30 @@ export function useLessonCompletion(
             }
           }, 500);
         } else {
-          console.log('Next lesson is locked, stopping auto-play:', nextLesson.title);
+          console.log('🔒 Next lesson is locked, stopping auto-play:', nextLesson.title);
           setIsPlaying(false);
         }
       } else {
-        console.log('No more lessons available for auto-play');
+        console.log('🏁 No more lessons available for auto-play');
         setIsPlaying(false);
       }
       return;
     }
 
-    console.log('Completing lesson for the first time:', currentLesson.title);
+    console.log('✅ Completing lesson for the first time:', currentLesson.title);
 
     try {
       // Mark as complete in database first
       await markLessonCompleteInDB(currentLesson.id, podcast.id);
       
-      // Update local podcast state
+      // Update local podcast state INMEDIATAMENTE
       const updatedLessons = podcast.lessons.map(lesson => {
         if (lesson.id === currentLesson.id) {
-          return { ...lesson, isCompleted: true, isLocked: false }; // CORRECCIÓN: Asegurar que se desbloquea
+          return { 
+            ...lesson, 
+            isCompleted: true, 
+            isLocked: false // CRÍTICO: Asegurar que se desbloquea inmediatamente
+          };
         }
         return lesson;
       });
@@ -108,7 +112,7 @@ export function useLessonCompletion(
           };
           
           // Auto-advance to next lesson
-          console.log('Auto-advancing to next lesson:', nextLesson.title);
+          console.log('⏭️ Auto-advancing to next lesson:', nextLesson.title);
           setCurrentLesson(nextLesson);
           
           // Small delay to ensure state update, then auto-play
@@ -120,20 +124,27 @@ export function useLessonCompletion(
           }, 500);
         }
       } else {
-        console.log('Course completed - no more lessons');
+        console.log('🏁 Course completed - no more lessons');
         setIsPlaying(false);
       }
 
-      // Update podcast with new lesson states
+      // ACTUALIZACIÓN INMEDIATA: Update podcast with new lesson states
+      console.log('🔄 Updating podcast state immediately...');
       setPodcast({ ...podcast, lessons: updatedLessons });
 
-      // Refresh progress data to update UI immediately
-      console.log('Refreshing progress data after lesson completion...');
-      await Promise.all([refetchLessonProgress(), refetchCourseProgress()]);
-      console.log('Progress data refreshed successfully');
+      // MEJORA PARA TIEMPO REAL: Refresh progress data to update UI immediately
+      console.log('📊 Refreshing progress data for real-time updates...');
+      const refreshPromises = [refetchLessonProgress(), refetchCourseProgress()];
+      
+      // No esperar a que termine el refresh para actualizar la UI
+      Promise.all(refreshPromises).then(() => {
+        console.log('✅ Progress data refreshed successfully');
+      }).catch(error => {
+        console.error('❌ Error refreshing progress data:', error);
+      });
 
     } catch (error) {
-      console.error('Error completing lesson:', error);
+      console.error('❌ Error completing lesson:', error);
     }
   }, [currentLesson, podcast, user, markLessonCompleteInDB, setPodcast, setCurrentLesson, setIsPlaying, refetchLessonProgress, refetchCourseProgress, updateLessonPosition]);
 
