@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { Podcast, Lesson } from '@/types';
 import { UserLessonProgress } from '../useUserLessonProgress';
 import { UserCourseProgress } from '../useUserProgress';

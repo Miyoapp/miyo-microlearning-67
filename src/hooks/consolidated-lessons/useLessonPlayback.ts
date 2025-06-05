@@ -17,6 +17,22 @@ export function useLessonPlayback(
   const handleSelectLesson = useCallback((lesson: Lesson) => {
     const courseCompleted = isCourseCompleted(userProgress, podcast?.id || '');
 
+    // For completed courses, allow free replay of any lesson
+    if (courseCompleted) {
+      console.log('Course completed - allowing free replay of lesson:', lesson.title);
+      
+      // If selecting the same lesson that's already playing, just toggle play/pause
+      if (currentLesson && lesson.id === currentLesson.id && isPlaying) {
+        setIsPlaying(false);
+        return;
+      }
+
+      // Note: setCurrentLesson will be handled by the parent hook
+      setIsPlaying(true);
+      return;
+    }
+
+    // For in-progress courses, check if lesson is locked
     if (!courseCompleted && lesson.isLocked) {
       console.log('Lesson is locked, cannot select:', lesson.title);
       return;

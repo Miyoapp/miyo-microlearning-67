@@ -7,6 +7,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { useLessonInitialization } from './consolidated-lessons/useLessonInitialization';
 import { useLessonPlayback } from './consolidated-lessons/useLessonPlayback';
 import { useLessonCompletion } from './consolidated-lessons/useLessonCompletion';
+import { isCourseCompleted } from './consolidated-lessons/lessonProgressUtils';
 
 export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (podcast: Podcast) => void) {
   const { user } = useAuth();
@@ -35,7 +36,7 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
   const {
     isPlaying,
     setIsPlaying,
-    handleSelectLesson,
+    handleSelectLesson: handleSelectLessonFromPlayback,
     handleTogglePlay,
     handleProgressUpdate
   } = useLessonPlayback(podcast, currentLesson, userProgress, user, updateLessonPosition);
@@ -54,6 +55,31 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     refetchLessonProgress,
     refetchCourseProgress
   );
+
+  // Enhanced lesson selection that updates current lesson and handles playback
+  const handleSelectLesson = (lesson: any) => {
+    console.log('handleSelectLesson called with:', lesson.title);
+    
+    const courseCompleted = isCourseCompleted(userProgress, podcast?.id || '');
+    
+    // For completed courses, allow selection of any lesson
+    if (courseCompleted) {
+      console.log('Course completed - allowing selection of any lesson');
+      setCurrentLesson(lesson);
+      handleSelectLessonFromPlayback(lesson);
+      return;
+    }
+    
+    // For in-progress courses, check if lesson is locked
+    if (lesson.isLocked) {
+      console.log('Lesson is locked, cannot select');
+      return;
+    }
+    
+    // Update current lesson and handle playback
+    setCurrentLesson(lesson);
+    handleSelectLessonFromPlayback(lesson);
+  };
 
   // Initialize when podcast or lesson progress changes
   useEffect(() => {
