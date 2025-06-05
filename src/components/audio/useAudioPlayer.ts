@@ -7,9 +7,10 @@ interface UseAudioPlayerProps {
   isPlaying: boolean;
   onTogglePlay: () => void;
   onComplete: () => void;
+  onProgressUpdate?: (position: number) => void;
 }
 
-const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: UseAudioPlayerProps) => {
+const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgressUpdate }: UseAudioPlayerProps) => {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
@@ -60,10 +61,17 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: UseAudi
     }
   }, [volume, isMuted, playbackRate]);
   
-  // Update time display
+  // Update time display and progress
   const updateTime = () => {
     if (audioRef.current) {
-      setCurrentTime(audioRef.current.currentTime);
+      const newCurrentTime = audioRef.current.currentTime;
+      setCurrentTime(newCurrentTime);
+      
+      // Update progress in database every 5 seconds or significant changes
+      if (onProgressUpdate && duration > 0) {
+        const progressPercent = (newCurrentTime / duration) * 100;
+        onProgressUpdate(progressPercent);
+      }
     }
   };
   
@@ -95,6 +103,12 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: UseAudi
     setCurrentTime(value);
     if (audioRef.current) {
       audioRef.current.currentTime = value;
+      
+      // Update progress immediately when seeking
+      if (onProgressUpdate && duration > 0) {
+        const progressPercent = (value / duration) * 100;
+        onProgressUpdate(progressPercent);
+      }
     }
   };
   

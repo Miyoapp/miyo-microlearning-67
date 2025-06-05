@@ -4,6 +4,7 @@ import { useLessonSelection } from './lessons/useLessonSelection';
 import { useLessonPlayback } from './lessons/useLessonPlayback';
 import { useLessonProgress } from './lessons/useLessonProgress';
 import { useUserLessonProgress } from './useUserLessonProgress';
+import { useCallback } from 'react';
 
 export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcast) => void) {
   // Use our individual hooks
@@ -33,7 +34,7 @@ export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcas
   } = useUserLessonProgress();
   
   // Enhanced lesson complete handler
-  const handleLessonCompleteEnhanced = () => {
+  const handleLessonCompleteEnhanced = useCallback(() => {
     if (!currentLesson || !podcast) return;
     
     console.log('Handling lesson complete for:', currentLesson.title);
@@ -43,10 +44,20 @@ export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcas
     
     // Mark as complete in database
     markLessonCompleteInDB(currentLesson.id, podcast.id);
-  };
+  }, [currentLesson, podcast, handleLessonComplete, markLessonCompleteInDB]);
+  
+  // Handle progress updates during playback
+  const handleProgressUpdate = useCallback((position: number) => {
+    if (!currentLesson || !podcast) return;
+    
+    // Only update position if not completed and position > 5% to avoid spam
+    if (position > 5) {
+      updateLessonPosition(currentLesson.id, podcast.id, position);
+    }
+  }, [currentLesson, podcast, updateLessonPosition]);
   
   // Wrapper for handleSelectLesson to include isPlaying and progress tracking
-  const selectLesson = (lesson: Lesson) => {
+  const selectLesson = useCallback((lesson: Lesson) => {
     // If selecting the same lesson that's already playing, just toggle play/pause
     if (currentLesson && lesson.id === currentLesson.id) {
       handleTogglePlay();
@@ -59,16 +70,16 @@ export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcas
     if (podcast) {
       updateLessonPosition(lesson.id, podcast.id, 1); // Mark as started
     }
-  };
+  }, [currentLesson, handleTogglePlay, handleSelectLesson, setIsPlaying, podcast, updateLessonPosition]);
   
-  // Wrapper for advanceToNextLesson that passes the setCurrentLesson callback
-  const advanceToNextLessonWrapper = () => {
+  // Wrapper for advanceToNextLesson that passes the setCurrentLesson callback and auto-plays
+  const advanceToNextLessonWrapper = useCallback(() => {
     console.log("Wrapper for advanceToNextLesson called - advancing from:", currentLesson?.title);
     
     // Get the next lesson using the callback approach to ensure it happens
     advanceToNextLesson((nextLesson) => {
       if (nextLesson) {
-        console.log("Setting next lesson:", nextLesson.title);
+        console.log("Setting next lesson and auto-playing:", nextLesson.title);
         setCurrentLesson(nextLesson);
         
         // Track next lesson start in database
@@ -76,15 +87,16 @@ export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcas
           updateLessonPosition(nextLesson.id, podcast.id, 1);
         }
         
-        // Ensure the UI updates by forcing the isPlaying state after a brief moment
+        // Auto-play the next lesson after a brief delay
         setTimeout(() => {
           setIsPlaying(true);
-        }, 300);
+        }, 500);
       } else {
         console.log("No next lesson available to advance to");
+        setIsPlaying(false);
       }
     });
-  };
+  }, [currentLesson, advanceToNextLesson, setCurrentLesson, podcast, updateLessonPosition, setIsPlaying]);
 
   return {
     currentLesson,
@@ -95,6 +107,7 @@ export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcas
     handleSelectLesson: selectLesson,
     handleTogglePlay,
     handleLessonComplete: handleLessonCompleteEnhanced,
-    advanceToNextLesson: advanceToNextLessonWrapper
+    advanceToNextLesson: advanceToNextLessonWrapper,
+    handleProgressUpdate
   };
 }

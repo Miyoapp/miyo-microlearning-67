@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { toast } from 'sonner';
@@ -123,10 +123,14 @@ export function useUserLessonProgress() {
     });
   };
 
-  const updateLessonPosition = async (lessonId: string, courseId: string, position: number) => {
-    console.log('Updating lesson position:', lessonId, 'position:', position);
-    await updateLessonProgress(lessonId, courseId, { current_position: position });
-  };
+  // Debounced function to update lesson position (to avoid too many calls)
+  const updateLessonPosition = useCallback(
+    async (lessonId: string, courseId: string, position: number) => {
+      console.log('Updating lesson position:', lessonId, 'position:', position);
+      await updateLessonProgress(lessonId, courseId, { current_position: Math.round(position) });
+    },
+    []
+  );
 
   useEffect(() => {
     if (user) {

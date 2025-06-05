@@ -12,9 +12,10 @@ interface AudioPlayerProps {
   isPlaying: boolean;
   onTogglePlay: () => void;
   onComplete: () => void;
+  onProgressUpdate?: (position: number) => void;
 }
 
-const AudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: AudioPlayerProps) => {
+const AudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgressUpdate }: AudioPlayerProps) => {
   const {
     audioRef,
     currentTime,
@@ -29,7 +30,7 @@ const AudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: AudioPlaye
     handleMetadata,
     updateTime,
     handleAudioEnded
-  } = useAudioPlayer({ lesson, isPlaying, onTogglePlay, onComplete });
+  } = useAudioPlayer({ lesson, isPlaying, onTogglePlay, onComplete, onProgressUpdate });
   
   // If no lesson is selected, don't render the player
   if (!lesson) return null;

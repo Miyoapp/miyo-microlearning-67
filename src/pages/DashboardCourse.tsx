@@ -27,7 +27,8 @@ const DashboardCourse = () => {
     handleSelectLesson, 
     handleTogglePlay, 
     handleLessonComplete,
-    advanceToNextLesson
+    advanceToNextLesson,
+    handleProgressUpdate
   } = useLessons(podcast, setPodcast);
   
   const courseProgress = userProgress.find(p => p.course_id === id);
@@ -210,6 +211,7 @@ const DashboardCourse = () => {
         isPlaying={isPlaying}
         onTogglePlay={handleTogglePlay}
         onComplete={handleLessonComplete}
+        onProgressUpdate={handleProgressUpdate}
       />
     </>
   );
