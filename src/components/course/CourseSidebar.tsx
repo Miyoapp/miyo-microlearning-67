@@ -5,12 +5,22 @@ import { Podcast } from '@/types';
 
 interface CourseSidebarProps {
   podcast: Podcast;
+  progressPercentage?: number;
+  isCompleted?: boolean;
 }
 
-const CourseSidebar: React.FC<CourseSidebarProps> = ({ podcast }) => {
+const CourseSidebar: React.FC<CourseSidebarProps> = ({ 
+  podcast, 
+  progressPercentage = 0,
+  isCompleted = false 
+}) => {
   return (
     <div className="lg:col-span-1">
-      <CourseStats podcast={podcast} />
+      <CourseStats 
+        podcast={podcast} 
+        progressPercentage={progressPercentage}
+        isCompleted={isCompleted}
+      />
     </div>
   );
 };

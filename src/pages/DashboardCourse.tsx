@@ -30,6 +30,8 @@ const DashboardCourse = () => {
   const courseProgress = userProgress.find(p => p.course_id === id);
   const isSaved = courseProgress?.is_saved || false;
   const hasStarted = (courseProgress?.progress_percentage || 0) > 0;
+  const progressPercentage = courseProgress?.progress_percentage || 0;
+  const isCompleted = courseProgress?.is_completed || false;
 
   // Initialize podcast and current lesson when data is loaded
   useEffect(() => {
@@ -103,7 +105,11 @@ const DashboardCourse = () => {
             </div>
 
             {/* Sidebar */}
-            <CourseSidebar podcast={podcast} />
+            <CourseSidebar 
+              podcast={podcast}
+              progressPercentage={progressPercentage}
+              isCompleted={isCompleted}
+            />
           </div>
         </div>
       </DashboardLayout>
