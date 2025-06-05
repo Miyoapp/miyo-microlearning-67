@@ -201,8 +201,10 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
       // Update podcast with new lesson states
       setPodcast({ ...podcast, lessons: updatedLessons });
 
-      // Refresh progress data
+      // Refresh progress data to update UI immediately
+      console.log('Refreshing progress data after lesson completion...');
       await Promise.all([refetchLessonProgress(), refetchCourseProgress()]);
+      console.log('Progress data refreshed successfully');
 
     } catch (error) {
       console.error('Error completing lesson:', error);
