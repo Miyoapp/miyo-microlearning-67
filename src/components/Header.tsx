@@ -33,18 +33,9 @@ const Header = () => {
   const handleLogout = async () => {
     try {
       await signOut();
-      navigate("/"); // Redirect to public landing
+      navigate("/"); // Redirect to public landing page
     } catch (error) {
       console.error("Error al cerrar sesión:", error);
-    }
-  };
-  
-  const handleLogoClick = (e) => {
-    // If user is authenticated, prevent any navigation
-    if (user) {
-      e.preventDefault();
-      // Do nothing - stay on current page
-      return false;
     }
   };
 
@@ -63,7 +54,7 @@ const Header = () => {
       }`}
     >
       <div className="miyo-container flex items-center justify-between">
-        <Logo linkClassName="flex items-center" onClick={handleLogoClick} />
+        <Logo linkClassName="flex items-center" />
         
         {!user ? (
           <div className="flex items-center space-x-4">

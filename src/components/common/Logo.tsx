@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 interface LogoProps {
   className?: string;
@@ -9,8 +10,23 @@ interface LogoProps {
 }
 
 const Logo: React.FC<LogoProps> = ({ className = '', linkClassName = '', onClick }) => {
+  const { user } = useAuth();
+
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    // If user is authenticated, prevent navigation
+    if (user) {
+      e.preventDefault();
+      return false;
+    }
+    
+    // Call the provided onClick handler if exists
+    if (onClick) {
+      onClick(e);
+    }
+  };
+
   return (
-    <Link to="/" className={`inline-block ${linkClassName}`} onClick={onClick}>
+    <Link to="/" className={`inline-block ${linkClassName}`} onClick={handleClick}>
       <img 
         src="https://res.cloudinary.com/dyjx9cjat/image/upload/v1742489263/image/jag130kkjn6aezxvf9q6.jpg" 
         alt="MIYO Logo" 

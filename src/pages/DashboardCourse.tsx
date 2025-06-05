@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Bookmark, BookmarkCheck, Play } from 'lucide-react';
 import { useCourseData } from '@/hooks/useCourseData';
 import { useUserProgress } from '@/hooks/useUserProgress';
+import { useUserLessonProgress } from '@/hooks/useUserLessonProgress';
 import { useLessons } from '@/hooks/useLessons';
 import { formatMinutesToHumanReadable } from '@/lib/formatters';
 import CourseStats from '@/components/course/CourseStats';
@@ -15,7 +16,8 @@ import AudioPlayer from '@/components/AudioPlayer';
 const DashboardCourse = () => {
   const { id } = useParams<{ id: string }>();
   const { podcast, setPodcast, isLoading } = useCourseData(id);
-  const { userProgress, toggleSaveCourse, startCourse } = useUserProgress();
+  const { userProgress, toggleSaveCourse, startCourse, refetch } = useUserProgress();
+  const { lessonProgress, refetch: refetchLessonProgress } = useUserLessonProgress();
   
   // Initialize lessons hook
   const { 
@@ -39,6 +41,11 @@ const DashboardCourse = () => {
     }
   }, [podcast, initializeCurrentLesson]);
 
+  // Refresh lesson progress when course progress changes
+  useEffect(() => {
+    refetchLessonProgress();
+  }, [courseProgress, refetchLessonProgress]);
+
   // Listen for lesson ended event to advance to next lesson
   useEffect(() => {
     const handleLessonEnded = (e: Event) => {
@@ -51,8 +58,9 @@ const DashboardCourse = () => {
         // Mark current lesson as complete first
         handleLessonComplete();
         
-        // Then advance to next lesson immediately
-        setTimeout(() => {
+        // Refresh both course and lesson progress
+        setTimeout(async () => {
+          await Promise.all([refetch(), refetchLessonProgress()]);
           advanceToNextLesson();
         }, 100);
       }
@@ -63,11 +71,12 @@ const DashboardCourse = () => {
     return () => {
       window.removeEventListener('lessonEnded', handleLessonEnded);
     };
-  }, [currentLesson, advanceToNextLesson, handleLessonComplete]);
+  }, [currentLesson, advanceToNextLesson, handleLessonComplete, refetch, refetchLessonProgress]);
 
   const handleStartLearning = async () => {
     if (podcast) {
       await startCourse(podcast.id);
+      await refetch(); // Refresh course progress
       // Initialize the first lesson and start playing
       initializeCurrentLesson();
       // Scroll to the learning path section
@@ -99,6 +108,19 @@ const DashboardCourse = () => {
       </DashboardLayout>
     );
   }
+
+  // Create enhanced podcast with lesson progress for LearningPath
+  const podcastWithProgress = {
+    ...podcast,
+    lessons: podcast.lessons.map(lesson => {
+      const progress = lessonProgress.find(p => p.lesson_id === lesson.id);
+      return {
+        ...lesson,
+        isCompleted: progress?.is_completed || lesson.isCompleted || false,
+        currentPosition: progress?.current_position || 0
+      };
+    })
+  };
 
   return (
     <>
@@ -166,8 +188,8 @@ const DashboardCourse = () => {
               <div id="learning-path-section" className="bg-white rounded-2xl shadow-sm p-6">
                 <h2 className="text-2xl font-bold mb-6">Ruta de aprendizaje</h2>
                 <LearningPath 
-                  lessons={podcast.lessons}
-                  modules={podcast.modules}
+                  lessons={podcastWithProgress.lessons}
+                  modules={podcastWithProgress.modules}
                   onSelectLesson={handleSelectLesson}
                   currentLessonId={currentLesson?.id || null}
                 />
