@@ -13,17 +13,15 @@ export function useLessonPlayback(
 ) {
   const [isPlaying, setIsPlaying] = useState(false);
 
-  // Handle lesson selection (improved to allow replay of any completed lesson)
+  // Handle lesson selection (CORRECCIÓN: Lecciones completadas SIEMPRE reproducibles)
   const handleSelectLesson = useCallback((lesson: Lesson) => {
-    const courseCompleted = isCourseCompleted(userProgress, podcast?.id || '');
-
     console.log('Selecting lesson:', lesson.title, 'isCompleted:', lesson.isCompleted, 'isLocked:', lesson.isLocked);
 
-    // Allow selection if:
-    // 1. Course is completed (can replay any lesson)
-    // 2. Lesson is not locked (available for first time)
-    // 3. Lesson is completed (can ALWAYS replay completed lessons regardless of course status)
-    const canSelectLesson = courseCompleted || !lesson.isLocked || lesson.isCompleted;
+    // NUEVA LÓGICA SIMPLIFICADA:
+    // 1. Si la lección está completada -> SIEMPRE se puede reproducir
+    // 2. Si la lección no está bloqueada -> se puede reproducir  
+    // 3. Solo bloquear si está bloqueada Y no completada
+    const canSelectLesson = lesson.isCompleted || !lesson.isLocked;
 
     if (!canSelectLesson) {
       console.log('Lesson is locked and not completed, cannot select:', lesson.title);
@@ -45,7 +43,7 @@ export function useLessonPlayback(
     } else if (lesson.isCompleted) {
       console.log('Replaying completed lesson, not tracking start:', lesson.title);
     }
-  }, [currentLesson, isPlaying, podcast, user, userProgress, updateLessonPosition]);
+  }, [currentLesson, isPlaying, podcast, user, updateLessonPosition]);
 
   // Toggle play/pause
   const handleTogglePlay = useCallback(() => {

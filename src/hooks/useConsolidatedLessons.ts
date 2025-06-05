@@ -60,13 +60,8 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
   const handleSelectLesson = (lesson: any) => {
     console.log('handleSelectLesson called with:', lesson.title, 'isCompleted:', lesson.isCompleted, 'isLocked:', lesson.isLocked);
     
-    const courseCompleted = isCourseCompleted(userProgress, podcast?.id || '');
-    
-    // Allow selection if:
-    // 1. Course is completed (can replay any lesson)
-    // 2. Lesson is not locked (available for first time)
-    // 3. Lesson is completed (can ALWAYS replay completed lessons regardless of course status)
-    const canSelectLesson = courseCompleted || !lesson.isLocked || lesson.isCompleted;
+    // CORRECCIÓN: Lógica simplificada - lecciones completadas SIEMPRE reproducibles
+    const canSelectLesson = lesson.isCompleted || !lesson.isLocked;
     
     if (!canSelectLesson) {
       console.log('Lesson is locked and not completed, cannot select');
@@ -92,27 +87,23 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     }
   }, [podcast?.lessons, userProgress, initializeCurrentLesson]);
 
-  // Enhanced effect to trigger UI updates when lesson progress changes
+  // MEJORADO: Actualizaciones en tiempo real más agresivas
   useEffect(() => {
     if (podcast && lessonProgress.length >= 0) {
       console.log('Lesson progress updated, refreshing podcast state for real-time UI updates');
       
-      // Force re-initialization to update UI immediately
-      setTimeout(() => {
-        initializePodcastWithProgress();
-      }, 100);
+      // Refresh inmediato sin timeout para actualizaciones más rápidas
+      initializePodcastWithProgress();
     }
   }, [lessonProgress, initializePodcastWithProgress]);
 
-  // Additional effect to ensure UI updates when progress changes
+  // MEJORADO: Actualizaciones inmediatas para progreso de curso
   useEffect(() => {
     if (podcast && userProgress.length >= 0) {
       console.log('User progress updated, refreshing podcast state for real-time UI updates');
       
-      // Force re-initialization to update UI immediately
-      setTimeout(() => {
-        initializePodcastWithProgress();
-      }, 100);
+      // Refresh inmediato sin timeout para actualizaciones más rápidas
+      initializePodcastWithProgress();
     }
   }, [userProgress, initializePodcastWithProgress]);
 

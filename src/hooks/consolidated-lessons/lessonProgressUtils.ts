@@ -9,10 +9,13 @@ export function updateLessonsWithProgress(
 ): Lesson[] {
   return podcast.lessons.map(lesson => {
     const progress = lessonProgress.find(p => p.lesson_id === lesson.id);
+    const isCompleted = progress?.is_completed || false;
+    
     return {
       ...lesson,
-      isCompleted: progress?.is_completed || false,
-      isLocked: true // Start with all locked, will be unlocked properly later
+      isCompleted,
+      // CRÍTICO: Las lecciones completadas NUNCA deben estar bloqueadas
+      isLocked: isCompleted ? false : true // Se desbloqueará en la lógica posterior si corresponde
     };
   });
 }
@@ -66,7 +69,14 @@ export function unlockLessonsForInProgressCourse(
     });
   });
 
-  return updatedLessons;
+  // CRÍTICO: Verificación final para asegurar que TODAS las lecciones completadas estén desbloqueadas
+  // Esta es la corrección principal que faltaba
+  const finalLessons = updatedLessons.map(lesson => ({
+    ...lesson,
+    isLocked: lesson.isCompleted ? false : lesson.isLocked
+  }));
+
+  return finalLessons;
 }
 
 export function isCourseCompleted(
