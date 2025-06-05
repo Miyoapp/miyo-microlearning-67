@@ -18,6 +18,7 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
   } = useUserLessonProgress();
   
   const { 
+    userProgress,
     updateCourseProgress, 
     refetch: refetchCourseProgress 
   } = useUserProgress();
@@ -44,70 +45,102 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
       lessons: module.lessonIds.map(id => updatedLessons.find(l => l.id === id)).filter(Boolean) as Lesson[]
     }));
 
-    // Unlock first lesson of first module
-    if (modulesWithLessons.length > 0 && modulesWithLessons[0].lessons.length > 0) {
-      const firstLessonId = modulesWithLessons[0].lessons[0].id;
-      const firstLessonIndex = updatedLessons.findIndex(l => l.id === firstLessonId);
-      if (firstLessonIndex !== -1) {
-        updatedLessons[firstLessonIndex] = { ...updatedLessons[firstLessonIndex], isLocked: false };
-      }
-    }
+    // Check if course is completed
+    const courseProgress = userProgress.find(p => p.course_id === podcast.id);
+    const isCourseCompleted = courseProgress?.is_completed || false;
 
-    // Unlock lessons following completed ones
-    modulesWithLessons.forEach(module => {
-      module.lessons.forEach((lesson, index) => {
-        if (lesson.isCompleted && index < module.lessons.length - 1) {
-          // Unlock next lesson in same module
-          const nextLessonId = module.lessons[index + 1].id;
-          const nextLessonIndex = updatedLessons.findIndex(l => l.id === nextLessonId);
-          if (nextLessonIndex !== -1) {
-            updatedLessons[nextLessonIndex] = { ...updatedLessons[nextLessonIndex], isLocked: false };
-          }
-        } else if (lesson.isCompleted && index === module.lessons.length - 1) {
-          // If last lesson of module is completed, unlock first lesson of next module
-          const currentModuleIndex = modulesWithLessons.findIndex(m => m.id === module.id);
-          if (currentModuleIndex < modulesWithLessons.length - 1) {
-            const nextModule = modulesWithLessons[currentModuleIndex + 1];
-            if (nextModule.lessons.length > 0) {
-              const nextModuleFirstLessonId = nextModule.lessons[0].id;
-              const nextModuleFirstLessonIndex = updatedLessons.findIndex(l => l.id === nextModuleFirstLessonId);
-              if (nextModuleFirstLessonIndex !== -1) {
-                updatedLessons[nextModuleFirstLessonIndex] = { ...updatedLessons[nextModuleFirstLessonIndex], isLocked: false };
+    if (isCourseCompleted) {
+      // If course is completed, unlock ALL lessons for free replay
+      console.log('Course is completed, unlocking all lessons for free replay');
+      updatedLessons.forEach((lesson, index) => {
+        updatedLessons[index] = { ...lesson, isLocked: false };
+      });
+    } else {
+      // Normal unlocking logic for in-progress courses
+      // Unlock first lesson of first module
+      if (modulesWithLessons.length > 0 && modulesWithLessons[0].lessons.length > 0) {
+        const firstLessonId = modulesWithLessons[0].lessons[0].id;
+        const firstLessonIndex = updatedLessons.findIndex(l => l.id === firstLessonId);
+        if (firstLessonIndex !== -1) {
+          updatedLessons[firstLessonIndex] = { ...updatedLessons[firstLessonIndex], isLocked: false };
+        }
+      }
+
+      // Unlock lessons following completed ones
+      modulesWithLessons.forEach(module => {
+        module.lessons.forEach((lesson, index) => {
+          if (lesson.isCompleted && index < module.lessons.length - 1) {
+            // Unlock next lesson in same module
+            const nextLessonId = module.lessons[index + 1].id;
+            const nextLessonIndex = updatedLessons.findIndex(l => l.id === nextLessonId);
+            if (nextLessonIndex !== -1) {
+              updatedLessons[nextLessonIndex] = { ...updatedLessons[nextLessonIndex], isLocked: false };
+            }
+          } else if (lesson.isCompleted && index === module.lessons.length - 1) {
+            // If last lesson of module is completed, unlock first lesson of next module
+            const currentModuleIndex = modulesWithLessons.findIndex(m => m.id === module.id);
+            if (currentModuleIndex < modulesWithLessons.length - 1) {
+              const nextModule = modulesWithLessons[currentModuleIndex + 1];
+              if (nextModule.lessons.length > 0) {
+                const nextModuleFirstLessonId = nextModule.lessons[0].id;
+                const nextModuleFirstLessonIndex = updatedLessons.findIndex(l => l.id === nextModuleFirstLessonId);
+                if (nextModuleFirstLessonIndex !== -1) {
+                  updatedLessons[nextModuleFirstLessonIndex] = { ...updatedLessons[nextModuleFirstLessonIndex], isLocked: false };
+                }
               }
             }
           }
-        }
+        });
       });
-    });
+    }
 
     setPodcast({ ...podcast, lessons: updatedLessons });
-  }, [podcast, lessonProgress, user, setPodcast]);
+  }, [podcast, lessonProgress, userProgress, user, setPodcast]);
 
-  // Initialize current lesson (first available or first incomplete)
+  // Initialize current lesson (improved logic for completed courses)
   const initializeCurrentLesson = useCallback(() => {
     if (!podcast) return;
 
     console.log('Initializing current lesson');
     
-    // Find first incomplete lesson that's unlocked
-    const firstIncompleteLesson = podcast.lessons.find(lesson => !lesson.isCompleted && !lesson.isLocked);
-    
-    if (firstIncompleteLesson) {
-      console.log('Setting current lesson to first incomplete:', firstIncompleteLesson.title);
-      setCurrentLesson(firstIncompleteLesson);
+    // Check if course is completed
+    const courseProgress = userProgress.find(p => p.course_id === podcast.id);
+    const isCourseCompleted = courseProgress?.is_completed || false;
+
+    if (isCourseCompleted) {
+      // For completed courses, default to first lesson but don't override user selection
+      if (!currentLesson) {
+        const firstLesson = podcast.lessons[0];
+        if (firstLesson) {
+          console.log('Course completed - setting current lesson to first lesson:', firstLesson.title);
+          setCurrentLesson(firstLesson);
+        }
+      }
     } else {
-      // If all lessons are completed or none are unlocked, set to first lesson
-      const firstLesson = podcast.lessons[0];
-      if (firstLesson) {
-        console.log('Setting current lesson to first lesson:', firstLesson.title);
-        setCurrentLesson(firstLesson);
+      // For in-progress courses, find first incomplete lesson that's unlocked
+      const firstIncompleteLesson = podcast.lessons.find(lesson => !lesson.isCompleted && !lesson.isLocked);
+      
+      if (firstIncompleteLesson) {
+        console.log('Setting current lesson to first incomplete:', firstIncompleteLesson.title);
+        setCurrentLesson(firstIncompleteLesson);
+      } else {
+        // If all lessons are completed or none are unlocked, set to first lesson
+        const firstLesson = podcast.lessons[0];
+        if (firstLesson) {
+          console.log('Setting current lesson to first lesson:', firstLesson.title);
+          setCurrentLesson(firstLesson);
+        }
       }
     }
-  }, [podcast]);
+  }, [podcast, userProgress, currentLesson]);
 
-  // Handle lesson selection
+  // Handle lesson selection (improved for completed courses)
   const handleSelectLesson = useCallback((lesson: Lesson) => {
-    if (lesson.isLocked) {
+    // Check if course is completed
+    const courseProgress = userProgress.find(p => p.course_id === podcast?.id);
+    const isCourseCompleted = courseProgress?.is_completed || false;
+
+    if (!isCourseCompleted && lesson.isLocked) {
       console.log('Lesson is locked, cannot select:', lesson.title);
       return;
     }
@@ -123,11 +156,11 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     setCurrentLesson(lesson);
     setIsPlaying(true);
 
-    // Track lesson start in database
-    if (podcast && user) {
+    // Track lesson start in database (only for in-progress courses)
+    if (podcast && user && !isCourseCompleted) {
       updateLessonPosition(lesson.id, podcast.id, 1);
     }
-  }, [currentLesson, isPlaying, podcast, user, updateLessonPosition]);
+  }, [currentLesson, isPlaying, podcast, user, userProgress, updateLessonPosition]);
 
   // Handle lesson completion
   const handleLessonComplete = useCallback(async () => {
@@ -211,15 +244,19 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     }
   }, [currentLesson, podcast, user, markLessonCompleteInDB, setPodcast, refetchLessonProgress, refetchCourseProgress, updateLessonPosition]);
 
-  // Handle progress updates during playback
+  // Handle progress updates during playback (only for incomplete courses)
   const handleProgressUpdate = useCallback((position: number) => {
     if (!currentLesson || !podcast || !user) return;
     
-    // Only update if position > 5% and lesson not completed
-    if (position > 5 && !currentLesson.isCompleted) {
+    // Check if course is completed
+    const courseProgress = userProgress.find(p => p.course_id === podcast.id);
+    const isCourseCompleted = courseProgress?.is_completed || false;
+
+    // Only update progress for incomplete courses and incomplete lessons
+    if (!isCourseCompleted && position > 5 && !currentLesson.isCompleted) {
       updateLessonPosition(currentLesson.id, podcast.id, position);
     }
-  }, [currentLesson, podcast, user, updateLessonPosition]);
+  }, [currentLesson, podcast, user, userProgress, updateLessonPosition]);
 
   // Toggle play/pause
   const handleTogglePlay = useCallback(() => {
@@ -231,14 +268,14 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     if (podcast && lessonProgress.length >= 0) { // >= 0 to handle empty arrays
       initializePodcastWithProgress();
     }
-  }, [podcast?.id, lessonProgress, initializePodcastWithProgress]);
+  }, [podcast?.id, lessonProgress, userProgress, initializePodcastWithProgress]);
 
   // Initialize current lesson when podcast is ready
   useEffect(() => {
     if (podcast && podcast.lessons.length > 0) {
       initializeCurrentLesson();
     }
-  }, [podcast?.lessons, initializeCurrentLesson]);
+  }, [podcast?.lessons, userProgress, initializeCurrentLesson]);
 
   return {
     currentLesson,
