@@ -39,11 +39,11 @@ const AudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: AudioPlaye
       <div className="miyo-container py-4">
         <audio
           ref={audioRef}
-          src={lesson.audioUrl || "https://assets.codepen.io/4358584/Anitek_-_Komorebi.mp3"}
+          src={lesson.audioUrl}
           onTimeUpdate={updateTime}
           onLoadedMetadata={handleMetadata}
           onEnded={handleAudioEnded}
-          preload="auto"
+          preload="metadata"
         />
         
         <div className="flex flex-col md:flex-row md:items-center justify-between">
@@ -71,7 +71,7 @@ const AudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: AudioPlaye
             
             <ProgressBar 
               currentTime={currentTime} 
-              duration={duration || (lesson.duration * 60)} // Convert minutes to seconds for the progress bar
+              duration={duration || (lesson.duration * 60)} 
               onSeek={handleSeek} 
             />
           </div>

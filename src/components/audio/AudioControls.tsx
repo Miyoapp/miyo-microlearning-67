@@ -4,12 +4,19 @@ import { Play, Pause, SkipBack, SkipForward } from 'lucide-react';
 interface AudioControlsProps {
   isPlaying: boolean;
   onPlayPause: () => void;
+  onPrevious?: () => void;
+  onNext?: () => void;
 }
 
-const AudioControls = ({ isPlaying, onPlayPause }: AudioControlsProps) => {
+const AudioControls = ({ isPlaying, onPlayPause, onPrevious, onNext }: AudioControlsProps) => {
   return (
     <div className="flex items-center justify-center space-x-4">
-      <button className="text-gray-600 hover:text-miyo-800 transition-colors" aria-label="Anterior">
+      <button 
+        onClick={onPrevious}
+        className="text-gray-600 hover:text-miyo-800 transition-colors disabled:opacity-50" 
+        aria-label="Anterior"
+        disabled={!onPrevious}
+      >
         <SkipBack size={22} />
       </button>
       
@@ -21,7 +28,12 @@ const AudioControls = ({ isPlaying, onPlayPause }: AudioControlsProps) => {
         {isPlaying ? <Pause size={18} /> : <Play size={18} className="ml-1" />}
       </button>
       
-      <button className="text-gray-600 hover:text-miyo-800 transition-colors" aria-label="Siguiente">
+      <button 
+        onClick={onNext}
+        className="text-gray-600 hover:text-miyo-800 transition-colors disabled:opacity-50" 
+        aria-label="Siguiente"
+        disabled={!onNext}
+      >
         <SkipForward size={22} />
       </button>
     </div>

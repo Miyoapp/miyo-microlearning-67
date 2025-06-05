@@ -19,62 +19,40 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: UseAudi
   
   // Reset player when lesson changes
   useEffect(() => {
-    if (lesson) {
+    if (lesson && audioRef.current) {
       console.log("Lesson changed to:", lesson.title);
       setCurrentTime(0);
+      audioRef.current.currentTime = 0;
+      audioRef.current.load(); // Force reload of the audio element
       
-      if (audioRef.current) {
-        audioRef.current.currentTime = 0;
-        audioRef.current.load(); // Force reload of the audio element
-        
-        // Delay auto-play to avoid race conditions
-        if (isPlaying) {
-          const timer = setTimeout(() => {
-            if (audioRef.current) {
-              console.log("Auto-playing new lesson:", lesson.title);
-              const playPromise = audioRef.current.play();
-              if (playPromise !== undefined) {
-                playPromise.catch(error => {
-                  console.error("Audio playback failed:", error);
-                  // Only toggle play if it's still supposed to be playing
-                  if (isPlaying) {
-                    onTogglePlay();
-                  }
-                });
-              }
-            }
-          }, 300); // Reduced delay for better responsiveness
-          
-          return () => clearTimeout(timer);
-        }
-      }
+      // Set initial volume and playback rate
+      audioRef.current.volume = isMuted ? 0 : volume;
+      audioRef.current.playbackRate = playbackRate;
     }
-  }, [lesson, isPlaying, onTogglePlay]);
+  }, [lesson?.id]); // Only depend on lesson ID to avoid unnecessary reloads
   
-  // Handle play/pause
+  // Handle play/pause when isPlaying state changes
   useEffect(() => {
     if (!audioRef.current || !lesson) return;
     
-    const handlePlay = async () => {
-      try {
-        if (isPlaying) {
-          console.log("Playing audio for lesson:", lesson.title);
-          await audioRef.current?.play();
-        } else {
-          audioRef.current?.pause();
-        }
-      } catch (error) {
-        console.error("Audio playback failed:", error);
-        if (isPlaying) {
-          onTogglePlay();
-        }
-      }
-    };
+    const audio = audioRef.current;
     
-    handlePlay();
-  }, [isPlaying, onTogglePlay, lesson]);
+    if (isPlaying) {
+      console.log("Playing audio for lesson:", lesson.title);
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.error("Audio playback failed:", error);
+          onTogglePlay(); // Reset the playing state
+        });
+      }
+    } else {
+      console.log("Pausing audio");
+      audio.pause();
+    }
+  }, [isPlaying, lesson?.id, onTogglePlay]);
   
-  // Update volume, mute state, and playback rate
+  // Update audio properties when they change
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = isMuted ? 0 : volume;
@@ -99,7 +77,6 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete }: UseAudi
   
   // Handle audio ended event - when it reaches 100%
   const handleAudioEnded = () => {
-    // Mark the lesson as complete
     if (lesson) {
       console.log("Audio ended naturally, marking lesson complete:", lesson.title);
       onComplete();
