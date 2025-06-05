@@ -1,15 +1,13 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import { Button } from '@/components/ui/button';
-import { Bookmark, BookmarkCheck, Play } from 'lucide-react';
 import { useCourseData } from '@/hooks/useCourseData';
 import { useUserProgress } from '@/hooks/useUserProgress';
 import { useConsolidatedLessons } from '@/hooks/useConsolidatedLessons';
-import { formatMinutesToHumanReadable } from '@/lib/formatters';
-import CourseStats from '@/components/course/CourseStats';
-import LearningPath from '@/components/LearningPath';
+import CourseHeader from '@/components/course/CourseHeader';
+import CourseLearningPathSection from '@/components/course/CourseLearningPathSection';
+import CourseSidebar from '@/components/course/CourseSidebar';
 import AudioPlayer from '@/components/AudioPlayer';
 
 const DashboardCourse = () => {
@@ -55,6 +53,12 @@ const DashboardCourse = () => {
     }
   };
 
+  const handleToggleSave = () => {
+    if (podcast) {
+      toggleSaveCourse(podcast.id);
+    }
+  };
+
   if (isLoading) {
     return (
       <DashboardLayout>
@@ -83,77 +87,23 @@ const DashboardCourse = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Content */}
             <div className="lg:col-span-2">
-              {/* Course Header */}
-              <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-8">
-                <div className="aspect-[3/1] relative">
-                  <img 
-                    src={podcast.imageUrl} 
-                    alt={podcast.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                
-                <div className="p-8">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <img 
-                      src={podcast.creator.imageUrl} 
-                      alt={podcast.creator.name}
-                      className="w-12 h-12 rounded-full"
-                    />
-                    <div>
-                      <div className="font-medium text-gray-900">{podcast.creator.name}</div>
-                      <div className="text-sm text-gray-500">{podcast.category.nombre}</div>
-                    </div>
-                  </div>
-                  
-                  <h1 className="text-3xl font-bold text-gray-900 mb-4">{podcast.title}</h1>
-                  <p className="text-gray-600 mb-6">{podcast.description}</p>
-                  
-                  <div className="flex items-center justify-between text-sm text-gray-500 mb-6">
-                    <span>{formatMinutesToHumanReadable(podcast.duration)}</span>
-                    <span>{podcast.lessonCount} lecciones</span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-4">
-                    <Button 
-                      className="bg-miyo-800 hover:bg-miyo-900 flex items-center space-x-2"
-                      onClick={handleStartLearning}
-                    >
-                      <Play className="w-4 h-4" />
-                      <span>{hasStarted ? 'Continuar aprendiendo' : 'Comenzar a aprender'}</span>
-                    </Button>
-                    
-                    <Button
-                      variant="outline"
-                      onClick={() => toggleSaveCourse(podcast.id)}
-                      className="flex items-center space-x-2"
-                    >
-                      {isSaved ? 
-                        <BookmarkCheck className="w-4 h-4 text-miyo-800" /> : 
-                        <Bookmark className="w-4 h-4" />
-                      }
-                      <span>{isSaved ? 'Guardado' : 'Guardar'}</span>
-                    </Button>
-                  </div>
-                </div>
-              </div>
+              <CourseHeader
+                podcast={podcast}
+                hasStarted={hasStarted}
+                isSaved={isSaved}
+                onStartLearning={handleStartLearning}
+                onToggleSave={handleToggleSave}
+              />
 
-              {/* Learning Path */}
-              <div id="learning-path-section" className="bg-white rounded-2xl shadow-sm p-6">
-                <h2 className="text-2xl font-bold mb-6">Ruta de aprendizaje</h2>
-                <LearningPath 
-                  lessons={podcast.lessons}
-                  modules={podcast.modules}
-                  onSelectLesson={handleSelectLesson}
-                  currentLessonId={currentLesson?.id || null}
-                />
-              </div>
+              <CourseLearningPathSection
+                podcast={podcast}
+                currentLessonId={currentLesson?.id || null}
+                onSelectLesson={handleSelectLesson}
+              />
             </div>
 
             {/* Sidebar */}
-            <div className="lg:col-span-1">
-              <CourseStats podcast={podcast} />
-            </div>
+            <CourseSidebar podcast={podcast} />
           </div>
         </div>
       </DashboardLayout>
