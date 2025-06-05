@@ -116,6 +116,13 @@ export function useUserLessonProgress() {
   };
 
   const markLessonComplete = async (lessonId: string, courseId: string) => {
+    // Check if lesson is already completed to avoid unnecessary updates
+    const existingProgress = lessonProgress.find(p => p.lesson_id === lessonId);
+    if (existingProgress?.is_completed) {
+      console.log('Lesson already completed in DB, skipping update:', lessonId);
+      return;
+    }
+
     console.log('Marking lesson complete:', lessonId, 'for course:', courseId);
     await updateLessonProgress(lessonId, courseId, { 
       is_completed: true,
@@ -126,10 +133,17 @@ export function useUserLessonProgress() {
   // Debounced function to update lesson position (to avoid too many calls)
   const updateLessonPosition = useCallback(
     async (lessonId: string, courseId: string, position: number) => {
+      // Don't update position for already completed lessons
+      const existingProgress = lessonProgress.find(p => p.lesson_id === lessonId);
+      if (existingProgress?.is_completed) {
+        console.log('Lesson already completed, not updating position:', lessonId);
+        return;
+      }
+
       console.log('Updating lesson position:', lessonId, 'position:', position);
       await updateLessonProgress(lessonId, courseId, { current_position: Math.round(position) });
     },
-    []
+    [lessonProgress]
   );
 
   useEffect(() => {

@@ -18,6 +18,12 @@ export function useLessonCompletion(
   const handleLessonComplete = useCallback(async () => {
     if (!currentLesson || !podcast || !user) return;
 
+    // Don't complete already completed lessons
+    if (currentLesson.isCompleted) {
+      console.log('Lesson already completed, skipping completion logic:', currentLesson.title);
+      return;
+    }
+
     console.log('Completing lesson:', currentLesson.title);
 
     try {

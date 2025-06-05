@@ -27,7 +27,6 @@ export function useLessonPlayback(
         return;
       }
 
-      // Note: setCurrentLesson will be handled by the parent hook
       setIsPlaying(true);
       return;
     }
@@ -46,11 +45,10 @@ export function useLessonPlayback(
       return;
     }
 
-    // Note: setCurrentLesson will be handled by the parent hook
     setIsPlaying(true);
 
-    // Track lesson start in database (only for in-progress courses)
-    if (podcast && user && !courseCompleted) {
+    // Track lesson start in database (only for in-progress courses and incomplete lessons)
+    if (podcast && user && !courseCompleted && !lesson.isCompleted) {
       updateLessonPosition(lesson.id, podcast.id, 1);
     }
   }, [currentLesson, isPlaying, podcast, user, userProgress, updateLessonPosition]);
@@ -60,14 +58,20 @@ export function useLessonPlayback(
     setIsPlaying(prev => !prev);
   }, []);
 
-  // Handle progress updates during playback (only for incomplete courses)
+  // Handle progress updates during playback (only for incomplete lessons in incomplete courses)
   const handleProgressUpdate = useCallback((position: number) => {
     if (!currentLesson || !podcast || !user) return;
     
     const courseCompleted = isCourseCompleted(userProgress, podcast.id);
 
+    // Never update progress for already completed lessons
+    if (currentLesson.isCompleted) {
+      console.log('Lesson already completed, not updating progress:', currentLesson.title);
+      return;
+    }
+
     // Only update progress for incomplete courses and incomplete lessons
-    if (!courseCompleted && position > 5 && !currentLesson.isCompleted) {
+    if (!courseCompleted && position > 5) {
       updateLessonPosition(currentLesson.id, podcast.id, position);
     }
   }, [currentLesson, podcast, user, userProgress, updateLessonPosition]);
