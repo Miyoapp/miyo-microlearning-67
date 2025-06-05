@@ -67,8 +67,8 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgres
       const newCurrentTime = audioRef.current.currentTime;
       setCurrentTime(newCurrentTime);
       
-      // Update progress in database every few seconds
-      if (onProgressUpdate && duration > 0) {
+      // Update progress in database every few seconds (only for incomplete lessons)
+      if (onProgressUpdate && duration > 0 && lesson && !lesson.isCompleted) {
         const progressPercent = (newCurrentTime / duration) * 100;
         onProgressUpdate(progressPercent);
       }
@@ -83,18 +83,15 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgres
     }
   };
   
-  // Handle audio ended - only complete if lesson is not already completed
+  // Handle audio ended - always trigger completion for auto-play functionality
   const handleAudioEnded = () => {
     if (lesson) {
-      console.log("Audio ended naturally for lesson:", lesson.title);
+      console.log("Audio ended naturally for lesson:", lesson.title, "isCompleted:", lesson.isCompleted);
       
-      // Only trigger completion if lesson is not already completed
-      if (!lesson.isCompleted) {
-        console.log("Marking lesson complete:", lesson.title);
-        onComplete();
-      } else {
-        console.log("Lesson already completed, not triggering completion:", lesson.title);
-      }
+      // Always trigger completion handler for auto-play functionality
+      // The completion handler will decide whether to mark as complete or just advance
+      console.log("Triggering completion handler for auto-play:", lesson.title);
+      onComplete();
     }
   };
   

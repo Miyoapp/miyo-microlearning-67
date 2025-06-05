@@ -58,21 +58,18 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
 
   // Enhanced lesson selection that updates current lesson and handles playback
   const handleSelectLesson = (lesson: any) => {
-    console.log('handleSelectLesson called with:', lesson.title);
+    console.log('handleSelectLesson called with:', lesson.title, 'isCompleted:', lesson.isCompleted, 'isLocked:', lesson.isLocked);
     
     const courseCompleted = isCourseCompleted(userProgress, podcast?.id || '');
     
-    // For completed courses, allow selection of any lesson
-    if (courseCompleted) {
-      console.log('Course completed - allowing selection of any lesson');
-      setCurrentLesson(lesson);
-      handleSelectLessonFromPlayback(lesson);
-      return;
-    }
+    // Allow selection if:
+    // 1. Course is completed (can replay any lesson)
+    // 2. Lesson is not locked (available for first time)
+    // 3. Lesson is completed (can always replay completed lessons)
+    const canSelectLesson = courseCompleted || !lesson.isLocked || lesson.isCompleted;
     
-    // For in-progress courses, check if lesson is locked
-    if (lesson.isLocked) {
-      console.log('Lesson is locked, cannot select');
+    if (!canSelectLesson) {
+      console.log('Lesson is locked and not completed, cannot select');
       return;
     }
     
@@ -94,6 +91,14 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
       initializeCurrentLesson();
     }
   }, [podcast?.lessons, userProgress, initializeCurrentLesson]);
+
+  // Add effect to trigger UI updates when lesson progress changes
+  useEffect(() => {
+    if (podcast && lessonProgress.length > 0) {
+      console.log('Lesson progress updated, refreshing podcast state for UI updates');
+      initializePodcastWithProgress();
+    }
+  }, [lessonProgress, initializePodcastWithProgress]);
 
   return {
     currentLesson,
