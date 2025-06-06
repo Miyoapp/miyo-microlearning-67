@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { Podcast } from '@/types';
 import { useUserLessonProgress } from './useUserLessonProgress';
 import { useUserProgress } from './useUserProgress';
@@ -7,7 +7,6 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { useLessonInitialization } from './consolidated-lessons/useLessonInitialization';
 import { useLessonPlayback } from './consolidated-lessons/useLessonPlayback';
 import { useLessonCompletion } from './consolidated-lessons/useLessonCompletion';
-import { isCourseCompleted } from './consolidated-lessons/lessonProgressUtils';
 
 export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (podcast: Podcast) => void) {
   const { user } = useAuth();
@@ -57,7 +56,7 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
   );
 
   // Enhanced lesson selection that updates current lesson and handles playback
-  const handleSelectLesson = (lesson: any) => {
+  const handleSelectLesson = useCallback((lesson: any) => {
     console.log('🎯 handleSelectLesson called with:', lesson.title, 'isCompleted:', lesson.isCompleted, 'isLocked:', lesson.isLocked);
     
     // CORRECCIÓN FINAL: Lógica clara y consistente
@@ -74,43 +73,23 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     // Update current lesson and handle playback
     setCurrentLesson(lesson);
     handleSelectLessonFromPlayback(lesson);
-  };
+  }, [setCurrentLesson, handleSelectLessonFromPlayback]);
 
-  // Initialize when podcast or lesson progress changes
+  // SIMPLIFICADO: Initialize cuando podcast o lesson progress cambian (evitar efectos circulares)
   useEffect(() => {
-    if (podcast && lessonProgress.length >= 0) { // >= 0 to handle empty arrays
+    if (podcast && user) {
       console.log('📊 Initializing podcast with progress data...');
       initializePodcastWithProgress();
     }
-  }, [podcast?.id, lessonProgress, userProgress, initializePodcastWithProgress]);
+  }, [podcast?.id, lessonProgress.length, userProgress.length, user?.id, initializePodcastWithProgress]);
 
-  // Initialize current lesson when podcast is ready
+  // SIMPLIFICADO: Initialize current lesson cuando podcast está listo
   useEffect(() => {
-    if (podcast && podcast.lessons.length > 0) {
+    if (podcast && podcast.lessons.length > 0 && user) {
       console.log('🎯 Initializing current lesson...');
       initializeCurrentLesson();
     }
-  }, [podcast?.lessons, userProgress, initializeCurrentLesson]);
-
-  // MEJORA CRÍTICA: Actualizaciones en tiempo real más agresivas y eficientes
-  useEffect(() => {
-    if (podcast && lessonProgress.length >= 0) {
-      console.log('⚡ Lesson progress updated, triggering IMMEDIATE UI refresh for real-time updates');
-      
-      // Refresh inmediato sin timeout para actualizaciones instantáneas
-      initializePodcastWithProgress();
-    }
-  }, [lessonProgress, initializePodcastWithProgress]);
-
-  // MEJORA CRÍTICA: Actualizaciones inmediatas para progreso de curso
-  useEffect(() => {
-    if (podcast && userProgress.length >= 0) {
-      console.log('⚡ User course progress updated, triggering IMMEDIATE UI refresh for real-time updates');
-      
-      // Refresh inmediato sin timeout para actualizaciones instantáneas
-      initializePodcastWithProgress();
-    }
-  }, [userProgress, initializePodcastWithProgress]);
+  }, [podcast?.lessons?.length, user?.id, initializeCurrentLesson]);
 
   return {
     currentLesson,

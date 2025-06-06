@@ -20,6 +20,7 @@ const Course = () => {
     handleSelectLesson, 
     handleTogglePlay, 
     handleLessonComplete,
+    handleProgressUpdate,
     initializePodcastWithProgress
   } = useConsolidatedLessons(podcast, setPodcast);
   
@@ -53,6 +54,7 @@ const Course = () => {
         isPlaying={isPlaying}
         onTogglePlay={handleTogglePlay}
         onComplete={handleLessonComplete}
+        onProgressUpdate={handleProgressUpdate}
       />
       <CourseFooter />
     </div>

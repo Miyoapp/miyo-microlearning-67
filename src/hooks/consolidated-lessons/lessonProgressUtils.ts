@@ -69,12 +69,17 @@ export function unlockLessonsForInProgressCourse(
     });
   });
 
-  // VERIFICACIÓN FINAL MEJORADA: Garantizar que TODAS las lecciones completadas estén desbloqueadas
-  const finalLessons = updatedLessons.map(lesson => ({
-    ...lesson,
-    // Si la lección está completada, NUNCA puede estar bloqueada
-    isLocked: lesson.isCompleted ? false : lesson.isLocked
-  }));
+  // VERIFICACIÓN FINAL REFORZADA: Proteger ABSOLUTAMENTE las lecciones completadas
+  const finalLessons = updatedLessons.map(lesson => {
+    if (lesson.isCompleted) {
+      console.log('🔒 PROTECTION: Ensuring completed lesson is unlocked:', lesson.title);
+      return {
+        ...lesson,
+        isLocked: false // NUNCA puede estar bloqueada si está completada
+      };
+    }
+    return lesson;
+  });
 
   return finalLessons;
 }

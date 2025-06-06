@@ -85,12 +85,10 @@ export function useLessonCompletion(
     console.log('✅ Completing lesson for the first time:', currentLesson.title);
 
     try {
-      // Mark as complete in database first
-      await markLessonCompleteInDB(currentLesson.id, podcast.id);
-      
-      // Update local podcast state INMEDIATAMENTE
+      // ACTUALIZACIÓN INMEDIATA Y CRÍTICA: Update local state FIRST
       const updatedLessons = podcast.lessons.map(lesson => {
         if (lesson.id === currentLesson.id) {
+          console.log('🔄 Updating lesson state immediately:', lesson.title, '-> isCompleted: true, isLocked: false');
           return { 
             ...lesson, 
             isCompleted: true, 
@@ -106,41 +104,51 @@ export function useLessonCompletion(
       if (nextLesson) {
         const nextLessonIndex = updatedLessons.findIndex(l => l.id === nextLesson.id);
         if (nextLessonIndex !== -1) {
+          console.log('🔓 Unlocking next lesson:', nextLesson.title);
           updatedLessons[nextLessonIndex] = { 
             ...updatedLessons[nextLessonIndex], 
             isLocked: false 
           };
-          
-          // Auto-advance to next lesson
-          console.log('⏭️ Auto-advancing to next lesson:', nextLesson.title);
-          setCurrentLesson(nextLesson);
-          
-          // Small delay to ensure state update, then auto-play
-          setTimeout(() => {
-            setIsPlaying(true);
-            if (user) {
-              updateLessonPosition(nextLesson.id, podcast.id, 1);
-            }
-          }, 500);
         }
+      }
+
+      // ACTUALIZACIÓN INMEDIATA: Update podcast state BEFORE database operations
+      console.log('🔄 Updating podcast state immediately for real-time UI...');
+      const updatedPodcast = { ...podcast, lessons: updatedLessons };
+      setPodcast(updatedPodcast);
+
+      // Update current lesson state immediately to reflect completion
+      const updatedCurrentLesson = { ...currentLesson, isCompleted: true, isLocked: false };
+      setCurrentLesson(updatedCurrentLesson);
+
+      // Mark as complete in database (asynchronous - doesn't block UI)
+      markLessonCompleteInDB(currentLesson.id, podcast.id).catch(error => {
+        console.error('❌ Error marking lesson complete in DB:', error);
+      });
+
+      // Auto-advance to next lesson if available
+      if (nextLesson) {
+        console.log('⏭️ Auto-advancing to next lesson:', nextLesson.title);
+        setCurrentLesson(nextLesson);
+        
+        // Small delay to ensure state update, then auto-play
+        setTimeout(() => {
+          setIsPlaying(true);
+          if (user) {
+            updateLessonPosition(nextLesson.id, podcast.id, 1);
+          }
+        }, 500);
       } else {
         console.log('🏁 Course completed - no more lessons');
         setIsPlaying(false);
       }
 
-      // ACTUALIZACIÓN INMEDIATA: Update podcast with new lesson states
-      console.log('🔄 Updating podcast state immediately...');
-      setPodcast({ ...podcast, lessons: updatedLessons });
-
-      // MEJORA PARA TIEMPO REAL: Refresh progress data to update UI immediately
-      console.log('📊 Refreshing progress data for real-time updates...');
-      const refreshPromises = [refetchLessonProgress(), refetchCourseProgress()];
-      
-      // No esperar a que termine el refresh para actualizar la UI
-      Promise.all(refreshPromises).then(() => {
-        console.log('✅ Progress data refreshed successfully');
+      // BACKGROUND REFRESH: Actualizar datos en segundo plano para sincronización
+      console.log('📊 Refreshing progress data in background...');
+      Promise.all([refetchLessonProgress(), refetchCourseProgress()]).then(() => {
+        console.log('✅ Background progress data refresh completed');
       }).catch(error => {
-        console.error('❌ Error refreshing progress data:', error);
+        console.error('❌ Error in background refresh:', error);
       });
 
     } catch (error) {
