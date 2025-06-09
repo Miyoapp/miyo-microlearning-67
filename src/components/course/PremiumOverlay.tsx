@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Lock, Crown } from 'lucide-react';
+import { Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface PremiumOverlayProps {
@@ -29,34 +29,19 @@ const PremiumOverlay: React.FC<PremiumOverlayProps> = ({ onUnlock, price, curren
 
   return (
     <div className="absolute inset-0 rounded-lg z-10 premium-overlay" style={{
-      background: 'rgba(0, 0, 0, 0.15)',
-      backdropFilter: 'blur(1px)',
+      background: 'rgba(0, 0, 0, 0.08)',
+      backdropFilter: 'blur(0.5px)',
       pointerEvents: 'all'
     }}>
-      {/* Subtle overlay content */}
-      <div className="absolute top-4 right-4">
-        <div className="bg-white/95 rounded-lg shadow-lg p-3 backdrop-blur-md">
-          <div className="flex items-center gap-2 mb-2">
-            <Crown className="w-4 h-4 text-yellow-500" />
-            <span className="text-sm font-semibold">Premium</span>
-          </div>
-          <Button onClick={onUnlock} size="sm" className="w-full">
-            <Lock className="w-3 h-3 mr-1" />
-            {formatCurrency(price, currency)}
-          </Button>
-        </div>
-      </div>
-      
-      {/* Center message for larger areas */}
+      {/* Only center message - removed top-right button */}
       <div className="absolute inset-0 flex items-center justify-center">
-        <div className="text-center p-4 max-w-xs bg-white/90 rounded-xl shadow-lg backdrop-blur-md">
-          <Crown className="w-8 h-8 mx-auto text-yellow-500 mb-2" />
-          <h3 className="text-lg font-bold mb-2">Contenido Premium</h3>
-          <p className="text-gray-600 text-sm mb-3">
+        <div className="text-center p-6 max-w-sm bg-white/95 rounded-xl shadow-lg backdrop-blur-md">
+          <Crown className="w-10 h-10 mx-auto text-yellow-500 mb-3" />
+          <h3 className="text-xl font-bold mb-3">Contenido Premium</h3>
+          <p className="text-gray-600 text-sm mb-4">
             Desbloquea este curso para acceder a todas las lecciones
           </p>
-          <Button onClick={onUnlock} className="w-full">
-            <Lock className="w-4 h-4 mr-2" />
+          <Button onClick={onUnlock} size="lg" className="w-full">
             Desbloquear por {formatCurrency(price, currency)}
           </Button>
         </div>
