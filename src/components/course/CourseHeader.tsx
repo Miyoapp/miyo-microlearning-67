@@ -87,117 +87,115 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
 
   return (
     <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Course Image */}
-        <div className="relative">
-          <img
-            src={podcast.imageUrl}
-            alt={podcast.title}
-            className="w-full lg:w-48 h-48 object-cover rounded-xl"
-          />
-          {isPremium && (
-            <div className="absolute top-2 left-2">
-              <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-                <Crown className="w-3 h-3 mr-1" />
-                Premium
-              </Badge>
-            </div>
-          )}
-        </div>
-
-        {/* Course Info */}
-        <div className="flex-1">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <h1 className="text-2xl lg:text-3xl font-bold mb-2">{podcast.title}</h1>
-              
-              {/* Creator Info - reorganized and clickeable */}
-              <div className="flex items-center gap-4 mb-3">
-                <div
-                  className={cn(
-                    "flex items-center gap-2",
-                    podcast.creator.linkedin_url && "cursor-pointer hover:opacity-80 transition-opacity"
-                  )}
-                  onClick={podcast.creator.linkedin_url ? handleCreatorClick : undefined}
-                >
-                  <img
-                    src={podcast.creator.imageUrl}
-                    alt={podcast.creator.name}
-                    className="w-8 h-8 rounded-full object-cover"
-                  />
-                  <span className="text-gray-600">{podcast.creator.name}</span>
-                  {podcast.creator.linkedin_url && (
-                    <ExternalLink className="w-4 h-4 text-gray-400" />
-                  )}
-                </div>
-                <Badge variant="outline">{podcast.category.nombre}</Badge>
-              </div>
-            </div>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onToggleSave}
-              className={isSaved ? 'text-red-600 border-red-200' : ''}
-            >
-              <Heart className={`w-4 h-4 mr-1 ${isSaved ? 'fill-current' : ''}`} />
-              {isSaved ? 'Guardado' : 'Guardar'}
-            </Button>
+      {/* Course Image - Full Width */}
+      <div className="relative mb-6">
+        <img
+          src={podcast.imageUrl}
+          alt={podcast.title}
+          className="w-full h-48 object-cover rounded-xl"
+        />
+        {isPremium && (
+          <div className="absolute top-4 left-4">
+            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+              <Crown className="w-3 h-3 mr-1" />
+              Premium
+            </Badge>
           </div>
-
-          <p className="text-gray-600 mb-4 line-clamp-3">{podcast.description}</p>
-
-          {/* Course Stats - Layout according to image */}
-          <div className="flex items-center gap-6 mb-4">
-            {isPremium ? (
-              <>
-                <span className="text-2xl font-bold text-green-600">
-                  {formatCurrency(podcast.precio || 0, podcast.moneda)}
-                </span>
-                <div className="flex items-center text-sm text-gray-500 gap-4">
-                  <span>{formatMinutesToHumanReadable(podcast.duration)}</span>
-                  <span>{podcast.lessonCount} lecciones</span>
-                </div>
-                <CourseVoting courseId={podcast.id} />
-              </>
-            ) : (
-              <>
-                <div className="flex items-center text-sm text-gray-500">
-                  <Clock className="w-4 h-4 mr-1" />
-                  <span>{formatMinutesToHumanReadable(podcast.duration)}</span>
-                </div>
-                <div className="flex items-center text-sm text-gray-500">
-                  <Headphones className="w-4 h-4 mr-1" />
-                  <span>{podcast.lessonCount} lecciones</span>
-                </div>
-                <CourseVoting courseId={podcast.id} />
-              </>
-            )}
-          </div>
-
-          {/* Progress bar for started courses */}
-          {hasStarted && hasAccess && (
-            <div className="mb-4">
-              <div className="flex justify-between text-sm text-gray-600 mb-1">
-                <span>Progreso</span>
-                <span>{progressPercentage}%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${progressPercentage}%` }}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Action Button */}
-          <Button onClick={handleStartLearning} size="lg" className="w-full lg:w-auto">
-            <Play className="w-4 h-4 mr-2" />
-            {getButtonText()}
-          </Button>
-        </div>
+        )}
       </div>
+
+      {/* Title and Save Button */}
+      <div className="flex items-start justify-between mb-4">
+        <h1 className="text-2xl font-bold flex-1 mr-4">{podcast.title}</h1>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onToggleSave}
+          className={isSaved ? 'text-red-600 border-red-200' : ''}
+        >
+          <Heart className={`w-4 h-4 mr-1 ${isSaved ? 'fill-current' : ''}`} />
+          {isSaved ? 'Guardado' : 'Guardar'}
+        </Button>
+      </div>
+
+      {/* Creator Info and Category */}
+      <div className="flex items-center gap-4 mb-4">
+        <div
+          className={cn(
+            "flex items-center gap-2",
+            podcast.creator.linkedin_url && "cursor-pointer hover:opacity-80 transition-opacity"
+          )}
+          onClick={podcast.creator.linkedin_url ? handleCreatorClick : undefined}
+        >
+          <img
+            src={podcast.creator.imageUrl}
+            alt={podcast.creator.name}
+            className="w-8 h-8 rounded-full object-cover"
+          />
+          <span className="text-gray-600">{podcast.creator.name}</span>
+          {podcast.creator.linkedin_url && (
+            <ExternalLink className="w-4 h-4 text-gray-400" />
+          )}
+        </div>
+        <Badge variant="outline">{podcast.category.nombre}</Badge>
+      </div>
+
+      {/* Course Description */}
+      <p className="text-gray-600 mb-4 line-clamp-3">{podcast.description}</p>
+
+      {/* Course Stats - Horizontal layout */}
+      <div className="flex items-center gap-6 mb-4">
+        {isPremium ? (
+          <>
+            <span className="text-2xl font-bold text-green-600">
+              {formatCurrency(podcast.precio || 0, podcast.moneda)}
+            </span>
+            <div className="flex items-center text-sm text-gray-500">
+              <Clock className="w-4 h-4 mr-1" />
+              <span>{formatMinutesToHumanReadable(podcast.duration)}</span>
+            </div>
+            <div className="flex items-center text-sm text-gray-500">
+              <Headphones className="w-4 h-4 mr-1" />
+              <span>{podcast.lessonCount} lecciones</span>
+            </div>
+            <CourseVoting courseId={podcast.id} />
+          </>
+        ) : (
+          <>
+            <div className="flex items-center text-sm text-gray-500">
+              <Clock className="w-4 h-4 mr-1" />
+              <span>{formatMinutesToHumanReadable(podcast.duration)}</span>
+            </div>
+            <div className="flex items-center text-sm text-gray-500">
+              <Headphones className="w-4 h-4 mr-1" />
+              <span>{podcast.lessonCount} lecciones</span>
+            </div>
+            <CourseVoting courseId={podcast.id} />
+          </>
+        )}
+      </div>
+
+      {/* Progress bar for started courses */}
+      {hasStarted && hasAccess && (
+        <div className="mb-4">
+          <div className="flex justify-between text-sm text-gray-600 mb-1">
+            <span>Progreso</span>
+            <span>{progressPercentage}%</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div
+              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${progressPercentage}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Action Button - Full Width */}
+      <Button onClick={handleStartLearning} size="lg" className="w-full">
+        <Play className="w-4 h-4 mr-2" />
+        {getButtonText()}
+      </Button>
 
       {/* Checkout Modal */}
       {isPremium && (
