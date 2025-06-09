@@ -32,6 +32,24 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
 }) => {
   const [processing, setProcessing] = useState(false);
 
+  const formatCurrency = (amount: number, currency?: string) => {
+    const curr = currency || 'USD';
+    switch (curr) {
+      case 'USD':
+        return `$${amount.toFixed(2)}`;
+      case 'EUR':
+        return `€${amount.toFixed(2)}`;
+      case 'MXN':
+        return `$${amount.toFixed(2)} MXN`;
+      case 'ARS':
+        return `$${amount.toFixed(0)} ARS`;
+      case 'PEN':
+        return `S/${amount.toFixed(2)}`;
+      default:
+        return `${curr} $${amount.toFixed(2)}`;
+    }
+  };
+
   const handleCheckout = async () => {
     setProcessing(true);
     
@@ -68,7 +86,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
             <div className="flex-1">
               <h4 className="font-medium text-sm">{course.title}</h4>
               <p className="text-2xl font-bold text-green-600">
-                {course.moneda || 'USD'} ${course.precio}
+                {formatCurrency(course.precio, course.moneda)}
               </p>
             </div>
           </div>
@@ -85,7 +103,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 disabled={processing}
                 className="w-full"
               >
-                {processing ? 'Procesando...' : `Pagar ${course.moneda || 'USD'} $${course.precio}`}
+                {processing ? 'Procesando...' : `Pagar ${formatCurrency(course.precio, course.moneda)}`}
               </Button>
             </div>
 

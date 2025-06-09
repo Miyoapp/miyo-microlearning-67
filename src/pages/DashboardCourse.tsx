@@ -90,6 +90,24 @@ const DashboardCourse = () => {
     handleSelectLesson(lesson, true);
   };
 
+  const formatCurrency = (amount: number, currency?: string) => {
+    const curr = currency || 'USD';
+    switch (curr) {
+      case 'USD':
+        return `$${amount.toFixed(2)}`;
+      case 'EUR':
+        return `€${amount.toFixed(2)}`;
+      case 'MXN':
+        return `$${amount.toFixed(2)} MXN`;
+      case 'ARS':
+        return `$${amount.toFixed(0)} ARS`;
+      case 'PEN':
+        return `S/${amount.toFixed(2)}`;
+      default:
+        return `${curr} $${amount.toFixed(2)}`;
+    }
+  };
+
   if (isLoading) {
     return (
       <DashboardLayout>

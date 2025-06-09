@@ -46,15 +46,17 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
     refetch();
   };
 
-  const handleCreatorClick = () => {
+  const handleCreatorClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (podcast.creator.linkedin_url) {
-      window.open(podcast.creator.linkedin_url, '_blank');
+      window.open(podcast.creator.linkedin_url, '_blank', 'noopener,noreferrer');
     }
   };
 
   const getButtonText = () => {
     if (isPremium && !hasAccess) {
-      return `Desbloquear por ${podcast.moneda || 'USD'} $${podcast.precio}`;
+      return `Desbloquear por ${formatCurrency(podcast.precio || 0, podcast.moneda)}`;
     }
     if (isCompleted) {
       return 'Repasar Curso';
@@ -63,6 +65,24 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
       return 'Continuar Aprendiendo';
     }
     return 'Comenzar a Aprender';
+  };
+
+  const formatCurrency = (amount: number, currency?: string) => {
+    const curr = currency || 'USD';
+    switch (curr) {
+      case 'USD':
+        return `$${amount.toFixed(2)}`;
+      case 'EUR':
+        return `€${amount.toFixed(2)}`;
+      case 'MXN':
+        return `$${amount.toFixed(2)} MXN`;
+      case 'ARS':
+        return `$${amount.toFixed(0)} ARS`;
+      case 'PEN':
+        return `S/${amount.toFixed(2)}`;
+      default:
+        return `${curr} $${amount.toFixed(2)}`;
+    }
   };
 
   return (
@@ -91,14 +111,14 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
             <div>
               <h1 className="text-2xl lg:text-3xl font-bold mb-2">{podcast.title}</h1>
               
-              {/* Creator Info - reorganized to match image layout */}
+              {/* Creator Info - reorganized and clickeable */}
               <div className="flex items-center gap-4 mb-3">
                 <div
                   className={cn(
                     "flex items-center gap-2",
                     podcast.creator.linkedin_url && "cursor-pointer hover:opacity-80 transition-opacity"
                   )}
-                  onClick={handleCreatorClick}
+                  onClick={podcast.creator.linkedin_url ? handleCreatorClick : undefined}
                 >
                   <img
                     src={podcast.creator.imageUrl}
@@ -127,13 +147,17 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
 
           <p className="text-gray-600 mb-4 line-clamp-3">{podcast.description}</p>
 
-          {/* Course Stats - reorganized according to image */}
-          <div className="flex items-center gap-4 mb-4">
+          {/* Course Stats - Layout according to image */}
+          <div className="flex items-center gap-6 mb-4">
             {isPremium ? (
               <>
-                <span className="text-lg font-bold text-green-600">
-                  {podcast.moneda || 'USD'} ${podcast.precio}
+                <span className="text-2xl font-bold text-green-600">
+                  {formatCurrency(podcast.precio || 0, podcast.moneda)}
                 </span>
+                <div className="flex items-center text-sm text-gray-500 gap-4">
+                  <span>{formatMinutesToHumanReadable(podcast.duration)}</span>
+                  <span>{podcast.lessonCount} lecciones</span>
+                </div>
                 <CourseVoting courseId={podcast.id} />
               </>
             ) : (
