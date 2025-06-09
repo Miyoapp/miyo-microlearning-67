@@ -206,13 +206,13 @@ export type Database = {
           categoria_id: string
           creador_id: string
           descripcion: string
-          dislikes: number | null
+          dislikes: number
           duracion_total: number
           fecha_actualizacion: string
           fecha_creacion: string
           id: string
           imagen_portada: string
-          likes: number | null
+          likes: number
           moneda: string | null
           numero_lecciones: number
           precio: number | null
@@ -223,13 +223,13 @@ export type Database = {
           categoria_id: string
           creador_id: string
           descripcion: string
-          dislikes?: number | null
+          dislikes?: number
           duracion_total: number
           fecha_actualizacion?: string
           fecha_creacion?: string
           id?: string
           imagen_portada: string
-          likes?: number | null
+          likes?: number
           moneda?: string | null
           numero_lecciones?: number
           precio?: number | null
@@ -240,13 +240,13 @@ export type Database = {
           categoria_id?: string
           creador_id?: string
           descripcion?: string
-          dislikes?: number | null
+          dislikes?: number
           duracion_total?: number
           fecha_actualizacion?: string
           fecha_creacion?: string
           id?: string
           imagen_portada?: string
-          likes?: number | null
+          likes?: number
           moneda?: string | null
           numero_lecciones?: number
           precio?: number | null

@@ -13,6 +13,12 @@ interface CourseVotingProps {
 const CourseVoting: React.FC<CourseVotingProps> = ({ courseId, className }) => {
   const { votes, loading, vote } = useCourseVotes(courseId);
 
+  // Defensive function to ensure display shows non-negative numbers
+  const displayCount = (count: number): string => {
+    const safeCount = Math.max(0, count || 0);
+    return safeCount.toString();
+  };
+
   if (loading) {
     return (
       <div className={cn("flex items-center gap-2", className)}>
@@ -34,7 +40,7 @@ const CourseVoting: React.FC<CourseVotingProps> = ({ courseId, className }) => {
         )}
       >
         <ThumbsUp className="w-4 h-4" />
-        <span>{votes.likes}</span>
+        <span>{displayCount(votes.likes)}</span>
       </Button>
       
       <Button

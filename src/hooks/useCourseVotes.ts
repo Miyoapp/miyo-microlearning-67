@@ -19,6 +19,12 @@ export function useCourseVotes(courseId: string) {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
+  // Defensive function to ensure non-negative counts
+  const sanitizeCount = (value: number | null | undefined): number => {
+    const count = value || 0;
+    return Math.max(0, count);
+  };
+
   const fetchVotes = async () => {
     try {
       // Get course likes/dislikes
@@ -44,13 +50,32 @@ export function useCourseVotes(courseId: string) {
         userVote = (voteData?.tipo_voto as 'like' | 'dislike' | 'none') || 'none';
       }
 
+      // Apply defensive sanitization to ensure non-negative counts
+      const sanitizedLikes = sanitizeCount(courseData.likes);
+      const sanitizedDislikes = sanitizeCount(courseData.dislikes);
+
+      // Log if we found invalid data (for debugging)
+      if (courseData.likes < 0 || courseData.dislikes < 0) {
+        console.warn('Found negative vote counts in database:', {
+          courseId,
+          likes: courseData.likes,
+          dislikes: courseData.dislikes
+        });
+      }
+
       setVotes({
-        likes: courseData.likes || 0,
-        dislikes: courseData.dislikes || 0,
+        likes: sanitizedLikes,
+        dislikes: sanitizedDislikes,
         userVote
       });
     } catch (error) {
       console.error('Error fetching votes:', error);
+      // Set safe defaults on error
+      setVotes({
+        likes: 0,
+        dislikes: 0,
+        userVote: 'none'
+      });
     } finally {
       setLoading(false);
     }
@@ -81,17 +106,21 @@ export function useCourseVotes(courseId: string) {
           updated_at: new Date().toISOString()
         });
 
-      // Calculate new counts
-      let newLikes = votes.likes;
-      let newDislikes = votes.dislikes;
+      // Calculate new counts with defensive programming
+      let newLikes = sanitizeCount(votes.likes);
+      let newDislikes = sanitizeCount(votes.dislikes);
 
       // Remove previous vote count
-      if (previousVote === 'like') newLikes--;
-      if (previousVote === 'dislike') newDislikes--;
+      if (previousVote === 'like') newLikes = Math.max(0, newLikes - 1);
+      if (previousVote === 'dislike') newDislikes = Math.max(0, newDislikes - 1);
 
       // Add new vote count
       if (finalVote === 'like') newLikes++;
       if (finalVote === 'dislike') newDislikes++;
+
+      // Ensure counts are never negative (defensive programming)
+      newLikes = Math.max(0, newLikes);
+      newDislikes = Math.max(0, newDislikes);
 
       // Update course counts in database
       await supabase
@@ -113,6 +142,8 @@ export function useCourseVotes(courseId: string) {
     } catch (error) {
       console.error('Error voting:', error);
       toast.error('Error al registrar el voto');
+      // Refetch votes to ensure consistency after error
+      fetchVotes();
     }
   };
 
