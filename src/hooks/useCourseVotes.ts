@@ -31,7 +31,7 @@ export function useCourseVotes(courseId: string) {
       if (courseError) throw courseError;
 
       // Get user's vote if authenticated
-      let userVote = 'none';
+      let userVote: 'like' | 'dislike' | 'none' = 'none';
       if (user) {
         const { data: voteData, error: voteError } = await supabase
           .from('curso_votos')
@@ -41,13 +41,13 @@ export function useCourseVotes(courseId: string) {
           .maybeSingle();
 
         if (voteError && voteError.code !== 'PGRST116') throw voteError;
-        userVote = voteData?.tipo_voto || 'none';
+        userVote = (voteData?.tipo_voto as 'like' | 'dislike' | 'none') || 'none';
       }
 
       setVotes({
         likes: courseData.likes || 0,
         dislikes: courseData.dislikes || 0,
-        userVote: userVote as 'like' | 'dislike' | 'none'
+        userVote
       });
     } catch (error) {
       console.error('Error fetching votes:', error);
@@ -64,7 +64,7 @@ export function useCourseVotes(courseId: string) {
 
     try {
       const previousVote = votes.userVote;
-      let finalVote = newVote;
+      let finalVote: 'like' | 'dislike' | 'none' = newVote;
 
       // Toggle logic: if clicking the same vote, remove it
       if (previousVote === newVote) {

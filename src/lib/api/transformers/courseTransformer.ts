@@ -34,7 +34,12 @@ export const transformarCursoAModelo = async (curso: SupabaseCurso): Promise<Pod
       duration: curso.duracion_total,
       lessonCount: curso.numero_lecciones,
       lessons: lecciones,
-      modules: modulos
+      modules: modulos,
+      // Add the new fields
+      tipo_curso: curso.tipo_curso as 'libre' | 'pago' | undefined,
+      precio: curso.precio,
+      likes: curso.likes,
+      dislikes: curso.dislikes
     };
   } catch (error) {
     console.error(`Error al transformar curso ${curso.id}:`, error);
@@ -66,7 +71,11 @@ export const transformarCursoAModelo = async (curso: SupabaseCurso): Promise<Pod
       duration: curso.duracion_total || 0,
       lessonCount: curso.numero_lecciones || 0,
       lessons: [],
-      modules: []
+      modules: [],
+      tipo_curso: 'libre',
+      precio: 0,
+      likes: 0,
+      dislikes: 0
     };
   }
 };

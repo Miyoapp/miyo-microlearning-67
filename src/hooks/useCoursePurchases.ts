@@ -30,7 +30,17 @@ export function useCoursePurchases() {
         .eq('estado_pago', 'completado');
 
       if (error) throw error;
-      setPurchases(data || []);
+      
+      // Transform the data to match our interface
+      const transformedData: CoursePurchase[] = (data || []).map(item => ({
+        id: item.id,
+        course_id: item.curso_id,
+        fecha_compra: item.fecha_compra,
+        monto_pagado: item.monto_pagado,
+        estado_pago: item.estado_pago
+      }));
+      
+      setPurchases(transformedData);
     } catch (error) {
       console.error('Error fetching purchases:', error);
     } finally {
