@@ -175,22 +175,6 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
         )}
       </div>
 
-      {/* Progress bar for started courses */}
-      {hasStarted && hasAccess && (
-        <div className="mb-4">
-          <div className="flex justify-between text-sm text-gray-600 mb-1">
-            <span>Progreso</span>
-            <span>{progressPercentage}%</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${progressPercentage}%` }}
-            />
-          </div>
-        </div>
-      )}
-
       {/* Action Button - Full Width */}
       <Button onClick={handleStartLearning} size="lg" className="w-full">
         <Play className="w-4 h-4 mr-2" />
