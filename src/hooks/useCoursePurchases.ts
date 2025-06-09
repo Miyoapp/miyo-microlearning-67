@@ -31,13 +31,13 @@ export function useCoursePurchases() {
 
       if (error) throw error;
       
-      // Transform the data to match our interface
+      // Transform the data to match our interface with proper type casting
       const transformedData: CoursePurchase[] = (data || []).map(item => ({
         id: item.id,
         course_id: item.curso_id,
         fecha_compra: item.fecha_compra,
         monto_pagado: item.monto_pagado,
-        estado_pago: item.estado_pago
+        estado_pago: item.estado_pago as 'pendiente' | 'completado' | 'cancelado'
       }));
       
       setPurchases(transformedData);
