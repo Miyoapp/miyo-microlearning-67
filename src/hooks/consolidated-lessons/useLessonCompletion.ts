@@ -12,7 +12,8 @@ export function useLessonCompletion(
   markLessonCompleteInDB: (lessonId: string, courseId: string) => Promise<void>,
   updateLessonPosition: (lessonId: string, courseId: string, position: number) => void,
   refetchLessonProgress: () => Promise<void>,
-  refetchCourseProgress: () => Promise<void>
+  refetchCourseProgress: () => Promise<void>,
+  isAutoAdvanceAllowed: () => boolean
 ) {
   // Handle lesson completion
   const handleLessonComplete = useCallback(async () => {
@@ -20,7 +21,6 @@ export function useLessonCompletion(
 
     console.log('🎯 Lesson completion triggered for:', currentLesson.title, 'isCompleted:', currentLesson.isCompleted);
 
-    // LÓGICA UNIFICADA: Misma lógica de auto-advance para TODOS los cursos
     const findNextLesson = () => {
       const currentModule = podcast.modules.find(module => 
         module.lessonIds.includes(currentLesson.id)
@@ -48,25 +48,28 @@ export function useLessonCompletion(
       return nextLessonId ? podcast.lessons.find(l => l.id === nextLessonId) : null;
     };
 
-    // Si la lección ya está completada, solo hacer auto-advance
+    // VERIFICACIÓN CRÍTICA: Solo auto-advance si está permitido
     if (currentLesson.isCompleted) {
-      console.log('🔄 Lesson already completed, advancing to next lesson for auto-play:', currentLesson.title);
+      console.log('🔄 Lesson already completed:', currentLesson.title);
+      
+      // PROTECCIÓN: Verificar si auto-advance está permitido
+      if (!isAutoAdvanceAllowed()) {
+        console.log('🚫 AUTO-ADVANCE BLOCKED: Manual selection active, not advancing');
+        setIsPlaying(false);
+        return;
+      }
       
       const nextLesson = findNextLesson();
       
       if (nextLesson) {
-        // CORRECCIÓN: Verificar si la siguiente lección puede ser reproducida
-        // (completada O desbloqueada)
         const canPlayNext = nextLesson.isCompleted || !nextLesson.isLocked;
         
         if (canPlayNext) {
           console.log('⏭️ Auto-advancing to next lesson:', nextLesson.title);
           setCurrentLesson(nextLesson);
           
-          // Small delay to ensure state update, then auto-play
           setTimeout(() => {
             setIsPlaying(true);
-            // Track next lesson start if it's not completed
             if (user && !nextLesson.isCompleted) {
               updateLessonPosition(nextLesson.id, podcast.id, 1);
             }
@@ -85,14 +88,14 @@ export function useLessonCompletion(
     console.log('✅ Completing lesson for the first time:', currentLesson.title);
 
     try {
-      // ACTUALIZACIÓN INMEDIATA Y CRÍTICA: Update local state FIRST
+      // Update local state FIRST
       const updatedLessons = podcast.lessons.map(lesson => {
         if (lesson.id === currentLesson.id) {
           console.log('🔄 Updating lesson state immediately:', lesson.title, '-> isCompleted: true, isLocked: false');
           return { 
             ...lesson, 
             isCompleted: true, 
-            isLocked: false // CRÍTICO: Asegurar que se desbloquea inmediatamente
+            isLocked: false
           };
         }
         return lesson;
@@ -112,38 +115,40 @@ export function useLessonCompletion(
         }
       }
 
-      // ACTUALIZACIÓN INMEDIATA: Update podcast state BEFORE database operations
+      // Update podcast state immediately
       console.log('🔄 Updating podcast state immediately for real-time UI...');
       const updatedPodcast = { ...podcast, lessons: updatedLessons };
       setPodcast(updatedPodcast);
 
-      // Update current lesson state immediately to reflect completion
+      // Update current lesson state immediately
       const updatedCurrentLesson = { ...currentLesson, isCompleted: true, isLocked: false };
       setCurrentLesson(updatedCurrentLesson);
 
-      // Mark as complete in database (asynchronous - doesn't block UI)
+      // Mark as complete in database (asynchronous)
       markLessonCompleteInDB(currentLesson.id, podcast.id).catch(error => {
         console.error('❌ Error marking lesson complete in DB:', error);
       });
 
-      // Auto-advance to next lesson if available
-      if (nextLesson) {
+      // PROTECCIÓN CRÍTICA: Solo auto-advance si está permitido
+      if (nextLesson && isAutoAdvanceAllowed()) {
         console.log('⏭️ Auto-advancing to next lesson:', nextLesson.title);
         setCurrentLesson(nextLesson);
         
-        // Small delay to ensure state update, then auto-play
         setTimeout(() => {
           setIsPlaying(true);
           if (user) {
             updateLessonPosition(nextLesson.id, podcast.id, 1);
           }
         }, 500);
+      } else if (nextLesson && !isAutoAdvanceAllowed()) {
+        console.log('🚫 AUTO-ADVANCE BLOCKED: Manual selection active, not advancing to:', nextLesson.title);
+        setIsPlaying(false);
       } else {
         console.log('🏁 Course completed - no more lessons');
         setIsPlaying(false);
       }
 
-      // BACKGROUND REFRESH: Actualizar datos en segundo plano para sincronización
+      // Background refresh
       console.log('📊 Refreshing progress data in background...');
       Promise.all([refetchLessonProgress(), refetchCourseProgress()]).then(() => {
         console.log('✅ Background progress data refresh completed');
@@ -154,7 +159,7 @@ export function useLessonCompletion(
     } catch (error) {
       console.error('❌ Error completing lesson:', error);
     }
-  }, [currentLesson, podcast, user, markLessonCompleteInDB, setPodcast, setCurrentLesson, setIsPlaying, refetchLessonProgress, refetchCourseProgress, updateLessonPosition]);
+  }, [currentLesson, podcast, user, markLessonCompleteInDB, setPodcast, setCurrentLesson, setIsPlaying, refetchLessonProgress, refetchCourseProgress, updateLessonPosition, isAutoAdvanceAllowed]);
 
   return {
     handleLessonComplete

@@ -1,8 +1,7 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { Lesson, Podcast } from '@/types';
 import { UserCourseProgress } from '../useUserProgress';
-import { isCourseCompleted } from './lessonProgressUtils';
 
 export function useLessonPlayback(
   podcast: Podcast | null,
@@ -12,20 +11,35 @@ export function useLessonPlayback(
   updateLessonPosition: (lessonId: string, courseId: string, position: number) => void
 ) {
   const [isPlaying, setIsPlaying] = useState(false);
+  
+  // CRÍTICO: Flag para controlar la prioridad de las acciones
+  const manualSelectionActive = useRef(false);
+  const autoAdvanceBlocked = useRef(false);
 
-  // Handle lesson selection (CORRECCIÓN: Lógica simplificada y clara)
-  const handleSelectLesson = useCallback((lesson: Lesson) => {
-    console.log('Selecting lesson:', lesson.title, 'isCompleted:', lesson.isCompleted, 'isLocked:', lesson.isLocked);
+  // Handle lesson selection (PRIORIDAD MANUAL ABSOLUTA)
+  const handleSelectLesson = useCallback((lesson: Lesson, isManualSelection = true) => {
+    console.log('🎯 Selecting lesson:', lesson.title, 'isCompleted:', lesson.isCompleted, 'isLocked:', lesson.isLocked, 'isManual:', isManualSelection);
 
-    // LÓGICA SIMPLIFICADA Y CLARA:
-    // 1. Si la lección está completada -> SIEMPRE se puede reproducir (sin importar el estado del curso)
-    // 2. Si la lección no está bloqueada -> se puede reproducir
-    // 3. Solo bloquear si está bloqueada Y no completada
+    // LÓGICA SIMPLIFICADA: Las lecciones completadas SIEMPRE se pueden reproducir
     const canSelectLesson = lesson.isCompleted || !lesson.isLocked;
 
     if (!canSelectLesson) {
       console.log('⚠️ Lesson is locked and not completed, cannot select:', lesson.title);
       return;
+    }
+
+    // CRÍTICO: Marcar como selección manual para bloquear auto-advance
+    if (isManualSelection) {
+      console.log('🚫 MANUAL SELECTION: Blocking auto-advance for 3 seconds');
+      manualSelectionActive.current = true;
+      autoAdvanceBlocked.current = true;
+      
+      // Desbloquear auto-advance después de 3 segundos
+      setTimeout(() => {
+        manualSelectionActive.current = false;
+        autoAdvanceBlocked.current = false;
+        console.log('✅ Auto-advance unblocked after manual selection timeout');
+      }, 3000);
     }
 
     console.log('✅ Lesson can be selected and played:', lesson.title);
@@ -69,11 +83,20 @@ export function useLessonPlayback(
     }
   }, [currentLesson, podcast, user, updateLessonPosition]);
 
+  // NUEVA FUNCIÓN: Verificar si auto-advance está permitido
+  const isAutoAdvanceAllowed = useCallback(() => {
+    const allowed = !autoAdvanceBlocked.current && !manualSelectionActive.current;
+    console.log('🤖 Auto-advance allowed:', allowed, 'manualActive:', manualSelectionActive.current, 'blocked:', autoAdvanceBlocked.current);
+    return allowed;
+  }, []);
+
   return {
     isPlaying,
     setIsPlaying,
     handleSelectLesson,
     handleTogglePlay,
-    handleProgressUpdate
+    handleProgressUpdate,
+    isAutoAdvanceAllowed,
+    manualSelectionActive: manualSelectionActive.current
   };
 }
