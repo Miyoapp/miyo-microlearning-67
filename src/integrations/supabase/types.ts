@@ -63,6 +63,47 @@ export type Database = {
         }
         Relationships: []
       }
+      compras_cursos: {
+        Row: {
+          created_at: string | null
+          curso_id: string | null
+          estado_pago: string | null
+          fecha_compra: string | null
+          id: string
+          monto_pagado: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          curso_id?: string | null
+          estado_pago?: string | null
+          fecha_compra?: string | null
+          id?: string
+          monto_pagado?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          curso_id?: string | null
+          estado_pago?: string | null
+          fecha_compra?: string | null
+          id?: string
+          monto_pagado?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compras_cursos_curso_id_fkey"
+            columns: ["curso_id"]
+            isOneToOne: false
+            referencedRelation: "cursos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       creador_social_media: {
         Row: {
           creador_id: string
@@ -104,6 +145,7 @@ export type Database = {
           fecha_creacion: string
           id: string
           imagen_url: string
+          linkedin_url: string | null
           nombre: string
         }
         Insert: {
@@ -111,6 +153,7 @@ export type Database = {
           fecha_creacion?: string
           id?: string
           imagen_url: string
+          linkedin_url?: string | null
           nombre: string
         }
         Update: {
@@ -118,45 +161,93 @@ export type Database = {
           fecha_creacion?: string
           id?: string
           imagen_url?: string
+          linkedin_url?: string | null
           nombre?: string
         }
         Relationships: []
+      }
+      curso_votos: {
+        Row: {
+          created_at: string | null
+          curso_id: string | null
+          id: string
+          tipo_voto: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          curso_id?: string | null
+          id?: string
+          tipo_voto?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          curso_id?: string | null
+          id?: string
+          tipo_voto?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "curso_votos_curso_id_fkey"
+            columns: ["curso_id"]
+            isOneToOne: false
+            referencedRelation: "cursos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       cursos: {
         Row: {
           categoria_id: string
           creador_id: string
           descripcion: string
+          dislikes: number | null
           duracion_total: number
           fecha_actualizacion: string
           fecha_creacion: string
           id: string
           imagen_portada: string
+          likes: number | null
           numero_lecciones: number
+          precio: number | null
+          tipo_curso: string | null
           titulo: string
         }
         Insert: {
           categoria_id: string
           creador_id: string
           descripcion: string
+          dislikes?: number | null
           duracion_total: number
           fecha_actualizacion?: string
           fecha_creacion?: string
           id?: string
           imagen_portada: string
+          likes?: number | null
           numero_lecciones?: number
+          precio?: number | null
+          tipo_curso?: string | null
           titulo: string
         }
         Update: {
           categoria_id?: string
           creador_id?: string
           descripcion?: string
+          dislikes?: number | null
           duracion_total?: number
           fecha_actualizacion?: string
           fecha_creacion?: string
           id?: string
           imagen_portada?: string
+          likes?: number | null
           numero_lecciones?: number
+          precio?: number | null
+          tipo_curso?: string | null
           titulo?: string
         }
         Relationships: [

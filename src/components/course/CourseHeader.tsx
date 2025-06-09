@@ -1,14 +1,19 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Bookmark, BookmarkCheck, Play } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Heart, Play, Crown, ExternalLink } from 'lucide-react';
 import { Podcast } from '@/types';
-import { formatMinutesToHumanReadable } from '@/lib/formatters';
+import CourseVoting from './CourseVoting';
+import CheckoutModal from './CheckoutModal';
+import { useCoursePurchases } from '@/hooks/useCoursePurchases';
+import { cn } from '@/lib/utils';
 
 interface CourseHeaderProps {
   podcast: Podcast;
   hasStarted: boolean;
   isSaved: boolean;
+  progressPercentage?: number;
   onStartLearning: () => void;
   onToggleSave: () => void;
 }
@@ -17,62 +22,159 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
   podcast,
   hasStarted,
   isSaved,
+  progressPercentage = 0,
   onStartLearning,
   onToggleSave
 }) => {
+  const [showCheckout, setShowCheckout] = useState(false);
+  const { hasPurchased, refetch } = useCoursePurchases();
+  
+  const isCompleted = progressPercentage >= 100;
+  const isPremium = podcast.tipo_curso === 'pago';
+  const hasAccess = !isPremium || hasPurchased(podcast.id);
+
+  const handleStartLearning = () => {
+    if (isPremium && !hasAccess) {
+      setShowCheckout(true);
+    } else {
+      onStartLearning();
+    }
+  };
+
+  const handlePurchaseComplete = () => {
+    refetch();
+  };
+
+  const handleCreatorClick = () => {
+    if (podcast.creator.linkedin_url) {
+      window.open(podcast.creator.linkedin_url, '_blank');
+    }
+  };
+
+  const getButtonText = () => {
+    if (isPremium && !hasAccess) {
+      return `Desbloquear por $${podcast.precio}`;
+    }
+    if (isCompleted) {
+      return 'Repasar Curso';
+    }
+    if (hasStarted) {
+      return 'Continuar Aprendiendo';
+    }
+    return 'Comenzar a Aprender';
+  };
+
   return (
-    <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-8">
-      <div className="aspect-[3/1] relative">
-        <img 
-          src={podcast.imageUrl} 
-          alt={podcast.title}
-          className="w-full h-full object-cover"
-        />
-      </div>
-      
-      <div className="p-8">
-        <div className="flex items-center space-x-3 mb-4">
-          <img 
-            src={podcast.creator.imageUrl} 
-            alt={podcast.creator.name}
-            className="w-12 h-12 rounded-full"
+    <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Course Image */}
+        <div className="relative">
+          <img
+            src={podcast.imageUrl}
+            alt={podcast.title}
+            className="w-full lg:w-48 h-48 object-cover rounded-xl"
           />
-          <div>
-            <div className="font-medium text-gray-900">{podcast.creator.name}</div>
-            <div className="text-sm text-gray-500">{podcast.category.nombre}</div>
+          {isPremium && (
+            <div className="absolute top-2 left-2">
+              <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+                <Crown className="w-3 h-3 mr-1" />
+                Premium
+              </Badge>
+            </div>
+          )}
+        </div>
+
+        {/* Course Info */}
+        <div className="flex-1">
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <h1 className="text-2xl lg:text-3xl font-bold mb-2">{podcast.title}</h1>
+              <div className="flex items-center gap-4 mb-3">
+                <div
+                  className={cn(
+                    "flex items-center gap-2",
+                    podcast.creator.linkedin_url && "cursor-pointer hover:opacity-80 transition-opacity"
+                  )}
+                  onClick={handleCreatorClick}
+                >
+                  <img
+                    src={podcast.creator.imageUrl}
+                    alt={podcast.creator.name}
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                  <span className="text-gray-600">{podcast.creator.name}</span>
+                  {podcast.creator.linkedin_url && (
+                    <ExternalLink className="w-4 h-4 text-gray-400" />
+                  )}
+                </div>
+                <Badge variant="outline">{podcast.category.nombre}</Badge>
+              </div>
+            </div>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onToggleSave}
+              className={isSaved ? 'text-red-600 border-red-200' : ''}
+            >
+              <Heart className={`w-4 h-4 mr-1 ${isSaved ? 'fill-current' : ''}`} />
+              {isSaved ? 'Guardado' : 'Guardar'}
+            </Button>
           </div>
-        </div>
-        
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">{podcast.title}</h1>
-        <p className="text-gray-600 mb-6">{podcast.description}</p>
-        
-        <div className="flex items-center justify-between text-sm text-gray-500 mb-6">
-          <span>{formatMinutesToHumanReadable(podcast.duration)}</span>
-          <span>{podcast.lessonCount} lecciones</span>
-        </div>
-        
-        <div className="flex items-center space-x-4">
-          <Button 
-            className="bg-miyo-800 hover:bg-miyo-900 flex items-center space-x-2"
-            onClick={onStartLearning}
-          >
-            <Play className="w-4 h-4" />
-            <span>{hasStarted ? 'Continuar aprendiendo' : 'Comenzar a aprender'}</span>
-          </Button>
-          
-          <Button
-            variant="outline"
-            onClick={onToggleSave}
-            className="flex items-center space-x-2"
-          >
-            {isSaved ? 
-              <BookmarkCheck className="w-4 h-4 text-miyo-800" /> : 
-              <Bookmark className="w-4 h-4" />
-            }
-            <span>{isSaved ? 'Guardado' : 'Guardar'}</span>
+
+          <p className="text-gray-600 mb-4 line-clamp-3">{podcast.description}</p>
+
+          {/* Course Stats and Voting */}
+          <div className="flex items-center gap-4 mb-4">
+            <span className="text-sm text-gray-500">
+              {podcast.lessonCount} lecciones • {Math.round(podcast.duration)} min
+            </span>
+            {isPremium && (
+              <span className="text-lg font-bold text-green-600">
+                ${podcast.precio}
+              </span>
+            )}
+            <CourseVoting courseId={podcast.id} />
+          </div>
+
+          {/* Progress bar for started courses */}
+          {hasStarted && hasAccess && (
+            <div className="mb-4">
+              <div className="flex justify-between text-sm text-gray-600 mb-1">
+                <span>Progreso</span>
+                <span>{progressPercentage}%</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${progressPercentage}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Action Button */}
+          <Button onClick={handleStartLearning} size="lg" className="w-full lg:w-auto">
+            <Play className="w-4 h-4 mr-2" />
+            {getButtonText()}
           </Button>
         </div>
       </div>
+
+      {/* Checkout Modal */}
+      {isPremium && (
+        <CheckoutModal
+          isOpen={showCheckout}
+          onClose={() => setShowCheckout(false)}
+          course={{
+            id: podcast.id,
+            title: podcast.title,
+            precio: podcast.precio || 0,
+            imageUrl: podcast.imageUrl
+          }}
+          onPurchaseComplete={handlePurchaseComplete}
+        />
+      )}
     </div>
   );
 };

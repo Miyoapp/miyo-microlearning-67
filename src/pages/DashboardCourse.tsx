@@ -1,19 +1,24 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { useCourseData } from '@/hooks/useCourseData';
 import { useUserProgress } from '@/hooks/useUserProgress';
 import { useConsolidatedLessons } from '@/hooks/useConsolidatedLessons';
+import { useCoursePurchases } from '@/hooks/useCoursePurchases';
 import CourseHeader from '@/components/course/CourseHeader';
 import CourseLearningPathSection from '@/components/course/CourseLearningPathSection';
 import CourseSidebar from '@/components/course/CourseSidebar';
 import AudioPlayer from '@/components/AudioPlayer';
+import PremiumOverlay from '@/components/course/PremiumOverlay';
+import CheckoutModal from '@/components/course/CheckoutModal';
 
 const DashboardCourse = () => {
   const { id } = useParams<{ id: string }>();
   const { podcast, setPodcast, isLoading } = useCourseData(id);
   const { userProgress, toggleSaveCourse, startCourse, refetch } = useUserProgress();
+  const { hasPurchased, refetch: refetchPurchases } = useCoursePurchases();
+  const [showCheckout, setShowCheckout] = useState(false);
   
   // Use consolidated lessons hook
   const { 
@@ -33,6 +38,10 @@ const DashboardCourse = () => {
   const progressPercentage = courseProgress?.progress_percentage || 0;
   const isCompleted = courseProgress?.is_completed || false;
 
+  // Check if this is a premium course and if user has access
+  const isPremium = podcast?.tipo_curso === 'pago';
+  const hasAccess = !isPremium || (podcast && hasPurchased(podcast.id));
+
   // Initialize podcast and current lesson when data is loaded
   useEffect(() => {
     if (podcast) {
@@ -43,6 +52,11 @@ const DashboardCourse = () => {
 
   const handleStartLearning = async () => {
     if (podcast) {
+      if (isPremium && !hasAccess) {
+        setShowCheckout(true);
+        return;
+      }
+
       await startCourse(podcast.id);
       await refetch();
       
@@ -59,6 +73,21 @@ const DashboardCourse = () => {
     if (podcast) {
       toggleSaveCourse(podcast.id);
     }
+  };
+
+  const handlePurchaseComplete = () => {
+    refetchPurchases();
+  };
+
+  const handleLessonSelect = (lesson: any) => {
+    // Check if user has access to this lesson
+    if (isPremium && !hasAccess) {
+      setShowCheckout(true);
+      return;
+    }
+    
+    // Use manual selection flag to prevent auto-play interference
+    handleSelectLesson(lesson, true);
   };
 
   if (isLoading) {
@@ -93,15 +122,26 @@ const DashboardCourse = () => {
                 podcast={podcast}
                 hasStarted={hasStarted}
                 isSaved={isSaved}
+                progressPercentage={progressPercentage}
                 onStartLearning={handleStartLearning}
                 onToggleSave={handleToggleSave}
               />
 
-              <CourseLearningPathSection
-                podcast={podcast}
-                currentLessonId={currentLesson?.id || null}
-                onSelectLesson={handleSelectLesson}
-              />
+              <div className="relative">
+                <CourseLearningPathSection
+                  podcast={podcast}
+                  currentLessonId={currentLesson?.id || null}
+                  onSelectLesson={handleLessonSelect}
+                />
+                
+                {/* Premium overlay for learning path */}
+                {isPremium && !hasAccess && (
+                  <PremiumOverlay
+                    onUnlock={() => setShowCheckout(true)}
+                    price={podcast.precio || 0}
+                  />
+                )}
+              </div>
             </div>
 
             {/* Sidebar */}
@@ -114,14 +154,31 @@ const DashboardCourse = () => {
         </div>
       </DashboardLayout>
       
-      {/* Audio Player - Fixed at bottom */}
-      <AudioPlayer 
-        lesson={currentLesson}
-        isPlaying={isPlaying}
-        onTogglePlay={handleTogglePlay}
-        onComplete={handleLessonComplete}
-        onProgressUpdate={handleProgressUpdate}
-      />
+      {/* Audio Player - Only show if user has access */}
+      {hasAccess && (
+        <AudioPlayer 
+          lesson={currentLesson}
+          isPlaying={isPlaying}
+          onTogglePlay={handleTogglePlay}
+          onComplete={handleLessonComplete}
+          onProgressUpdate={handleProgressUpdate}
+        />
+      )}
+
+      {/* Checkout Modal */}
+      {isPremium && (
+        <CheckoutModal
+          isOpen={showCheckout}
+          onClose={() => setShowCheckout(false)}
+          course={{
+            id: podcast.id,
+            title: podcast.title,
+            precio: podcast.precio || 0,
+            imageUrl: podcast.imageUrl
+          }}
+          onPurchaseComplete={handlePurchaseComplete}
+        />
+      )}
     </>
   );
 };

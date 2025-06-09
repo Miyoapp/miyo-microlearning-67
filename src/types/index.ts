@@ -1,7 +1,9 @@
+
 export interface Creator {
   id: string;
   name: string;
   imageUrl: string;
+  linkedin_url?: string;
   socialMedia?: CreatorSocialMedia[];
 }
 
@@ -21,6 +23,11 @@ export interface Podcast {
   description: string;
   lessons: Lesson[];
   modules: Module[];
+  // New fields for premium courses and voting
+  tipo_curso?: 'libre' | 'pago';
+  precio?: number;
+  likes?: number;
+  dislikes?: number;
 }
 
 export interface Module {
@@ -66,6 +73,11 @@ export interface SupabaseCurso {
   numero_lecciones: number;
   fecha_creacion: string;
   fecha_actualizacion: string;
+  // New fields
+  tipo_curso?: 'libre' | 'pago';
+  precio?: number;
+  likes?: number;
+  dislikes?: number;
 }
 
 export interface SupabaseCategoria {
@@ -79,6 +91,7 @@ export interface SupabaseCreador {
   id: string;
   nombre: string;
   imagen_url: string;
+  linkedin_url?: string;
   fecha_creacion: string;
   fecha_actualizacion: string;
 }
@@ -113,6 +126,27 @@ export interface SupabaseLeccion {
   estado_inicial: 'disponible' | 'bloqueado';
   fecha_creacion: string;
   fecha_actualizacion: string;
+}
+
+// New types for voting and purchases
+export interface CourseVote {
+  id: string;
+  user_id: string;
+  curso_id: string;
+  tipo_voto: 'like' | 'dislike' | 'none';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CoursePurchase {
+  id: string;
+  user_id: string;
+  curso_id: string;
+  fecha_compra: string;
+  monto_pagado: number;
+  estado_pago: 'pendiente' | 'completado' | 'cancelado';
+  created_at: string;
+  updated_at: string;
 }
 
 // Importar tipos específicos del landing

@@ -55,12 +55,12 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     refetchCourseProgress
   );
 
-  // Enhanced lesson selection that updates current lesson and handles playback
-  const handleSelectLesson = useCallback((lesson: any) => {
-    console.log('🎯 handleSelectLesson called with:', lesson.title, 'isCompleted:', lesson.isCompleted, 'isLocked:', lesson.isLocked);
+  // Enhanced lesson selection that prioritizes manual selection over auto-play
+  const handleSelectLesson = useCallback((lesson: any, isManualSelection = true) => {
+    console.log('🎯 handleSelectLesson called with:', lesson.title, 'isCompleted:', lesson.isCompleted, 'isLocked:', lesson.isLocked, 'isManual:', isManualSelection);
     
-    // CORRECCIÓN FINAL: Lógica clara y consistente
-    // Lecciones completadas SIEMPRE pueden ser reproducidas, sin importar el estado del curso
+    // CORRECCIÓN CRÍTICA: Permitir reproducir CUALQUIER lección completada, independientemente del estado del curso
+    // Las lecciones completadas siempre deben ser accesibles
     const canSelectLesson = lesson.isCompleted || !lesson.isLocked;
     
     if (!canSelectLesson) {
@@ -70,12 +70,24 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     
     console.log('✅ Lesson can be selected, updating current lesson and starting playback');
     
-    // Update current lesson and handle playback
-    setCurrentLesson(lesson);
-    handleSelectLessonFromPlayback(lesson);
-  }, [setCurrentLesson, handleSelectLessonFromPlayback]);
+    // PRIORIDAD MANUAL: Si es selección manual, detener cualquier auto-play previo
+    if (isManualSelection) {
+      console.log('🎯 Manual lesson selection detected - stopping auto-play sequence');
+      setIsPlaying(false);
+      
+      // Small delay to ensure clean state transition
+      setTimeout(() => {
+        setCurrentLesson(lesson);
+        handleSelectLessonFromPlayback(lesson);
+      }, 100);
+    } else {
+      // Auto-play sequence
+      setCurrentLesson(lesson);
+      handleSelectLessonFromPlayback(lesson);
+    }
+  }, [setCurrentLesson, handleSelectLessonFromPlayback, setIsPlaying]);
 
-  // SIMPLIFICADO: Initialize cuando podcast o lesson progress cambian (evitar efectos circulares)
+  // Initialize cuando podcast o lesson progress cambian
   useEffect(() => {
     if (podcast && user) {
       console.log('📊 Initializing podcast with progress data...');
@@ -83,7 +95,7 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     }
   }, [podcast?.id, lessonProgress.length, userProgress.length, user?.id, initializePodcastWithProgress]);
 
-  // SIMPLIFICADO: Initialize current lesson cuando podcast está listo
+  // Initialize current lesson cuando podcast está listo
   useEffect(() => {
     if (podcast && podcast.lessons.length > 0 && user) {
       console.log('🎯 Initializing current lesson...');
