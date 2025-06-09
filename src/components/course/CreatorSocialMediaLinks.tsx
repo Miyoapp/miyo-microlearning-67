@@ -1,4 +1,3 @@
-
 import { CreatorSocialMedia } from '@/types';
 import { 
   Globe, 
@@ -121,21 +120,26 @@ const CreatorSocialMediaLinks = ({ socialMedia, className = "" }: CreatorSocialM
     }
   };
 
+  const handleSocialClick = (url: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <TooltipProvider>
       <div className={`flex gap-2 mt-2 ${className}`}>
         {socialMedia.map((item, index) => (
           <Tooltip key={index}>
             <TooltipTrigger asChild>
-              <a 
-                href={item.url} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="p-1.5 transition-colors"
+              <button 
+                onClick={(e) => handleSocialClick(item.url, e)}
+                className="p-1.5 transition-colors hover:bg-gray-100 rounded-md"
                 aria-label={`${item.platform} link`}
+                type="button"
               >
                 {getPlatformIcon(item.platform)}
-              </a>
+              </button>
             </TooltipTrigger>
             <TooltipContent>
               <p>{item.platform}</p>

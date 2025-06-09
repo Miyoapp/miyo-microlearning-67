@@ -134,11 +134,12 @@ const DashboardCourse = () => {
                   onSelectLesson={handleLessonSelect}
                 />
                 
-                {/* Premium overlay for learning path */}
+                {/* Premium overlay for learning path - more transparent */}
                 {isPremium && !hasAccess && (
                   <PremiumOverlay
                     onUnlock={() => setShowCheckout(true)}
                     price={podcast.precio || 0}
+                    currency={podcast.moneda || 'USD'}
                   />
                 )}
               </div>
@@ -174,7 +175,8 @@ const DashboardCourse = () => {
             id: podcast.id,
             title: podcast.title,
             precio: podcast.precio || 0,
-            imageUrl: podcast.imageUrl
+            imageUrl: podcast.imageUrl,
+            moneda: podcast.moneda || 'USD'
           }}
           onPurchaseComplete={handlePurchaseComplete}
         />

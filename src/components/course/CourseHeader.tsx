@@ -2,12 +2,13 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Heart, Play, Crown, ExternalLink } from 'lucide-react';
+import { Heart, Play, Crown, ExternalLink, Clock, Headphones } from 'lucide-react';
 import { Podcast } from '@/types';
 import CourseVoting from './CourseVoting';
 import CheckoutModal from './CheckoutModal';
 import { useCoursePurchases } from '@/hooks/useCoursePurchases';
 import { cn } from '@/lib/utils';
+import { formatMinutesToHumanReadable } from '@/lib/formatters';
 
 interface CourseHeaderProps {
   podcast: Podcast;
@@ -53,7 +54,7 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
 
   const getButtonText = () => {
     if (isPremium && !hasAccess) {
-      return `Desbloquear por $${podcast.precio}`;
+      return `Desbloquear por ${podcast.moneda || 'USD'} $${podcast.precio}`;
     }
     if (isCompleted) {
       return 'Repasar Curso';
@@ -89,6 +90,8 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
           <div className="flex items-start justify-between mb-4">
             <div>
               <h1 className="text-2xl lg:text-3xl font-bold mb-2">{podcast.title}</h1>
+              
+              {/* Creator Info - reorganized to match image layout */}
               <div className="flex items-center gap-4 mb-3">
                 <div
                   className={cn(
@@ -124,17 +127,28 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
 
           <p className="text-gray-600 mb-4 line-clamp-3">{podcast.description}</p>
 
-          {/* Course Stats and Voting */}
+          {/* Course Stats - reorganized according to image */}
           <div className="flex items-center gap-4 mb-4">
-            <span className="text-sm text-gray-500">
-              {podcast.lessonCount} lecciones • {Math.round(podcast.duration)} min
-            </span>
-            {isPremium && (
-              <span className="text-lg font-bold text-green-600">
-                ${podcast.precio}
-              </span>
+            {isPremium ? (
+              <>
+                <span className="text-lg font-bold text-green-600">
+                  {podcast.moneda || 'USD'} ${podcast.precio}
+                </span>
+                <CourseVoting courseId={podcast.id} />
+              </>
+            ) : (
+              <>
+                <div className="flex items-center text-sm text-gray-500">
+                  <Clock className="w-4 h-4 mr-1" />
+                  <span>{formatMinutesToHumanReadable(podcast.duration)}</span>
+                </div>
+                <div className="flex items-center text-sm text-gray-500">
+                  <Headphones className="w-4 h-4 mr-1" />
+                  <span>{podcast.lessonCount} lecciones</span>
+                </div>
+                <CourseVoting courseId={podcast.id} />
+              </>
             )}
-            <CourseVoting courseId={podcast.id} />
           </div>
 
           {/* Progress bar for started courses */}
@@ -170,7 +184,8 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
             id: podcast.id,
             title: podcast.title,
             precio: podcast.precio || 0,
-            imageUrl: podcast.imageUrl
+            imageUrl: podcast.imageUrl,
+            moneda: podcast.moneda || 'USD'
           }}
           onPurchaseComplete={handlePurchaseComplete}
         />

@@ -6,12 +6,13 @@ import { Button } from '@/components/ui/button';
 interface PremiumOverlayProps {
   onUnlock: () => void;
   price: number;
+  currency?: string;
 }
 
-const PremiumOverlay: React.FC<PremiumOverlayProps> = ({ onUnlock, price }) => {
+const PremiumOverlay: React.FC<PremiumOverlayProps> = ({ onUnlock, price, currency = 'USD' }) => {
   return (
-    <div className="absolute inset-0 bg-white/90 backdrop-blur-sm flex items-center justify-center rounded-lg z-10">
-      <div className="text-center p-6 max-w-sm">
+    <div className="absolute inset-0 bg-white/50 backdrop-blur-sm flex items-center justify-center rounded-lg z-10">
+      <div className="text-center p-6 max-w-sm bg-white/90 rounded-xl shadow-lg">
         <div className="mb-4">
           <Crown className="w-12 h-12 mx-auto text-yellow-500 mb-2" />
           <h3 className="text-xl font-bold mb-2">Contenido Premium</h3>
@@ -22,7 +23,7 @@ const PremiumOverlay: React.FC<PremiumOverlayProps> = ({ onUnlock, price }) => {
         
         <Button onClick={onUnlock} className="w-full">
           <Lock className="w-4 h-4 mr-2" />
-          Desbloquear por ${price}
+          Desbloquear por {currency} ${price}
         </Button>
       </div>
     </div>

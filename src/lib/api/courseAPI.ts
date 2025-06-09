@@ -40,6 +40,7 @@ export const obtenerCursos = async (): Promise<Podcast[]> => {
         fecha_actualizacion: curso.fecha_actualizacion,
         tipo_curso: (curso.tipo_curso as 'libre' | 'pago') || 'libre',
         precio: curso.precio,
+        moneda: curso.moneda || 'USD',
         likes: curso.likes,
         dislikes: curso.dislikes
       };
@@ -94,6 +95,7 @@ export const obtenerCursoPorId = async (id: string): Promise<Podcast | null> => 
       fecha_actualizacion: data.fecha_actualizacion,
       tipo_curso: (data.tipo_curso as 'libre' | 'pago') || 'libre',
       precio: data.precio,
+      moneda: data.moneda || 'USD',
       likes: data.likes,
       dislikes: data.dislikes
     };

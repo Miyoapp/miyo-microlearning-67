@@ -213,6 +213,7 @@ export type Database = {
           id: string
           imagen_portada: string
           likes: number | null
+          moneda: string | null
           numero_lecciones: number
           precio: number | null
           tipo_curso: string | null
@@ -229,6 +230,7 @@ export type Database = {
           id?: string
           imagen_portada: string
           likes?: number | null
+          moneda?: string | null
           numero_lecciones?: number
           precio?: number | null
           tipo_curso?: string | null
@@ -245,6 +247,7 @@ export type Database = {
           id?: string
           imagen_portada?: string
           likes?: number | null
+          moneda?: string | null
           numero_lecciones?: number
           precio?: number | null
           tipo_curso?: string | null

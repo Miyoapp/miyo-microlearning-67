@@ -35,9 +35,10 @@ export const transformarCursoAModelo = async (curso: SupabaseCurso): Promise<Pod
       lessonCount: curso.numero_lecciones,
       lessons: lecciones,
       modules: modulos,
-      // Add the new fields
+      // Add the new fields including currency
       tipo_curso: curso.tipo_curso as 'libre' | 'pago' | undefined,
       precio: curso.precio,
+      moneda: curso.moneda || 'USD',
       likes: curso.likes,
       dislikes: curso.dislikes
     };
@@ -74,6 +75,7 @@ export const transformarCursoAModelo = async (curso: SupabaseCurso): Promise<Pod
       modules: [],
       tipo_curso: 'libre',
       precio: 0,
+      moneda: 'USD',
       likes: 0,
       dislikes: 0
     };
