@@ -19,6 +19,7 @@ interface CheckoutModalProps {
     title: string;
     precio: number;
     imageUrl: string;
+    moneda?: string;
   };
   onPurchaseComplete: () => void;
 }
@@ -67,7 +68,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
             <div className="flex-1">
               <h4 className="font-medium text-sm">{course.title}</h4>
               <p className="text-2xl font-bold text-green-600">
-                ${course.precio}
+                {course.moneda || 'USD'} ${course.precio}
               </p>
             </div>
           </div>
@@ -84,7 +85,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 disabled={processing}
                 className="w-full"
               >
-                {processing ? 'Procesando...' : `Pagar $${course.precio}`}
+                {processing ? 'Procesando...' : `Pagar ${course.moneda || 'USD'} $${course.precio}`}
               </Button>
             </div>
 

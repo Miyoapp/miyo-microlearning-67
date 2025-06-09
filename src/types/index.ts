@@ -1,4 +1,3 @@
-
 export interface Creator {
   id: string;
   name: string;
@@ -26,6 +25,7 @@ export interface Podcast {
   // New fields for premium courses and voting
   tipo_curso?: 'libre' | 'pago';
   precio?: number;
+  moneda?: string;
   likes?: number;
   dislikes?: number;
 }
@@ -76,6 +76,7 @@ export interface SupabaseCurso {
   // New fields
   tipo_curso?: 'libre' | 'pago';
   precio?: number;
+  moneda?: string;
   likes?: number;
   dislikes?: number;
 }
