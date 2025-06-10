@@ -14,13 +14,14 @@ export function useLessonPlayback(
   const [isPlaying, setIsPlaying] = useState(false);
   const [isAutoAdvanceAllowed, setIsAutoAdvanceAllowed] = useState(true);
   const manualSelectionActive = useRef(false);
-  const isTransitioning = useRef(false); // NUEVO: Flag para transiciones
+  const isTransitioning = useRef(false);
+  const lastUpdateTime = useRef(0); // NUEVO: Throttling para progress updates
 
   // Handle lesson selection with immediate playback for manual selections
   const handleSelectLesson = useCallback((lesson: Lesson, isManualSelection = false) => {
     console.log('🎵 handleSelectLesson:', lesson.title, 'manual:', isManualSelection);
     
-    // Evitar cambios durante transiciones
+    // MEJORADO: Evitar cambios durante transiciones con timeout más corto
     if (isTransitioning.current) {
       console.log('🔄 Transition in progress, skipping selection');
       return;
@@ -32,15 +33,14 @@ export function useLessonPlayback(
       return;
     }
     
-    // Set transition flag para manual selections
+    // OPTIMIZADO: Transición más rápida para manual selections
     if (isManualSelection) {
       isTransitioning.current = true;
       setTimeout(() => {
         isTransitioning.current = false;
-      }, 500);
+      }, 200); // Reducido de 500ms a 200ms
     }
     
-    // Set manual selection flag
     manualSelectionActive.current = isManualSelection;
     
     // Start playback immediately for manual selections
@@ -53,8 +53,8 @@ export function useLessonPlayback(
       setIsAutoAdvanceAllowed(false);
     }
     
-    // Track lesson start if not completed
-    if (podcast && !lesson.isCompleted) {
+    // OPTIMIZADO: Track lesson start solo si es necesario
+    if (podcast && !lesson.isCompleted && isManualSelection) {
       updateLessonPosition(lesson.id, podcast.id, 1);
     }
   }, [podcast, updateLessonPosition]);
@@ -71,18 +71,25 @@ export function useLessonPlayback(
     }
   }, [isPlaying, currentLesson]);
 
-  // Handle progress updates during playback
+  // OPTIMIZADO: Progress updates con throttling
   const handleProgressUpdate = useCallback((position: number) => {
     if (!currentLesson || !podcast || !user) return;
     
-    // OPTIMIZACIÓN: Solo actualizar progreso si no está en transición
-    if (isTransitioning.current) {
+    // OPTIMIZACIÓN: Throttling para reducir updates frecuentes
+    const now = Date.now();
+    if (now - lastUpdateTime.current < 2000) { // Max 1 update cada 2 segundos
+      return;
+    }
+    lastUpdateTime.current = now;
+    
+    // OPTIMIZACIÓN: Solo actualizar durante transiciones si es completion
+    if (isTransitioning.current && position < 95) {
       return;
     }
     
     // Only update progress for incomplete lessons during normal playback
     if (!currentLesson.isCompleted && position > 5) {
-      console.log('📊 Updating progress for incomplete lesson:', currentLesson.title, position.toFixed(1) + '%');
+      console.log('📊 Throttled progress update:', currentLesson.title, position.toFixed(1) + '%');
       updateLessonPosition(currentLesson.id, podcast.id, position);
     }
   }, [currentLesson, podcast, user, updateLessonPosition]);

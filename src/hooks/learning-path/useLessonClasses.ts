@@ -4,9 +4,14 @@ import { Lesson } from '@/types';
 import { cn } from '@/lib/utils';
 
 export function useLessonClasses(lessons: Lesson[], lessonStatusMap: Map<string, any>) {
-  // OPTIMIZADO: Memoizar clases CSS (ESTABLE)
+  // OPTIMIZADO: Memoización más estable con hash específico
   const getLessonClasses = useMemo(() => {
     const classCache = new Map();
+    
+    // OPTIMIZACIÓN: Crear hash para status map
+    const statusMapHash = Array.from(lessonStatusMap.entries())
+      .map(([id, status]) => `${id}:${status._hash || 'no-hash'}`)
+      .join('|');
     
     lessons.forEach(lesson => {
       const status = lessonStatusMap.get(lesson.id);
@@ -41,8 +46,13 @@ export function useLessonClasses(lessons: Lesson[], lessonStatusMap: Map<string,
       classCache.set(lesson.id, { nodeClasses, textClasses });
     });
     
+    console.log('🎨 useLessonClasses: Recalculated with statusMapHash:', statusMapHash.slice(0, 50));
     return classCache;
-  }, [lessons, lessonStatusMap]); // ESTABILIZADO: Solo dependencias necesarias
+  }, [
+    // ESTABILIZADO: Dependencies más específicas
+    lessons.map(l => l.id).join('|'),
+    Array.from(lessonStatusMap.entries()).map(([id, status]) => `${id}:${status._hash || 'no-hash'}`).join('|')
+  ]);
 
   return getLessonClasses;
 }

@@ -1,5 +1,5 @@
 
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Lesson, Module } from '../types';
 import React from 'react';
 import { useLessonStatus } from '@/hooks/learning-path/useLessonStatus';
@@ -18,7 +18,7 @@ const LearningPath = React.memo(({ lessons, modules, onSelectLesson, currentLess
   const lessonStatusMap = useLessonStatus(lessons, modules, currentLessonId);
   const getLessonClasses = useLessonClasses(lessons, lessonStatusMap);
 
-  // Agrupar lecciones por módulo manteniendo el orden real
+  // OPTIMIZADO: Memoizar función de agrupación con hash estable
   const getLessonsForModule = useCallback((moduleId: string) => {
     const module = modules.find(m => m.id === moduleId);
     if (!module) return [];
@@ -27,9 +27,13 @@ const LearningPath = React.memo(({ lessons, modules, onSelectLesson, currentLess
     return module.lessonIds
       .map(id => lessons.find(lesson => lesson.id === id))
       .filter((lesson): lesson is Lesson => lesson !== undefined);
-  }, [modules, lessons]);
+  }, [
+    // ESTABILIZADO: Hash más específico para evitar recálculos
+    modules.map(m => `${m.id}:${m.lessonIds.join(',')}`).join('|'),
+    lessons.map(l => l.id).join('|')
+  ]);
 
-  // OPTIMIZADO: Memoizar handler de click
+  // OPTIMIZADO: Memoizar handler de click con dependencies más estables
   const handleLessonClick = useCallback((lesson: Lesson) => {
     const status = lessonStatusMap.get(lesson.id);
     if (!status) return;
@@ -42,14 +46,26 @@ const LearningPath = React.memo(({ lessons, modules, onSelectLesson, currentLess
     } else {
       console.log('🚫 Lesson not playable:', lesson.title, 'isLocked:', isLocked, 'isFirst:', isFirstInSequence);
     }
-  }, [lessonStatusMap, onSelectLesson]);
+  }, [
+    // ESTABILIZADO: Solo incluir referencias estables
+    Array.from(lessonStatusMap.entries()).map(([id, status]) => `${id}:${status._hash || 'no-hash'}`).join('|'),
+    onSelectLesson
+  ]);
+
+  // OPTIMIZADO: Memoizar módulos ordenados
+  const orderedModules = useMemo(() => {
+    return modules.filter(module => {
+      const moduleLessons = getLessonsForModule(module.id);
+      return moduleLessons.length > 0;
+    });
+  }, [modules, getLessonsForModule]);
   
   return (
     <div className="py-3">
       <h2 className="text-2xl font-bold mb-2 text-center">Tu Ruta de Aprendizaje</h2>
       
       <div className="relative max-w-[400px] mx-auto">
-        {modules.map((module) => {
+        {orderedModules.map((module) => {
           const moduleLessons = getLessonsForModule(module.id);
           
           return (

@@ -1,5 +1,5 @@
 
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { Lesson, Podcast } from '@/types';
 import { User } from '@supabase/supabase-js';
 import { getNextLesson } from './lessonOrderUtils';
@@ -18,81 +18,83 @@ export function useLessonCompletion(
   isAutoAdvanceAllowed: boolean
 ) {
   
+  const isCompletingRef = useRef(false); // NUEVO: Flag para evitar múltiples completions
+  
   const handleLessonComplete = useCallback(async () => {
     if (!currentLesson || !podcast || !user) {
       console.log('❌ Cannot complete lesson: missing dependencies');
       return;
     }
 
+    // CRÍTICO: Evitar múltiples ejecuciones simultáneas
+    if (isCompletingRef.current) {
+      console.log('🔄 Lesson completion already in progress, skipping...');
+      return;
+    }
+
+    isCompletingRef.current = true;
     console.log('🏁 LESSON COMPLETE:', currentLesson.title);
     
     try {
-      // 1. OPTIMISTIC UPDATE: Actualizar estado local inmediatamente
+      // 1. OPTIMISTIC UPDATE INMEDIATO: Sin delays
       const nextLesson = getNextLesson(currentLesson, podcast.lessons, podcast.modules);
       
       const updatedLessons = podcast.lessons.map(lesson => {
         if (lesson.id === currentLesson.id) {
-          // Marcar lección actual como completada
           return { ...lesson, isCompleted: true };
         }
         if (nextLesson && lesson.id === nextLesson.id) {
-          // Desbloquear siguiente lección inmediatamente
           return { ...lesson, isLocked: false };
         }
         return lesson;
       });
       
-      // Actualizar podcast con cambios optimistas
       const updatedPodcast = { ...podcast, lessons: updatedLessons };
       setPodcast(updatedPodcast);
       
-      console.log('✅ Optimistic update applied - UI should be updated immediately');
+      console.log('✅ IMMEDIATE optimistic update applied');
       
-      // 2. BACKGROUND: Actualizar base de datos sin bloquear UI
-      const dbUpdates = Promise.all([
-        markLessonCompleteInDB(currentLesson.id, podcast.id),
-        updateLessonPosition(currentLesson.id, podcast.id, 100)
-      ]);
-      
-      // 3. AUTO-ADVANCE: Transición más rápida y suave
+      // 2. AUTO-ADVANCE INMEDIATO: Sin delays para transición más fluida
       if (isAutoAdvanceAllowed && nextLesson) {
-        console.log('⏭️ Auto-advancing to next lesson (optimized):', nextLesson.title);
+        console.log('⏭️ IMMEDIATE auto-advance to:', nextLesson.title);
         
-        // Transición más rápida (300ms en lugar de 1000ms)
-        setTimeout(() => {
-          const updatedNextLesson = {
-            ...nextLesson,
-            isLocked: false // Asegurar que está desbloqueada
-          };
-          setCurrentLesson(updatedNextLesson);
-          setIsPlaying(true);
-        }, 300);
+        const updatedNextLesson = {
+          ...nextLesson,
+          isLocked: false
+        };
+        setCurrentLesson(updatedNextLesson);
+        setIsPlaying(true);
       } else {
         console.log('⏹️ No auto-advance: reached end or not allowed');
         setIsPlaying(false);
       }
       
-      // 4. BACKGROUND: Esperar actualizaciones de BD y refrescar datos solo una vez
-      try {
-        await dbUpdates;
-        console.log('💾 Database updates completed');
-        
-        // SINGLE REFETCH: Solo un refetch después de que todo esté completo
-        setTimeout(() => {
-          refetchLessonProgress();
-          refetchCourseProgress();
-        }, 500);
-        
-      } catch (dbError) {
-        console.error('❌ Database update failed:', dbError);
-        // En caso de error, revertir cambios optimistas
-        setPodcast(podcast);
-      }
+      // 3. BACKGROUND DB UPDATES: Sin refetches para evitar conflictos
+      const dbUpdates = Promise.all([
+        markLessonCompleteInDB(currentLesson.id, podcast.id),
+        updateLessonPosition(currentLesson.id, podcast.id, 100)
+      ]);
+      
+      // Ejecutar en background sin afectar UI
+      dbUpdates
+        .then(() => {
+          console.log('💾 Background DB updates completed successfully');
+          // ELIMINADO: No más refetches automáticos para evitar conflictos
+        })
+        .catch(dbError => {
+          console.error('❌ Background DB update failed:', dbError);
+          // En caso de error, mantener el estado optimista
+        })
+        .finally(() => {
+          // Reset completion flag después de un delay
+          setTimeout(() => {
+            isCompletingRef.current = false;
+          }, 500);
+        });
       
     } catch (error) {
       console.error('❌ Error completing lesson:', error);
-      // Revertir cambios optimistas en caso de error
-      setPodcast(podcast);
+      isCompletingRef.current = false;
     }
   }, [
     currentLesson,
@@ -103,9 +105,8 @@ export function useLessonCompletion(
     setIsPlaying,
     markLessonCompleteInDB,
     updateLessonPosition,
-    refetchLessonProgress,
-    refetchCourseProgress,
     isAutoAdvanceAllowed
+    // ELIMINADO: refetchLessonProgress, refetchCourseProgress para evitar re-renders
   ]);
 
   return { handleLessonComplete };
