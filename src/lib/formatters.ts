@@ -38,27 +38,3 @@ export function formatMinutesToHumanReadable(minutes: number): string {
     return `${mins} min`;
   }
 }
-
-/**
- * Formats currency based on the currency code
- * @param amount The amount to format
- * @param currency The currency code (optional, defaults to USD)
- * @returns Formatted currency string
- */
-export function formatCurrency(amount: number, currency?: string): string {
-  const curr = currency || 'USD';
-  switch (curr) {
-    case 'USD':
-      return `$${amount.toFixed(2)}`;
-    case 'EUR':
-      return `€${amount.toFixed(2)}`;
-    case 'MXN':
-      return `$${amount.toFixed(2)} MXN`;
-    case 'ARS':
-      return `$${amount.toFixed(0)} ARS`;
-    case 'PEN':
-      return `S/${amount.toFixed(2)}`;
-    default:
-      return `${curr} $${amount.toFixed(2)}`;
-  }
-}
