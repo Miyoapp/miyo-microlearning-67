@@ -110,9 +110,9 @@ const DashboardCourse = () => {
   if (!podcast) {
     return (
       <DashboardLayout>
-        <div className="text-center py-20">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Curso no encontrado</h2>
-          <p className="text-gray-600">El curso que buscas no existe o no está disponible.</p>
+        <div className="text-center py-20 px-4">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">Curso no encontrado</h2>
+          <p className="text-sm sm:text-base text-gray-600">El curso que buscas no existe o no está disponible.</p>
         </div>
       </DashboardLayout>
     );
@@ -121,7 +121,7 @@ const DashboardCourse = () => {
   return (
     <>
       <DashboardLayout>
-        <div className="max-w-7xl mx-auto pb-24">
+        <div className="max-w-7xl mx-auto pb-20 sm:pb-24">
           <CoursePageHeader isReviewMode={isReviewMode} />
           
           <CourseMainContent

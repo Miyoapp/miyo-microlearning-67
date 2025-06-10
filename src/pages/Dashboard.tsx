@@ -133,10 +133,15 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">¡Bienvenido de vuelta, {userName}!</h1>
-          <p className="text-gray-600">Continúa tu aprendizaje donde lo dejaste</p>
+      <div className="max-w-7xl mx-auto pb-20 sm:pb-24">
+        {/* Mobile-optimized welcome section */}
+        <div className="mb-6 sm:mb-8 px-4 sm:px-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 leading-tight">
+            ¡Bienvenido de vuelta, {userName}!
+          </h1>
+          <p className="text-sm sm:text-base text-gray-600">
+            Continúa tu aprendizaje donde lo dejaste
+          </p>
         </div>
 
         <CourseCarousel

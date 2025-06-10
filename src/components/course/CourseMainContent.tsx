@@ -36,8 +36,8 @@ const CourseMainContent: React.FC<CourseMainContentProps> = ({
   onShowCheckout
 }) => {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      {/* Main Content */}
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
+      {/* Main Content - Full width on mobile */}
       <div className="lg:col-span-2">
         <CourseHeader
           podcast={podcast}
@@ -48,7 +48,7 @@ const CourseMainContent: React.FC<CourseMainContentProps> = ({
           onToggleSave={onToggleSave}
         />
 
-        <div className="relative">
+        <div className="relative mx-4 sm:mx-0">
           <CourseLearningPathSection
             podcast={podcast}
             currentLessonId={currentLesson?.id || null}
@@ -66,12 +66,14 @@ const CourseMainContent: React.FC<CourseMainContentProps> = ({
         </div>
       </div>
 
-      {/* Sidebar */}
-      <CourseSidebar 
-        podcast={podcast}
-        progressPercentage={progressPercentage}
-        isCompleted={isCompleted}
-      />
+      {/* Sidebar - Hidden on mobile, shown on desktop */}
+      <div className="hidden lg:block">
+        <CourseSidebar 
+          podcast={podcast}
+          progressPercentage={progressPercentage}
+          isCompleted={isCompleted}
+        />
+      </div>
     </div>
   );
 };

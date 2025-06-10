@@ -86,40 +86,43 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
-      {/* Course Image - Full Width */}
-      <div className="relative mb-6">
+    <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 mb-4 sm:mb-6 mx-4 sm:mx-0">
+      {/* Course Image - Mobile optimized */}
+      <div className="relative mb-4 sm:mb-6">
         <img
           src={podcast.imageUrl}
           alt={podcast.title}
-          className="w-full h-48 object-cover rounded-xl"
+          className="w-full h-40 sm:h-48 object-cover rounded-lg sm:rounded-xl"
         />
         {isPremium && (
-          <div className="absolute top-4 left-4">
-            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-              <Crown className="w-3 h-3 mr-1" />
+          <div className="absolute top-2 sm:top-4 left-2 sm:left-4">
+            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 text-xs sm:text-sm">
+              <Crown className="w-3 h-3 sm:w-3 sm:h-3 mr-1" />
               Premium
             </Badge>
           </div>
         )}
       </div>
 
-      {/* Title and Save Button */}
-      <div className="flex items-start justify-between mb-4">
-        <h1 className="text-2xl font-bold flex-1 mr-4">{podcast.title}</h1>
+      {/* Title and Save Button - Mobile layout */}
+      <div className="flex items-start justify-between mb-3 sm:mb-4 gap-3">
+        <h1 className="text-lg sm:text-2xl font-bold flex-1 leading-tight">{podcast.title}</h1>
         <Button
           variant="outline"
           size="sm"
           onClick={onToggleSave}
-          className={isSaved ? 'text-red-600 border-red-200' : ''}
+          className={cn(
+            "flex-shrink-0 h-8 sm:h-9 px-2 sm:px-3",
+            isSaved ? 'text-red-600 border-red-200' : ''
+          )}
         >
-          <Heart className={`w-4 h-4 mr-1 ${isSaved ? 'fill-current' : ''}`} />
-          {isSaved ? 'Guardado' : 'Guardar'}
+          <Heart className={`w-3 h-3 sm:w-4 sm:h-4 mr-1 ${isSaved ? 'fill-current' : ''}`} />
+          <span className="hidden sm:inline">{isSaved ? 'Guardado' : 'Guardar'}</span>
         </Button>
       </div>
 
-      {/* Creator Info and Category */}
-      <div className="flex items-center gap-4 mb-4">
+      {/* Creator Info and Category - Mobile optimized */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-3 sm:mb-4">
         <div
           className={cn(
             "flex items-center gap-2",
@@ -130,53 +133,63 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
           <img
             src={podcast.creator.imageUrl}
             alt={podcast.creator.name}
-            className="w-8 h-8 rounded-full object-cover"
+            className="w-6 h-6 sm:w-8 sm:h-8 rounded-full object-cover flex-shrink-0"
           />
-          <span className="text-gray-600">{podcast.creator.name}</span>
+          <span className="text-sm sm:text-base text-gray-600">{podcast.creator.name}</span>
           {podcast.creator.linkedin_url && (
-            <ExternalLink className="w-4 h-4 text-gray-400" />
+            <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
           )}
         </div>
-        <Badge variant="outline">{podcast.category.nombre}</Badge>
+        <Badge variant="outline" className="text-xs sm:text-sm w-fit">{podcast.category.nombre}</Badge>
       </div>
 
-      {/* Course Description */}
-      <p className="text-gray-600 mb-4 line-clamp-3">{podcast.description}</p>
+      {/* Course Description - Mobile optimized */}
+      <p className="text-sm sm:text-base text-gray-600 mb-4 leading-relaxed line-clamp-3 sm:line-clamp-none">
+        {podcast.description}
+      </p>
 
-      {/* Course Stats - Horizontal layout */}
-      <div className="flex items-center gap-6 mb-4">
+      {/* Course Stats - Mobile responsive layout */}
+      <div className="flex flex-wrap items-center gap-3 sm:gap-6 mb-4 sm:mb-4">
         {isPremium ? (
           <>
-            <span className="text-2xl font-bold text-green-600">
+            <span className="text-lg sm:text-2xl font-bold text-green-600">
               {formatCurrency(podcast.precio || 0, podcast.moneda)}
             </span>
-            <div className="flex items-center text-sm text-gray-500">
-              <Clock className="w-4 h-4 mr-1" />
+            <div className="flex items-center text-xs sm:text-sm text-gray-500">
+              <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
               <span>{formatMinutesToHumanReadable(podcast.duration)}</span>
             </div>
-            <div className="flex items-center text-sm text-gray-500">
-              <Headphones className="w-4 h-4 mr-1" />
+            <div className="flex items-center text-xs sm:text-sm text-gray-500">
+              <Headphones className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
               <span>{podcast.lessonCount} lecciones</span>
             </div>
-            <CourseVoting courseId={podcast.id} />
+            <div className="w-full sm:w-auto">
+              <CourseVoting courseId={podcast.id} />
+            </div>
           </>
         ) : (
           <>
-            <div className="flex items-center text-sm text-gray-500">
-              <Clock className="w-4 h-4 mr-1" />
+            <div className="flex items-center text-xs sm:text-sm text-gray-500">
+              <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
               <span>{formatMinutesToHumanReadable(podcast.duration)}</span>
             </div>
-            <div className="flex items-center text-sm text-gray-500">
-              <Headphones className="w-4 h-4 mr-1" />
+            <div className="flex items-center text-xs sm:text-sm text-gray-500">
+              <Headphones className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
               <span>{podcast.lessonCount} lecciones</span>
             </div>
-            <CourseVoting courseId={podcast.id} />
+            <div className="w-full sm:w-auto">
+              <CourseVoting courseId={podcast.id} />
+            </div>
           </>
         )}
       </div>
 
-      {/* Action Button - Full Width */}
-      <Button onClick={handleStartLearning} size="lg" className="w-full">
+      {/* Action Button - Mobile optimized */}
+      <Button 
+        onClick={handleStartLearning} 
+        size="lg" 
+        className="w-full h-12 sm:h-11 text-sm sm:text-base font-medium"
+      >
         <Play className="w-4 h-4 mr-2" />
         {getButtonText()}
       </Button>

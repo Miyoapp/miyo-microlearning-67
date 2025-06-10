@@ -35,6 +35,11 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', sans-serif;
+    /* Improve text rendering on mobile */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Prevent zoom on input focus on iOS */
+    -webkit-text-size-adjust: 100%;
   }
   
   .glass {
@@ -86,16 +91,60 @@
     animation: pulse 2s infinite ease-in-out;
   }
   
-  /* Custom scrollbar */
-  ::-webkit-scrollbar {
-    @apply w-1.5;
+  /* Custom scrollbar - only show on non-mobile */
+  @media (min-width: 768px) {
+    ::-webkit-scrollbar {
+      @apply w-1.5;
+    }
+    
+    ::-webkit-scrollbar-track {
+      @apply bg-gray-100 rounded-full;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      @apply bg-gray-300 rounded-full hover:bg-gray-400 transition-colors;
+    }
   }
-  
-  ::-webkit-scrollbar-track {
-    @apply bg-gray-100 rounded-full;
+
+  /* Mobile-specific improvements */
+  @media (max-width: 767px) {
+    /* Prevent horizontal scrolling */
+    html, body {
+      overflow-x: hidden;
+    }
+    
+    /* Improve touch targets */
+    button, [role="button"] {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    
+    /* Improve form inputs */
+    input, textarea, select {
+      /* Prevent zoom on iOS */
+      font-size: 16px;
+    }
   }
-  
-  ::-webkit-scrollbar-thumb {
-    @apply bg-gray-300 rounded-full hover:bg-gray-400 transition-colors;
+
+  /* Text clamp utilities */
+  .line-clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+  }
+
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
   }
 }

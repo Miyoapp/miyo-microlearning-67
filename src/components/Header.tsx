@@ -9,11 +9,12 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
-import { LogOut } from 'lucide-react';
+import { LogOut, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Logo from './common/Logo';
 import { useAuth } from './auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
 
 const Header = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -74,50 +75,50 @@ const Header = () => {
   
   return (
     <header 
-      className={`fixed top-0 left-0 right-0 z-50 py-4 transition-all duration-300 bg-white ${
+      className={`fixed top-0 left-0 right-0 z-50 py-3 sm:py-4 transition-all duration-300 bg-white ${
         scrolled ? 'shadow-md' : ''
       }`}
     >
-      <div className="miyo-container flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+      <div className="miyo-container flex items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center space-x-2 sm:space-x-4">
           <Logo linkClassName="flex items-center" />
           {user && isDashboard && (
-            <span className="text-gray-700 font-medium">
+            <span className="hidden sm:block text-sm sm:text-base text-gray-700 font-medium truncate">
               ¡Bienvenido de vuelta, {userName}!
             </span>
           )}
         </div>
         
         {!user ? (
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4">
             <button 
               onClick={handleLogin}
-              className="text-gray-600 hover:text-miyo-600 font-medium transition-colors"
+              className="text-gray-600 hover:text-miyo-600 font-medium transition-colors text-sm sm:text-base"
             >
               Iniciar Sesión
             </button>
             <button 
               onClick={handleRegister}
-              className="bg-miyo-800 hover:bg-miyo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              className="bg-miyo-800 hover:bg-miyo-700 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg font-medium transition-colors text-sm sm:text-base"
             >
               Registro
             </button>
           </div>
         ) : (
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4">
             <DropdownMenu>
               <DropdownMenuTrigger className="flex items-center focus:outline-none">
-                <Avatar className="h-9 w-9 bg-miyo-100">
-                  <AvatarFallback className="text-miyo-800">
+                <Avatar className="h-8 w-8 sm:h-9 sm:w-9 bg-miyo-100">
+                  <AvatarFallback className="text-miyo-800 text-xs sm:text-sm">
                     {userName.substring(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 z-50 bg-white">
+              <DropdownMenuContent align="end" className="w-48 sm:w-56 z-50 bg-white">
                 <div className="p-2 border-b">
-                  <p className="text-sm font-medium">{user.email}</p>
+                  <p className="text-sm font-medium truncate">{user.email}</p>
                   {userProfile?.name && (
-                    <p className="text-xs text-gray-500">{userProfile.name}</p>
+                    <p className="text-xs text-gray-500 truncate">{userProfile.name}</p>
                   )}
                 </div>
                 <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
