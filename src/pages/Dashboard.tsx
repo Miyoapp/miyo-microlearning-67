@@ -7,11 +7,15 @@ import { useUserProgress } from '@/hooks/useUserProgress';
 import { obtenerCursos } from '@/lib/api';
 import { useState, useEffect } from 'react';
 import { Podcast } from '@/types';
+import { useAuth } from '@/components/auth/AuthProvider';
+import { supabase } from '@/integrations/supabase/client';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [allCourses, setAllCourses] = useState<Podcast[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState<{ name?: string } | null>(null);
+  const { user } = useAuth();
   const { userProgress, toggleSaveCourse, startCourse, refetch } = useUserProgress();
 
   useEffect(() => {
@@ -29,6 +33,25 @@ const Dashboard = () => {
 
     loadCourses();
   }, []);
+
+  // Fetch user profile when user changes
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('name')
+          .eq('id', user.id)
+          .single();
+        
+        setUserProfile(data);
+      } else {
+        setUserProfile(null);
+      }
+    };
+
+    fetchUserProfile();
+  }, [user]);
 
   // Refresh user progress when userProgress changes
   useEffect(() => {
@@ -95,6 +118,9 @@ const Dashboard = () => {
   console.log('Dashboard render - Continue learning courses:', continueLearningCourses.length);
   console.log('Dashboard render - Recommended courses:', recommendedCourses.length);
 
+  // Get user name for welcome message
+  const userName = userProfile?.name || user?.email?.split('@')[0] || 'Usuario';
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -109,7 +135,7 @@ const Dashboard = () => {
     <DashboardLayout>
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">¡Bienvenido de vuelta!</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">¡Bienvenido de vuelta, {userName}!</h1>
           <p className="text-gray-600">Continúa tu aprendizaje donde lo dejaste</p>
         </div>
 
