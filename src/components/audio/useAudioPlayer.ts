@@ -21,7 +21,7 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgres
   // Reset player when lesson changes
   useEffect(() => {
     if (lesson && audioRef.current) {
-      console.log("Lesson changed to:", lesson.title);
+      console.log("Lesson changed to:", lesson.title, "isCompleted:", lesson.isCompleted);
       setCurrentTime(0);
       audioRef.current.currentTime = 0;
       audioRef.current.load();
@@ -67,10 +67,13 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgres
       const newCurrentTime = audioRef.current.currentTime;
       setCurrentTime(newCurrentTime);
       
-      // Update progress in database every few seconds (only for incomplete lessons)
+      // IMPROVED: Only update progress for incomplete lessons
       if (onProgressUpdate && duration > 0 && lesson && !lesson.isCompleted) {
         const progressPercent = (newCurrentTime / duration) * 100;
+        console.log('🔄 Updating progress for incomplete lesson:', lesson.title, 'progress:', progressPercent.toFixed(1) + '%');
         onProgressUpdate(progressPercent);
+      } else if (lesson?.isCompleted) {
+        console.log('⏭️ Skipping progress update for completed lesson:', lesson.title);
       }
     }
   };
@@ -86,11 +89,11 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgres
   // Handle audio ended - always trigger completion for auto-play functionality
   const handleAudioEnded = () => {
     if (lesson) {
-      console.log("Audio ended naturally for lesson:", lesson.title, "isCompleted:", lesson.isCompleted);
+      console.log("🎵 Audio ended naturally for lesson:", lesson.title, "isCompleted:", lesson.isCompleted);
       
       // Always trigger completion handler for auto-play functionality
       // The completion handler will decide whether to mark as complete or just advance
-      console.log("Triggering completion handler for auto-play:", lesson.title);
+      console.log("🎯 Triggering completion handler for auto-play:", lesson.title);
       onComplete();
     }
   };
@@ -101,10 +104,13 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgres
     if (audioRef.current) {
       audioRef.current.currentTime = value;
       
-      // Update progress immediately when seeking (only for incomplete lessons)
+      // IMPROVED: Only update progress when seeking for incomplete lessons
       if (onProgressUpdate && duration > 0 && lesson && !lesson.isCompleted) {
         const progressPercent = (value / duration) * 100;
+        console.log('🎯 Seek: Updating progress for incomplete lesson:', lesson.title, 'progress:', progressPercent.toFixed(1) + '%');
         onProgressUpdate(progressPercent);
+      } else if (lesson?.isCompleted) {
+        console.log('⏭️ Seek: Skipping progress update for completed lesson:', lesson.title);
       }
     }
   };

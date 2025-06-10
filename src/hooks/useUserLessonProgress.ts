@@ -60,18 +60,53 @@ export function useUserLessonProgress() {
     console.log('Updating lesson progress for:', lessonId, 'with updates:', updates);
 
     try {
+      // First, get the existing progress to preserve important fields
+      const { data: existingData, error: fetchError } = await supabase
+        .from('user_lesson_progress')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('lesson_id', lessonId)
+        .single();
+
+      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = no rows returned
+        console.error('Error fetching existing progress:', fetchError);
+        throw fetchError;
+      }
+
+      // Prepare the data for upsert
+      const baseData = {
+        user_id: user.id,
+        lesson_id: lessonId,
+        course_id: courseId,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      // If record exists, use existing values as base
+      const existingProgress = existingData || {
+        is_completed: false,
+        current_position: 0
+      };
+
+      // Apply the updates
+      const finalData = {
+        ...baseData,
+        is_completed: existingProgress.is_completed,
+        current_position: existingProgress.current_position,
+        ...updates
+      };
+
+      // DEFENSIVE VALIDATION: If position >= 100, it should be completed
+      if (finalData.current_position >= 100) {
+        finalData.is_completed = true;
+        console.log('🛡️ Defensive validation: Setting is_completed=true because current_position >= 100');
+      }
+
+      console.log('Final data for upsert:', finalData);
+
       const { data, error } = await supabase
         .from('user_lesson_progress')
-        .upsert({
-          user_id: user.id,
-          lesson_id: lessonId,
-          course_id: courseId,
-          is_completed: false,
-          current_position: 0,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          ...updates
-        }, {
+        .upsert(finalData, {
           onConflict: 'user_id,lesson_id'
         })
         .select();
@@ -85,20 +120,23 @@ export function useUserLessonProgress() {
       
       // Update local state
       setLessonProgress(prev => {
-        const existing = prev.find(p => p.lesson_id === lessonId);
         const updatedProgress = {
           id: data[0]?.id || '',
           user_id: user.id,
           lesson_id: lessonId,
           course_id: courseId,
-          is_completed: false,
-          current_position: 0,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-          ...(existing || {}),
+          ...existingProgress,
           ...updates
         };
+
+        // Apply same defensive validation to local state
+        if (updatedProgress.current_position >= 100) {
+          updatedProgress.is_completed = true;
+        }
         
+        const existing = prev.find(p => p.lesson_id === lessonId);
         if (existing) {
           return prev.map(p => 
             p.lesson_id === lessonId 
@@ -130,18 +168,32 @@ export function useUserLessonProgress() {
     });
   };
 
-  // Debounced function to update lesson position (to avoid too many calls)
+  // Improved function to update lesson position with better state preservation
   const updateLessonPosition = useCallback(
     async (lessonId: string, courseId: string, position: number) => {
-      // Don't update position for already completed lessons
+      // Get current state from local state first (for performance)
       const existingProgress = lessonProgress.find(p => p.lesson_id === lessonId);
-      if (existingProgress?.is_completed) {
-        console.log('Lesson already completed, not updating position:', lessonId);
+      
+      // CRITICAL: Don't update position for already completed lessons unless explicitly needed
+      if (existingProgress?.is_completed && position < 100) {
+        console.log('🔒 Lesson already completed, not updating position to lower value:', lessonId, 'current position:', position);
         return;
       }
 
-      console.log('Updating lesson position:', lessonId, 'position:', position);
-      await updateLessonProgress(lessonId, courseId, { current_position: Math.round(position) });
+      console.log('📍 Updating lesson position:', lessonId, 'position:', position, 'existing completion status:', existingProgress?.is_completed);
+      
+      // Prepare updates - preserve completion status unless position reaches 100%
+      const updates: Partial<Pick<UserLessonProgress, 'is_completed' | 'current_position'>> = {
+        current_position: Math.round(position)
+      };
+
+      // Only update completion status if position reaches 100% (defensive)
+      if (position >= 100) {
+        updates.is_completed = true;
+        console.log('🎯 Position reached 100%, marking as completed');
+      }
+
+      await updateLessonProgress(lessonId, courseId, updates);
     },
     [lessonProgress]
   );
