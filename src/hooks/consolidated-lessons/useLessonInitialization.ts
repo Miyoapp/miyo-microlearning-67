@@ -60,7 +60,7 @@ export function useLessonInitialization(
     setPodcast({ ...podcast, lessons: finalLessons });
   }, [podcast, lessonProgress, userProgress, user, setPodcast]);
 
-  // SIMPLIFIED: Auto-initialize current lesson more aggressively
+  // FIXED: Corrected dependencies and simplified initialization
   const initializeCurrentLesson = useCallback(() => {
     console.log('🎯 INITIALIZING CURRENT LESSON - START');
     console.log('🔍 Current state check:', {
@@ -68,7 +68,9 @@ export function useLessonInitialization(
       hasUser: !!user,
       lessonsCount: podcast?.lessons?.length || 0,
       currentLessonExists: !!currentLesson,
-      currentLessonTitle: currentLesson?.title
+      currentLessonTitle: currentLesson?.title,
+      userProgressCount: userProgress.length,
+      lessonProgressCount: lessonProgress.length
     });
 
     if (!podcast || !user) {
@@ -81,28 +83,29 @@ export function useLessonInitialization(
       return;
     }
 
-    console.log('🎯 SIMPLIFIED: Always select first lesson when no current lesson exists');
+    // CRITICAL FIX: Don't return early if currentLesson exists - allow re-initialization
+    console.log('🎯 SELECTING FIRST LESSON AUTOMATICALLY');
     
     const courseCompleted = isCourseCompleted(userProgress, podcast.id);
     let lessonToSelect: Lesson | null = null;
 
+    // SIMPLIFIED: Always select first lesson - it should be available
+    lessonToSelect = podcast.lessons[0] || null;
+    
     if (courseCompleted) {
-      // For completed courses, default to first lesson for review
-      lessonToSelect = podcast.lessons[0] || null;
       console.log('🏆 Course completed - selecting first lesson for review:', lessonToSelect?.title);
     } else {
-      // SIMPLIFIED: Always select first lesson (it should be unlocked by default)
-      lessonToSelect = podcast.lessons[0] || null;
-      console.log('📚 Selecting first lesson:', lessonToSelect?.title);
+      console.log('📚 Course in progress/fresh - selecting first lesson:', lessonToSelect?.title);
     }
 
     if (lessonToSelect) {
       console.log('✅ SETTING CURRENT LESSON TO:', lessonToSelect.title);
+      console.log('🔧 Lesson state:', { isLocked: lessonToSelect.isLocked, isCompleted: lessonToSelect.isCompleted });
       setCurrentLesson(lessonToSelect);
     } else {
       console.log('❌ No lesson available to select');
     }
-  }, [podcast, userProgress, user]);
+  }, [podcast, userProgress, lessonProgress, user, setCurrentLesson]); // FIXED: Added missing dependencies
 
   return {
     currentLesson,

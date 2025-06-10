@@ -25,9 +25,6 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     refetch: refetchCourseProgress 
   } = useUserProgress();
 
-  // SIMPLIFIED: Remove complex control flags
-  const hasUserInteracted = useRef(false);
-
   // Use specialized hooks
   const {
     currentLesson,
@@ -74,12 +71,6 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
       return;
     }
     
-    // Mark user interaction for manual selections
-    if (isManualSelection) {
-      hasUserInteracted.current = true;
-      console.log('👤 USER INTERACTION: Manual lesson selection');
-    }
-    
     console.log('✅ Setting current lesson to:', lesson.title);
     
     // Always set the current lesson first
@@ -96,7 +87,7 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     }
   }, [setCurrentLesson, handleSelectLessonFromPlayback, podcast]);
 
-  // SIMPLIFIED: Initialize podcast immediately when data is available
+  // CRITICAL FIX: Initialize podcast immediately when all data is available
   useEffect(() => {
     console.log('🔄 PODCAST INITIALIZATION EFFECT TRIGGERED');
     console.log('🔍 Effect conditions:', {
@@ -105,18 +96,20 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
       hasUser: !!user,
       userId: user?.id,
       lessonProgressDefined: lessonProgress !== undefined,
-      userProgressDefined: userProgress !== undefined
+      userProgressDefined: userProgress !== undefined,
+      lessonProgressLength: lessonProgress?.length,
+      userProgressLength: userProgress?.length
     });
 
     if (podcast && user && lessonProgress !== undefined && userProgress !== undefined) {
-      console.log('📊 INITIALIZING PODCAST WITH PROGRESS IMMEDIATELY...');
+      console.log('📊 ALL DATA AVAILABLE - INITIALIZING PODCAST WITH PROGRESS...');
       startTransition(() => {
         initializePodcastWithProgress();
       });
     }
   }, [podcast?.id, user?.id, lessonProgress, userProgress, initializePodcastWithProgress]);
 
-  // SIMPLIFIED: Initialize current lesson immediately after podcast is ready
+  // CRITICAL FIX: Initialize current lesson immediately after podcast is ready
   useEffect(() => {
     console.log('🎯 CURRENT LESSON INITIALIZATION EFFECT TRIGGERED');
     console.log('🔍 Lesson init conditions:', {
@@ -124,26 +117,28 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
       hasLessons: podcast?.lessons?.length > 0,
       lessonsCount: podcast?.lessons?.length,
       hasUser: !!user,
-      hasCurrentLesson: !!currentLesson,
-      currentLessonTitle: currentLesson?.title
+      currentLessonExists: !!currentLesson,
+      currentLessonTitle: currentLesson?.title,
+      userProgressDefined: userProgress !== undefined,
+      lessonProgressDefined: lessonProgress !== undefined
     });
 
-    // SIMPLIFIED: Initialize current lesson immediately when podcast has lessons and no current lesson exists
-    if (podcast && podcast.lessons && podcast.lessons.length > 0 && user && !currentLesson) {
-      console.log('🎯 AUTO-INITIALIZING CURRENT LESSON IMMEDIATELY...');
+    // CRITICAL FIX: Always try to initialize when podcast has lessons, regardless of currentLesson state
+    if (podcast && podcast.lessons && podcast.lessons.length > 0 && user && 
+        userProgress !== undefined && lessonProgress !== undefined) {
+      console.log('🎯 ALL CONDITIONS MET - INITIALIZING CURRENT LESSON...');
+      console.log('🎯 First lesson details:', {
+        id: podcast.lessons[0]?.id,
+        title: podcast.lessons[0]?.title,
+        isLocked: podcast.lessons[0]?.isLocked,
+        isCompleted: podcast.lessons[0]?.isCompleted
+      });
+      
       startTransition(() => {
         initializeCurrentLesson();
       });
     }
-  }, [podcast?.lessons?.length, user?.id, currentLesson, initializeCurrentLesson]);
-
-  // Reset user interaction flag when podcast changes
-  useEffect(() => {
-    if (podcast?.id) {
-      console.log('🔄 New podcast detected, resetting user interaction flag');
-      hasUserInteracted.current = false;
-    }
-  }, [podcast?.id]);
+  }, [podcast?.lessons?.length, podcast?.id, user?.id, userProgress, lessonProgress, initializeCurrentLesson]);
 
   return {
     currentLesson,
