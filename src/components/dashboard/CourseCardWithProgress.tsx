@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Play, Pause, Bookmark, BookmarkCheck } from 'lucide-react';
 import { Podcast } from '@/types';
 import { formatMinutesToHumanReadable } from '@/lib/formatters';
+import PremiumBadge from '@/components/PremiumBadge';
 
 interface CourseCardWithProgressProps {
   podcast: Podcast;
@@ -52,6 +53,9 @@ const CourseCardWithProgress: React.FC<CourseCardWithProgressProps> = ({
               alt={podcast.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
+            {podcast.tipo_curso === 'pago' && (
+              <PremiumBadge />
+            )}
           </div>
           
           <div className="p-4">

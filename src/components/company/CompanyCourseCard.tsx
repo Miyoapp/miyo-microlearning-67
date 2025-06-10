@@ -4,6 +4,7 @@ import { Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Podcast } from "@/types";
 import { formatMinutesToHumanReadable } from "@/lib/formatters";
+import PremiumBadge from "@/components/PremiumBadge";
 
 interface CompanyCourseCardProps {
   podcast: Podcast;
@@ -19,6 +20,9 @@ const CompanyCourseCard = ({ podcast }: CompanyCourseCardProps) => {
             alt={podcast.title}
             className="w-full h-full object-cover"
           />
+          {podcast.tipo_curso === 'pago' && (
+            <PremiumBadge />
+          )}
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
             <div className="flex items-center gap-2 text-white">
               <Clock size={14} />
