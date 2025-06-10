@@ -1,5 +1,5 @@
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Lesson } from '../../types';
 
 interface UseAudioPlayerProps {
@@ -21,16 +21,19 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgres
   // Reset player when lesson changes
   useEffect(() => {
     if (lesson && audioRef.current) {
-      console.log("Lesson changed to:", lesson.title, "isCompleted:", lesson.isCompleted);
+      console.log("🎵 Lesson changed to:", lesson.title, "isCompleted:", lesson.isCompleted);
       setCurrentTime(0);
-      audioRef.current.currentTime = 0;
-      audioRef.current.load();
+      setDuration(0);
       
-      // Set initial volume and playback rate
-      audioRef.current.volume = isMuted ? 0 : volume;
-      audioRef.current.playbackRate = playbackRate;
+      const audio = audioRef.current;
+      audio.currentTime = 0;
+      audio.load();
+      
+      // Set initial properties
+      audio.volume = isMuted ? 0 : volume;
+      audio.playbackRate = playbackRate;
     }
-  }, [lesson?.id]);
+  }, [lesson?.id, volume, isMuted, playbackRate]);
   
   // Handle play/pause when isPlaying state changes
   useEffect(() => {
@@ -39,16 +42,16 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgres
     const audio = audioRef.current;
     
     if (isPlaying) {
-      console.log("Playing audio for lesson:", lesson.title);
+      console.log("▶️ Playing audio for lesson:", lesson.title);
       const playPromise = audio.play();
       if (playPromise !== undefined) {
         playPromise.catch(error => {
-          console.error("Audio playback failed:", error);
+          console.error("❌ Audio playback failed:", error);
           onTogglePlay();
         });
       }
     } else {
-      console.log("Pausing audio");
+      console.log("⏸️ Pausing audio");
       audio.pause();
     }
   }, [isPlaying, lesson?.id, onTogglePlay]);
@@ -62,74 +65,68 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgres
   }, [volume, isMuted, playbackRate]);
   
   // Update time display and progress
-  const updateTime = () => {
-    if (audioRef.current) {
+  const updateTime = useCallback(() => {
+    if (audioRef.current && duration > 0) {
       const newCurrentTime = audioRef.current.currentTime;
       setCurrentTime(newCurrentTime);
       
-      // IMPROVED: Only update progress for incomplete lessons
-      if (onProgressUpdate && duration > 0 && lesson && !lesson.isCompleted) {
+      // Only update progress for incomplete lessons
+      if (onProgressUpdate && lesson && !lesson.isCompleted) {
         const progressPercent = (newCurrentTime / duration) * 100;
-        console.log('🔄 Updating progress for incomplete lesson:', lesson.title, 'progress:', progressPercent.toFixed(1) + '%');
+        console.log('📊 Updating progress for incomplete lesson:', lesson.title, 'progress:', progressPercent.toFixed(1) + '%');
         onProgressUpdate(progressPercent);
-      } else if (lesson?.isCompleted) {
-        console.log('⏭️ Skipping progress update for completed lesson:', lesson.title);
       }
     }
-  };
+  }, [duration, lesson, onProgressUpdate]);
   
   // Handle metadata loaded
-  const handleMetadata = () => {
+  const handleMetadata = useCallback(() => {
     if (audioRef.current) {
-      console.log("Audio metadata loaded, duration:", audioRef.current.duration);
-      setDuration(audioRef.current.duration);
+      const newDuration = audioRef.current.duration;
+      console.log("📋 Audio metadata loaded, duration:", newDuration);
+      setDuration(newDuration);
     }
-  };
+  }, []);
   
-  // Handle audio ended - always trigger completion for auto-play functionality
-  const handleAudioEnded = () => {
+  // Handle audio ended
+  const handleAudioEnded = useCallback(() => {
     if (lesson) {
-      console.log("🎵 Audio ended naturally for lesson:", lesson.title, "isCompleted:", lesson.isCompleted);
-      
-      // Always trigger completion handler for auto-play functionality
-      // The completion handler will decide whether to mark as complete or just advance
-      console.log("🎯 Triggering completion handler for auto-play:", lesson.title);
+      console.log("🏁 Audio ended for lesson:", lesson.title);
+      setCurrentTime(0);
       onComplete();
     }
-  };
+  }, [lesson, onComplete]);
   
   // Handle seek
-  const handleSeek = (value: number) => {
-    setCurrentTime(value);
+  const handleSeek = useCallback((value: number) => {
     if (audioRef.current) {
+      setCurrentTime(value);
       audioRef.current.currentTime = value;
       
-      // IMPROVED: Only update progress when seeking for incomplete lessons
+      // Update progress when seeking for incomplete lessons
       if (onProgressUpdate && duration > 0 && lesson && !lesson.isCompleted) {
         const progressPercent = (value / duration) * 100;
         console.log('🎯 Seek: Updating progress for incomplete lesson:', lesson.title, 'progress:', progressPercent.toFixed(1) + '%');
         onProgressUpdate(progressPercent);
-      } else if (lesson?.isCompleted) {
-        console.log('⏭️ Seek: Skipping progress update for completed lesson:', lesson.title);
       }
     }
-  };
+  }, [duration, lesson, onProgressUpdate]);
   
   // Handle volume change
-  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleVolumeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseFloat(e.target.value);
     setVolume(value);
     setIsMuted(value === 0);
-  };
+  }, []);
   
-  const toggleMute = () => {
-    setIsMuted(!isMuted);
-  };
+  const toggleMute = useCallback(() => {
+    setIsMuted(prev => !prev);
+  }, []);
   
   // Handle playback rate change
-  const handlePlaybackRateChange = (rate: number) => {
+  const handlePlaybackRateChange = useCallback((rate: number) => {
     setPlaybackRate(rate);
-  };
+  }, []);
 
   return {
     audioRef,

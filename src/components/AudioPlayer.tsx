@@ -33,10 +33,15 @@ const AudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgressUp
   } = useAudioPlayer({ lesson, isPlaying, onTogglePlay, onComplete, onProgressUpdate });
   
   // If no lesson is selected, don't render the player
-  if (!lesson) return null;
+  if (!lesson) {
+    console.log('🚫 No lesson selected, not rendering audio player');
+    return null;
+  }
+  
+  console.log('🎵 Rendering AudioPlayer for lesson:', lesson.title, 'isPlaying:', isPlaying);
   
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white shadow-player z-40 transition-transform duration-300 animate-slide-up">
+    <div className="fixed bottom-0 left-0 right-0 bg-white shadow-player z-40 transition-transform duration-150 animate-slide-up">
       <div className="miyo-container py-4">
         <audio
           ref={audioRef}
