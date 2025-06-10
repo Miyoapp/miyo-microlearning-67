@@ -6,12 +6,12 @@ import { useAuth } from './auth/AuthProvider';
 import Logo from './common/Logo';
 
 const Header = () => {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
-      await logout();
+      await signOut();
       navigate('/');
     } catch (error) {
       console.error('Error during logout:', error);
@@ -54,7 +54,7 @@ const Header = () => {
                     Iniciar Sesión
                   </Button>
                 </Link>
-                <Link to="/login">
+                <Link to="/login?mode=signup">
                   <Button size="sm" className="bg-miyo-800 hover:bg-miyo-700">
                     Registro
                   </Button>
