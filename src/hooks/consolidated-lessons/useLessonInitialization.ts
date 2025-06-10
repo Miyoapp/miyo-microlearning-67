@@ -76,15 +76,13 @@ export function useLessonInitialization(
       }
     } else {
       // For in-progress courses, find the appropriate lesson to start with
-      const firstIncompleteUnlockedLesson = podcast.lessons.find(
-        lesson => !lesson.isCompleted && !lesson.isLocked
-      );
+      const firstUnlockedLesson = podcast.lessons.find(lesson => !lesson.isLocked);
       
-      if (firstIncompleteUnlockedLesson) {
-        console.log('📚 Setting current lesson to first incomplete unlocked:', firstIncompleteUnlockedLesson.title);
-        setCurrentLesson(firstIncompleteUnlockedLesson);
-      } else {
-        // Fallback to first lesson if no incomplete unlocked lessons
+      if (firstUnlockedLesson && !currentLesson) {
+        console.log('📚 Setting current lesson to first unlocked:', firstUnlockedLesson.title);
+        setCurrentLesson(firstUnlockedLesson);
+      } else if (!firstUnlockedLesson) {
+        // Fallback to first lesson if no unlocked lessons found
         const firstLesson = podcast.lessons[0];
         if (firstLesson) {
           console.log('🔄 Fallback to first lesson:', firstLesson.title);
