@@ -1,11 +1,13 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 const HomeHero = () => {
+  const navigate = useNavigate();
+
   const handleEmpezarAhora = () => {
-    // Implementar navegación a registro o scroll a categorías
-    console.log('Empezar ahora clicked');
+    navigate('/login?mode=signup');
   };
 
   return (
@@ -21,9 +23,8 @@ const HomeHero = () => {
           </p>
           <div className="flex justify-center">
             <Button 
-              variant="outline" 
               size="lg"
-              className="border-miyo-800 text-miyo-800 hover:bg-miyo-50 px-8 py-4 h-auto text-lg font-medium"
+              className="bg-miyo-800 hover:bg-miyo-700 text-white px-8 py-4 h-auto text-lg font-medium"
               onClick={handleEmpezarAhora}
             >
               EMPIEZA AHORA

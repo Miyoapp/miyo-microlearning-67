@@ -54,6 +54,7 @@ export const obtenerCreador = async (creadorId: string, cursoId?: string): Promi
       id: creadorData.id,
       name: creadorData.nombre,
       imageUrl: creadorData.imagen_url || '/placeholder.svg',
+      linkedin_url: creadorData.linkedin_url,
       socialMedia: socialMediaData
     };
   } catch (error) {

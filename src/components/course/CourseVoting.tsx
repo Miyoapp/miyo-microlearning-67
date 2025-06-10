@@ -1,60 +1,79 @@
 
-import React from 'react';
-import { ThumbsUp, ThumbsDown } from 'lucide-react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { ThumbsUp, ThumbsDown, Share } from 'lucide-react';
 import { useCourseVotes } from '@/hooks/useCourseVotes';
-import { cn } from '@/lib/utils';
+import { useCourseData } from '@/hooks/useCourseData';
+import ShareCourseModal from './ShareCourseModal';
 
 interface CourseVotingProps {
   courseId: string;
-  className?: string;
 }
 
-const CourseVoting: React.FC<CourseVotingProps> = ({ courseId, className }) => {
+const CourseVoting: React.FC<CourseVotingProps> = ({ courseId }) => {
   const { votes, loading, vote } = useCourseVotes(courseId);
-
-  // Defensive function to ensure display shows non-negative numbers
-  const displayCount = (count: number): string => {
-    const safeCount = Math.max(0, count || 0);
-    return safeCount.toString();
-  };
+  const { podcast } = useCourseData(courseId);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   if (loading) {
     return (
-      <div className={cn("flex items-center gap-2", className)}>
-        <div className="w-16 h-8 bg-gray-200 rounded animate-pulse" />
-        <div className="w-8 h-8 bg-gray-200 rounded animate-pulse" />
+      <div className="flex items-center gap-2">
+        <div className="h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
+        <div className="h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
+        <div className="h-8 w-10 bg-gray-200 rounded animate-pulse"></div>
       </div>
     );
   }
 
   return (
-    <div className={cn("flex items-center gap-2", className)}>
-      <Button
-        variant={votes.userVote === 'like' ? 'default' : 'outline'}
-        size="sm"
-        onClick={() => vote('like')}
-        className={cn(
-          "flex items-center gap-1",
-          votes.userVote === 'like' && "bg-green-600 hover:bg-green-700"
-        )}
-      >
-        <ThumbsUp className="w-4 h-4" />
-        <span>{displayCount(votes.likes)}</span>
-      </Button>
-      
-      <Button
-        variant={votes.userVote === 'dislike' ? 'secondary' : 'outline'}
-        size="sm"
-        onClick={() => vote('dislike')}
-        className={cn(
-          "flex items-center gap-1",
-          votes.userVote === 'dislike' && "bg-gray-600 hover:bg-gray-700"
-        )}
-      >
-        <ThumbsDown className="w-4 h-4" />
-      </Button>
-    </div>
+    <>
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => vote('like')}
+          className={`flex items-center gap-1 ${
+            votes.userVote === 'like' 
+              ? 'bg-gray-100 text-gray-700 border-gray-300' 
+              : 'hover:bg-gray-50'
+          }`}
+        >
+          <ThumbsUp className={`w-4 h-4 ${votes.userVote === 'like' ? 'fill-current' : ''}`} />
+          <span>{votes.likes}</span>
+        </Button>
+        
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => vote('dislike')}
+          className={`flex items-center gap-1 ${
+            votes.userVote === 'dislike' 
+              ? 'bg-gray-100 text-gray-700 border-gray-300' 
+              : 'hover:bg-gray-50'
+          }`}
+        >
+          <ThumbsDown className={`w-4 h-4 ${votes.userVote === 'dislike' ? 'fill-current' : ''}`} />
+          <span>{votes.dislikes}</span>
+        </Button>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowShareModal(true)}
+          className="hover:bg-gray-50"
+        >
+          <Share className="w-4 h-4" />
+        </Button>
+      </div>
+
+      {podcast && (
+        <ShareCourseModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          course={podcast}
+        />
+      )}
+    </>
   );
 };
 

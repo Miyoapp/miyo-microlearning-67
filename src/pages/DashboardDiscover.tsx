@@ -43,11 +43,11 @@ const DashboardDiscover = () => {
   const newCourses = allCourses.slice(0, 6);
 
   const handlePlayCourse = (courseId: string) => {
-    navigate(`/course/${courseId}`);
+    navigate(`/dashboard/course/${courseId}`);
   };
 
   const handleCourseClick = (courseId: string) => {
-    navigate(`/course/${courseId}`);
+    navigate(`/dashboard/course/${courseId}`);
   };
 
   if (loading) {
