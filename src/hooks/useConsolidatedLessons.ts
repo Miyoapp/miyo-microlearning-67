@@ -7,6 +7,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { useLessonInitialization } from './consolidated-lessons/useLessonInitialization';
 import { useLessonPlayback } from './consolidated-lessons/useLessonPlayback';
 import { useLessonCompletion } from './consolidated-lessons/useLessonCompletion';
+import { isFirstLessonInSequence } from './consolidated-lessons/lessonOrderUtils';
 
 export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (podcast: Podcast) => void) {
   const { user } = useAuth();
@@ -23,7 +24,7 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     refetch: refetchCourseProgress 
   } = useUserProgress();
 
-  // Use specialized hooks
+  // Usar hooks especializados
   const {
     currentLesson,
     setCurrentLesson,
@@ -56,29 +57,29 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     isAutoAdvanceAllowed
   );
 
-  // MAIN LESSON SELECTION with immediate playback for manual selections
+  // CORREGIDO: Selección de lección usando orden real
   const handleSelectLesson = useCallback((lesson: any, isManualSelection = true) => {
     console.log('🎯 handleSelectLesson called:', lesson.title, 'isCompleted:', lesson.isCompleted, 'isLocked:', lesson.isLocked, 'isManual:', isManualSelection);
     
-    // CRITICAL FIX: Allow selection of first lesson even if marked as locked
-    const isFirstLesson = podcast?.lessons[0]?.id === lesson.id;
-    const canSelectLesson = lesson.isCompleted || !lesson.isLocked || isFirstLesson;
+    // CRÍTICO: Verificar si es la primera lección usando orden real
+    const isFirstInSequence = podcast ? isFirstLessonInSequence(lesson, podcast.lessons, podcast.modules) : false;
+    const canSelectLesson = lesson.isCompleted || !lesson.isLocked || isFirstInSequence;
     
     if (!canSelectLesson) {
-      console.log('⚠️ Lesson cannot be selected - locked and not completed');
+      console.log('⚠️ Lesson cannot be selected - locked and not first in sequence');
       return;
     }
     
-    console.log('✅ Setting current lesson to:', lesson.title);
+    console.log('✅ Setting current lesson (verified sequence):', lesson.title);
     
-    // Set the current lesson first
+    // Establecer la lección actual primero
     setCurrentLesson(lesson);
     
-    // Handle playback
+    // Manejar reproducción
     handleSelectLessonFromPlayback(lesson, isManualSelection);
   }, [setCurrentLesson, handleSelectLessonFromPlayback, podcast]);
 
-  // CRITICAL FIX: Initialize podcast when all data is available
+  // CRÍTICO: Inicializar podcast cuando todos los datos estén disponibles
   useEffect(() => {
     console.log('🔄 PODCAST INITIALIZATION EFFECT');
     console.log('🔍 Conditions:', {
@@ -89,12 +90,12 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     });
 
     if (podcast && user && lessonProgress !== undefined && userProgress !== undefined) {
-      console.log('📊 ALL DATA AVAILABLE - INITIALIZING...');
+      console.log('📊 ALL DATA AVAILABLE - INITIALIZING WITH CORRECT SEQUENCE...');
       initializePodcastWithProgress();
     }
   }, [podcast?.id, user?.id, lessonProgress, userProgress, initializePodcastWithProgress]);
 
-  // CRITICAL FIX: Initialize current lesson when podcast is ready
+  // CRÍTICO: Inicializar lección actual cuando el podcast esté listo
   useEffect(() => {
     console.log('🎯 CURRENT LESSON INITIALIZATION EFFECT');
     console.log('🔍 Conditions:', {
@@ -104,9 +105,9 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
       currentLessonExists: !!currentLesson
     });
 
-    // Initialize current lesson when podcast has lessons and no current lesson is set
+    // Inicializar lección actual cuando el podcast tenga lecciones y no haya lección actual establecida
     if (podcast && podcast.lessons && podcast.lessons.length > 0 && user && !currentLesson) {
-      console.log('🎯 INITIALIZING CURRENT LESSON...');
+      console.log('🎯 INITIALIZING CURRENT LESSON WITH CORRECT SEQUENCE...');
       initializeCurrentLesson();
     }
   }, [podcast?.lessons?.length, podcast?.id, user?.id, currentLesson, initializeCurrentLesson]);

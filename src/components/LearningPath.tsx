@@ -4,6 +4,7 @@ import { Lesson, Module } from '../types';
 import { Play, Lock, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import React from 'react';
+import { getOrderedLessons, isFirstLessonInSequence } from '@/hooks/consolidated-lessons/lessonOrderUtils';
 
 interface LearningPathProps {
   lessons: Lesson[];
@@ -13,41 +14,56 @@ interface LearningPathProps {
 }
 
 const LearningPath = React.memo(({ lessons, modules, onSelectLesson, currentLessonId }: LearningPathProps) => {
-  // Group lessons by module and ensure they are in the correct order
+  // CORREGIDO: Usar orden real basado en la BD
+  const orderedLessons = useMemo(() => {
+    return getOrderedLessons(lessons, modules);
+  }, [lessons, modules]);
+
+  // Agrupar lecciones por módulo manteniendo el orden real
   const getLessonsForModule = (moduleId: string) => {
     const module = modules.find(m => m.id === moduleId);
     if (!module) return [];
     
-    // Get lessons in the order defined by lessonIds array
+    // Obtener lecciones en el orden definido por lessonIds del módulo
     return module.lessonIds
       .map(id => lessons.find(lesson => lesson.id === id))
       .filter((lesson): lesson is Lesson => lesson !== undefined);
   };
 
-  // OPTIMIZED: Memoize lesson status calculations
+  // OPTIMIZADO: Memoizar cálculos de estado de lecciones usando orden real
   const lessonStatusMap = useMemo(() => {
     const statusMap = new Map();
+    
     lessons.forEach(lesson => {
       const isCompleted = lesson.isCompleted;
       const isLocked = lesson.isLocked;
       const isCurrent = currentLessonId === lesson.id;
       
-      // CRITICAL FIX: First lesson is always playable
-      const isFirstLesson = lessons.findIndex(l => l.id === lesson.id) === 0;
-      const canPlay = isCompleted || !isLocked || isFirstLesson;
+      // CRÍTICO: Verificar si es la primera lección usando orden real
+      const isFirstInSequence = isFirstLessonInSequence(lesson, lessons, modules);
+      const canPlay = isCompleted || !isLocked || isFirstInSequence;
       
       statusMap.set(lesson.id, {
         isCompleted,
         isLocked,
         isCurrent,
         canPlay,
-        isFirstLesson
+        isFirstInSequence
+      });
+      
+      console.log(`🔍 Lesson status for ${lesson.title}:`, {
+        isCompleted,
+        isLocked,
+        isCurrent,
+        canPlay,
+        isFirstInSequence
       });
     });
+    
     return statusMap;
-  }, [lessons, currentLessonId]);
+  }, [lessons, modules, currentLessonId]);
 
-  // OPTIMIZED: Memoize CSS classes
+  // OPTIMIZADO: Memoizar clases CSS
   const getLessonClasses = useMemo(() => {
     const classCache = new Map();
     
@@ -99,36 +115,36 @@ const LearningPath = React.memo(({ lessons, modules, onSelectLesson, currentLess
           
           return (
             <div key={module.id} className="mb-6">
-              {/* Module title */}
+              {/* Título del módulo */}
               <div className="text-center mb-3 px-2">
                 <h3 className="text-sm font-medium text-indigo-700 bg-indigo-50 inline-block py-1 px-3 rounded-full">
                   {module.title}
                 </h3>
               </div>
               
-              {/* Lessons within this module */}
+              {/* Lecciones dentro de este módulo */}
               <div className="space-y-[25px]">
                 {moduleLessons.map((lesson, index) => {
                   const status = lessonStatusMap.get(lesson.id);
                   if (!status) return null;
                   
-                  const { isCompleted, isLocked, isCurrent, canPlay, isFirstLesson } = status;
+                  const { isCompleted, isLocked, isCurrent, canPlay, isFirstInSequence } = status;
                   const classes = getLessonClasses.get(lesson.id);
                   if (!classes) return null;
                   
                   const { nodeClasses, textClasses } = classes;
                   
-                  // Alternate positions for zigzag effect 
+                  // Efecto zigzag alternando posiciones
                   const containerAlignment = index % 2 === 0 
                     ? "justify-start" 
                     : "justify-start ml-[45px]";
                   
                   const handleClick = () => {
                     if (canPlay) {
-                      console.log('🎯 User clicked lesson:', lesson.title, 'canPlay:', canPlay, 'isCompleted:', isCompleted, 'isLocked:', isLocked, 'isFirst:', isFirstLesson);
+                      console.log('🎯 User clicked lesson:', lesson.title, 'canPlay:', canPlay, 'isCompleted:', isCompleted, 'isLocked:', isLocked, 'isFirst:', isFirstInSequence);
                       onSelectLesson(lesson);
                     } else {
-                      console.log('🚫 Lesson not playable:', lesson.title, 'isLocked:', isLocked);
+                      console.log('🚫 Lesson not playable:', lesson.title, 'isLocked:', isLocked, 'isFirst:', isFirstInSequence);
                     }
                   };
                   
@@ -138,7 +154,7 @@ const LearningPath = React.memo(({ lessons, modules, onSelectLesson, currentLess
                         className={nodeClasses}
                         onClick={handleClick}
                       >
-                        {/* Icon logic */}
+                        {/* CORREGIDO: Lógica de iconos basada en estado real */}
                         {isCompleted ? (
                           <Trophy size={16} />
                         ) : canPlay ? (
@@ -148,14 +164,14 @@ const LearningPath = React.memo(({ lessons, modules, onSelectLesson, currentLess
                         )}
                       </div>
                       
-                      {/* Progress indicator for current lesson */}
+                      {/* Indicador de progreso para lección actual */}
                       {isCurrent && (
                         <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
                           <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
                         </div>
                       )}
                       
-                      {/* Lesson title */}
+                      {/* Título de la lección */}
                       <div 
                         className={cn("ml-3", { "cursor-pointer": canPlay, "cursor-not-allowed": !canPlay })}
                         onClick={handleClick}

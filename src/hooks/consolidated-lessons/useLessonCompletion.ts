@@ -2,6 +2,7 @@
 import { useCallback } from 'react';
 import { Lesson, Podcast } from '@/types';
 import { User } from '@supabase/supabase-js';
+import { getNextLesson } from './lessonOrderUtils';
 
 export function useLessonCompletion(
   currentLesson: Lesson | null,
@@ -26,41 +27,44 @@ export function useLessonCompletion(
     console.log('🏁 LESSON COMPLETE:', currentLesson.title);
     
     try {
-      // 1. Mark lesson as complete in database
+      // 1. Marcar lección como completada en BD
       await markLessonCompleteInDB(currentLesson.id, podcast.id);
       
-      // 2. Update lesson position to 100%
+      // 2. Actualizar posición a 100%
       await updateLessonPosition(currentLesson.id, podcast.id, 100);
       
-      // 3. Update local podcast state immediately
+      // 3. Actualizar estado local inmediatamente
       const updatedLessons = podcast.lessons.map(lesson => 
         lesson.id === currentLesson.id 
           ? { ...lesson, isCompleted: true }
           : lesson
       );
       
-      // 4. Unlock next lesson
-      const currentIndex = podcast.lessons.findIndex(l => l.id === currentLesson.id);
-      if (currentIndex !== -1 && currentIndex < podcast.lessons.length - 1) {
-        const nextLessonIndex = currentIndex + 1;
-        updatedLessons[nextLessonIndex] = {
-          ...updatedLessons[nextLessonIndex],
-          isLocked: false
-        };
-        
-        console.log('🔓 Unlocked next lesson:', updatedLessons[nextLessonIndex].title);
+      // 4. CORREGIDO: Desbloquear siguiente lección usando orden real
+      const nextLesson = getNextLesson(currentLesson, podcast.lessons, podcast.modules);
+      
+      if (nextLesson) {
+        // Encontrar y desbloquear la siguiente lección
+        const nextLessonIndex = updatedLessons.findIndex(l => l.id === nextLesson.id);
+        if (nextLessonIndex !== -1) {
+          updatedLessons[nextLessonIndex] = {
+            ...updatedLessons[nextLessonIndex],
+            isLocked: false
+          };
+          
+          console.log('🔓 Unlocked next lesson (real sequence):', updatedLessons[nextLessonIndex].title);
+        }
       }
       
-      // 5. Update podcast state
+      // 5. Actualizar estado del podcast
       const updatedPodcast = { ...podcast, lessons: updatedLessons };
       setPodcast(updatedPodcast);
       
-      // 6. Auto-advance to next lesson if allowed
-      if (isAutoAdvanceAllowed && currentIndex !== -1 && currentIndex < podcast.lessons.length - 1) {
-        const nextLesson = updatedLessons[currentIndex + 1];
-        console.log('⏭️ Auto-advancing to next lesson:', nextLesson.title);
+      // 6. CORREGIDO: Auto-avance usando orden real
+      if (isAutoAdvanceAllowed && nextLesson) {
+        console.log('⏭️ Auto-advancing to next lesson (real sequence):', nextLesson.title);
         
-        // Small delay for smooth transition
+        // Pequeña pausa para transición suave
         setTimeout(() => {
           setCurrentLesson(nextLesson);
           setIsPlaying(true);
@@ -70,7 +74,7 @@ export function useLessonCompletion(
         setIsPlaying(false);
       }
       
-      // 7. Refresh progress data
+      // 7. Refrescar datos de progreso
       setTimeout(() => {
         refetchLessonProgress();
         refetchCourseProgress();
