@@ -1,4 +1,3 @@
-
 import { useEffect, useCallback, useRef } from 'react';
 import { Podcast } from '@/types';
 import { useUserLessonProgress } from './useUserLessonProgress';
@@ -25,9 +24,8 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     refetch: refetchCourseProgress 
   } = useUserProgress();
 
-  // Control automatic initialization
+  // FIXED: Simplify control flags
   const hasUserInteracted = useRef(false);
-  const initializationBlocked = useRef(false);
 
   // Use specialized hooks
   const {
@@ -78,14 +76,7 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     // Mark user interaction for manual selections
     if (isManualSelection) {
       hasUserInteracted.current = true;
-      initializationBlocked.current = true;
-      console.log('👤 USER INTERACTION: Blocking automatic actions');
-      
-      // Unblock after delay
-      setTimeout(() => {
-        initializationBlocked.current = false;
-        console.log('✅ Automatic actions unblocked');
-      }, 5000);
+      console.log('👤 USER INTERACTION: Manual lesson selection');
     }
     
     console.log('✅ Setting current lesson to:', lesson.title);
@@ -101,29 +92,25 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
       console.log('🎵 Manual selection - delegating to playback hook for immediate start');
       handleSelectLessonFromPlayback(lesson, true);
     } else {
-      // Auto-play sequence (only if not blocked)
-      if (!initializationBlocked.current) {
-        handleSelectLessonFromPlayback(lesson, false);
-      } else {
-        console.log('🚫 Auto-play blocked by recent user interaction');
-      }
+      // Auto-play sequence
+      handleSelectLessonFromPlayback(lesson, false);
     }
   }, [setCurrentLesson, handleSelectLessonFromPlayback, podcast]);
 
-  // CONTROLLED INITIALIZATION: Only when no user interaction
+  // SIMPLIFIED INITIALIZATION: Initialize podcast when data is available
   useEffect(() => {
-    if (podcast && user && !initializationBlocked.current && !hasUserInteracted.current) {
-      console.log('📊 Auto-initializing podcast with progress (no user interaction)...');
+    if (podcast && user && lessonProgress !== undefined && userProgress !== undefined) {
+      console.log('📊 Initializing podcast with progress...');
       startTransition(() => {
         initializePodcastWithProgress();
       });
     }
   }, [podcast?.id, lessonProgress.length, userProgress.length, user?.id, initializePodcastWithProgress]);
 
-  // CURRENT LESSON INITIALIZATION: Only when no user interaction and after podcast is initialized
+  // CURRENT LESSON INITIALIZATION: After podcast is initialized and no current lesson
   useEffect(() => {
-    if (podcast && podcast.lessons.length > 0 && user && !initializationBlocked.current && !hasUserInteracted.current && !currentLesson) {
-      console.log('🎯 Auto-initializing current lesson (no user interaction)...');
+    if (podcast && podcast.lessons.length > 0 && user && !currentLesson && !hasUserInteracted.current) {
+      console.log('🎯 Auto-initializing current lesson...');
       startTransition(() => {
         initializeCurrentLesson();
       });

@@ -57,38 +57,37 @@ export function useLessonInitialization(
     setPodcast({ ...podcast, lessons: finalLessons });
   }, [podcast, lessonProgress, userProgress, user, setPodcast]);
 
-  // Initialize current lesson with improved logic
+  // FIXED: Initialize current lesson more reliably
   const initializeCurrentLesson = useCallback(() => {
-    if (!podcast || !user) return;
+    if (!podcast || !user || !podcast.lessons || podcast.lessons.length === 0) {
+      console.log('⚠️ Cannot initialize lesson - missing data');
+      return;
+    }
 
     console.log('🎯 Initializing current lesson');
     
     const courseCompleted = isCourseCompleted(userProgress, podcast.id);
 
+    // FIXED: Always find and set the first available lesson
+    let lessonToSelect: Lesson | null = null;
+
     if (courseCompleted) {
-      // For completed courses, default to first lesson unless user has selected another
-      if (!currentLesson) {
-        const firstLesson = podcast.lessons[0];
-        if (firstLesson) {
-          console.log('🏆 Course completed - setting to first lesson for review:', firstLesson.title);
-          setCurrentLesson(firstLesson);
-        }
-      }
+      // For completed courses, default to first lesson for review
+      lessonToSelect = podcast.lessons[0] || null;
+      console.log('🏆 Course completed - selecting first lesson for review:', lessonToSelect?.title);
     } else {
-      // For in-progress courses, find the appropriate lesson to start with
-      const firstUnlockedLesson = podcast.lessons.find(lesson => !lesson.isLocked);
-      
-      if (firstUnlockedLesson && !currentLesson) {
-        console.log('📚 Setting current lesson to first unlocked:', firstUnlockedLesson.title);
-        setCurrentLesson(firstUnlockedLesson);
-      } else if (!firstUnlockedLesson) {
-        // Fallback to first lesson if no unlocked lessons found
-        const firstLesson = podcast.lessons[0];
-        if (firstLesson) {
-          console.log('🔄 Fallback to first lesson:', firstLesson.title);
-          setCurrentLesson(firstLesson);
-        }
-      }
+      // For in-progress or new courses, find first unlocked lesson
+      lessonToSelect = podcast.lessons.find(lesson => !lesson.isLocked) || podcast.lessons[0] || null;
+      console.log('📚 Course in progress - selecting first unlocked lesson:', lessonToSelect?.title);
+    }
+
+    if (lessonToSelect && !currentLesson) {
+      console.log('✅ Setting current lesson to:', lessonToSelect.title);
+      setCurrentLesson(lessonToSelect);
+    } else if (!lessonToSelect) {
+      console.log('❌ No lesson available to select');
+    } else {
+      console.log('⏭️ Current lesson already set:', currentLesson?.title);
     }
   }, [podcast, userProgress, currentLesson, user]);
 

@@ -47,6 +47,13 @@ const DashboardCourse = () => {
   const isCompleted = courseProgress?.is_completed || false;
   const isReviewMode = isCompleted && progressPercentage === 100;
 
+  // FIXED: Add debugging for audio player visibility
+  console.log('🎵 Audio player visibility check:', {
+    hasCurrentLesson: !!currentLesson,
+    hasAccess,
+    currentLessonTitle: currentLesson?.title
+  });
+
   const handleStartLearning = async () => {
     if (podcast) {
       if (isPremium && !hasAccess) {
@@ -131,8 +138,8 @@ const DashboardCourse = () => {
         </div>
       </DashboardLayout>
       
-      {/* Audio Player - Only show if user has access */}
-      {hasAccess && (
+      {/* FIXED: Audio Player - Show when there's a current lesson AND user has access */}
+      {currentLesson && hasAccess && (
         <AudioPlayer 
           lesson={currentLesson}
           isPlaying={isPlaying}
