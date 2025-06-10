@@ -66,6 +66,32 @@ export function useLessonInitialization(
     });
   }, [lessonProgress, userProgress, podcast]);
 
+  const findResumePoint = useCallback((lessons: Lesson[], courseId: string) => {
+    console.log('🎯 Finding resume point for course:', courseId);
+    
+    const orderedLessons = podcast ? getOrderedLessons(lessons, podcast.modules) : lessons;
+    
+    // ESTRATEGIA 1: Buscar la primera lección desbloqueada incompleta
+    const firstIncomplete = orderedLessons.find(lesson => 
+      !lesson.isCompleted && !lesson.isLocked
+    );
+    
+    if (firstIncomplete) {
+      console.log('📍 Resume point: First incomplete lesson -', firstIncomplete.title);
+      return firstIncomplete;
+    }
+    
+    // ESTRATEGIA 2: Si todas están completadas o no hay incompletas disponibles, usar la primera
+    const firstLesson = getFirstLesson(lessons, podcast?.modules || []);
+    if (firstLesson) {
+      console.log('📍 Resume point: First lesson (fallback) -', firstLesson.title);
+      return firstLesson;
+    }
+    
+    console.log('❌ No resume point found');
+    return null;
+  }, [podcast]);
+
   const initializePodcastWithProgress = useCallback(() => {
     if (!podcast || !user) {
       console.log('❌ Cannot initialize: missing podcast or user');
@@ -92,32 +118,19 @@ export function useLessonInitialization(
       return;
     }
 
-    console.log('🎯 INITIALIZING CURRENT LESSON...');
+    console.log('🎯 INITIALIZING CURRENT LESSON WITH SMART RESUME...');
     
-    const firstLesson = getFirstLesson(podcast.lessons, podcast.modules);
-    if (!firstLesson) {
-      console.log('❌ No first lesson found');
+    // MEJORADO: Buscar punto de continuación inteligente
+    const resumeLesson = findResumePoint(podcast.lessons, podcast.id);
+    
+    if (resumeLesson) {
+      console.log('🎯 Setting current lesson (smart resume):', resumeLesson.title, 'completed:', resumeLesson.isCompleted, 'locked:', resumeLesson.isLocked);
+      setCurrentLesson(resumeLesson);
+    } else {
+      console.log('❌ No suitable lesson found for initialization');
       setCurrentLesson(null);
-      return;
     }
-    
-    // PRIORIDAD: Buscar primera lección incompleta y desbloqueada
-    const firstIncompleteLesson = podcast.lessons.find(lesson => 
-      !lesson.isCompleted && !lesson.isLocked
-    );
-    
-    // FALLBACK: Usar primera lección si no hay incompletas disponibles
-    const targetLesson = firstIncompleteLesson || firstLesson;
-    
-    // PROTECCIÓN: La primera lección siempre debe estar desbloqueada
-    const lessonToSet = {
-      ...targetLesson,
-      isLocked: firstLesson.id === targetLesson.id ? false : targetLesson.isLocked
-    };
-    
-    console.log('🎯 Setting current lesson:', lessonToSet.title, 'completed:', lessonToSet.isCompleted, 'locked:', lessonToSet.isLocked);
-    setCurrentLesson(lessonToSet);
-  }, [podcast]);
+  }, [podcast, findResumePoint]);
 
   return {
     currentLesson,

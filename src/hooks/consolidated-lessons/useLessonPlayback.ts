@@ -1,8 +1,8 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { Podcast, Lesson } from '@/types';
-import { UserCourseProgress } from '@/hooks/useUserProgress';
 import { User } from '@supabase/supabase-js';
+import { UserCourseProgress } from '@/hooks/useUserProgress';
 
 export function useLessonPlayback(
   podcast: Podcast | null,
@@ -17,7 +17,7 @@ export function useLessonPlayback(
   const isTransitioning = useRef(false);
   const lastUpdateTime = useRef(0);
 
-  // NUEVO: Detectar si el curso está en modo revisión (100% completo)
+  // MEJORADO: Detectar si el curso está en modo revisión (100% completo)
   const isInReviewMode = useCallback(() => {
     if (!podcast) return false;
     const courseProgress = userProgress.find(p => p.course_id === podcast.id);
@@ -32,12 +32,12 @@ export function useLessonPlayback(
       return;
     }
     
-    // CORREGIDO: Lógica de acceso mejorada
+    // CORREGIDO: Lógica de acceso mejorada - lecciones completadas SIEMPRE reproducibles
     const reviewMode = isInReviewMode();
     const canSelectLesson = reviewMode || lesson.isCompleted || !lesson.isLocked;
     
     if (!canSelectLesson) {
-      console.log('🚫 Lesson cannot be selected - locked');
+      console.log('🚫 Lesson cannot be selected - locked and not completed');
       return;
     }
     
@@ -55,23 +55,22 @@ export function useLessonPlayback(
       console.log('▶️ Manual selection - starting playback');
       setIsPlaying(true);
       
-      // CRÍTICO: Auto-advance rules basadas en el estado de la lección
-      if (lesson.isCompleted) {
-        console.log('🔄 Selected completed lesson - enable auto-advance for continuation');
-        setIsAutoAdvanceAllowed(true);
-      } else {
-        console.log('🆕 Selected new lesson - enable auto-advance for normal flow');
-        setIsAutoAdvanceAllowed(true);
-      }
+      // CRÍTICO: Auto-advance rules - SIEMPRE permitir para continuar secuencia
+      console.log('✅ Manual selection - enable auto-advance for sequence continuation');
+      setIsAutoAdvanceAllowed(true);
     } else {
       setIsPlaying(false);
       setIsAutoAdvanceAllowed(false);
     }
     
-    // OPTIMIZADO: Solo track lesson start si es necesario
-    if (podcast && !lesson.isCompleted && isManualSelection && !reviewMode) {
-      console.log('📊 Tracking lesson start for incomplete lesson');
-      updateLessonPosition(lesson.id, podcast.id, 1);
+    // OPTIMIZADO: Tracking de inicio para lecciones no completadas o en review mode
+    if (podcast && isManualSelection) {
+      if (!lesson.isCompleted || reviewMode) {
+        console.log('📊 Tracking lesson start for:', lesson.isCompleted ? 'completed lesson in review' : 'incomplete lesson');
+        updateLessonPosition(lesson.id, podcast.id, 1);
+      } else {
+        console.log('🔄 Replay of completed lesson - no tracking needed');
+      }
     }
   }, [podcast, updateLessonPosition, userProgress, isInReviewMode]);
 
@@ -99,16 +98,27 @@ export function useLessonPlayback(
       return;
     }
     
-    // CRÍTICO: No actualizar progreso para lecciones completadas en replay
+    // CRÍTICO: Lógica de actualización mejorada para replay vs progreso
     const reviewMode = isInReviewMode();
-    if (currentLesson.isCompleted && !reviewMode) {
-      console.log('🔄 Skipping progress update for completed lesson in replay');
+    
+    // CASO 1: Review mode (100% completo) - permitir tracking sin restricciones
+    if (reviewMode) {
+      if (position > 5) {
+        console.log('📊 Review mode progress update:', currentLesson.title, position.toFixed(1) + '%');
+        updateLessonPosition(currentLesson.id, podcast.id, position);
+      }
       return;
     }
     
-    // Solo actualizar progreso para lecciones incompletas o en modo revisión
-    if ((!currentLesson.isCompleted || reviewMode) && position > 5) {
-      console.log('📊 Progress update:', currentLesson.title, position.toFixed(1) + '%', 'reviewMode:', reviewMode);
+    // CASO 2: Lección completada en curso en progreso - NO actualizar progreso
+    if (currentLesson.isCompleted) {
+      console.log('🔄 Replay mode - skipping progress update for completed lesson:', currentLesson.title);
+      return;
+    }
+    
+    // CASO 3: Lección incompleta - actualizar progreso normalmente
+    if (position > 5) {
+      console.log('📊 Normal progress update:', currentLesson.title, position.toFixed(1) + '%');
       updateLessonPosition(currentLesson.id, podcast.id, position);
     }
   }, [currentLesson, podcast, user, updateLessonPosition, isInReviewMode]);

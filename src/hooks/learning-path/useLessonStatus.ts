@@ -1,45 +1,52 @@
 
 import { useMemo } from 'react';
 import { Lesson, Module } from '@/types';
-import { isFirstLessonInSequence } from '@/hooks/consolidated-lessons/lessonOrderUtils';
+import { getOrderedLessons, isFirstLessonInSequence } from '@/hooks/consolidated-lessons/lessonOrderUtils';
 
 export function useLessonStatus(lessons: Lesson[], modules: Module[], currentLessonId: string | null) {
-  // OPTIMIZADO: Memoización más estable con keys específicas
-  const lessonStatusMap = useMemo(() => {
-    const statusMap = new Map();
+  return useMemo(() => {
+    const lessonStatusMap = new Map();
+    const orderedLessons = getOrderedLessons(lessons, modules);
     
-    // OPTIMIZACIÓN: Crear hash estable para evitar recálculos innecesarios
-    const lessonsHash = lessons.map(l => `${l.id}-${l.isCompleted}-${l.isLocked}`).join('|');
-    const modulesHash = modules.map(m => `${m.id}-${m.lessonIds.join(',')}`).join('|');
+    console.log('🔍 Computing lesson status for', lessons.length, 'lessons');
     
     lessons.forEach(lesson => {
-      const isCompleted = lesson.isCompleted;
-      const isLocked = lesson.isLocked;
-      const isCurrent = currentLessonId === lesson.id;
-      
-      // CRÍTICO: Verificar si es la primera lección usando orden real
+      const isCompleted = lesson.isCompleted || false;
+      const isLocked = lesson.isLocked !== undefined ? lesson.isLocked : true;
+      const isCurrent = lesson.id === currentLessonId;
       const isFirstInSequence = isFirstLessonInSequence(lesson, lessons, modules);
+      
+      // MEJORADO: Lecciones completadas SIEMPRE son reproducibles
+      // Lecciones desbloqueadas también son reproducibles
+      // Primera lección en secuencia siempre es reproducible
       const canPlay = isCompleted || !isLocked || isFirstInSequence;
       
-      statusMap.set(lesson.id, {
+      const status = {
         isCompleted,
         isLocked,
         isCurrent,
         canPlay,
         isFirstInSequence,
-        // NUEVO: Agregar hash para debugging
-        _hash: `${lesson.id}-${isCompleted}-${isLocked}-${isCurrent}`
+        // Agregar hash para optimización
+        _hash: `${isCompleted}-${isLocked}-${isCurrent}-${canPlay}-${isFirstInSequence}`
+      };
+      
+      console.log(`📚 Lesson "${lesson.title}":`, {
+        isCompleted,
+        isLocked,
+        canPlay,
+        isFirstInSequence,
+        isCurrent
       });
+      
+      lessonStatusMap.set(lesson.id, status);
     });
     
-    console.log('🔄 useLessonStatus: Recalculated with hash:', { lessonsHash: lessonsHash.slice(0, 50), modulesHash: modulesHash.slice(0, 50) });
-    return statusMap;
+    return lessonStatusMap;
   }, [
-    // ESTABILIZADO: Dependencies más específicas
-    lessons.map(l => `${l.id}-${l.isCompleted}-${l.isLocked}`).join('|'),
-    modules.map(m => `${m.id}-${m.lessonIds.join(',')}`).join('|'),
+    // ESTABILIZADO: Dependencias más específicas para evitar recálculos innecesarios
+    lessons.map(l => `${l.id}:${l.isCompleted}:${l.isLocked}`).join('|'),
+    modules.map(m => `${m.id}:${m.lessonIds.join(',')}`).join('|'),
     currentLessonId
   ]);
-
-  return lessonStatusMap;
 }

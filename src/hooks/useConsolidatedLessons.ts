@@ -57,20 +57,20 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     isAutoAdvanceAllowed
   );
 
-  // CORREGIDO: Selección de lección usando orden real
+  // MEJORADO: Selección de lección con lógica simplificada
   const handleSelectLesson = useCallback((lesson: any, isManualSelection = true) => {
     console.log('🎯 handleSelectLesson called:', lesson.title, 'isCompleted:', lesson.isCompleted, 'isLocked:', lesson.isLocked, 'isManual:', isManualSelection);
     
-    // CRÍTICO: Verificar si es la primera lección usando orden real
+    // SIMPLIFICADO: Verificar si la lección es reproducible
     const isFirstInSequence = podcast ? isFirstLessonInSequence(lesson, podcast.lessons, podcast.modules) : false;
     const canSelectLesson = lesson.isCompleted || !lesson.isLocked || isFirstInSequence;
     
     if (!canSelectLesson) {
-      console.log('⚠️ Lesson cannot be selected - locked and not first in sequence');
+      console.log('⚠️ Lesson cannot be selected - locked, not completed, and not first in sequence');
       return;
     }
     
-    console.log('✅ Setting current lesson (verified sequence):', lesson.title);
+    console.log('✅ Setting current lesson:', lesson.title, 'Type:', lesson.isCompleted ? 'REPLAY' : 'PROGRESS');
     
     // Establecer la lección actual primero
     setCurrentLesson(lesson);

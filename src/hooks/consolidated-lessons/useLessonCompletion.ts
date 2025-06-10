@@ -35,20 +35,27 @@ export function useLessonCompletion(
     console.log('🏁 LESSON COMPLETE:', currentLesson.title, 'Already completed:', currentLesson.isCompleted);
     
     try {
-      // CRÍTICO: Distinguir entre completion real y replay
       const isReplay = currentLesson.isCompleted;
       const nextLesson = getNextLesson(currentLesson, podcast.lessons, podcast.modules);
       
       if (isReplay) {
-        console.log('🔄 REPLAY MODE: No progress changes, continue to next lesson');
+        console.log('🔄 REPLAY MODE: No progress changes, continue with auto-advance logic');
         
-        // En replay, NO actualizar progreso, solo continuar con auto-advance
+        // En replay, NO actualizar progreso, pero SÍ permitir auto-advance inteligente
         if (isAutoAdvanceAllowed && nextLesson) {
-          console.log('⏭️ Auto-advance from replay to:', nextLesson.title);
-          setCurrentLesson(nextLesson);
-          setIsPlaying(true);
+          // MEJORADO: Verificar si la siguiente lección es reproducible
+          const canPlayNext = nextLesson.isCompleted || !nextLesson.isLocked;
+          
+          if (canPlayNext) {
+            console.log('⏭️ Auto-advance from replay to next available lesson:', nextLesson.title);
+            setCurrentLesson(nextLesson);
+            setIsPlaying(true);
+          } else {
+            console.log('🚫 Next lesson not available - stopping playback');
+            setIsPlaying(false);
+          }
         } else {
-          console.log('⏹️ End of replay sequence');
+          console.log('⏹️ End of replay sequence or auto-advance disabled');
           setIsPlaying(false);
         }
       } else {
