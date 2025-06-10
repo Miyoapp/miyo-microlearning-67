@@ -2,8 +2,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { EmblaOptionsType } from 'embla-carousel';
 import useEmblaCarousel from 'embla-carousel-react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import CourseCardWithProgress from './CourseCardWithProgress';
 import { Podcast } from '@/types';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -31,8 +29,6 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
   onCourseClick
 }) => {
   const isMobile = useIsMobile();
-  const [canScrollPrev, setCanScrollPrev] = useState(false);
-  const [canScrollNext, setCanScrollNext] = useState(false);
 
   const options: EmblaOptionsType = {
     align: 'start',
@@ -42,32 +38,6 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
   };
 
   const [emblaRef, emblaApi] = useEmblaCarousel(options);
-
-  const scrollPrev = useCallback(() => {
-    if (emblaApi) emblaApi.scrollPrev();
-  }, [emblaApi]);
-
-  const scrollNext = useCallback(() => {
-    if (emblaApi) emblaApi.scrollNext();
-  }, [emblaApi]);
-
-  const onSelect = useCallback(() => {
-    if (!emblaApi) return;
-    setCanScrollPrev(emblaApi.canScrollPrev());
-    setCanScrollNext(emblaApi.canScrollNext());
-  }, [emblaApi]);
-
-  useEffect(() => {
-    if (!emblaApi) return;
-    onSelect();
-    emblaApi.on('select', onSelect);
-    emblaApi.on('reInit', onSelect);
-    
-    return () => {
-      emblaApi.off('select', onSelect);
-      emblaApi.off('reInit', onSelect);
-    };
-  }, [emblaApi, onSelect]);
 
   if (courses.length === 0) {
     return (
@@ -111,31 +81,6 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
             ))}
           </div>
         </div>
-
-        {/* Navigation arrows - only show on desktop when needed */}
-        {!isMobile && courses.length > 3 && (
-          <>
-            <Button
-              variant="outline"
-              size="icon"
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-white shadow-lg z-10 h-10 w-10"
-              onClick={scrollPrev}
-              disabled={!canScrollPrev}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-
-            <Button
-              variant="outline"
-              size="icon"
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-white shadow-lg z-10 h-10 w-10"
-              onClick={scrollNext}
-              disabled={!canScrollNext}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </>
-        )}
 
         {/* Mobile pagination dots */}
         {isMobile && courses.length > 1 && (
