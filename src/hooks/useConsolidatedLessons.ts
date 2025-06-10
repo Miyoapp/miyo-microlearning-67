@@ -63,7 +63,7 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     isAutoAdvanceAllowed
   );
 
-  // MAIN LESSON SELECTION with absolute manual priority
+  // MAIN LESSON SELECTION with immediate playback for manual selections
   const handleSelectLesson = useCallback((lesson: any, isManualSelection = true) => {
     console.log('🎯 handleSelectLesson called:', lesson.title, 'isCompleted:', lesson.isCompleted, 'isLocked:', lesson.isLocked, 'isManual:', isManualSelection);
     
@@ -95,11 +95,10 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
       setCurrentLesson(lesson);
     });
     
-    // Then handle playback
+    // FIXED: Handle playback properly - don't interfere with manual selections
     if (isManualSelection) {
-      // Manual selection - stop auto-play and set new lesson
-      setIsPlaying(false);
-      // Handle playback immediately
+      // Manual selection - let playback hook handle immediate playback
+      console.log('🎵 Manual selection - delegating to playback hook for immediate start');
       handleSelectLessonFromPlayback(lesson, true);
     } else {
       // Auto-play sequence (only if not blocked)
@@ -109,7 +108,7 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
         console.log('🚫 Auto-play blocked by recent user interaction');
       }
     }
-  }, [setCurrentLesson, handleSelectLessonFromPlayback, setIsPlaying, podcast]);
+  }, [setCurrentLesson, handleSelectLessonFromPlayback, podcast]);
 
   // CONTROLLED INITIALIZATION: Only when no user interaction
   useEffect(() => {

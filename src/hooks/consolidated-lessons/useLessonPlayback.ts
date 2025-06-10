@@ -17,12 +17,12 @@ export function useLessonPlayback(
   const manualSelectionActive = useRef(false);
   const autoAdvanceBlocked = useRef(false);
 
-  // Handle lesson selection with proper completed lesson support
+  // Handle lesson selection with immediate playback for manual selections
   const handleSelectLesson = useCallback((lesson: Lesson, isManualSelection = true) => {
     console.log('🎯 Selecting lesson:', lesson.title, 'isCompleted:', lesson.isCompleted, 'isLocked:', lesson.isLocked, 'isManual:', isManualSelection);
 
-    // FIXED: Allow playback of completed lessons without restrictions
-    const canSelectLesson = lesson.isCompleted || !lesson.isLocked;
+    // FIXED: Allow playback of completed lessons and first lesson
+    const canSelectLesson = lesson.isCompleted || !lesson.isLocked || (podcast?.lessons[0]?.id === lesson.id);
 
     if (!canSelectLesson) {
       console.log('⚠️ Lesson is locked and not completed, cannot select:', lesson.title);
@@ -31,7 +31,7 @@ export function useLessonPlayback(
 
     // Handle manual selection priority
     if (isManualSelection) {
-      console.log('👤 MANUAL SELECTION: Blocking auto-advance temporarily');
+      console.log('👤 MANUAL SELECTION: Blocking auto-advance temporarily and starting playback');
       manualSelectionActive.current = true;
       autoAdvanceBlocked.current = true;
       
@@ -45,30 +45,31 @@ export function useLessonPlayback(
 
     console.log('✅ Lesson can be played:', lesson.title);
 
-    // If selecting the same lesson that's already playing, just toggle play/pause
-    if (currentLesson && lesson.id === currentLesson.id && isPlaying) {
-      setIsPlaying(false);
-      return;
+    // FIXED: For manual selections, always start playback immediately
+    if (isManualSelection) {
+      console.log('🎵 Starting immediate playback for manual selection');
+      startTransition(() => {
+        setIsPlaying(true);
+      });
+    } else {
+      // For auto-selections, don't start playback automatically
+      console.log('🔄 Auto-selection - not starting playback');
     }
 
-    // Start playback
-    startTransition(() => {
-      setIsPlaying(true);
-    });
-
-    // FIXED: Only track start for incomplete lessons (not completed replays)
+    // Track start for incomplete lessons (not completed replays)
     if (podcast && user && !lesson.isCompleted) {
       console.log('📊 Tracking lesson start for incomplete lesson:', lesson.title);
       updateLessonPosition(lesson.id, podcast.id, 1);
     } else if (lesson.isCompleted) {
       console.log('🔄 Playing completed lesson - no progress tracking needed:', lesson.title);
     }
-  }, [currentLesson, isPlaying, podcast, user, updateLessonPosition]);
+  }, [podcast, user, updateLessonPosition]);
 
   // Toggle play/pause
   const handleTogglePlay = useCallback(() => {
+    console.log('🎵 Toggling play state from:', isPlaying, 'to:', !isPlaying);
     setIsPlaying(prev => !prev);
-  }, []);
+  }, [isPlaying]);
 
   // Handle progress updates - FIXED to respect completed lessons
   const handleProgressUpdate = useCallback((position: number) => {
