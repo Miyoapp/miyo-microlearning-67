@@ -22,33 +22,36 @@ export function useLessonInitialization(
 
   // Initialize podcast with correct lesson states from DB
   const initializePodcastWithProgress = useCallback(() => {
-    if (!podcast || !user) return;
+    if (!podcast || !user) {
+      console.log('🚫 Cannot initialize podcast - missing data:', { podcast: !!podcast, user: !!user });
+      return;
+    }
 
     console.log('🎬 Initializing podcast with progress from DB');
+    console.log('📊 Lesson progress count:', lessonProgress.length);
+    console.log('📊 User progress count:', userProgress.length);
     
     const courseCompleted = isCourseCompleted(userProgress, podcast.id);
     const hasAnyProgress = lessonProgress.length > 0;
     
+    console.log('📋 Course status:', { courseCompleted, hasAnyProgress });
+    
     let finalLessons: Lesson[];
     
     if (courseCompleted) {
-      // Course 100% completed - all lessons unlocked for review
       console.log('🏆 Course completed - enabling review mode');
       const lessonsWithProgress = updateLessonsWithProgress(podcast, lessonProgress);
       finalLessons = unlockAllLessonsForCompletedCourse(lessonsWithProgress);
     } else if (hasAnyProgress) {
-      // Course in progress - apply progress and sequential unlocking
       console.log('📚 Course in progress - applying sequential unlock logic');
       const lessonsWithProgress = updateLessonsWithProgress(podcast, lessonProgress);
       finalLessons = unlockLessonsSequentially(podcast, lessonsWithProgress);
     } else {
-      // Fresh course - only first lesson unlocked
       console.log('🆕 Fresh course - only first lesson unlocked');
       finalLessons = initializeFreshCourse(podcast);
     }
     
-    // Debug: Log the state of the first few lessons
-    console.log('🔍 First lesson states:', finalLessons.slice(0, 3).map(l => ({
+    console.log('🔍 Final lesson states:', finalLessons.slice(0, 3).map(l => ({
       title: l.title,
       isCompleted: l.isCompleted,
       isLocked: l.isLocked
@@ -57,18 +60,36 @@ export function useLessonInitialization(
     setPodcast({ ...podcast, lessons: finalLessons });
   }, [podcast, lessonProgress, userProgress, user, setPodcast]);
 
-  // FIXED: Initialize current lesson more reliably
+  // CRITICAL FIX: Auto-initialize current lesson more reliably
   const initializeCurrentLesson = useCallback(() => {
-    if (!podcast || !user || !podcast.lessons || podcast.lessons.length === 0) {
-      console.log('⚠️ Cannot initialize lesson - missing data');
+    console.log('🎯 INITIALIZING CURRENT LESSON - START');
+    console.log('🔍 Current state check:', {
+      hasPodcast: !!podcast,
+      hasUser: !!user,
+      lessonsCount: podcast?.lessons?.length || 0,
+      currentLessonExists: !!currentLesson,
+      currentLessonTitle: currentLesson?.title
+    });
+
+    if (!podcast || !user) {
+      console.log('⚠️ Cannot initialize lesson - missing basic data');
       return;
     }
 
-    console.log('🎯 Initializing current lesson');
+    if (!podcast.lessons || podcast.lessons.length === 0) {
+      console.log('⚠️ Cannot initialize lesson - no lessons available');
+      return;
+    }
+
+    // If current lesson is already set, don't override it
+    if (currentLesson) {
+      console.log('✅ Current lesson already set:', currentLesson.title);
+      return;
+    }
+
+    console.log('🎯 Finding lesson to select...');
     
     const courseCompleted = isCourseCompleted(userProgress, podcast.id);
-
-    // FIXED: Always find and set the first available lesson
     let lessonToSelect: Lesson | null = null;
 
     if (courseCompleted) {
@@ -78,16 +99,16 @@ export function useLessonInitialization(
     } else {
       // For in-progress or new courses, find first unlocked lesson
       lessonToSelect = podcast.lessons.find(lesson => !lesson.isLocked) || podcast.lessons[0] || null;
-      console.log('📚 Course in progress - selecting first unlocked lesson:', lessonToSelect?.title);
+      console.log('📚 Course in progress - finding first unlocked lesson');
+      console.log('🔍 Available lessons:', podcast.lessons.map(l => ({ title: l.title, isLocked: l.isLocked })));
+      console.log('🎯 Selected lesson:', lessonToSelect?.title);
     }
 
-    if (lessonToSelect && !currentLesson) {
-      console.log('✅ Setting current lesson to:', lessonToSelect.title);
+    if (lessonToSelect) {
+      console.log('✅ SETTING CURRENT LESSON TO:', lessonToSelect.title);
       setCurrentLesson(lessonToSelect);
-    } else if (!lessonToSelect) {
-      console.log('❌ No lesson available to select');
     } else {
-      console.log('⏭️ Current lesson already set:', currentLesson?.title);
+      console.log('❌ No lesson available to select');
     }
   }, [podcast, userProgress, currentLesson, user]);
 

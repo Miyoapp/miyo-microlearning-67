@@ -7,30 +7,44 @@ export function useCourseAccess(podcast: Podcast | null) {
   const { hasPurchased, refetch: refetchPurchases } = useCoursePurchases();
   
   const accessInfo = useMemo(() => {
+    console.log('🔒 COURSE ACCESS CALCULATION - START');
+    
     if (!podcast) {
       console.log('🔒 No podcast - default access granted');
       return { isPremium: false, hasAccess: true };
     }
     
     const isPremium = podcast.tipo_curso === 'pago';
-    console.log('🔒 Course access check:', { 
+    console.log('🔒 Course access details:', { 
       courseId: podcast.id, 
-      isPremium, 
-      courseType: podcast.tipo_curso 
+      courseTitle: podcast.title,
+      courseType: podcast.tipo_curso,
+      isPremium
     });
     
-    // FIXED: For free courses, always grant access
+    // CRITICAL FIX: For free courses, ALWAYS grant access
     if (!isPremium) {
-      console.log('✅ Free course - access granted');
+      console.log('✅ FREE COURSE - ACCESS GRANTED');
       return { isPremium: false, hasAccess: true };
     }
     
     // For premium courses, check purchase status
     const hasAccess = hasPurchased(podcast.id);
-    console.log('💰 Premium course access:', { hasAccess, courseId: podcast.id });
+    console.log('💰 PREMIUM COURSE ACCESS CHECK:', { 
+      hasAccess, 
+      courseId: podcast.id,
+      courseTitle: podcast.title
+    });
     
     return { isPremium, hasAccess };
   }, [podcast, hasPurchased]);
+
+  console.log('🔒 FINAL ACCESS RESULT:', {
+    courseId: podcast?.id,
+    courseTitle: podcast?.title,
+    isPremium: accessInfo.isPremium,
+    hasAccess: accessInfo.hasAccess
+  });
 
   return {
     ...accessInfo,

@@ -1,3 +1,4 @@
+
 import { useEffect, useCallback, useRef } from 'react';
 import { Podcast } from '@/types';
 import { useUserLessonProgress } from './useUserLessonProgress';
@@ -24,8 +25,9 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     refetch: refetchCourseProgress 
   } = useUserProgress();
 
-  // FIXED: Simplify control flags
+  // SIMPLIFIED: Remove complex control flags
   const hasUserInteracted = useRef(false);
+  const isInitialized = useRef(false);
 
   // Use specialized hooks
   const {
@@ -65,7 +67,7 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
   const handleSelectLesson = useCallback((lesson: any, isManualSelection = true) => {
     console.log('🎯 handleSelectLesson called:', lesson.title, 'isCompleted:', lesson.isCompleted, 'isLocked:', lesson.isLocked, 'isManual:', isManualSelection);
     
-    // FIXED: Allow selection of completed lessons for replay and first lesson even if locked state is wrong
+    // Allow selection of completed lessons for replay and first lesson even if locked state is wrong
     const canSelectLesson = lesson.isCompleted || !lesson.isLocked || (podcast?.lessons[0]?.id === lesson.id);
     
     if (!canSelectLesson) {
@@ -86,36 +88,70 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
       setCurrentLesson(lesson);
     });
     
-    // FIXED: Handle playback properly - don't interfere with manual selections
+    // Handle playback properly
     if (isManualSelection) {
-      // Manual selection - let playback hook handle immediate playback
       console.log('🎵 Manual selection - delegating to playback hook for immediate start');
       handleSelectLessonFromPlayback(lesson, true);
     } else {
-      // Auto-play sequence
       handleSelectLessonFromPlayback(lesson, false);
     }
   }, [setCurrentLesson, handleSelectLessonFromPlayback, podcast]);
 
-  // SIMPLIFIED INITIALIZATION: Initialize podcast when data is available
+  // CRITICAL FIX: Initialize podcast when data is available
   useEffect(() => {
-    if (podcast && user && lessonProgress !== undefined && userProgress !== undefined) {
-      console.log('📊 Initializing podcast with progress...');
+    console.log('🔄 PODCAST INITIALIZATION EFFECT TRIGGERED');
+    console.log('🔍 Effect conditions:', {
+      hasPodcast: !!podcast,
+      podcastId: podcast?.id,
+      hasUser: !!user,
+      userId: user?.id,
+      lessonProgressDefined: lessonProgress !== undefined,
+      lessonProgressLength: lessonProgress?.length,
+      userProgressDefined: userProgress !== undefined,
+      userProgressLength: userProgress?.length,
+      isInitialized: isInitialized.current
+    });
+
+    if (podcast && user && lessonProgress !== undefined && userProgress !== undefined && !isInitialized.current) {
+      console.log('📊 INITIALIZING PODCAST WITH PROGRESS...');
+      isInitialized.current = true;
       startTransition(() => {
         initializePodcastWithProgress();
       });
     }
-  }, [podcast?.id, lessonProgress.length, userProgress.length, user?.id, initializePodcastWithProgress]);
+  }, [podcast?.id, user?.id, lessonProgress, userProgress, initializePodcastWithProgress]);
 
-  // CURRENT LESSON INITIALIZATION: After podcast is initialized and no current lesson
+  // CRITICAL FIX: Initialize current lesson after podcast is ready
   useEffect(() => {
-    if (podcast && podcast.lessons.length > 0 && user && !currentLesson && !hasUserInteracted.current) {
-      console.log('🎯 Auto-initializing current lesson...');
+    console.log('🎯 CURRENT LESSON INITIALIZATION EFFECT TRIGGERED');
+    console.log('🔍 Lesson init conditions:', {
+      hasPodcast: !!podcast,
+      hasLessons: podcast?.lessons?.length > 0,
+      lessonsCount: podcast?.lessons?.length,
+      hasUser: !!user,
+      hasCurrentLesson: !!currentLesson,
+      currentLessonTitle: currentLesson?.title,
+      hasUserInteracted: hasUserInteracted.current,
+      isInitialized: isInitialized.current
+    });
+
+    // Initialize current lesson only after podcast is initialized and no current lesson is set
+    if (podcast && podcast.lessons && podcast.lessons.length > 0 && user && !currentLesson && isInitialized.current) {
+      console.log('🎯 AUTO-INITIALIZING CURRENT LESSON...');
       startTransition(() => {
         initializeCurrentLesson();
       });
     }
-  }, [podcast?.lessons?.length, user?.id, initializeCurrentLesson, currentLesson]);
+  }, [podcast?.lessons?.length, user?.id, currentLesson, initializeCurrentLesson, isInitialized.current]);
+
+  // Reset initialization flag when podcast changes
+  useEffect(() => {
+    if (podcast?.id) {
+      console.log('🔄 New podcast detected, resetting initialization flag');
+      isInitialized.current = false;
+      hasUserInteracted.current = false;
+    }
+  }, [podcast?.id]);
 
   return {
     currentLesson,

@@ -47,11 +47,14 @@ const DashboardCourse = () => {
   const isCompleted = courseProgress?.is_completed || false;
   const isReviewMode = isCompleted && progressPercentage === 100;
 
-  // FIXED: Add debugging for audio player visibility
-  console.log('🎵 Audio player visibility check:', {
+  // CRITICAL DEBUG: Log audio player visibility conditions
+  console.log('🎵 AUDIO PLAYER VISIBILITY DEBUG:', {
     hasCurrentLesson: !!currentLesson,
+    currentLessonTitle: currentLesson?.title,
     hasAccess,
-    currentLessonTitle: currentLesson?.title
+    isPremium,
+    shouldShow: !!currentLesson && hasAccess,
+    courseId: id
   });
 
   const handleStartLearning = async () => {
@@ -138,8 +141,8 @@ const DashboardCourse = () => {
         </div>
       </DashboardLayout>
       
-      {/* FIXED: Audio Player - Show when there's a current lesson AND user has access */}
-      {currentLesson && hasAccess && (
+      {/* CRITICAL FIX: Always show audio player when there's a current lesson and user has access */}
+      {currentLesson && hasAccess ? (
         <AudioPlayer 
           lesson={currentLesson}
           isPlaying={isPlaying}
@@ -147,6 +150,15 @@ const DashboardCourse = () => {
           onComplete={handleLessonComplete}
           onProgressUpdate={handleProgressUpdate}
         />
+      ) : (
+        <div style={{ display: 'none' }}>
+          {/* Debug info - will be removed by build process */}
+          {console.log('🚫 Audio player not showing:', { 
+            hasCurrentLesson: !!currentLesson, 
+            hasAccess,
+            currentLessonTitle: currentLesson?.title
+          })}
+        </div>
       )}
 
       {/* Checkout Modal */}
