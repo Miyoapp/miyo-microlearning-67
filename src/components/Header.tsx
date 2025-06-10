@@ -6,15 +6,20 @@ import { useAuth } from './auth/AuthProvider';
 import Logo from './common/Logo';
 
 const Header = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, forceLogout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
+      console.log('Header: Starting logout process...');
       await signOut();
+      console.log('Header: Logout successful, navigating to home...');
       navigate('/');
     } catch (error) {
-      console.error('Error during logout:', error);
+      console.error('Header: Error during logout:', error);
+      // En caso de error, usar forceLogout como fallback
+      forceLogout();
+      navigate('/');
     }
   };
 
@@ -25,6 +30,9 @@ const Header = () => {
       return false;
     }
   };
+
+  // Debug: mostrar el estado actual en consola
+  console.log('Header render - User:', user?.email || 'No user', 'Path:', window.location.pathname);
 
   return (
     <header className="bg-white shadow-sm border-b">
