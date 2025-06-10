@@ -12,6 +12,7 @@ import Logo from '@/components/common/Logo';
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
@@ -31,7 +32,7 @@ const LoginPage = () => {
 
     try {
       const { error } = isSignUp 
-        ? await signUp(email, password)
+        ? await signUp(email, password, name)
         : await signIn(email, password);
 
       if (error) {
@@ -54,6 +55,10 @@ const LoginPage = () => {
   const toggleMode = () => {
     const newMode = !isSignUp;
     setIsSignUp(newMode);
+    // Clear form when switching modes
+    setName('');
+    setEmail('');
+    setPassword('');
     // Update URL parameter
     navigate(`/login${newMode ? '?mode=signup' : ''}`, { replace: true });
   };
@@ -69,6 +74,20 @@ const LoginPage = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {isSignUp && (
+              <div className="space-y-2">
+                <Label htmlFor="name">Nombre</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  placeholder="Tu nombre completo"
+                />
+              </div>
+            )}
+            
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input

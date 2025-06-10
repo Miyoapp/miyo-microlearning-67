@@ -13,9 +13,11 @@ import { LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Logo from './common/Logo';
 import { useAuth } from './auth/AuthProvider';
+import { supabase } from '@/integrations/supabase/client';
 
 const Header = () => {
   const [scrolled, setScrolled] = useState(false);
+  const [userProfile, setUserProfile] = useState<{ name?: string } | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
@@ -29,6 +31,25 @@ const Header = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Fetch user profile when user changes
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('name')
+          .eq('id', user.id)
+          .single();
+        
+        setUserProfile(data);
+      } else {
+        setUserProfile(null);
+      }
+    };
+
+    fetchUserProfile();
+  }, [user]);
 
   const handleLogout = async () => {
     try {
@@ -46,6 +67,10 @@ const Header = () => {
   const handleRegister = () => {
     navigate('/login?mode=signup');
   };
+
+  // Show welcome message on dashboard pages
+  const isDashboard = location.pathname.startsWith('/dashboard');
+  const userName = userProfile?.name || user?.email?.split('@')[0] || 'Usuario';
   
   return (
     <header 
@@ -54,7 +79,14 @@ const Header = () => {
       }`}
     >
       <div className="miyo-container flex items-center justify-between">
-        <Logo linkClassName="flex items-center" />
+        <div className="flex items-center space-x-4">
+          <Logo linkClassName="flex items-center" />
+          {user && isDashboard && (
+            <span className="text-gray-700 font-medium">
+              ¡Bienvenido de vuelta, {userName}!
+            </span>
+          )}
+        </div>
         
         {!user ? (
           <div className="flex items-center space-x-4">
@@ -77,13 +109,16 @@ const Header = () => {
               <DropdownMenuTrigger className="flex items-center focus:outline-none">
                 <Avatar className="h-9 w-9 bg-miyo-100">
                   <AvatarFallback className="text-miyo-800">
-                    {user.email?.substring(0, 2).toUpperCase() || 'U'}
+                    {userName.substring(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 z-50 bg-white">
                 <div className="p-2 border-b">
                   <p className="text-sm font-medium">{user.email}</p>
+                  {userProfile?.name && (
+                    <p className="text-xs text-gray-500">{userProfile.name}</p>
+                  )}
                 </div>
                 <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
                   <LogOut className="mr-2 h-4 w-4" />
