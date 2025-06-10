@@ -5,8 +5,9 @@ import { UserLessonProgress } from '../useUserLessonProgress';
 import { UserCourseProgress } from '../useUserProgress';
 import { 
   updateLessonsWithProgress, 
-  unlockLessonsForCompletedCourse, 
-  unlockLessonsForInProgressCourse,
+  initializeFreshCourse,
+  unlockLessonsSequentially,
+  unlockAllLessonsForCompletedCourse,
   isCourseCompleted 
 } from './lessonProgressUtils';
 
@@ -23,60 +24,68 @@ export function useLessonInitialization(
   const initializePodcastWithProgress = useCallback(() => {
     if (!podcast || !user) return;
 
-    console.log('Initializing podcast with progress from DB');
+    console.log('🎬 Initializing podcast with progress from DB');
     
-    // Update lessons with progress from database (completadas nunca bloqueadas)
-    const updatedLessons = updateLessonsWithProgress(podcast, lessonProgress);
     const courseCompleted = isCourseCompleted(userProgress, podcast.id);
-
+    const hasAnyProgress = lessonProgress.length > 0;
+    
+    let finalLessons: Lesson[];
+    
     if (courseCompleted) {
-      // If course is completed, unlock ALL lessons for free replay
-      console.log('Course is completed, unlocking all lessons for free replay');
-      const unlockedLessons = unlockLessonsForCompletedCourse(updatedLessons);
-      setPodcast({ ...podcast, lessons: unlockedLessons });
+      // Course 100% completed - all lessons unlocked for review
+      console.log('🏆 Course completed - enabling review mode');
+      const lessonsWithProgress = updateLessonsWithProgress(podcast, lessonProgress);
+      finalLessons = unlockAllLessonsForCompletedCourse(lessonsWithProgress);
+    } else if (hasAnyProgress) {
+      // Course in progress - apply progress and sequential unlocking
+      console.log('📚 Course in progress - applying sequential unlock logic');
+      const lessonsWithProgress = updateLessonsWithProgress(podcast, lessonProgress);
+      finalLessons = unlockLessonsSequentially(podcast, lessonsWithProgress);
     } else {
-      // For in-progress courses: unlock based on completion + ensure completed lessons are always unlocked
-      console.log('Course in progress, applying unlock logic for completed and sequential lessons');
-      const finalLessons = unlockLessonsForInProgressCourse(podcast, updatedLessons);
-      
-      setPodcast({ ...podcast, lessons: finalLessons });
+      // Fresh course - only first lesson unlocked
+      console.log('🆕 Fresh course - only first lesson unlocked');
+      finalLessons = initializeFreshCourse(podcast);
     }
+    
+    setPodcast({ ...podcast, lessons: finalLessons });
   }, [podcast, lessonProgress, userProgress, user, setPodcast]);
 
-  // Initialize current lesson (improved logic for completed courses)
+  // Initialize current lesson with improved logic
   const initializeCurrentLesson = useCallback(() => {
-    if (!podcast) return;
+    if (!podcast || !user) return;
 
-    console.log('Initializing current lesson');
+    console.log('🎯 Initializing current lesson');
     
     const courseCompleted = isCourseCompleted(userProgress, podcast.id);
 
     if (courseCompleted) {
-      // For completed courses, default to first lesson but don't override user selection
+      // For completed courses, default to first lesson unless user has selected another
       if (!currentLesson) {
         const firstLesson = podcast.lessons[0];
         if (firstLesson) {
-          console.log('Course completed - setting current lesson to first lesson:', firstLesson.title);
+          console.log('🏆 Course completed - setting to first lesson for review:', firstLesson.title);
           setCurrentLesson(firstLesson);
         }
       }
     } else {
-      // For in-progress courses, find first incomplete lesson that's unlocked
-      const firstIncompleteLesson = podcast.lessons.find(lesson => !lesson.isCompleted && !lesson.isLocked);
+      // For in-progress courses, find the appropriate lesson to start with
+      const firstIncompleteUnlockedLesson = podcast.lessons.find(
+        lesson => !lesson.isCompleted && !lesson.isLocked
+      );
       
-      if (firstIncompleteLesson) {
-        console.log('Setting current lesson to first incomplete:', firstIncompleteLesson.title);
-        setCurrentLesson(firstIncompleteLesson);
+      if (firstIncompleteUnlockedLesson) {
+        console.log('📚 Setting current lesson to first incomplete unlocked:', firstIncompleteUnlockedLesson.title);
+        setCurrentLesson(firstIncompleteUnlockedLesson);
       } else {
-        // If all lessons are completed or none are unlocked, set to first lesson
+        // Fallback to first lesson if no incomplete unlocked lessons
         const firstLesson = podcast.lessons[0];
         if (firstLesson) {
-          console.log('Setting current lesson to first lesson:', firstLesson.title);
+          console.log('🔄 Fallback to first lesson:', firstLesson.title);
           setCurrentLesson(firstLesson);
         }
       }
     }
-  }, [podcast, userProgress, currentLesson]);
+  }, [podcast, userProgress, currentLesson, user]);
 
   return {
     currentLesson,

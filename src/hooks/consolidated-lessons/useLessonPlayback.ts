@@ -13,15 +13,15 @@ export function useLessonPlayback(
 ) {
   const [isPlaying, setIsPlaying] = useState(false);
   
-  // CRITICAL: Flag to control action priority
+  // Control flags for manual vs automatic actions
   const manualSelectionActive = useRef(false);
   const autoAdvanceBlocked = useRef(false);
 
-  // Handle lesson selection (ABSOLUTE MANUAL PRIORITY)
+  // Handle lesson selection with proper completed lesson support
   const handleSelectLesson = useCallback((lesson: Lesson, isManualSelection = true) => {
     console.log('🎯 Selecting lesson:', lesson.title, 'isCompleted:', lesson.isCompleted, 'isLocked:', lesson.isLocked, 'isManual:', isManualSelection);
 
-    // SIMPLIFIED LOGIC: Completed lessons can ALWAYS be played
+    // FIXED: Allow playback of completed lessons without restrictions
     const canSelectLesson = lesson.isCompleted || !lesson.isLocked;
 
     if (!canSelectLesson) {
@@ -29,9 +29,9 @@ export function useLessonPlayback(
       return;
     }
 
-    // CRITICAL: Mark as manual selection to block auto-advance
+    // Handle manual selection priority
     if (isManualSelection) {
-      console.log('🚫 MANUAL SELECTION: Blocking auto-advance for 3 seconds');
+      console.log('👤 MANUAL SELECTION: Blocking auto-advance temporarily');
       manualSelectionActive.current = true;
       autoAdvanceBlocked.current = true;
       
@@ -39,11 +39,11 @@ export function useLessonPlayback(
       setTimeout(() => {
         manualSelectionActive.current = false;
         autoAdvanceBlocked.current = false;
-        console.log('✅ Auto-advance unblocked after manual selection timeout');
+        console.log('✅ Auto-advance unblocked after manual selection');
       }, 3000);
     }
 
-    console.log('✅ Lesson can be selected and played:', lesson.title);
+    console.log('✅ Lesson can be played:', lesson.title);
 
     // If selecting the same lesson that's already playing, just toggle play/pause
     if (currentLesson && lesson.id === currentLesson.id && isPlaying) {
@@ -51,17 +51,17 @@ export function useLessonPlayback(
       return;
     }
 
-    // OPTIMIZED: Use startTransition for better performance on play state
+    // Start playback
     startTransition(() => {
       setIsPlaying(true);
     });
 
-    // Track lesson start in database (only for incomplete lessons)
+    // FIXED: Only track start for incomplete lessons (not completed replays)
     if (podcast && user && !lesson.isCompleted) {
       console.log('📊 Tracking lesson start for incomplete lesson:', lesson.title);
       updateLessonPosition(lesson.id, podcast.id, 1);
     } else if (lesson.isCompleted) {
-      console.log('🔄 Replaying completed lesson, not tracking start:', lesson.title);
+      console.log('🔄 Playing completed lesson - no progress tracking needed:', lesson.title);
     }
   }, [currentLesson, isPlaying, podcast, user, updateLessonPosition]);
 
@@ -70,27 +70,27 @@ export function useLessonPlayback(
     setIsPlaying(prev => !prev);
   }, []);
 
-  // Handle progress updates during playback (only for incomplete lessons)
+  // Handle progress updates - FIXED to respect completed lessons
   const handleProgressUpdate = useCallback((position: number) => {
     if (!currentLesson || !podcast || !user) return;
     
-    // Never update progress for already completed lessons
+    // CRITICAL FIX: Never update progress for completed lessons during replay
     if (currentLesson.isCompleted) {
-      console.log('📝 Lesson already completed, not updating progress:', currentLesson.title);
+      console.log('🔄 Playing completed lesson - not updating progress:', currentLesson.title);
       return;
     }
 
     // Only update progress for incomplete lessons when position > 5%
     if (position > 5) {
-      console.log('📈 Updating progress for incomplete lesson:', currentLesson.title, 'position:', position);
+      console.log('📈 Updating progress for incomplete lesson:', currentLesson.title, 'position:', position.toFixed(1) + '%');
       updateLessonPosition(currentLesson.id, podcast.id, position);
     }
   }, [currentLesson, podcast, user, updateLessonPosition]);
 
-  // NEW FUNCTION: Check if auto-advance is allowed
+  // Check if auto-advance is allowed
   const isAutoAdvanceAllowed = useCallback(() => {
     const allowed = !autoAdvanceBlocked.current && !manualSelectionActive.current;
-    console.log('🤖 Auto-advance allowed:', allowed, 'manualActive:', manualSelectionActive.current, 'blocked:', autoAdvanceBlocked.current);
+    console.log('🤖 Auto-advance check:', { allowed, manualActive: manualSelectionActive.current, blocked: autoAdvanceBlocked.current });
     return allowed;
   }, []);
 

@@ -14,53 +14,65 @@ export function updateLessonsWithProgress(
     return {
       ...lesson,
       isCompleted,
-      // CORRECCIÓN CRÍTICA: Las lecciones completadas NUNCA deben estar bloqueadas
-      isLocked: !isCompleted // Si está completada, NO está bloqueada
+      // CRITICAL FIX: Completed lessons are NEVER locked
+      isLocked: !isCompleted
     };
   });
 }
 
-export function unlockLessonsForCompletedCourse(lessons: Lesson[]): Lesson[] {
-  return lessons.map(lesson => ({ ...lesson, isLocked: false }));
+export function initializeFreshCourse(podcast: Podcast): Lesson[] {
+  console.log('🆕 Initializing fresh course - only first lesson unlocked');
+  
+  // Get the first module and its first lesson
+  const firstModule = podcast.modules[0];
+  const firstLessonId = firstModule?.lessonIds?.[0];
+  
+  return podcast.lessons.map(lesson => ({
+    ...lesson,
+    isCompleted: false,
+    // Only the very first lesson is unlocked initially
+    isLocked: lesson.id !== firstLessonId
+  }));
 }
 
-export function unlockLessonsForInProgressCourse(
+export function unlockLessonsSequentially(
   podcast: Podcast,
   updatedLessons: Lesson[]
 ): Lesson[] {
+  console.log('🔓 Applying sequential unlock logic...');
+  
   const modulesWithLessons = podcast.modules.map(module => ({
     ...module,
     lessons: module.lessonIds.map(id => updatedLessons.find(l => l.id === id)).filter(Boolean) as Lesson[]
   }));
 
-  // Unlock first lesson of first module
-  if (modulesWithLessons.length > 0 && modulesWithLessons[0].lessons.length > 0) {
-    const firstLessonId = modulesWithLessons[0].lessons[0].id;
-    const firstLessonIndex = updatedLessons.findIndex(l => l.id === firstLessonId);
-    if (firstLessonIndex !== -1) {
-      updatedLessons[firstLessonIndex] = { ...updatedLessons[firstLessonIndex], isLocked: false };
-    }
-  }
-
-  // Unlock lessons following completed ones
-  modulesWithLessons.forEach(module => {
-    module.lessons.forEach((lesson, index) => {
-      if (lesson.isCompleted && index < module.lessons.length - 1) {
-        // Unlock next lesson in same module
-        const nextLessonId = module.lessons[index + 1].id;
-        const nextLessonIndex = updatedLessons.findIndex(l => l.id === nextLessonId);
-        if (nextLessonIndex !== -1) {
-          updatedLessons[nextLessonIndex] = { ...updatedLessons[nextLessonIndex], isLocked: false };
-        }
-      } else if (lesson.isCompleted && index === module.lessons.length - 1) {
-        // If last lesson of module is completed, unlock first lesson of next module
-        const currentModuleIndex = modulesWithLessons.findIndex(m => m.id === module.id);
-        if (currentModuleIndex < modulesWithLessons.length - 1) {
-          const nextModule = modulesWithLessons[currentModuleIndex + 1];
+  // Process each module sequentially
+  modulesWithLessons.forEach((module, moduleIndex) => {
+    module.lessons.forEach((lesson, lessonIndex) => {
+      const globalLessonIndex = updatedLessons.findIndex(l => l.id === lesson.id);
+      
+      if (lesson.isCompleted) {
+        // PROTECTION: Completed lessons are always unlocked
+        console.log('✅ Keeping completed lesson unlocked:', lesson.title);
+        updatedLessons[globalLessonIndex] = { ...updatedLessons[globalLessonIndex], isLocked: false };
+        
+        // Unlock next lesson in sequence
+        if (lessonIndex < module.lessons.length - 1) {
+          // Next lesson in same module
+          const nextLessonId = module.lessons[lessonIndex + 1].id;
+          const nextLessonIndex = updatedLessons.findIndex(l => l.id === nextLessonId);
+          if (nextLessonIndex !== -1) {
+            console.log('🔓 Unlocking next lesson in module:', updatedLessons[nextLessonIndex].title);
+            updatedLessons[nextLessonIndex] = { ...updatedLessons[nextLessonIndex], isLocked: false };
+          }
+        } else if (moduleIndex < modulesWithLessons.length - 1) {
+          // First lesson of next module
+          const nextModule = modulesWithLessons[moduleIndex + 1];
           if (nextModule.lessons.length > 0) {
             const nextModuleFirstLessonId = nextModule.lessons[0].id;
             const nextModuleFirstLessonIndex = updatedLessons.findIndex(l => l.id === nextModuleFirstLessonId);
             if (nextModuleFirstLessonIndex !== -1) {
+              console.log('🔓 Unlocking first lesson of next module:', updatedLessons[nextModuleFirstLessonIndex].title);
               updatedLessons[nextModuleFirstLessonIndex] = { ...updatedLessons[nextModuleFirstLessonIndex], isLocked: false };
             }
           }
@@ -69,19 +81,15 @@ export function unlockLessonsForInProgressCourse(
     });
   });
 
-  // VERIFICACIÓN FINAL REFORZADA: Proteger ABSOLUTAMENTE las lecciones completadas
-  const finalLessons = updatedLessons.map(lesson => {
-    if (lesson.isCompleted) {
-      console.log('🔒 PROTECTION: Ensuring completed lesson is unlocked:', lesson.title);
-      return {
-        ...lesson,
-        isLocked: false // NUNCA puede estar bloqueada si está completada
-      };
-    }
-    return lesson;
-  });
+  return updatedLessons;
+}
 
-  return finalLessons;
+export function unlockAllLessonsForCompletedCourse(lessons: Lesson[]): Lesson[] {
+  console.log('🏆 Course 100% completed - unlocking all lessons for review');
+  return lessons.map(lesson => ({ 
+    ...lesson, 
+    isLocked: false // All lessons available for review
+  }));
 }
 
 export function isCourseCompleted(
@@ -89,5 +97,5 @@ export function isCourseCompleted(
   courseId: string
 ): boolean {
   const courseProgress = userProgress.find(p => p.course_id === courseId);
-  return courseProgress?.is_completed || false;
+  return courseProgress?.is_completed && courseProgress?.progress_percentage === 100;
 }

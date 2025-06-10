@@ -24,24 +24,31 @@ const LearningPath = React.memo(({ lessons, modules, onSelectLesson, currentLess
       .filter((lesson): lesson is Lesson => lesson !== undefined);
   };
 
-  // OPTIMIZED: Memoize lesson status calculations to prevent recalculation on every render
+  // OPTIMIZED: Memoize lesson status calculations
   const lessonStatusMap = useMemo(() => {
     const statusMap = new Map();
     lessons.forEach(lesson => {
       const isCompleted = lesson.isCompleted;
-      const isAvailable = !lesson.isLocked;
+      const isLocked = lesson.isLocked;
       const isCurrent = currentLessonId === lesson.id;
+      
+      // FIXED: Proper lesson state logic
+      // - Completed lessons: always unlocked with trophy icon
+      // - Unlocked incomplete lessons: play icon  
+      // - Locked lessons: lock icon
+      const canPlay = isCompleted || !isLocked;
       
       statusMap.set(lesson.id, {
         isCompleted,
-        isAvailable,
-        isCurrent
+        isLocked,
+        isCurrent,
+        canPlay
       });
     });
     return statusMap;
   }, [lessons, currentLessonId]);
 
-  // OPTIMIZED: Memoize CSS classes to prevent recalculation
+  // OPTIMIZED: Memoize CSS classes
   const getLessonClasses = useMemo(() => {
     const classCache = new Map();
     
@@ -49,27 +56,30 @@ const LearningPath = React.memo(({ lessons, modules, onSelectLesson, currentLess
       const status = lessonStatusMap.get(lesson.id);
       if (!status) return;
       
-      const { isCompleted, isAvailable, isCurrent } = status;
+      const { isCompleted, isLocked, isCurrent, canPlay } = status;
       
       const nodeClasses = cn(
-        "flex items-center justify-center w-12 h-12 rounded-full shadow-md transition-all duration-150 relative", // OPTIMIZED: Reduced transition duration
+        "flex items-center justify-center w-12 h-12 rounded-full shadow-md transition-all duration-200 relative",
         {
-          "bg-yellow-500 text-white": isCompleted, // Trofeo dorado/amarillo
-          "bg-[#5e16ea] text-white": !isCompleted && (isCurrent || isAvailable), // Color morado específico
-          "bg-gray-300 text-gray-500": !isAvailable, // Lecciones bloqueadas en gris
-          "hover:scale-110": isAvailable, // Efecto hover solo para lecciones disponibles
-          "ring-2 ring-yellow-300": isCurrent && isCompleted, // Ring for current completed lesson
-          "ring-2 ring-[#5e16ea]": isCurrent && !isCompleted // Ring for current incomplete lesson
+          // FIXED: Proper icon and color logic
+          "bg-yellow-500 text-white hover:bg-yellow-600": isCompleted, // Trophy - yellow/gold
+          "bg-[#5e16ea] text-white hover:bg-[#4a11ba]": !isCompleted && canPlay, // Play - purple
+          "bg-gray-300 text-gray-500": isLocked && !isCompleted, // Lock - gray
+          "hover:scale-110": canPlay, // Hover effect only for playable lessons
+          "ring-2 ring-yellow-300": isCurrent && isCompleted, // Ring for current completed
+          "ring-2 ring-[#5e16ea]": isCurrent && !isCompleted && canPlay, // Ring for current playable
+          "cursor-pointer": canPlay,
+          "cursor-not-allowed": !canPlay
         }
       );
 
       const textClasses = cn(
-        "text-sm transition-colors duration-150", // OPTIMIZED: Reduced transition duration
+        "text-sm transition-colors duration-200",
         {
-          "text-yellow-600 font-semibold": isCompleted, // Color de texto para lecciones completadas
-          "text-[#5e16ea] font-semibold": isCurrent && !isCompleted, // Color morado específico
-          "text-gray-800": isAvailable && !isCurrent && !isCompleted,
-          "text-gray-400": !isAvailable
+          "text-yellow-600 font-semibold": isCompleted, // Completed lessons
+          "text-[#5e16ea] font-semibold": isCurrent && !isCompleted && canPlay, // Current playable
+          "text-gray-800": canPlay && !isCurrent && !isCompleted, // Other playable
+          "text-gray-400": !canPlay // Locked lessons
         }
       );
 
@@ -91,7 +101,7 @@ const LearningPath = React.memo(({ lessons, modules, onSelectLesson, currentLess
           
           return (
             <div key={module.id} className="mb-6">
-              {/* Module title with subtle styling */}
+              {/* Module title */}
               <div className="text-center mb-3 px-2">
                 <h3 className="text-sm font-medium text-indigo-700 bg-indigo-50 inline-block py-1 px-3 rounded-full">
                   {module.title}
@@ -104,49 +114,53 @@ const LearningPath = React.memo(({ lessons, modules, onSelectLesson, currentLess
                   const status = lessonStatusMap.get(lesson.id);
                   if (!status) return null;
                   
-                  const { isCompleted, isAvailable, isCurrent } = status;
+                  const { isCompleted, isLocked, isCurrent, canPlay } = status;
                   const classes = getLessonClasses.get(lesson.id);
                   if (!classes) return null;
                   
                   const { nodeClasses, textClasses } = classes;
                   
-                  // Alternate positions to create zigzag effect 
+                  // Alternate positions for zigzag effect 
                   const containerAlignment = index % 2 === 0 
                     ? "justify-start" 
                     : "justify-start ml-[45px]";
                   
+                  const handleClick = () => {
+                    if (canPlay) {
+                      console.log('🎯 User clicked lesson:', lesson.title, 'canPlay:', canPlay, 'isCompleted:', isCompleted, 'isLocked:', isLocked);
+                      onSelectLesson(lesson);
+                    } else {
+                      console.log('🚫 Lesson not playable:', lesson.title, 'isLocked:', isLocked);
+                    }
+                  };
+                  
                   return (
                     <div key={lesson.id} className={`flex ${containerAlignment} items-center`}>
                       <div 
-                        className={`relative ${isAvailable ? 'cursor-pointer' : 'cursor-not-allowed'}`}
-                        onClick={() => isAvailable && onSelectLesson(lesson)}
+                        className={nodeClasses}
+                        onClick={handleClick}
                       >
-                        {/* Lesson circle with icon */}
-                        <div className={nodeClasses}>
-                          {isCompleted ? (
-                            <Trophy size={16} />
-                          ) : isAvailable ? (
-                            <Play size={16} fill="white" />
-                          ) : (
-                            <Lock size={16} />
-                          )}
-                        </div>
-                        
-                        {/* Progress indicator for current lesson */}
-                        {isCurrent && (
-                          <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                          </div>
+                        {/* FIXED: Proper icon logic */}
+                        {isCompleted ? (
+                          <Trophy size={16} />
+                        ) : canPlay ? (
+                          <Play size={16} fill="white" />
+                        ) : (
+                          <Lock size={16} />
                         )}
                       </div>
                       
+                      {/* Progress indicator for current lesson */}
+                      {isCurrent && (
+                        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                          <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                        </div>
+                      )}
+                      
                       {/* Lesson title */}
                       <div 
-                        className={cn(
-                          "ml-3 cursor-pointer", 
-                          { "cursor-not-allowed": !isAvailable }
-                        )}
-                        onClick={() => isAvailable && onSelectLesson(lesson)}
+                        className={cn("ml-3", { "cursor-pointer": canPlay, "cursor-not-allowed": !canPlay })}
+                        onClick={handleClick}
                       >
                         <div className={textClasses}>
                           {lesson.title}

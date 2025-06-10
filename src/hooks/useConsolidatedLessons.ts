@@ -25,7 +25,7 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     refetch: refetchCourseProgress 
   } = useUserProgress();
 
-  // CRITICAL: Flag to control automatic initialization
+  // Control automatic initialization
   const hasUserInteracted = useRef(false);
   const initializationBlocked = useRef(false);
 
@@ -63,38 +63,37 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     isAutoAdvanceAllowed
   );
 
-  // MAIN FUNCTION: Lesson selection handling with absolute priority for manual
+  // MAIN LESSON SELECTION with absolute manual priority
   const handleSelectLesson = useCallback((lesson: any, isManualSelection = true) => {
-    console.log('🎯 handleSelectLesson called with:', lesson.title, 'isCompleted:', lesson.isCompleted, 'isLocked:', lesson.isLocked, 'isManual:', isManualSelection);
+    console.log('🎯 handleSelectLesson called:', lesson.title, 'isCompleted:', lesson.isCompleted, 'isLocked:', lesson.isLocked, 'isManual:', isManualSelection);
     
-    // MARK USER INTERACTION
-    if (isManualSelection) {
-      hasUserInteracted.current = true;
-      initializationBlocked.current = true;
-      console.log('👤 USER INTERACTION: Blocking automatic initialization');
-      
-      // Unblock initialization after 5 seconds
-      setTimeout(() => {
-        initializationBlocked.current = false;
-        console.log('✅ Initialization unblocked after user interaction timeout');
-      }, 5000);
-    }
-    
+    // FIXED: Allow selection of completed lessons for replay
     const canSelectLesson = lesson.isCompleted || !lesson.isLocked;
     
     if (!canSelectLesson) {
-      console.log('⚠️ Lesson is locked and not completed, cannot select');
+      console.log('⚠️ Lesson cannot be selected - locked and not completed');
       return;
     }
     
-    console.log('✅ Lesson can be selected, updating current lesson and starting playback');
-    
-    // MANUAL PRIORITY: If manual selection, stop any auto-play sequence
+    // Mark user interaction for manual selections
     if (isManualSelection) {
-      console.log('🎯 Manual lesson selection detected - stopping auto-play sequence');
+      hasUserInteracted.current = true;
+      initializationBlocked.current = true;
+      console.log('👤 USER INTERACTION: Blocking automatic actions');
+      
+      // Unblock after delay
+      setTimeout(() => {
+        initializationBlocked.current = false;
+        console.log('✅ Automatic actions unblocked');
+      }, 5000);
+    }
+    
+    console.log('✅ Lesson selection confirmed:', lesson.title);
+    
+    if (isManualSelection) {
+      // Manual selection - stop auto-play and set new lesson
       setIsPlaying(false);
       
-      // OPTIMIZED: Use startTransition for non-urgent UI updates
       startTransition(() => {
         setCurrentLesson(lesson);
       });
@@ -114,27 +113,23 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     }
   }, [setCurrentLesson, handleSelectLessonFromPlayback, setIsPlaying]);
 
-  // CONTROLLED INITIALIZATION: Only if no user interaction
+  // CONTROLLED INITIALIZATION: Only when no user interaction
   useEffect(() => {
     if (podcast && user && !initializationBlocked.current && !hasUserInteracted.current) {
-      console.log('📊 Initializing podcast with progress data (no user interaction detected)...');
+      console.log('📊 Auto-initializing podcast with progress (no user interaction)...');
       startTransition(() => {
         initializePodcastWithProgress();
       });
-    } else if (initializationBlocked.current) {
-      console.log('🚫 Initialization blocked due to recent user interaction');
     }
   }, [podcast?.id, lessonProgress.length, userProgress.length, user?.id, initializePodcastWithProgress]);
 
-  // CURRENT LESSON INITIALIZATION: Only if no user interaction
+  // CURRENT LESSON INITIALIZATION: Only when no user interaction
   useEffect(() => {
     if (podcast && podcast.lessons.length > 0 && user && !initializationBlocked.current && !hasUserInteracted.current) {
-      console.log('🎯 Initializing current lesson (no user interaction detected)...');
+      console.log('🎯 Auto-initializing current lesson (no user interaction)...');
       startTransition(() => {
         initializeCurrentLesson();
       });
-    } else if (initializationBlocked.current) {
-      console.log('🚫 Current lesson initialization blocked due to recent user interaction');
     }
   }, [podcast?.lessons?.length, user?.id, initializeCurrentLesson]);
 
