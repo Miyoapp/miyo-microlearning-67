@@ -35,11 +35,12 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', sans-serif;
-    /* Improve text rendering on mobile */
+    /* Mobile-first font optimizations */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    /* Prevent zoom on input focus on iOS */
     -webkit-text-size-adjust: 100%;
+    /* Prevent zoom on input focus on iOS */
+    font-size: 16px;
   }
   
   .glass {
@@ -50,7 +51,7 @@
     @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
   }
   
-  /* Custom transitions */
+  /* Mobile-first transitions */
   .page-transition-enter {
     @apply opacity-0;
   }
@@ -67,13 +68,13 @@
     @apply opacity-0 transition-opacity duration-300;
   }
   
-  /* Card hover effect */
+  /* Mobile-first card hover effect */
   .card-hover {
     @apply transition-all duration-300 ease-in-out;
   }
   
   .card-hover:hover {
-    @apply transform -translate-y-1 shadow-card-hover;
+    @apply transform hover:-translate-y-1 shadow-card-hover;
   }
   
   @keyframes pulse {
@@ -91,7 +92,7 @@
     animation: pulse 2s infinite ease-in-out;
   }
   
-  /* Custom scrollbar - only show on non-mobile */
+  /* Mobile-first: hide scrollbar on mobile, show on desktop */
   @media (min-width: 768px) {
     ::-webkit-scrollbar {
       @apply w-1.5;
@@ -106,32 +107,69 @@
     }
   }
 
-  /* Mobile-specific improvements */
+  /* Mobile-first optimizations */
   @media (max-width: 767px) {
     /* Prevent horizontal scrolling */
     html, body {
       overflow-x: hidden;
+      max-width: 100vw;
     }
     
-    /* Improve touch targets */
-    button, [role="button"] {
+    /* Improve touch targets - minimum 44px */
+    button, [role="button"], .touchable {
       min-height: 44px;
       min-width: 44px;
     }
     
-    /* Improve form inputs */
+    /* Improve form inputs - prevent zoom on iOS */
     input, textarea, select {
-      /* Prevent zoom on iOS */
       font-size: 16px;
+    }
+
+    /* Mobile-specific spacing */
+    .mobile-padding {
+      @apply px-4;
+    }
+
+    /* Mobile-optimized typography */
+    h1 {
+      @apply text-2xl;
+    }
+
+    h2 {
+      @apply text-xl;
+    }
+
+    /* Mobile card optimizations */
+    .card-mobile {
+      @apply rounded-xl shadow-sm;
     }
   }
 
-  /* Text clamp utilities */
+  /* Desktop enhancements */
+  @media (min-width: 768px) {
+    /* Better hover states on desktop */
+    .card-hover:hover {
+      @apply shadow-lg scale-[1.02];
+    }
+
+    /* Desktop typography scale */
+    h1 {
+      @apply text-3xl;
+    }
+
+    h2 {
+      @apply text-2xl;
+    }
+  }
+
+  /* Text clamp utilities - improved for mobile */
   .line-clamp-1 {
     overflow: hidden;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 1;
+    line-height: 1.4;
   }
 
   .line-clamp-2 {
@@ -139,6 +177,7 @@
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
+    line-height: 1.4;
   }
 
   .line-clamp-3 {
@@ -146,5 +185,29 @@
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
+    line-height: 1.4;
+  }
+
+  /* Mobile-first grid utilities */
+  .mobile-grid {
+    @apply grid grid-cols-1 gap-4;
+  }
+
+  @media (min-width: 640px) {
+    .mobile-grid {
+      @apply sm:grid-cols-2 sm:gap-6;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .mobile-grid {
+      @apply lg:grid-cols-3;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .mobile-grid {
+      @apply xl:grid-cols-4;
+    }
   }
 }

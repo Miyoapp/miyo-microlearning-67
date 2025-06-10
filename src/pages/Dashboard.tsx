@@ -138,40 +138,44 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto pb-4">
+      <div className="max-w-7xl mx-auto pb-6">
+        {/* Mobile-first header */}
         <div className="mb-6 sm:mb-8 px-4 sm:px-0">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{welcomeMessage}</h1>
           <p className="text-sm sm:text-base text-gray-600">Continúa tu aprendizaje donde lo dejaste</p>
         </div>
 
-        {continueLearningCourses.length > 0 && (
+        {/* Mobile-first course sections */}
+        <div className="space-y-8 sm:space-y-12">
+          {continueLearningCourses.length > 0 && (
+            <TouchCarousel
+              title="Continúa escuchando"
+              courses={continueLearningCourses}
+              showProgress={true}
+              onPlayCourse={handlePlayCourse}
+              onToggleSave={handleToggleSave}
+              onCourseClick={handleCourseClick}
+            />
+          )}
+
           <TouchCarousel
-            title="Continúa escuchando"
-            courses={continueLearningCourses}
-            showProgress={true}
+            title="Para ti"
+            courses={recommendedCourses}
+            showProgress={false}
             onPlayCourse={handlePlayCourse}
             onToggleSave={handleToggleSave}
             onCourseClick={handleCourseClick}
           />
-        )}
 
-        <TouchCarousel
-          title="Para ti"
-          courses={recommendedCourses}
-          showProgress={false}
-          onPlayCourse={handlePlayCourse}
-          onToggleSave={handleToggleSave}
-          onCourseClick={handleCourseClick}
-        />
-
-        <TouchCarousel
-          title="Cursos Premium"
-          courses={premiumCourses}
-          showProgress={false}
-          onPlayCourse={handlePlayCourse}
-          onToggleSave={handleToggleSave}
-          onCourseClick={handleCourseClick}
-        />
+          <TouchCarousel
+            title="Cursos Premium"
+            courses={premiumCourses}
+            showProgress={false}
+            onPlayCourse={handlePlayCourse}
+            onToggleSave={handleToggleSave}
+            onCourseClick={handleCourseClick}
+          />
+        </div>
       </div>
     </DashboardLayout>
   );

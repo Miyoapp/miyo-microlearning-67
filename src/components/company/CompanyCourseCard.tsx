@@ -13,12 +13,12 @@ interface CompanyCourseCardProps {
 const CompanyCourseCard = ({ podcast }: CompanyCourseCardProps) => {
   return (
     <Link to={`/company/course/${podcast.id}`} className="block h-full">
-      <Card className="overflow-hidden transition-all duration-300 w-full max-w-sm mx-auto hover:shadow-lg hover:-translate-y-1 flex flex-col">
+      <Card className="overflow-hidden transition-all duration-300 w-full h-full hover:shadow-lg hover:-translate-y-1 flex flex-col group">
         <div className="aspect-[4/3] relative overflow-hidden flex-shrink-0">
           <img 
             src={podcast.imageUrl} 
             alt={podcast.title}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
           {podcast.tipo_curso === 'pago' && (
             <PremiumBadge />
@@ -31,28 +31,28 @@ const CompanyCourseCard = ({ podcast }: CompanyCourseCardProps) => {
           </div>
         </div>
         
-        <CardContent className="p-3 sm:p-4 flex-1 flex flex-col justify-between">
-          <div>
-            <div className="mb-2">
+        <CardContent className="p-4 sm:p-5 flex-1 flex flex-col justify-between min-h-0">
+          <div className="flex-1">
+            <div className="mb-3">
               <span className="text-xs font-medium px-2 py-1 rounded-full bg-miyo-100 text-miyo-800">
                 {podcast.category.nombre}
               </span>
             </div>
             
-            <h3 className="text-base sm:text-lg font-semibold mb-2 line-clamp-2">
+            <h3 className="text-base sm:text-lg font-semibold mb-3 line-clamp-2 leading-tight">
               {podcast.title}
             </h3>
             
-            <p className="text-sm text-gray-500 line-clamp-2 mb-3">{podcast.description}</p>
+            <p className="text-sm text-gray-500 line-clamp-2 mb-4">{podcast.description}</p>
           </div>
           
-          <div className="flex items-center mt-auto pt-2">
+          <div className="flex items-center mt-auto pt-3 border-t border-gray-100">
             <img 
               src={podcast.creator.imageUrl} 
               alt={podcast.creator.name}
-              className="w-5 h-5 sm:w-6 sm:h-6 rounded-full mr-2"
+              className="w-5 h-5 sm:w-6 sm:h-6 rounded-full mr-2 flex-shrink-0"
             />
-            <span className="text-xs text-gray-600 truncate">{podcast.creator.name}</span>
+            <span className="text-sm text-gray-600 truncate">{podcast.creator.name}</span>
           </div>
         </CardContent>
       </Card>

@@ -54,14 +54,14 @@ const FeaturedCourses = () => {
   };
 
   return (
-    <section className="py-20 px-4 bg-white sm:px-6 lg:px-8">
+    <section className="py-12 sm:py-20 px-4 bg-white sm:px-6 lg:px-8">
       <div className="miyo-container">
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-12">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-8 sm:mb-12">
           <div>
             <span className="inline-block py-1 px-3 rounded-full bg-miyo-100 text-miyo-800 text-sm font-medium mb-4">
               Cursos Destacados
             </span>
-            <h2 className="text-3xl font-bold text-gray-900">Comienza tu viaje de aprendizaje</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Comienza tu viaje de aprendizaje</h2>
           </div>
           <Link to="/personas" className="mt-4 md:mt-0">
             <Button variant="link" className="text-miyo-800 hover:text-miyo-600 p-0">
@@ -72,18 +72,18 @@ const FeaturedCourses = () => {
         </div>
         
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {[...Array(4)].map((_, index) => (
-              <div key={index} className="bg-white rounded-2xl overflow-hidden shadow-sm animate-pulse">
+              <div key={index} className="bg-white rounded-2xl overflow-hidden shadow-sm animate-pulse h-[400px]">
                 <div className="aspect-[4/3] bg-gray-200"></div>
-                <div className="p-5">
-                  <div className="h-6 bg-gray-200 rounded mb-2"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/2 mb-3"></div>
-                  <div className="flex space-x-2 mb-3">
+                <div className="p-4 sm:p-5 space-y-3">
+                  <div className="h-6 bg-gray-200 rounded"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  <div className="flex space-x-2">
                     <div className="h-6 w-6 bg-gray-200 rounded-full"></div>
                     <div className="h-4 bg-gray-200 rounded w-1/3"></div>
                   </div>
-                  <div className="flex space-x-3">
+                  <div className="flex justify-between pt-3 border-t border-gray-100">
                     <div className="h-4 bg-gray-200 rounded w-1/4"></div>
                     <div className="h-4 bg-gray-200 rounded w-1/4"></div>
                   </div>
@@ -105,11 +105,11 @@ const FeaturedCourses = () => {
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {featuredCourses.map((podcast, index) => (
               <div 
                 key={podcast.id} 
-                className="opacity-0 animate-scale-in opacity-100" 
+                className="opacity-0 animate-scale-in opacity-100 h-full" 
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <PodcastCard podcast={podcast} />

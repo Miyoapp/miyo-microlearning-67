@@ -62,14 +62,15 @@ const DashboardDiscover = () => {
 
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-0">
-        <div className="mb-6 sm:mb-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Mobile-first header */}
+        <div className="mb-6 sm:mb-8 px-4 sm:px-0">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Descubrir</h1>
           <p className="text-sm sm:text-base text-gray-600">Explora nuevos cursos y temas</p>
         </div>
 
-        {/* Categories - Mobile optimized */}
-        <div className="mb-8">
+        {/* Mobile-first categories */}
+        <div className="mb-8 px-4 sm:px-0">
           <h2 className="text-xl sm:text-2xl font-bold mb-4">Categorías</h2>
           <div className="flex flex-wrap gap-2 mb-6">
             <Button
@@ -93,44 +94,47 @@ const DashboardDiscover = () => {
             ))}
           </div>
 
+          {/* Mobile-first: Single column on mobile, grid on desktop */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {filteredCourses.map(course => {
               const progress = userProgress.find(p => p.course_id === course.id);
               return (
-                <CourseCardWithProgress
-                  key={course.id}
-                  podcast={course}
-                  progress={progress?.progress_percentage || 0}
-                  isPlaying={false}
-                  isSaved={progress?.is_saved || false}
-                  showProgress={false}
-                  onPlay={() => handlePlayCourse(course.id)}
-                  onToggleSave={() => toggleSaveCourse(course.id)}
-                  onClick={() => handleCourseClick(course.id)}
-                />
+                <div key={course.id} className="h-full">
+                  <CourseCardWithProgress
+                    podcast={course}
+                    progress={progress?.progress_percentage || 0}
+                    isPlaying={false}
+                    isSaved={progress?.is_saved || false}
+                    showProgress={false}
+                    onPlay={() => handlePlayCourse(course.id)}
+                    onToggleSave={() => toggleSaveCourse(course.id)}
+                    onClick={() => handleCourseClick(course.id)}
+                  />
+                </div>
               );
             })}
           </div>
         </div>
 
-        {/* New Courses */}
-        <div className="mb-8">
+        {/* Mobile-first new courses */}
+        <div className="mb-8 px-4 sm:px-0">
           <h2 className="text-xl sm:text-2xl font-bold mb-4">Nuevos</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {newCourses.map(course => {
               const progress = userProgress.find(p => p.course_id === course.id);
               return (
-                <CourseCardWithProgress
-                  key={course.id}
-                  podcast={course}
-                  progress={progress?.progress_percentage || 0}
-                  isPlaying={false}
-                  isSaved={progress?.is_saved || false}
-                  showProgress={false}
-                  onPlay={() => handlePlayCourse(course.id)}
-                  onToggleSave={() => toggleSaveCourse(course.id)}
-                  onClick={() => handleCourseClick(course.id)}
-                />
+                <div key={course.id} className="h-full">
+                  <CourseCardWithProgress
+                    podcast={course}
+                    progress={progress?.progress_percentage || 0}
+                    isPlaying={false}
+                    isSaved={progress?.is_saved || false}
+                    showProgress={false}
+                    onPlay={() => handlePlayCourse(course.id)}
+                    onToggleSave={() => toggleSaveCourse(course.id)}
+                    onClick={() => handleCourseClick(course.id)}
+                  />
+                </div>
               );
             })}
           </div>

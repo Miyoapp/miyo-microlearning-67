@@ -44,10 +44,10 @@ const CourseCardWithProgress: React.FC<CourseCardWithProgressProps> = ({
   console.log('CourseCard render - Course:', podcast.id, 'isSaved:', isSaved, 'progress:', progress, 'showProgress:', showProgress);
 
   return (
-    <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer w-full max-w-sm mx-auto flex flex-col">
+    <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer w-full h-full flex flex-col">
       <CardContent className="p-0 flex flex-col h-full">
-        <div onClick={onClick} className="flex-1 flex flex-col">
-          {/* Mobile-optimized image container */}
+        <div onClick={onClick} className="flex-1 flex flex-col h-full">
+          {/* Mobile-first image container */}
           <div className="aspect-[4/3] relative overflow-hidden rounded-t-lg flex-shrink-0">
             <img 
               src={podcast.imageUrl} 
@@ -61,31 +61,31 @@ const CourseCardWithProgress: React.FC<CourseCardWithProgressProps> = ({
             )}
           </div>
           
-          {/* Mobile-optimized content area */}
-          <div className="p-3 sm:p-4 flex-1 flex flex-col">
-            <div className="flex-1">
-              <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base leading-tight line-clamp-2">
+          {/* Mobile-first content area */}
+          <div className="p-4 sm:p-5 flex-1 flex flex-col min-h-0">
+            <div className="flex-1 min-h-0">
+              <h3 className="font-semibold text-gray-900 mb-3 text-base sm:text-lg leading-tight line-clamp-2">
                 {podcast.title}
               </h3>
               
               {/* Creator info */}
-              <div className="flex items-center space-x-2 mb-3">
+              <div className="flex items-center space-x-2 mb-4">
                 <img 
                   src={podcast.creator.imageUrl} 
                   alt={podcast.creator.name}
-                  className="w-4 h-4 rounded-full flex-shrink-0"
+                  className="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex-shrink-0"
                 />
-                <span className="text-xs text-gray-600 truncate">{podcast.creator.name}</span>
+                <span className="text-sm text-gray-600 truncate">{podcast.creator.name}</span>
               </div>
               
               {/* Course stats - mobile optimized */}
-              <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
+              <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
                 <div className="flex items-center space-x-1">
-                  <Clock className="w-3 h-3" />
+                  <Clock className="w-4 h-4" />
                   <span>{formatMinutesToHumanReadable(podcast.duration)}</span>
                 </div>
                 <div className="flex items-center space-x-1">
-                  <Headphones className="w-3 h-3" />
+                  <Headphones className="w-4 h-4" />
                   <span>{podcast.lessonCount} lecciones</span>
                 </div>
               </div>
@@ -93,21 +93,21 @@ const CourseCardWithProgress: React.FC<CourseCardWithProgressProps> = ({
               {/* Progress bar */}
               {showProgress && progress > 0 && (
                 <div className="mb-4">
-                  <Progress value={progress} className="h-1.5" />
+                  <Progress value={progress} className="h-2" />
                   <div className="text-xs text-gray-500 mt-1">{Math.round(progress)}% completado</div>
                 </div>
               )}
             </div>
             
-            {/* Mobile-optimized action buttons */}
-            <div className="flex items-center justify-between gap-2 mt-auto pt-2">
+            {/* Mobile-first action buttons */}
+            <div className="flex items-center justify-between gap-3 mt-auto pt-3 border-t border-gray-100">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handlePlayClick}
-                className="flex items-center space-x-1 flex-1 text-xs h-9 sm:h-8"
+                className="flex items-center space-x-2 flex-1 text-sm h-10"
               >
-                {isPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+                {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                 <span>{isPlaying ? 'Pausar' : 'Reproducir'}</span>
               </Button>
               
@@ -115,11 +115,11 @@ const CourseCardWithProgress: React.FC<CourseCardWithProgressProps> = ({
                 variant="ghost"
                 size="sm"
                 onClick={handleSaveClick}
-                className="h-9 w-9 sm:h-8 sm:w-8 p-0 flex-shrink-0"
+                className="h-10 w-10 p-0 flex-shrink-0"
               >
                 {isSaved ? 
-                  <BookmarkCheck className="w-4 h-4 sm:w-3 sm:h-3 text-miyo-800" /> : 
-                  <Bookmark className="w-4 h-4 sm:w-3 sm:h-3" />
+                  <BookmarkCheck className="w-4 h-4 text-miyo-800" /> : 
+                  <Bookmark className="w-4 h-4" />
                 }
               </Button>
             </div>

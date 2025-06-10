@@ -41,9 +41,9 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
 
   if (courses.length === 0) {
     return (
-      <div className="mb-6 sm:mb-8">
-        <h2 className="text-xl sm:text-2xl font-bold mb-4 px-4 sm:px-0">{title}</h2>
-        <div className="text-gray-500 text-center py-8 text-sm sm:text-base">
+      <div className="mb-8 sm:mb-12">
+        <h2 className="text-xl sm:text-2xl font-bold mb-6 px-4 sm:px-0">{title}</h2>
+        <div className="text-gray-500 text-center py-12 text-sm sm:text-base">
           No hay cursos disponibles en esta sección
         </div>
       </div>
@@ -52,17 +52,37 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
 
   return (
     <div className="mb-8 sm:mb-12">
-      <h2 className="text-xl sm:text-2xl font-bold mb-4 px-4 sm:px-0">{title}</h2>
+      <h2 className="text-xl sm:text-2xl font-bold mb-6 px-4 sm:px-0">{title}</h2>
       
       <div className="relative">
-        {/* Embla Carousel Container */}
-        <div className="overflow-hidden" ref={emblaRef}>
-          <div className="flex">
-            {courses.map((course, index) => (
-              <div 
-                key={course.podcast.id} 
-                className="flex-none w-[280px] sm:w-[300px] mr-4 first:ml-4 last:mr-4 sm:first:ml-0"
-              >
+        {/* Mobile: Horizontal scroll carousel */}
+        {isMobile ? (
+          <div className="overflow-hidden" ref={emblaRef}>
+            <div className="flex">
+              {courses.map((course, index) => (
+                <div 
+                  key={course.podcast.id} 
+                  className="flex-none w-[85vw] max-w-[320px] mr-4 first:ml-4 last:mr-4"
+                >
+                  <CourseCardWithProgress
+                    podcast={course.podcast}
+                    progress={course.progress}
+                    isPlaying={course.isPlaying}
+                    isSaved={course.isSaved}
+                    showProgress={showProgress}
+                    onPlay={() => onPlayCourse?.(course.podcast.id)}
+                    onToggleSave={() => onToggleSave?.(course.podcast.id)}
+                    onClick={() => onCourseClick?.(course.podcast.id)}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          /* Desktop: Grid layout */
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 px-4 sm:px-0">
+            {courses.map((course) => (
+              <div key={course.podcast.id} className="h-full">
                 <CourseCardWithProgress
                   podcast={course.podcast}
                   progress={course.progress}
@@ -76,7 +96,7 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
               </div>
             ))}
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
