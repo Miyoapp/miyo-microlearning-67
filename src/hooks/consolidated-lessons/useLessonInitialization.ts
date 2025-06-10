@@ -47,6 +47,13 @@ export function useLessonInitialization(
       finalLessons = initializeFreshCourse(podcast);
     }
     
+    // Debug: Log the state of the first few lessons
+    console.log('🔍 First lesson states:', finalLessons.slice(0, 3).map(l => ({
+      title: l.title,
+      isCompleted: l.isCompleted,
+      isLocked: l.isLocked
+    })));
+    
     setPodcast({ ...podcast, lessons: finalLessons });
   }, [podcast, lessonProgress, userProgress, user, setPodcast]);
 

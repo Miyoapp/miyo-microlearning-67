@@ -7,6 +7,10 @@ export function updateLessonsWithProgress(
   podcast: Podcast,
   lessonProgress: UserLessonProgress[]
 ): Lesson[] {
+  // Get the first lesson ID to ensure it's always unlocked
+  const firstModule = podcast.modules[0];
+  const firstLessonId = firstModule?.lessonIds?.[0];
+  
   return podcast.lessons.map(lesson => {
     const progress = lessonProgress.find(p => p.lesson_id === lesson.id);
     const isCompleted = progress?.is_completed || false;
@@ -14,8 +18,8 @@ export function updateLessonsWithProgress(
     return {
       ...lesson,
       isCompleted,
-      // CRITICAL FIX: Completed lessons are NEVER locked
-      isLocked: !isCompleted
+      // FIXED: First lesson is always unlocked, completed lessons are always unlocked
+      isLocked: !isCompleted && lesson.id !== firstLessonId
     };
   });
 }
