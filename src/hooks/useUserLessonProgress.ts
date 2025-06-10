@@ -20,7 +20,7 @@ export function useUserLessonProgress() {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
-  const fetchLessonProgress = async () => {
+  const fetchLessonProgress = useCallback(async () => {
     if (!user) {
       setLoading(false);
       return;
@@ -45,7 +45,33 @@ export function useUserLessonProgress() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  // Check if course is in review mode (100% complete)
+  const isInReviewMode = useCallback(async (courseId: string): Promise<boolean> => {
+    if (!user) return false;
+
+    try {
+      const { data, error } = await supabase
+        .from('user_course_progress')
+        .select('progress_percentage, is_completed')
+        .eq('user_id', user.id)
+        .eq('course_id', courseId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error checking review mode:', error);
+        return false;
+      }
+
+      const isReviewMode = data?.is_completed === true && data?.progress_percentage === 100;
+      console.log('🔍 Review mode check for course:', courseId, 'isReviewMode:', isReviewMode);
+      return isReviewMode;
+    } catch (error) {
+      console.error('Error checking review mode:', error);
+      return false;
+    }
+  }, [user]);
 
   const updateLessonProgress = async (
     lessonId: string, 
@@ -55,6 +81,16 @@ export function useUserLessonProgress() {
     if (!user) {
       console.log('No user found, cannot update lesson progress');
       return;
+    }
+
+    // Check if course is in review mode
+    const reviewMode = await isInReviewMode(courseId);
+    if (reviewMode && updates.current_position !== undefined && updates.current_position < 100) {
+      console.log('🔒 Course in review mode, skipping progress update for lesson:', lessonId);
+      // Still allow lesson completion updates, but not position updates during review
+      if (updates.is_completed !== true) {
+        return;
+      }
     }
 
     console.log('Updating lesson progress for:', lessonId, 'with updates:', updates);
@@ -68,7 +104,7 @@ export function useUserLessonProgress() {
         .eq('lesson_id', lessonId)
         .single();
 
-      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = no rows returned
+      if (fetchError && fetchError.code !== 'PGRST116') {
         console.error('Error fetching existing progress:', fetchError);
         throw fetchError;
       }
@@ -118,7 +154,7 @@ export function useUserLessonProgress() {
       
       console.log('Successfully updated lesson progress in DB:', data);
       
-      // Update local state
+      // Update local state immediately
       setLessonProgress(prev => {
         const updatedProgress = {
           id: data[0]?.id || '',
@@ -171,6 +207,13 @@ export function useUserLessonProgress() {
   // Improved function to update lesson position with better state preservation
   const updateLessonPosition = useCallback(
     async (lessonId: string, courseId: string, position: number) => {
+      // Check if course is in review mode first
+      const reviewMode = await isInReviewMode(courseId);
+      if (reviewMode) {
+        console.log('🔒 Course in review mode, not updating position for lesson:', lessonId);
+        return;
+      }
+
       // Get current state from local state first (for performance)
       const existingProgress = lessonProgress.find(p => p.lesson_id === lessonId);
       
@@ -195,19 +238,12 @@ export function useUserLessonProgress() {
 
       await updateLessonProgress(lessonId, courseId, updates);
     },
-    [lessonProgress]
+    [lessonProgress, isInReviewMode]
   );
 
   useEffect(() => {
-    if (user) {
-      console.log('User found, fetching lesson progress for:', user.id);
-      fetchLessonProgress();
-    } else {
-      console.log('No user found, clearing lesson progress');
-      setLessonProgress([]);
-      setLoading(false);
-    }
-  }, [user]);
+    fetchLessonProgress();
+  }, [fetchLessonProgress]);
 
   return {
     lessonProgress,
@@ -215,6 +251,7 @@ export function useUserLessonProgress() {
     updateLessonProgress,
     markLessonComplete,
     updateLessonPosition,
+    isInReviewMode,
     refetch: fetchLessonProgress
   };
 }

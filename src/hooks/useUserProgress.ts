@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { toast } from 'sonner';
@@ -17,7 +16,7 @@ export function useUserProgress() {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
-  const fetchUserProgress = async () => {
+  const fetchUserProgress = useCallback(async () => {
     if (!user) {
       setLoading(false);
       return;
@@ -42,12 +41,28 @@ export function useUserProgress() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   const updateCourseProgress = async (courseId: string, updates: Partial<UserCourseProgress>) => {
     if (!user) {
       console.log('No user found, cannot update progress');
       return;
+    }
+
+    // Check if course is already 100% complete (review mode)
+    const currentProgress = userProgress.find(p => p.course_id === courseId);
+    if (currentProgress?.is_completed && currentProgress?.progress_percentage === 100) {
+      console.log('🔒 Course already 100% complete, preserving progress in review mode:', courseId);
+      // Only allow saving/unsaving in review mode
+      if (updates.is_saved !== undefined) {
+        const preservedUpdates = {
+          is_saved: updates.is_saved,
+          last_listened_at: new Date().toISOString()
+        };
+        updates = preservedUpdates;
+      } else {
+        return; // Skip other updates in review mode
+      }
     }
 
     console.log('Updating course progress for:', courseId, 'with updates:', updates);
@@ -154,15 +169,8 @@ export function useUserProgress() {
   };
 
   useEffect(() => {
-    if (user) {
-      console.log('User found, fetching progress for:', user.id);
-      fetchUserProgress();
-    } else {
-      console.log('No user found, clearing progress');
-      setUserProgress([]);
-      setLoading(false);
-    }
-  }, [user]);
+    fetchUserProgress();
+  }, [fetchUserProgress]);
 
   return {
     userProgress,

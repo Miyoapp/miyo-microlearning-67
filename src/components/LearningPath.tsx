@@ -55,7 +55,9 @@ const LearningPath = ({ lessons, modules, onSelectLesson, currentLessonId }: Lea
                       "bg-yellow-500 text-white": isCompleted, // Trofeo dorado/amarillo
                       "bg-[#5e16ea] text-white": !isCompleted && (isCurrent || isAvailable), // Color morado específico
                       "bg-gray-300 text-gray-500": !isAvailable, // Lecciones bloqueadas en gris
-                      "hover:scale-110": isAvailable // Efecto hover solo para lecciones disponibles
+                      "hover:scale-110": isAvailable, // Efecto hover solo para lecciones disponibles
+                      "ring-2 ring-yellow-300": isCurrent && isCompleted, // Ring for current completed lesson
+                      "ring-2 ring-[#5e16ea]": isCurrent && !isCompleted // Ring for current incomplete lesson
                     }
                   );
                   
@@ -80,6 +82,13 @@ const LearningPath = ({ lessons, modules, onSelectLesson, currentLessonId }: Lea
                             <Lock size={16} />
                           )}
                         </div>
+                        
+                        {/* Progress indicator for current lesson */}
+                        {isCurrent && (
+                          <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                          </div>
+                        )}
                       </div>
                       
                       {/* Lesson title */}
@@ -93,13 +102,16 @@ const LearningPath = ({ lessons, modules, onSelectLesson, currentLessonId }: Lea
                         <div className={cn(
                           "text-sm transition-colors", 
                           {
-                            "text-yellow-600": isCompleted, // Color de texto para lecciones completadas
+                            "text-yellow-600 font-semibold": isCompleted, // Color de texto para lecciones completadas
                             "text-[#5e16ea] font-semibold": isCurrent && !isCompleted, // Color morado específico
                             "text-gray-800": isAvailable && !isCurrent && !isCompleted,
                             "text-gray-400": !isAvailable
                           }
                         )}>
                           {lesson.title}
+                          {isCurrent && (
+                            <span className="ml-2 text-xs text-green-600">● Reproduciendo</span>
+                          )}
                         </div>
                       </div>
                     </div>
