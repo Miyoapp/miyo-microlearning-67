@@ -2,6 +2,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { Lesson, Podcast } from '@/types';
 import { UserCourseProgress } from '../useUserProgress';
+import { startTransition } from 'react';
 
 export function useLessonPlayback(
   podcast: Podcast | null,
@@ -12,15 +13,15 @@ export function useLessonPlayback(
 ) {
   const [isPlaying, setIsPlaying] = useState(false);
   
-  // CRÍTICO: Flag para controlar la prioridad de las acciones
+  // CRITICAL: Flag to control action priority
   const manualSelectionActive = useRef(false);
   const autoAdvanceBlocked = useRef(false);
 
-  // Handle lesson selection (PRIORIDAD MANUAL ABSOLUTA)
+  // Handle lesson selection (ABSOLUTE MANUAL PRIORITY)
   const handleSelectLesson = useCallback((lesson: Lesson, isManualSelection = true) => {
     console.log('🎯 Selecting lesson:', lesson.title, 'isCompleted:', lesson.isCompleted, 'isLocked:', lesson.isLocked, 'isManual:', isManualSelection);
 
-    // LÓGICA SIMPLIFICADA: Las lecciones completadas SIEMPRE se pueden reproducir
+    // SIMPLIFIED LOGIC: Completed lessons can ALWAYS be played
     const canSelectLesson = lesson.isCompleted || !lesson.isLocked;
 
     if (!canSelectLesson) {
@@ -28,13 +29,13 @@ export function useLessonPlayback(
       return;
     }
 
-    // CRÍTICO: Marcar como selección manual para bloquear auto-advance
+    // CRITICAL: Mark as manual selection to block auto-advance
     if (isManualSelection) {
       console.log('🚫 MANUAL SELECTION: Blocking auto-advance for 3 seconds');
       manualSelectionActive.current = true;
       autoAdvanceBlocked.current = true;
       
-      // Desbloquear auto-advance después de 3 segundos
+      // Unblock auto-advance after 3 seconds
       setTimeout(() => {
         manualSelectionActive.current = false;
         autoAdvanceBlocked.current = false;
@@ -50,7 +51,10 @@ export function useLessonPlayback(
       return;
     }
 
-    setIsPlaying(true);
+    // OPTIMIZED: Use startTransition for better performance on play state
+    startTransition(() => {
+      setIsPlaying(true);
+    });
 
     // Track lesson start in database (only for incomplete lessons)
     if (podcast && user && !lesson.isCompleted) {
@@ -83,7 +87,7 @@ export function useLessonPlayback(
     }
   }, [currentLesson, podcast, user, updateLessonPosition]);
 
-  // NUEVA FUNCIÓN: Verificar si auto-advance está permitido
+  // NEW FUNCTION: Check if auto-advance is allowed
   const isAutoAdvanceAllowed = useCallback(() => {
     const allowed = !autoAdvanceBlocked.current && !manualSelectionActive.current;
     console.log('🤖 Auto-advance allowed:', allowed, 'manualActive:', manualSelectionActive.current, 'blocked:', autoAdvanceBlocked.current);

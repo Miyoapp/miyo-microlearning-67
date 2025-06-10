@@ -1,8 +1,9 @@
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Lesson, Module } from '../types';
 import { Play, Lock, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import React from 'react';
 
 interface LearningPathProps {
   lessons: Lesson[];
@@ -11,7 +12,7 @@ interface LearningPathProps {
   currentLessonId: string | null;
 }
 
-const LearningPath = ({ lessons, modules, onSelectLesson, currentLessonId }: LearningPathProps) => {
+const LearningPath = React.memo(({ lessons, modules, onSelectLesson, currentLessonId }: LearningPathProps) => {
   // Group lessons by module and ensure they are in the correct order
   const getLessonsForModule = (moduleId: string) => {
     const module = modules.find(m => m.id === moduleId);
@@ -22,6 +23,61 @@ const LearningPath = ({ lessons, modules, onSelectLesson, currentLessonId }: Lea
       .map(id => lessons.find(lesson => lesson.id === id))
       .filter((lesson): lesson is Lesson => lesson !== undefined);
   };
+
+  // OPTIMIZED: Memoize lesson status calculations to prevent recalculation on every render
+  const lessonStatusMap = useMemo(() => {
+    const statusMap = new Map();
+    lessons.forEach(lesson => {
+      const isCompleted = lesson.isCompleted;
+      const isAvailable = !lesson.isLocked;
+      const isCurrent = currentLessonId === lesson.id;
+      
+      statusMap.set(lesson.id, {
+        isCompleted,
+        isAvailable,
+        isCurrent
+      });
+    });
+    return statusMap;
+  }, [lessons, currentLessonId]);
+
+  // OPTIMIZED: Memoize CSS classes to prevent recalculation
+  const getLessonClasses = useMemo(() => {
+    const classCache = new Map();
+    
+    lessons.forEach(lesson => {
+      const status = lessonStatusMap.get(lesson.id);
+      if (!status) return;
+      
+      const { isCompleted, isAvailable, isCurrent } = status;
+      
+      const nodeClasses = cn(
+        "flex items-center justify-center w-12 h-12 rounded-full shadow-md transition-all duration-150 relative", // OPTIMIZED: Reduced transition duration
+        {
+          "bg-yellow-500 text-white": isCompleted, // Trofeo dorado/amarillo
+          "bg-[#5e16ea] text-white": !isCompleted && (isCurrent || isAvailable), // Color morado específico
+          "bg-gray-300 text-gray-500": !isAvailable, // Lecciones bloqueadas en gris
+          "hover:scale-110": isAvailable, // Efecto hover solo para lecciones disponibles
+          "ring-2 ring-yellow-300": isCurrent && isCompleted, // Ring for current completed lesson
+          "ring-2 ring-[#5e16ea]": isCurrent && !isCompleted // Ring for current incomplete lesson
+        }
+      );
+
+      const textClasses = cn(
+        "text-sm transition-colors duration-150", // OPTIMIZED: Reduced transition duration
+        {
+          "text-yellow-600 font-semibold": isCompleted, // Color de texto para lecciones completadas
+          "text-[#5e16ea] font-semibold": isCurrent && !isCompleted, // Color morado específico
+          "text-gray-800": isAvailable && !isCurrent && !isCompleted,
+          "text-gray-400": !isAvailable
+        }
+      );
+
+      classCache.set(lesson.id, { nodeClasses, textClasses });
+    });
+    
+    return classCache;
+  }, [lessons, lessonStatusMap]);
   
   return (
     <div className="py-3">
@@ -45,21 +101,14 @@ const LearningPath = ({ lessons, modules, onSelectLesson, currentLessonId }: Lea
               {/* Lessons within this module */}
               <div className="space-y-[25px]">
                 {moduleLessons.map((lesson, index) => {
-                  const isCompleted = lesson.isCompleted;
-                  const isAvailable = !lesson.isLocked;
-                  const isCurrent = currentLessonId === lesson.id;
+                  const status = lessonStatusMap.get(lesson.id);
+                  if (!status) return null;
                   
-                  let nodeClasses = cn(
-                    "flex items-center justify-center w-12 h-12 rounded-full shadow-md transition-all duration-300 relative",
-                    {
-                      "bg-yellow-500 text-white": isCompleted, // Trofeo dorado/amarillo
-                      "bg-[#5e16ea] text-white": !isCompleted && (isCurrent || isAvailable), // Color morado específico
-                      "bg-gray-300 text-gray-500": !isAvailable, // Lecciones bloqueadas en gris
-                      "hover:scale-110": isAvailable, // Efecto hover solo para lecciones disponibles
-                      "ring-2 ring-yellow-300": isCurrent && isCompleted, // Ring for current completed lesson
-                      "ring-2 ring-[#5e16ea]": isCurrent && !isCompleted // Ring for current incomplete lesson
-                    }
-                  );
+                  const { isCompleted, isAvailable, isCurrent } = status;
+                  const classes = getLessonClasses.get(lesson.id);
+                  if (!classes) return null;
+                  
+                  const { nodeClasses, textClasses } = classes;
                   
                   // Alternate positions to create zigzag effect 
                   const containerAlignment = index % 2 === 0 
@@ -99,15 +148,7 @@ const LearningPath = ({ lessons, modules, onSelectLesson, currentLessonId }: Lea
                         )}
                         onClick={() => isAvailable && onSelectLesson(lesson)}
                       >
-                        <div className={cn(
-                          "text-sm transition-colors", 
-                          {
-                            "text-yellow-600 font-semibold": isCompleted, // Color de texto para lecciones completadas
-                            "text-[#5e16ea] font-semibold": isCurrent && !isCompleted, // Color morado específico
-                            "text-gray-800": isAvailable && !isCurrent && !isCompleted,
-                            "text-gray-400": !isAvailable
-                          }
-                        )}>
+                        <div className={textClasses}>
                           {lesson.title}
                           {isCurrent && (
                             <span className="ml-2 text-xs text-green-600">● Reproduciendo</span>
@@ -124,6 +165,8 @@ const LearningPath = ({ lessons, modules, onSelectLesson, currentLessonId }: Lea
       </div>
     </div>
   );
-};
+});
+
+LearningPath.displayName = 'LearningPath';
 
 export default LearningPath;
