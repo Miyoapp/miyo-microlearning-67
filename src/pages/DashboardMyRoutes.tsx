@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import CourseCarousel from '@/components/dashboard/CourseCarousel';
+import TouchCarousel from '@/components/dashboard/TouchCarousel';
 import CourseCardWithProgress from '@/components/dashboard/CourseCardWithProgress';
 import { obtenerCursos } from '@/lib/api';
 import { useUserProgress } from '@/hooks/useUserProgress';
@@ -100,12 +100,12 @@ const DashboardMyRoutes = () => {
   return (
     <DashboardLayout>
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
+        <div className="mb-8 px-4 sm:px-0">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Mis Rutas</h1>
           <p className="text-gray-600">Tu progreso y cursos guardados</p>
         </div>
 
-        <CourseCarousel
+        <TouchCarousel
           title="Continúa escuchando"
           courses={continueLearningCourses}
           showProgress={true}
@@ -115,7 +115,7 @@ const DashboardMyRoutes = () => {
         />
 
         {/* Saved Courses */}
-        <div className="mb-8">
+        <div className="mb-8 px-4 sm:px-0">
           <h2 className="text-2xl font-bold mb-4">Guardados</h2>
           {savedCourses.length === 0 ? (
             <div className="text-gray-500 text-center py-8">
@@ -146,7 +146,7 @@ const DashboardMyRoutes = () => {
         </div>
 
         {/* Completed Courses */}
-        <div className="mb-8">
+        <div className="mb-8 px-4 sm:px-0">
           <h2 className="text-2xl font-bold mb-4">Terminados</h2>
           {completedCourses.length === 0 ? (
             <div className="text-gray-500 text-center py-8">

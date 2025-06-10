@@ -1,21 +1,16 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import CourseCarousel from '@/components/dashboard/CourseCarousel';
-import { useUserProgress } from '@/hooks/useUserProgress';
+import TouchCarousel from '@/components/dashboard/TouchCarousel';
 import { obtenerCursos } from '@/lib/api';
-import { useState, useEffect } from 'react';
+import { useUserProgress } from '@/hooks/useUserProgress';
 import { Podcast } from '@/types';
-import { useAuth } from '@/components/auth/AuthProvider';
-import { supabase } from '@/integrations/supabase/client';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [allCourses, setAllCourses] = useState<Podcast[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userProfile, setUserProfile] = useState<{ name?: string } | null>(null);
-  const { user } = useAuth();
   const { userProgress, toggleSaveCourse, startCourse, refetch } = useUserProgress();
 
   useEffect(() => {
@@ -34,36 +29,11 @@ const Dashboard = () => {
     loadCourses();
   }, []);
 
-  // Fetch user profile when user changes
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (user) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('name')
-          .eq('id', user.id)
-          .single();
-        
-        setUserProfile(data);
-      } else {
-        setUserProfile(null);
-      }
-    };
-
-    fetchUserProfile();
-  }, [user]);
-
-  // Refresh user progress when userProgress changes
-  useEffect(() => {
-    console.log('Dashboard: User progress updated:', userProgress);
-  }, [userProgress]);
-
-  // Get courses with progress
+  // Get courses in progress
   const continueLearningCourses = allCourses
     .map(course => {
       const progress = userProgress.find(p => p.course_id === course.id);
       const progressPercentage = progress?.progress_percentage || 0;
-      console.log(`Dashboard: Course ${course.id} progress: ${progressPercentage}%`);
       return {
         podcast: course,
         progress: progressPercentage,
@@ -71,55 +41,52 @@ const Dashboard = () => {
         isSaved: progress?.is_saved || false
       };
     })
-    .filter(course => course.progress > 0 && course.progress < 100)
-    .sort((a, b) => {
-      const aProgress = userProgress.find(p => p.course_id === a.podcast.id);
-      const bProgress = userProgress.find(p => p.course_id === b.podcast.id);
-      return new Date(bProgress?.last_listened_at || 0).getTime() - 
-             new Date(aProgress?.last_listened_at || 0).getTime();
-    });
+    .filter(course => course.progress > 0 && course.progress < 100);
 
-  // Get recommended courses (for now, just show courses user hasn't started)
+  // Get recommended courses (courses not started)
   const recommendedCourses = allCourses
+    .filter(course => {
+      const progress = userProgress.find(p => p.course_id === course.id);
+      return !progress || progress.progress_percentage === 0;
+    })
+    .slice(0, 6)
+    .map(course => ({
+      podcast: course,
+      progress: 0,
+      isPlaying: false,
+      isSaved: userProgress.find(p => p.course_id === course.id)?.is_saved || false
+    }));
+
+  // Get premium courses
+  const premiumCourses = allCourses
+    .filter(course => course.tipo_curso === 'pago')
+    .slice(0, 6)
     .map(course => {
       const progress = userProgress.find(p => p.course_id === course.id);
-      const progressPercentage = progress?.progress_percentage || 0;
       return {
         podcast: course,
-        progress: progressPercentage,
+        progress: progress?.progress_percentage || 0,
         isPlaying: false,
         isSaved: progress?.is_saved || false
       };
-    })
-    .filter(course => course.progress === 0)
-    .slice(0, 6);
+    });
 
   const handlePlayCourse = async (courseId: string) => {
     console.log('Dashboard: Starting course:', courseId);
-    // Start the course to add it to continue learning
     await startCourse(courseId);
-    // Refresh data to show updated state
     await refetch();
-    // Redirect to the new dashboard course view instead of old course view
     navigate(`/dashboard/course/${courseId}`);
   };
 
   const handleToggleSave = async (courseId: string) => {
     console.log('Dashboard: Toggling save for course:', courseId);
     await toggleSaveCourse(courseId);
-    // Refresh data to show updated state
     await refetch();
   };
 
   const handleCourseClick = (courseId: string) => {
     navigate(`/dashboard/course/${courseId}`);
   };
-
-  console.log('Dashboard render - Continue learning courses:', continueLearningCourses.length);
-  console.log('Dashboard render - Recommended courses:', recommendedCourses.length);
-
-  // Get user name for welcome message
-  const userName = userProfile?.name || user?.email?.split('@')[0] || 'Usuario';
 
   if (loading) {
     return (
@@ -133,29 +100,35 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto pb-20 sm:pb-24">
-        {/* Mobile-optimized welcome section */}
-        <div className="mb-6 sm:mb-8 px-4 sm:px-0">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 leading-tight">
-            ¡Bienvenido de vuelta, {userName}!
-          </h1>
-          <p className="text-sm sm:text-base text-gray-600">
-            Continúa tu aprendizaje donde lo dejaste
-          </p>
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8 px-4 sm:px-0">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Continúa tu aprendizaje donde lo dejaste</h1>
+          <p className="text-gray-600">Continúa tu aprendizaje donde lo dejaste</p>
         </div>
 
-        <CourseCarousel
-          title="Continúa escuchando"
-          courses={continueLearningCourses}
-          showProgress={true}
+        {continueLearningCourses.length > 0 && (
+          <TouchCarousel
+            title="Continúa escuchando"
+            courses={continueLearningCourses}
+            showProgress={true}
+            onPlayCourse={handlePlayCourse}
+            onToggleSave={handleToggleSave}
+            onCourseClick={handleCourseClick}
+          />
+        )}
+
+        <TouchCarousel
+          title="Para ti"
+          courses={recommendedCourses}
+          showProgress={false}
           onPlayCourse={handlePlayCourse}
           onToggleSave={handleToggleSave}
           onCourseClick={handleCourseClick}
         />
 
-        <CourseCarousel
-          title="Para ti"
-          courses={recommendedCourses}
+        <TouchCarousel
+          title="Cursos Premium"
+          courses={premiumCourses}
           showProgress={false}
           onPlayCourse={handlePlayCourse}
           onToggleSave={handleToggleSave}
