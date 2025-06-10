@@ -1,5 +1,5 @@
 
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { Lesson, Module } from '../types';
 import { Play, Lock, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -20,7 +20,7 @@ const LearningPath = React.memo(({ lessons, modules, onSelectLesson, currentLess
   }, [lessons, modules]);
 
   // Agrupar lecciones por módulo manteniendo el orden real
-  const getLessonsForModule = (moduleId: string) => {
+  const getLessonsForModule = useCallback((moduleId: string) => {
     const module = modules.find(m => m.id === moduleId);
     if (!module) return [];
     
@@ -28,9 +28,9 @@ const LearningPath = React.memo(({ lessons, modules, onSelectLesson, currentLess
     return module.lessonIds
       .map(id => lessons.find(lesson => lesson.id === id))
       .filter((lesson): lesson is Lesson => lesson !== undefined);
-  };
+  }, [modules, lessons]);
 
-  // OPTIMIZADO: Memoizar cálculos de estado de lecciones usando orden real
+  // OPTIMIZADO: Memoizar cálculos de estado de lecciones usando orden real (ESTABLE)
   const lessonStatusMap = useMemo(() => {
     const statusMap = new Map();
     
@@ -50,20 +50,12 @@ const LearningPath = React.memo(({ lessons, modules, onSelectLesson, currentLess
         canPlay,
         isFirstInSequence
       });
-      
-      console.log(`🔍 Lesson status for ${lesson.title}:`, {
-        isCompleted,
-        isLocked,
-        isCurrent,
-        canPlay,
-        isFirstInSequence
-      });
     });
     
     return statusMap;
-  }, [lessons, modules, currentLessonId]);
+  }, [lessons, modules, currentLessonId]); // ESTABILIZADO: Solo dependencias necesarias
 
-  // OPTIMIZADO: Memoizar clases CSS
+  // OPTIMIZADO: Memoizar clases CSS (ESTABLE)
   const getLessonClasses = useMemo(() => {
     const classCache = new Map();
     
@@ -101,7 +93,22 @@ const LearningPath = React.memo(({ lessons, modules, onSelectLesson, currentLess
     });
     
     return classCache;
-  }, [lessons, lessonStatusMap]);
+  }, [lessons, lessonStatusMap]); // ESTABILIZADO: Solo dependencias necesarias
+
+  // OPTIMIZADO: Memoizar handler de click
+  const handleLessonClick = useCallback((lesson: Lesson) => {
+    const status = lessonStatusMap.get(lesson.id);
+    if (!status) return;
+    
+    const { canPlay, isCompleted, isLocked, isFirstInSequence } = status;
+    
+    if (canPlay) {
+      console.log('🎯 User clicked lesson:', lesson.title, 'canPlay:', canPlay, 'isCompleted:', isCompleted, 'isLocked:', isLocked, 'isFirst:', isFirstInSequence);
+      onSelectLesson(lesson);
+    } else {
+      console.log('🚫 Lesson not playable:', lesson.title, 'isLocked:', isLocked, 'isFirst:', isFirstInSequence);
+    }
+  }, [lessonStatusMap, onSelectLesson]);
   
   return (
     <div className="py-3">
@@ -139,22 +146,13 @@ const LearningPath = React.memo(({ lessons, modules, onSelectLesson, currentLess
                     ? "justify-start" 
                     : "justify-start ml-[45px]";
                   
-                  const handleClick = () => {
-                    if (canPlay) {
-                      console.log('🎯 User clicked lesson:', lesson.title, 'canPlay:', canPlay, 'isCompleted:', isCompleted, 'isLocked:', isLocked, 'isFirst:', isFirstInSequence);
-                      onSelectLesson(lesson);
-                    } else {
-                      console.log('🚫 Lesson not playable:', lesson.title, 'isLocked:', isLocked, 'isFirst:', isFirstInSequence);
-                    }
-                  };
-                  
                   return (
                     <div key={lesson.id} className={`flex ${containerAlignment} items-center`}>
                       <div 
                         className={nodeClasses}
-                        onClick={handleClick}
+                        onClick={() => handleLessonClick(lesson)}
                       >
-                        {/* CORREGIDO: Lógica de iconos basada en estado real */}
+                        {/* OPTIMIZADO: Lógica de iconos más clara y estable */}
                         {isCompleted ? (
                           <Trophy size={16} />
                         ) : canPlay ? (
@@ -174,7 +172,7 @@ const LearningPath = React.memo(({ lessons, modules, onSelectLesson, currentLess
                       {/* Título de la lección */}
                       <div 
                         className={cn("ml-3", { "cursor-pointer": canPlay, "cursor-not-allowed": !canPlay })}
-                        onClick={handleClick}
+                        onClick={() => handleLessonClick(lesson)}
                       >
                         <div className={textClasses}>
                           {lesson.title}

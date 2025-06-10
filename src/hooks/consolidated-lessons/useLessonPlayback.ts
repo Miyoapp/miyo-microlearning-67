@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useRef } from 'react';
 import { Podcast, Lesson } from '@/types';
 import { UserCourseProgress } from '@/hooks/useUserProgress';
@@ -13,15 +14,30 @@ export function useLessonPlayback(
   const [isPlaying, setIsPlaying] = useState(false);
   const [isAutoAdvanceAllowed, setIsAutoAdvanceAllowed] = useState(true);
   const manualSelectionActive = useRef(false);
+  const isTransitioning = useRef(false); // NUEVO: Flag para transiciones
 
   // Handle lesson selection with immediate playback for manual selections
   const handleSelectLesson = useCallback((lesson: Lesson, isManualSelection = false) => {
     console.log('🎵 handleSelectLesson:', lesson.title, 'manual:', isManualSelection);
     
+    // Evitar cambios durante transiciones
+    if (isTransitioning.current) {
+      console.log('🔄 Transition in progress, skipping selection');
+      return;
+    }
+    
     // Check if lesson is accessible
     if (lesson.isLocked && !lesson.isCompleted) {
       console.log('🚫 Lesson is locked and not completed');
       return;
+    }
+    
+    // Set transition flag para manual selections
+    if (isManualSelection) {
+      isTransitioning.current = true;
+      setTimeout(() => {
+        isTransitioning.current = false;
+      }, 500);
     }
     
     // Set manual selection flag
@@ -58,6 +74,11 @@ export function useLessonPlayback(
   // Handle progress updates during playback
   const handleProgressUpdate = useCallback((position: number) => {
     if (!currentLesson || !podcast || !user) return;
+    
+    // OPTIMIZACIÓN: Solo actualizar progreso si no está en transición
+    if (isTransitioning.current) {
+      return;
+    }
     
     // Only update progress for incomplete lessons during normal playback
     if (!currentLesson.isCompleted && position > 5) {
