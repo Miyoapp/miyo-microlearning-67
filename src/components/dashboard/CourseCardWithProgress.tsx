@@ -44,7 +44,7 @@ const CourseCardWithProgress: React.FC<CourseCardWithProgressProps> = ({
   console.log('CourseCard render - Course:', podcast.id, 'isSaved:', isSaved, 'progress:', progress, 'showProgress:', showProgress);
 
   return (
-    <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer h-[380px] w-full max-w-[280px] mx-auto flex flex-col">
+    <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer h-[380px] w-[280px] mx-auto flex flex-col">
       <CardContent className="p-0 flex flex-col h-full">
         <div onClick={onClick} className="flex-1 flex flex-col">
           {/* Fixed aspect ratio image container */}
@@ -101,8 +101,8 @@ const CourseCardWithProgress: React.FC<CourseCardWithProgressProps> = ({
           </div>
         </div>
         
-        {/* Fixed action buttons area */}
-        <div className="px-4 pb-4 flex items-center justify-between gap-2 mt-auto">
+        {/* Fixed action buttons area with more space from bottom */}
+        <div className="px-4 pb-6 flex items-center justify-between gap-2 mt-auto">
           <Button
             variant="outline"
             size="sm"

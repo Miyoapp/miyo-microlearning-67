@@ -13,7 +13,7 @@ interface CompanyCourseCardProps {
 const CompanyCourseCard = ({ podcast }: CompanyCourseCardProps) => {
   return (
     <Link to={`/company/course/${podcast.id}`} className="block h-full">
-      <Card className="overflow-hidden transition-all duration-300 h-[380px] w-full max-w-[280px] mx-auto hover:shadow-lg hover:-translate-y-1 flex flex-col">
+      <Card className="overflow-hidden transition-all duration-300 h-[380px] w-[280px] mx-auto hover:shadow-lg hover:-translate-y-1 flex flex-col">
         <div className="aspect-[4/3] relative overflow-hidden flex-shrink-0">
           <img 
             src={podcast.imageUrl} 
@@ -31,7 +31,7 @@ const CompanyCourseCard = ({ podcast }: CompanyCourseCardProps) => {
           </div>
         </div>
         
-        <CardContent className="p-4 flex-1 flex flex-col justify-between">
+        <CardContent className="p-4 pb-6 flex-1 flex flex-col justify-between">
           <div>
             <div className="mb-2">
               <span className="text-xs font-medium px-2 py-1 rounded-full bg-miyo-100 text-miyo-800">

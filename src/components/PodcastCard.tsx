@@ -13,7 +13,7 @@ const PodcastCard = ({ podcast }: PodcastCardProps) => {
   return (
     <Link 
       to={`/course/${podcast.id}`} 
-      className="card-hover bg-white rounded-2xl overflow-hidden shadow-sm h-[380px] w-full max-w-[280px] mx-auto flex flex-col"
+      className="card-hover bg-white rounded-2xl overflow-hidden shadow-sm h-[380px] w-[280px] mx-auto flex flex-col"
     >
       <div className="aspect-[4/3] relative overflow-hidden flex-shrink-0">
         <img 
@@ -31,7 +31,7 @@ const PodcastCard = ({ podcast }: PodcastCardProps) => {
         </div>
       </div>
       
-      <div className="p-5 flex-1 flex flex-col justify-between">
+      <div className="p-5 pb-6 flex-1 flex flex-col justify-between">
         <div>
           <h3 className="text-xl font-bold mb-2 h-12 overflow-hidden">
             <span className="line-clamp-2">{podcast.title}</span>
