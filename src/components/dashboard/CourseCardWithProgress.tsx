@@ -101,8 +101,8 @@ const CourseCardWithProgress: React.FC<CourseCardWithProgressProps> = ({
           </div>
         </div>
         
-        {/* Fixed action buttons area with significantly more space from bottom */}
-        <div className="px-4 pb-12 flex items-center justify-between gap-2 mt-auto">
+        {/* Fixed action buttons area with appropriate spacing from bottom */}
+        <div className="px-4 pb-6 flex items-center justify-between gap-2 mt-auto">
           <Button
             variant="outline"
             size="sm"

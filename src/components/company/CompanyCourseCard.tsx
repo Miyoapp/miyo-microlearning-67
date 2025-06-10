@@ -31,7 +31,7 @@ const CompanyCourseCard = ({ podcast }: CompanyCourseCardProps) => {
           </div>
         </div>
         
-        <CardContent className="p-4 pb-12 flex-1 flex flex-col justify-between">
+        <CardContent className="p-4 pb-6 flex-1 flex flex-col justify-between">
           <div>
             <div className="mb-2">
               <span className="text-xs font-medium px-2 py-1 rounded-full bg-miyo-100 text-miyo-800">

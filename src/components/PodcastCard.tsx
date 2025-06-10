@@ -31,7 +31,7 @@ const PodcastCard = ({ podcast }: PodcastCardProps) => {
         </div>
       </div>
       
-      <div className="p-5 pb-12 flex-1 flex flex-col justify-between">
+      <div className="p-5 pb-6 flex-1 flex flex-col justify-between">
         <div>
           <h3 className="text-xl font-bold mb-2 h-12 overflow-hidden">
             <span className="line-clamp-2">{podcast.title}</span>
