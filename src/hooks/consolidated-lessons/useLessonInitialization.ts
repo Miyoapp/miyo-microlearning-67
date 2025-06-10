@@ -1,111 +1,117 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { Podcast, Lesson } from '@/types';
-import { UserLessonProgress } from '../useUserLessonProgress';
-import { UserCourseProgress } from '../useUserProgress';
-import { 
-  updateLessonsWithProgress, 
-  initializeFreshCourse,
-  unlockLessonsSequentially,
-  unlockAllLessonsForCompletedCourse,
-  isCourseCompleted 
-} from './lessonProgressUtils';
+import { UserLessonProgress } from '@/hooks/useUserLessonProgress';
+import { UserProgress } from '@/hooks/useUserProgress';
+import { User } from '@supabase/supabase-js';
 
 export function useLessonInitialization(
   podcast: Podcast | null,
   lessonProgress: UserLessonProgress[],
-  userProgress: UserCourseProgress[],
-  user: any,
+  userProgress: UserProgress[],
+  user: User | null,
   setPodcast: (podcast: Podcast) => void
 ) {
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
+  const initializationRef = useRef(false);
 
-  // Initialize podcast with correct lesson states from DB
+  // CRITICAL FIX: Simplified lesson state calculation
+  const calculateLessonStates = useCallback((lessons: Lesson[], courseId: string) => {
+    console.log('🔧 Calculating lesson states for course:', courseId);
+    
+    const courseProgress = userProgress.find(p => p.course_id === courseId);
+    const isReviewMode = courseProgress?.is_completed && courseProgress?.progress_percentage === 100;
+    
+    return lessons.map((lesson, index) => {
+      const progress = lessonProgress.find(p => p.lesson_id === lesson.id);
+      const isCompleted = progress?.is_completed || false;
+      
+      // CRITICAL FIX: First lesson is ALWAYS unlocked
+      const isFirstLesson = index === 0;
+      
+      // In review mode (100% complete), all lessons are unlocked
+      if (isReviewMode) {
+        return {
+          ...lesson,
+          isCompleted,
+          isLocked: false
+        };
+      }
+      
+      // For courses in progress:
+      // - First lesson: always unlocked
+      // - Other lessons: unlocked if previous lesson is completed
+      let isLocked = false;
+      if (!isFirstLesson) {
+        const previousLesson = lessons[index - 1];
+        const previousProgress = lessonProgress.find(p => p.lesson_id === previousLesson.id);
+        isLocked = !previousProgress?.is_completed;
+      }
+      
+      console.log('📚 Lesson state:', {
+        title: lesson.title,
+        index,
+        isFirstLesson,
+        isCompleted,
+        isLocked,
+        isReviewMode
+      });
+      
+      return {
+        ...lesson,
+        isCompleted,
+        isLocked
+      };
+    });
+  }, [lessonProgress, userProgress]);
+
+  // CRITICAL FIX: Simplified podcast initialization
   const initializePodcastWithProgress = useCallback(() => {
     if (!podcast || !user) {
-      console.log('🚫 Cannot initialize podcast - missing data:', { podcast: !!podcast, user: !!user });
+      console.log('❌ Cannot initialize: missing podcast or user');
       return;
     }
 
-    console.log('🎬 Initializing podcast with progress from DB');
-    console.log('📊 Lesson progress count:', lessonProgress.length);
-    console.log('📊 User progress count:', userProgress.length);
+    console.log('🚀 INITIALIZING PODCAST WITH PROGRESS:', podcast.title);
     
-    const courseCompleted = isCourseCompleted(userProgress, podcast.id);
-    const hasAnyProgress = lessonProgress.length > 0;
+    // Calculate lesson states
+    const updatedLessons = calculateLessonStates(podcast.lessons, podcast.id);
     
-    console.log('📋 Course status:', { courseCompleted, hasAnyProgress });
+    // Update podcast with calculated states
+    const updatedPodcast = {
+      ...podcast,
+      lessons: updatedLessons
+    };
     
-    let finalLessons: Lesson[];
+    console.log('✅ Podcast updated with lesson states');
+    setPodcast(updatedPodcast);
     
-    if (courseCompleted) {
-      console.log('🏆 Course completed - enabling review mode');
-      const lessonsWithProgress = updateLessonsWithProgress(podcast, lessonProgress);
-      finalLessons = unlockAllLessonsForCompletedCourse(lessonsWithProgress);
-    } else if (hasAnyProgress) {
-      console.log('📚 Course in progress - applying sequential unlock logic');
-      const lessonsWithProgress = updateLessonsWithProgress(podcast, lessonProgress);
-      finalLessons = unlockLessonsSequentially(podcast, lessonsWithProgress);
-    } else {
-      console.log('🆕 Fresh course - only first lesson unlocked');
-      finalLessons = initializeFreshCourse(podcast);
-    }
-    
-    console.log('🔍 Final lesson states:', finalLessons.slice(0, 3).map(l => ({
-      title: l.title,
-      isCompleted: l.isCompleted,
-      isLocked: l.isLocked
-    })));
-    
-    setPodcast({ ...podcast, lessons: finalLessons });
-  }, [podcast, lessonProgress, userProgress, user, setPodcast]);
+    initializationRef.current = true;
+  }, [podcast, user, calculateLessonStates, setPodcast]);
 
-  // FIXED: Corrected dependencies and simplified initialization
+  // CRITICAL FIX: Simplified current lesson initialization
   const initializeCurrentLesson = useCallback(() => {
-    console.log('🎯 INITIALIZING CURRENT LESSON - START');
-    console.log('🔍 Current state check:', {
-      hasPodcast: !!podcast,
-      hasUser: !!user,
-      lessonsCount: podcast?.lessons?.length || 0,
-      currentLessonExists: !!currentLesson,
-      currentLessonTitle: currentLesson?.title,
-      userProgressCount: userProgress.length,
-      lessonProgressCount: lessonProgress.length
-    });
-
-    if (!podcast || !user) {
-      console.log('⚠️ Cannot initialize lesson - missing basic data');
+    if (!podcast || !podcast.lessons || podcast.lessons.length === 0) {
+      console.log('❌ Cannot initialize current lesson: no lessons available');
+      setCurrentLesson(null);
       return;
     }
 
-    if (!podcast.lessons || podcast.lessons.length === 0) {
-      console.log('⚠️ Cannot initialize lesson - no lessons available');
-      return;
-    }
-
-    // CRITICAL FIX: Don't return early if currentLesson exists - allow re-initialization
-    console.log('🎯 SELECTING FIRST LESSON AUTOMATICALLY');
+    console.log('🎯 INITIALIZING CURRENT LESSON...');
     
-    const courseCompleted = isCourseCompleted(userProgress, podcast.id);
-    let lessonToSelect: Lesson | null = null;
-
-    // SIMPLIFIED: Always select first lesson - it should be available
-    lessonToSelect = podcast.lessons[0] || null;
+    // Find the first incomplete lesson or fall back to first lesson
+    const firstIncompleteLesson = podcast.lessons.find(lesson => !lesson.isCompleted && !lesson.isLocked);
+    const targetLesson = firstIncompleteLesson || podcast.lessons[0];
     
-    if (courseCompleted) {
-      console.log('🏆 Course completed - selecting first lesson for review:', lessonToSelect?.title);
-    } else {
-      console.log('📚 Course in progress/fresh - selecting first lesson:', lessonToSelect?.title);
-    }
-
-    if (lessonToSelect) {
-      console.log('✅ SETTING CURRENT LESSON TO:', lessonToSelect.title);
-      console.log('🔧 Lesson state:', { isLocked: lessonToSelect.isLocked, isCompleted: lessonToSelect.isCompleted });
-      setCurrentLesson(lessonToSelect);
-    } else {
-      console.log('❌ No lesson available to select');
-    }
-  }, [podcast, userProgress, lessonProgress, user, setCurrentLesson]); // FIXED: Added missing dependencies
+    // CRITICAL FIX: Always ensure first lesson is available
+    const lessonToSet = {
+      ...targetLesson,
+      isLocked: targetLesson === podcast.lessons[0] ? false : targetLesson.isLocked
+    };
+    
+    console.log('🎯 Setting current lesson:', lessonToSet.title, 'isLocked:', lessonToSet.isLocked);
+    setCurrentLesson(lessonToSet);
+  }, [podcast]);
 
   return {
     currentLesson,

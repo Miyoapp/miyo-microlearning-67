@@ -1,5 +1,5 @@
 
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback } from 'react';
 import { Podcast } from '@/types';
 import { useUserLessonProgress } from './useUserLessonProgress';
 import { useUserProgress } from './useUserProgress';
@@ -7,7 +7,6 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { useLessonInitialization } from './consolidated-lessons/useLessonInitialization';
 import { useLessonPlayback } from './consolidated-lessons/useLessonPlayback';
 import { useLessonCompletion } from './consolidated-lessons/useLessonCompletion';
-import { startTransition } from 'react';
 
 export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (podcast: Podcast) => void) {
   const { user } = useAuth();
@@ -21,7 +20,6 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
   
   const { 
     userProgress,
-    updateCourseProgress, 
     refetch: refetchCourseProgress 
   } = useUserProgress();
 
@@ -39,8 +37,7 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     handleSelectLesson: handleSelectLessonFromPlayback,
     handleTogglePlay,
     handleProgressUpdate,
-    isAutoAdvanceAllowed,
-    manualSelectionActive
+    isAutoAdvanceAllowed
   } = useLessonPlayback(podcast, currentLesson, userProgress, user, updateLessonPosition);
 
   const {
@@ -63,8 +60,9 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
   const handleSelectLesson = useCallback((lesson: any, isManualSelection = true) => {
     console.log('🎯 handleSelectLesson called:', lesson.title, 'isCompleted:', lesson.isCompleted, 'isLocked:', lesson.isLocked, 'isManual:', isManualSelection);
     
-    // Allow selection of completed lessons for replay and first lesson even if locked state is wrong
-    const canSelectLesson = lesson.isCompleted || !lesson.isLocked || (podcast?.lessons[0]?.id === lesson.id);
+    // CRITICAL FIX: Allow selection of first lesson even if marked as locked
+    const isFirstLesson = podcast?.lessons[0]?.id === lesson.id;
+    const canSelectLesson = lesson.isCompleted || !lesson.isLocked || isFirstLesson;
     
     if (!canSelectLesson) {
       console.log('⚠️ Lesson cannot be selected - locked and not completed');
@@ -73,72 +71,45 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     
     console.log('✅ Setting current lesson to:', lesson.title);
     
-    // Always set the current lesson first
-    startTransition(() => {
-      setCurrentLesson(lesson);
-    });
+    // Set the current lesson first
+    setCurrentLesson(lesson);
     
-    // Handle playback properly
-    if (isManualSelection) {
-      console.log('🎵 Manual selection - delegating to playback hook for immediate start');
-      handleSelectLessonFromPlayback(lesson, true);
-    } else {
-      handleSelectLessonFromPlayback(lesson, false);
-    }
+    // Handle playback
+    handleSelectLessonFromPlayback(lesson, isManualSelection);
   }, [setCurrentLesson, handleSelectLessonFromPlayback, podcast]);
 
-  // CRITICAL FIX: Initialize podcast immediately when all data is available
+  // CRITICAL FIX: Initialize podcast when all data is available
   useEffect(() => {
-    console.log('🔄 PODCAST INITIALIZATION EFFECT TRIGGERED');
-    console.log('🔍 Effect conditions:', {
+    console.log('🔄 PODCAST INITIALIZATION EFFECT');
+    console.log('🔍 Conditions:', {
       hasPodcast: !!podcast,
-      podcastId: podcast?.id,
       hasUser: !!user,
-      userId: user?.id,
       lessonProgressDefined: lessonProgress !== undefined,
-      userProgressDefined: userProgress !== undefined,
-      lessonProgressLength: lessonProgress?.length,
-      userProgressLength: userProgress?.length
+      userProgressDefined: userProgress !== undefined
     });
 
     if (podcast && user && lessonProgress !== undefined && userProgress !== undefined) {
-      console.log('📊 ALL DATA AVAILABLE - INITIALIZING PODCAST WITH PROGRESS...');
-      startTransition(() => {
-        initializePodcastWithProgress();
-      });
+      console.log('📊 ALL DATA AVAILABLE - INITIALIZING...');
+      initializePodcastWithProgress();
     }
   }, [podcast?.id, user?.id, lessonProgress, userProgress, initializePodcastWithProgress]);
 
-  // CRITICAL FIX: Initialize current lesson immediately after podcast is ready
+  // CRITICAL FIX: Initialize current lesson when podcast is ready
   useEffect(() => {
-    console.log('🎯 CURRENT LESSON INITIALIZATION EFFECT TRIGGERED');
-    console.log('🔍 Lesson init conditions:', {
+    console.log('🎯 CURRENT LESSON INITIALIZATION EFFECT');
+    console.log('🔍 Conditions:', {
       hasPodcast: !!podcast,
       hasLessons: podcast?.lessons?.length > 0,
-      lessonsCount: podcast?.lessons?.length,
       hasUser: !!user,
-      currentLessonExists: !!currentLesson,
-      currentLessonTitle: currentLesson?.title,
-      userProgressDefined: userProgress !== undefined,
-      lessonProgressDefined: lessonProgress !== undefined
+      currentLessonExists: !!currentLesson
     });
 
-    // CRITICAL FIX: Always try to initialize when podcast has lessons, regardless of currentLesson state
-    if (podcast && podcast.lessons && podcast.lessons.length > 0 && user && 
-        userProgress !== undefined && lessonProgress !== undefined) {
-      console.log('🎯 ALL CONDITIONS MET - INITIALIZING CURRENT LESSON...');
-      console.log('🎯 First lesson details:', {
-        id: podcast.lessons[0]?.id,
-        title: podcast.lessons[0]?.title,
-        isLocked: podcast.lessons[0]?.isLocked,
-        isCompleted: podcast.lessons[0]?.isCompleted
-      });
-      
-      startTransition(() => {
-        initializeCurrentLesson();
-      });
+    // Initialize current lesson when podcast has lessons and no current lesson is set
+    if (podcast && podcast.lessons && podcast.lessons.length > 0 && user && !currentLesson) {
+      console.log('🎯 INITIALIZING CURRENT LESSON...');
+      initializeCurrentLesson();
     }
-  }, [podcast?.lessons?.length, podcast?.id, user?.id, userProgress, lessonProgress, initializeCurrentLesson]);
+  }, [podcast?.lessons?.length, podcast?.id, user?.id, currentLesson, initializeCurrentLesson]);
 
   return {
     currentLesson,

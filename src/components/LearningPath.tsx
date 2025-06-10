@@ -1,5 +1,5 @@
 
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { Lesson, Module } from '../types';
 import { Play, Lock, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -32,17 +32,16 @@ const LearningPath = React.memo(({ lessons, modules, onSelectLesson, currentLess
       const isLocked = lesson.isLocked;
       const isCurrent = currentLessonId === lesson.id;
       
-      // FIXED: Proper lesson state logic
-      // - Completed lessons: always unlocked with trophy icon
-      // - Unlocked incomplete lessons: play icon  
-      // - Locked lessons: lock icon
-      const canPlay = isCompleted || !isLocked;
+      // CRITICAL FIX: First lesson is always playable
+      const isFirstLesson = lessons.findIndex(l => l.id === lesson.id) === 0;
+      const canPlay = isCompleted || !isLocked || isFirstLesson;
       
       statusMap.set(lesson.id, {
         isCompleted,
         isLocked,
         isCurrent,
-        canPlay
+        canPlay,
+        isFirstLesson
       });
     });
     return statusMap;
@@ -61,13 +60,12 @@ const LearningPath = React.memo(({ lessons, modules, onSelectLesson, currentLess
       const nodeClasses = cn(
         "flex items-center justify-center w-12 h-12 rounded-full shadow-md transition-all duration-200 relative",
         {
-          // FIXED: Proper icon and color logic
-          "bg-yellow-500 text-white hover:bg-yellow-600": isCompleted, // Trophy - yellow/gold
-          "bg-[#5e16ea] text-white hover:bg-[#4a11ba]": !isCompleted && canPlay, // Play - purple
-          "bg-gray-300 text-gray-500": isLocked && !isCompleted, // Lock - gray
-          "hover:scale-110": canPlay, // Hover effect only for playable lessons
-          "ring-2 ring-yellow-300": isCurrent && isCompleted, // Ring for current completed
-          "ring-2 ring-[#5e16ea]": isCurrent && !isCompleted && canPlay, // Ring for current playable
+          "bg-yellow-500 text-white hover:bg-yellow-600": isCompleted,
+          "bg-[#5e16ea] text-white hover:bg-[#4a11ba]": !isCompleted && canPlay,
+          "bg-gray-300 text-gray-500": isLocked && !isCompleted && !canPlay,
+          "hover:scale-110": canPlay,
+          "ring-2 ring-yellow-300": isCurrent && isCompleted,
+          "ring-2 ring-[#5e16ea]": isCurrent && !isCompleted && canPlay,
           "cursor-pointer": canPlay,
           "cursor-not-allowed": !canPlay
         }
@@ -76,10 +74,10 @@ const LearningPath = React.memo(({ lessons, modules, onSelectLesson, currentLess
       const textClasses = cn(
         "text-sm transition-colors duration-200",
         {
-          "text-yellow-600 font-semibold": isCompleted, // Completed lessons
-          "text-[#5e16ea] font-semibold": isCurrent && !isCompleted && canPlay, // Current playable
-          "text-gray-800": canPlay && !isCurrent && !isCompleted, // Other playable
-          "text-gray-400": !canPlay // Locked lessons
+          "text-yellow-600 font-semibold": isCompleted,
+          "text-[#5e16ea] font-semibold": isCurrent && !isCompleted && canPlay,
+          "text-gray-800": canPlay && !isCurrent && !isCompleted,
+          "text-gray-400": !canPlay
         }
       );
 
@@ -114,7 +112,7 @@ const LearningPath = React.memo(({ lessons, modules, onSelectLesson, currentLess
                   const status = lessonStatusMap.get(lesson.id);
                   if (!status) return null;
                   
-                  const { isCompleted, isLocked, isCurrent, canPlay } = status;
+                  const { isCompleted, isLocked, isCurrent, canPlay, isFirstLesson } = status;
                   const classes = getLessonClasses.get(lesson.id);
                   if (!classes) return null;
                   
@@ -127,7 +125,7 @@ const LearningPath = React.memo(({ lessons, modules, onSelectLesson, currentLess
                   
                   const handleClick = () => {
                     if (canPlay) {
-                      console.log('🎯 User clicked lesson:', lesson.title, 'canPlay:', canPlay, 'isCompleted:', isCompleted, 'isLocked:', isLocked);
+                      console.log('🎯 User clicked lesson:', lesson.title, 'canPlay:', canPlay, 'isCompleted:', isCompleted, 'isLocked:', isLocked, 'isFirst:', isFirstLesson);
                       onSelectLesson(lesson);
                     } else {
                       console.log('🚫 Lesson not playable:', lesson.title, 'isLocked:', isLocked);
@@ -140,7 +138,7 @@ const LearningPath = React.memo(({ lessons, modules, onSelectLesson, currentLess
                         className={nodeClasses}
                         onClick={handleClick}
                       >
-                        {/* FIXED: Proper icon logic */}
+                        {/* Icon logic */}
                         {isCompleted ? (
                           <Trophy size={16} />
                         ) : canPlay ? (
