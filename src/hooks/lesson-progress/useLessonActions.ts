@@ -10,51 +10,54 @@ export function useLessonActions(
   const { isInReviewMode } = useReviewMode();
 
   const markLessonComplete = useCallback(async (lessonId: string, courseId: string) => {
-    // Check if lesson is already completed to avoid unnecessary updates
     const existingProgress = lessonProgress.find(p => p.lesson_id === lessonId);
     if (existingProgress?.is_completed) {
       console.log('✅ Lesson already completed in DB, skipping update:', lessonId);
       return;
     }
 
-    console.log('🎯 Marking lesson complete for first time:', lessonId, 'for course:', courseId);
+    console.log('🎯 Marking lesson complete for first time:', lessonId);
     await updateLessonProgress(lessonId, courseId, { 
       is_completed: true,
-      current_position: 100 // 100% complete
+      current_position: 100
     });
   }, [lessonProgress, updateLessonProgress]);
 
   const updateLessonPosition = useCallback(
     async (lessonId: string, courseId: string, position: number) => {
-      // Get current lesson state
       const existingProgress = lessonProgress.find(p => p.lesson_id === lessonId);
       
-      // CRITICAL FIX: Never update progress for already completed lessons during replay
-      if (existingProgress?.is_completed) {
-        console.log('🔄 Lesson is completed - allowing replay without affecting progress:', lessonId);
-        return; // Allow playback but don't update progress
-      }
-
-      // Check if course is in review mode
+      // CRÍTICO: Proteger progreso en diferentes escenarios
       const reviewMode = await isInReviewMode(courseId);
+      
+      // Escenario 1: Curso 100% completo (modo revisión)
       if (reviewMode) {
-        console.log('🔒 Course in review mode, not updating position for lesson:', lessonId);
+        console.log('🔒 Course in review mode - no progress updates allowed:', lessonId);
         return;
       }
-
-      console.log('📍 Updating lesson position for incomplete lesson:', lessonId, 'position:', position);
       
-      const updates: any = {
-        current_position: Math.round(position)
-      };
-
-      // Only mark as complete if position reaches 100%
-      if (position >= 100) {
-        updates.is_completed = true;
-        console.log('🎯 Position reached 100%, marking as completed');
+      // Escenario 2: Lección ya completada siendo reproducida (replay)
+      if (existingProgress?.is_completed && position < 100) {
+        console.log('🔄 Replay of completed lesson - preserving completion status:', lessonId);
+        return;
       }
+      
+      // Escenario 3: Primera completion de lección
+      if (!existingProgress?.is_completed) {
+        console.log('📍 Updating position for incomplete lesson:', lessonId, 'position:', position);
+        
+        const updates: any = {
+          current_position: Math.round(position)
+        };
 
-      await updateLessonProgress(lessonId, courseId, updates);
+        // Solo marcar como completada si llega al 100%
+        if (position >= 100) {
+          updates.is_completed = true;
+          console.log('🎯 First completion - marking as completed');
+        }
+
+        await updateLessonProgress(lessonId, courseId, updates);
+      }
     },
     [lessonProgress, isInReviewMode, updateLessonProgress]
   );
