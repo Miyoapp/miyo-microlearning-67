@@ -1,13 +1,12 @@
-
 import { useState, useCallback, useRef } from 'react';
 import { Podcast, Lesson } from '@/types';
-import { UserProgress } from '@/hooks/useUserProgress';
+import { UserCourseProgress } from '@/hooks/useUserProgress';
 import { User } from '@supabase/supabase-js';
 
 export function useLessonPlayback(
   podcast: Podcast | null,
   currentLesson: Lesson | null,
-  userProgress: UserProgress[],
+  userProgress: UserCourseProgress[],
   user: User | null,
   updateLessonPosition: (lessonId: string, courseId: string, position: number) => Promise<void>
 ) {
