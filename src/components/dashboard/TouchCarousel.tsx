@@ -81,21 +81,6 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
             ))}
           </div>
         </div>
-
-        {/* Mobile pagination dots */}
-        {isMobile && courses.length > 1 && (
-          <div className="flex justify-center mt-4 space-x-2">
-            {Array.from({ length: Math.ceil(courses.length) }).map((_, index) => (
-              <button
-                key={index}
-                className={`w-2 h-2 rounded-full transition-colors ${
-                  index === 0 ? 'bg-miyo-800' : 'bg-gray-300'
-                }`}
-                onClick={() => emblaApi?.scrollTo(index)}
-              />
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );
