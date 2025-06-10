@@ -83,7 +83,6 @@ const LoginPage = () => {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
-                  placeholder="Tu nombre completo"
                 />
               </div>
             )}
