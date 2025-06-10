@@ -142,7 +142,7 @@ const DashboardCourse = () => {
       </DashboardLayout>
       
       {/* CRITICAL FIX: Always show audio player when there's a current lesson and user has access */}
-      {currentLesson && hasAccess ? (
+      {currentLesson && hasAccess && (
         <AudioPlayer 
           lesson={currentLesson}
           isPlaying={isPlaying}
@@ -150,15 +150,6 @@ const DashboardCourse = () => {
           onComplete={handleLessonComplete}
           onProgressUpdate={handleProgressUpdate}
         />
-      ) : (
-        <div style={{ display: 'none' }}>
-          {/* Debug info - will be removed by build process */}
-          {console.log('🚫 Audio player not showing:', { 
-            hasCurrentLesson: !!currentLesson, 
-            hasAccess,
-            currentLessonTitle: currentLesson?.title
-          })}
-        </div>
       )}
 
       {/* Checkout Modal */}
