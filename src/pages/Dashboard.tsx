@@ -5,13 +5,47 @@ import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import TouchCarousel from '@/components/dashboard/TouchCarousel';
 import { obtenerCursos } from '@/lib/api';
 import { useUserProgress } from '@/hooks/useUserProgress';
+import { useAuth } from '@/components/auth/AuthProvider';
+import { supabase } from '@/integrations/supabase/client';
 import { Podcast } from '@/types';
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [allCourses, setAllCourses] = useState<Podcast[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userName, setUserName] = useState<string>('');
+  const [isFirstTimeUser, setIsFirstTimeUser] = useState<boolean>(false);
   const { userProgress, toggleSaveCourse, startCourse, refetch } = useUserProgress();
+
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (user) {
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('name, created_at')
+            .eq('id', user.id)
+            .single();
+          
+          if (profile) {
+            setUserName(profile.name || user.email || 'Usuario');
+            
+            // Determinar si es primera vez basado en si se creó hoy
+            const createdDate = new Date(profile.created_at);
+            const today = new Date();
+            const isToday = createdDate.toDateString() === today.toDateString();
+            setIsFirstTimeUser(isToday);
+          }
+        } catch (error) {
+          console.error('Error loading user profile:', error);
+          setUserName(user.email || 'Usuario');
+        }
+      }
+    };
+
+    loadUserData();
+  }, [user]);
 
   useEffect(() => {
     const loadCourses = async () => {
@@ -98,11 +132,15 @@ const Dashboard = () => {
     );
   }
 
+  const welcomeMessage = isFirstTimeUser 
+    ? `¡Bienvenido(a), ${userName}!` 
+    : `¡Bienvenido(a) de vuelta, ${userName}!`;
+
   return (
     <DashboardLayout>
       <div className="max-w-7xl mx-auto">
         <div className="mb-8 px-4 sm:px-0">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Continúa tu aprendizaje donde lo dejaste</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{welcomeMessage}</h1>
           <p className="text-gray-600">Continúa tu aprendizaje donde lo dejaste</p>
         </div>
 

@@ -13,8 +13,8 @@ interface CompanyCourseCardProps {
 const CompanyCourseCard = ({ podcast }: CompanyCourseCardProps) => {
   return (
     <Link to={`/company/course/${podcast.id}`} className="block h-full">
-      <Card className="overflow-hidden transition-all duration-300 h-full hover:shadow-lg hover:-translate-y-1">
-        <div className="aspect-video relative overflow-hidden">
+      <Card className="overflow-hidden transition-all duration-300 h-[380px] w-full max-w-[280px] mx-auto hover:shadow-lg hover:-translate-y-1 flex flex-col">
+        <div className="aspect-[4/3] relative overflow-hidden flex-shrink-0">
           <img 
             src={podcast.imageUrl} 
             alt={podcast.title}
@@ -31,24 +31,28 @@ const CompanyCourseCard = ({ podcast }: CompanyCourseCardProps) => {
           </div>
         </div>
         
-        <CardContent className="p-4">
-          <div className="mb-2">
-            <span className="text-xs font-medium px-2 py-1 rounded-full bg-miyo-100 text-miyo-800">
-              {podcast.category.nombre}
-            </span>
+        <CardContent className="p-4 flex-1 flex flex-col justify-between">
+          <div>
+            <div className="mb-2">
+              <span className="text-xs font-medium px-2 py-1 rounded-full bg-miyo-100 text-miyo-800">
+                {podcast.category.nombre}
+              </span>
+            </div>
+            
+            <h3 className="text-lg font-semibold mb-2 h-12 overflow-hidden">
+              <span className="line-clamp-2">{podcast.title}</span>
+            </h3>
+            
+            <p className="text-sm text-gray-500 line-clamp-2 mb-3 h-10 overflow-hidden">{podcast.description}</p>
           </div>
           
-          <h3 className="text-lg font-semibold line-clamp-2 mb-2">{podcast.title}</h3>
-          
-          <p className="text-sm text-gray-500 line-clamp-2 mb-3">{podcast.description}</p>
-          
-          <div className="flex items-center">
+          <div className="flex items-center mt-auto">
             <img 
               src={podcast.creator.imageUrl} 
               alt={podcast.creator.name}
               className="w-6 h-6 rounded-full mr-2"
             />
-            <span className="text-xs text-gray-600">{podcast.creator.name}</span>
+            <span className="text-xs text-gray-600 truncate">{podcast.creator.name}</span>
           </div>
         </CardContent>
       </Card>

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import CategoryCard from './CategoryCard';
 import { CategoriaLanding } from '@/types/landing';
 import { obtenerCategoriasLanding } from '@/lib/api/landingAPI';
+
 const CategoryCarousel: React.FC = () => {
   const [categorias, setCategorias] = useState<CategoriaLanding[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -23,28 +24,35 @@ const CategoryCarousel: React.FC = () => {
     };
     cargarCategorias();
   }, []);
+
   const itemsPerPage = 3;
   const maxIndex = Math.max(0, categorias.length - itemsPerPage);
+
   const nextSlide = () => {
     setCurrentIndex(prev => Math.min(prev + 1, maxIndex));
   };
+
   const prevSlide = () => {
     setCurrentIndex(prev => Math.max(prev - 1, 0));
   };
+
   const handleCategoryClick = (categoria: CategoriaLanding) => {
     console.log('Categoría seleccionada:', categoria.nombre);
     // Aquí se puede implementar la navegación o modal de registro
   };
+
   if (isLoading) {
     return <div className="flex justify-center items-center py-20">
         <div className="text-lg text-gray-600">Cargando categorías...</div>
       </div>;
   }
+
   if (categorias.length === 0) {
     return <div className="flex justify-center items-center py-20">
         <div className="text-lg text-gray-600">No hay categorías disponibles</div>
       </div>;
   }
+
   return <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
       <div className="miyo-container">
         <div className="max-w-6xl mx-auto">
@@ -86,12 +94,18 @@ const CategoryCarousel: React.FC = () => {
               </>}
           </div>
 
-          {/* Botón CTA centrado */}
+          {/* Botón CTA centrado - homologado con el botón Registro */}
           <div className="text-center mt-16">
-            <Button variant="outline" size="lg" className="border-miyo-800 text-miyo-800 hover:bg-miyo-50 px-8 py-4 h-auto text-lg font-medium">Empieza Ahora</Button>
+            <Button 
+              size="lg" 
+              className="bg-miyo-800 hover:bg-miyo-700 text-white px-8 py-4 h-auto text-lg font-medium"
+            >
+              Empieza Ahora
+            </Button>
           </div>
         </div>
       </div>
     </section>;
 };
+
 export default CategoryCarousel;

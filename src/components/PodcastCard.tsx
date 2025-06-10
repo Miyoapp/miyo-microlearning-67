@@ -1,7 +1,7 @@
 
 import { Link } from 'react-router-dom';
 import { Podcast } from '../types';
-import { Clock, Headphones, Tag } from 'lucide-react';
+import { Clock, Headphones } from 'lucide-react';
 import { formatMinutesToHumanReadable } from '@/lib/formatters';
 import PremiumBadge from '@/components/PremiumBadge';
 
@@ -13,9 +13,9 @@ const PodcastCard = ({ podcast }: PodcastCardProps) => {
   return (
     <Link 
       to={`/course/${podcast.id}`} 
-      className="card-hover bg-white rounded-2xl overflow-hidden shadow-sm"
+      className="card-hover bg-white rounded-2xl overflow-hidden shadow-sm h-[380px] w-full max-w-[280px] mx-auto flex flex-col"
     >
-      <div className="relative aspect-[4/3] overflow-hidden">
+      <div className="aspect-[4/3] relative overflow-hidden flex-shrink-0">
         <img 
           src={podcast.imageUrl}
           alt={podcast.title}
@@ -31,23 +31,25 @@ const PodcastCard = ({ podcast }: PodcastCardProps) => {
         </div>
       </div>
       
-      <div className="p-5">
-        <h3 className="text-xl font-bold mb-2 line-clamp-2">{podcast.title}</h3>
-        
-        <div className="mb-3">
-          <div className="flex items-center gap-2">
-            <img 
-              src={podcast.creator.imageUrl} 
-              alt={podcast.creator.name}
-              className="w-6 h-6 rounded-full object-cover"
-            />
-            <span className="text-sm text-gray-600">{podcast.creator.name}</span>
-          </div>
+      <div className="p-5 flex-1 flex flex-col justify-between">
+        <div>
+          <h3 className="text-xl font-bold mb-2 h-12 overflow-hidden">
+            <span className="line-clamp-2">{podcast.title}</span>
+          </h3>
           
-          {/* Removed social media links from card view */}
+          <div className="mb-3">
+            <div className="flex items-center gap-2">
+              <img 
+                src={podcast.creator.imageUrl} 
+                alt={podcast.creator.name}
+                className="w-6 h-6 rounded-full object-cover"
+              />
+              <span className="text-sm text-gray-600 truncate">{podcast.creator.name}</span>
+            </div>
+          </div>
         </div>
         
-        <div className="flex flex-wrap gap-y-2">
+        <div className="flex flex-wrap gap-y-2 mt-auto">
           <div className="flex items-center mr-4 text-sm text-gray-500">
             <Clock size={16} className="mr-1" />
             <span>{formatMinutesToHumanReadable(podcast.duration)}</span>
