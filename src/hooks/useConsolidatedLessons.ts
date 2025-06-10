@@ -27,7 +27,6 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
 
   // SIMPLIFIED: Remove complex control flags
   const hasUserInteracted = useRef(false);
-  const isInitialized = useRef(false);
 
   // Use specialized hooks
   const {
@@ -97,7 +96,7 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     }
   }, [setCurrentLesson, handleSelectLessonFromPlayback, podcast]);
 
-  // CRITICAL FIX: Initialize podcast when data is available
+  // SIMPLIFIED: Initialize podcast immediately when data is available
   useEffect(() => {
     console.log('🔄 PODCAST INITIALIZATION EFFECT TRIGGERED');
     console.log('🔍 Effect conditions:', {
@@ -106,22 +105,18 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
       hasUser: !!user,
       userId: user?.id,
       lessonProgressDefined: lessonProgress !== undefined,
-      lessonProgressLength: lessonProgress?.length,
-      userProgressDefined: userProgress !== undefined,
-      userProgressLength: userProgress?.length,
-      isInitialized: isInitialized.current
+      userProgressDefined: userProgress !== undefined
     });
 
-    if (podcast && user && lessonProgress !== undefined && userProgress !== undefined && !isInitialized.current) {
-      console.log('📊 INITIALIZING PODCAST WITH PROGRESS...');
-      isInitialized.current = true;
+    if (podcast && user && lessonProgress !== undefined && userProgress !== undefined) {
+      console.log('📊 INITIALIZING PODCAST WITH PROGRESS IMMEDIATELY...');
       startTransition(() => {
         initializePodcastWithProgress();
       });
     }
   }, [podcast?.id, user?.id, lessonProgress, userProgress, initializePodcastWithProgress]);
 
-  // CRITICAL FIX: Initialize current lesson after podcast is ready
+  // SIMPLIFIED: Initialize current lesson immediately after podcast is ready
   useEffect(() => {
     console.log('🎯 CURRENT LESSON INITIALIZATION EFFECT TRIGGERED');
     console.log('🔍 Lesson init conditions:', {
@@ -130,25 +125,22 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
       lessonsCount: podcast?.lessons?.length,
       hasUser: !!user,
       hasCurrentLesson: !!currentLesson,
-      currentLessonTitle: currentLesson?.title,
-      hasUserInteracted: hasUserInteracted.current,
-      isInitialized: isInitialized.current
+      currentLessonTitle: currentLesson?.title
     });
 
-    // Initialize current lesson only after podcast is initialized and no current lesson is set
-    if (podcast && podcast.lessons && podcast.lessons.length > 0 && user && !currentLesson && isInitialized.current) {
-      console.log('🎯 AUTO-INITIALIZING CURRENT LESSON...');
+    // SIMPLIFIED: Initialize current lesson immediately when podcast has lessons and no current lesson exists
+    if (podcast && podcast.lessons && podcast.lessons.length > 0 && user && !currentLesson) {
+      console.log('🎯 AUTO-INITIALIZING CURRENT LESSON IMMEDIATELY...');
       startTransition(() => {
         initializeCurrentLesson();
       });
     }
-  }, [podcast?.lessons?.length, user?.id, currentLesson, initializeCurrentLesson, isInitialized.current]);
+  }, [podcast?.lessons?.length, user?.id, currentLesson, initializeCurrentLesson]);
 
-  // Reset initialization flag when podcast changes
+  // Reset user interaction flag when podcast changes
   useEffect(() => {
     if (podcast?.id) {
-      console.log('🔄 New podcast detected, resetting initialization flag');
-      isInitialized.current = false;
+      console.log('🔄 New podcast detected, resetting user interaction flag');
       hasUserInteracted.current = false;
     }
   }, [podcast?.id]);

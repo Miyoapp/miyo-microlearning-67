@@ -60,7 +60,7 @@ export function useLessonInitialization(
     setPodcast({ ...podcast, lessons: finalLessons });
   }, [podcast, lessonProgress, userProgress, user, setPodcast]);
 
-  // CRITICAL FIX: Auto-initialize current lesson more reliably
+  // SIMPLIFIED: Auto-initialize current lesson more aggressively
   const initializeCurrentLesson = useCallback(() => {
     console.log('🎯 INITIALIZING CURRENT LESSON - START');
     console.log('🔍 Current state check:', {
@@ -81,13 +81,7 @@ export function useLessonInitialization(
       return;
     }
 
-    // If current lesson is already set, don't override it
-    if (currentLesson) {
-      console.log('✅ Current lesson already set:', currentLesson.title);
-      return;
-    }
-
-    console.log('🎯 Finding lesson to select...');
+    console.log('🎯 SIMPLIFIED: Always select first lesson when no current lesson exists');
     
     const courseCompleted = isCourseCompleted(userProgress, podcast.id);
     let lessonToSelect: Lesson | null = null;
@@ -97,11 +91,9 @@ export function useLessonInitialization(
       lessonToSelect = podcast.lessons[0] || null;
       console.log('🏆 Course completed - selecting first lesson for review:', lessonToSelect?.title);
     } else {
-      // For in-progress or new courses, find first unlocked lesson
-      lessonToSelect = podcast.lessons.find(lesson => !lesson.isLocked) || podcast.lessons[0] || null;
-      console.log('📚 Course in progress - finding first unlocked lesson');
-      console.log('🔍 Available lessons:', podcast.lessons.map(l => ({ title: l.title, isLocked: l.isLocked })));
-      console.log('🎯 Selected lesson:', lessonToSelect?.title);
+      // SIMPLIFIED: Always select first lesson (it should be unlocked by default)
+      lessonToSelect = podcast.lessons[0] || null;
+      console.log('📚 Selecting first lesson:', lessonToSelect?.title);
     }
 
     if (lessonToSelect) {
@@ -110,7 +102,7 @@ export function useLessonInitialization(
     } else {
       console.log('❌ No lesson available to select');
     }
-  }, [podcast, userProgress, currentLesson, user]);
+  }, [podcast, userProgress, user]);
 
   return {
     currentLesson,
