@@ -13,7 +13,7 @@ interface CompanyCourseCardProps {
 const CompanyCourseCard = ({ podcast }: CompanyCourseCardProps) => {
   return (
     <Link to={`/company/course/${podcast.id}`} className="block h-full">
-      <Card className="overflow-hidden transition-all duration-300 h-[380px] w-[280px] mx-auto hover:shadow-lg hover:-translate-y-1 flex flex-col">
+      <Card className="overflow-hidden transition-all duration-300 w-full max-w-sm mx-auto hover:shadow-lg hover:-translate-y-1 flex flex-col">
         <div className="aspect-[4/3] relative overflow-hidden flex-shrink-0">
           <img 
             src={podcast.imageUrl} 
@@ -23,7 +23,7 @@ const CompanyCourseCard = ({ podcast }: CompanyCourseCardProps) => {
           {podcast.tipo_curso === 'pago' && (
             <PremiumBadge />
           )}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3 sm:p-4">
             <div className="flex items-center gap-2 text-white">
               <Clock size={14} />
               <span className="text-xs">{formatMinutesToHumanReadable(podcast.duration)}</span>
@@ -31,7 +31,7 @@ const CompanyCourseCard = ({ podcast }: CompanyCourseCardProps) => {
           </div>
         </div>
         
-        <CardContent className="p-4 pb-6 flex-1 flex flex-col justify-between">
+        <CardContent className="p-3 sm:p-4 flex-1 flex flex-col justify-between">
           <div>
             <div className="mb-2">
               <span className="text-xs font-medium px-2 py-1 rounded-full bg-miyo-100 text-miyo-800">
@@ -39,18 +39,18 @@ const CompanyCourseCard = ({ podcast }: CompanyCourseCardProps) => {
               </span>
             </div>
             
-            <h3 className="text-lg font-semibold mb-2 h-12 overflow-hidden">
-              <span className="line-clamp-2">{podcast.title}</span>
+            <h3 className="text-base sm:text-lg font-semibold mb-2 line-clamp-2">
+              {podcast.title}
             </h3>
             
-            <p className="text-sm text-gray-500 line-clamp-2 mb-3 h-10 overflow-hidden">{podcast.description}</p>
+            <p className="text-sm text-gray-500 line-clamp-2 mb-3">{podcast.description}</p>
           </div>
           
-          <div className="flex items-center mt-auto">
+          <div className="flex items-center mt-auto pt-2">
             <img 
               src={podcast.creator.imageUrl} 
               alt={podcast.creator.name}
-              className="w-6 h-6 rounded-full mr-2"
+              className="w-5 h-5 sm:w-6 sm:h-6 rounded-full mr-2"
             />
             <span className="text-xs text-gray-600 truncate">{podcast.creator.name}</span>
           </div>

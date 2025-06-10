@@ -42,8 +42,8 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
   if (courses.length === 0) {
     return (
       <div className="mb-6 sm:mb-8">
-        <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 px-4 sm:px-0">{title}</h2>
-        <div className="text-gray-500 text-center py-6 sm:py-8 text-sm sm:text-base">
+        <h2 className="text-xl sm:text-2xl font-bold mb-4 px-4 sm:px-0">{title}</h2>
+        <div className="text-gray-500 text-center py-8 text-sm sm:text-base">
           No hay cursos disponibles en esta sección
         </div>
       </div>
@@ -51,8 +51,8 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
   }
 
   return (
-    <div className="mb-6 sm:mb-8">
-      <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 px-4 sm:px-0">{title}</h2>
+    <div className="mb-8 sm:mb-12">
+      <h2 className="text-xl sm:text-2xl font-bold mb-4 px-4 sm:px-0">{title}</h2>
       
       <div className="relative">
         {/* Embla Carousel Container */}
@@ -61,11 +61,7 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
             {courses.map((course, index) => (
               <div 
                 key={course.podcast.id} 
-                className={`flex-none ${
-                  isMobile 
-                    ? 'w-[85%] mr-4 first:ml-4 last:mr-4' 
-                    : 'w-[300px] mr-6 first:ml-0'
-                }`}
+                className="flex-none w-[280px] sm:w-[300px] mr-4 first:ml-4 last:mr-4 sm:first:ml-0"
               >
                 <CourseCardWithProgress
                   podcast={course.podcast}

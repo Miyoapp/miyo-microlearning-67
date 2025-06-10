@@ -70,26 +70,26 @@ const CompanyDashboard = () => {
           </BreadcrumbList>
         </Breadcrumb>
         
-        <div className="flex flex-col md:flex-row gap-8">
+        <div className="flex flex-col lg:flex-row gap-6 sm:gap-8">
           {/* Sidebar */}
-          <div className="w-full md:w-1/4">
+          <div className="w-full lg:w-1/4">
             <Card>
-              <CardContent className="p-6">
+              <CardContent className="p-4 sm:p-6">
                 <div className="flex flex-col items-center text-center">
-                  <div className="w-20 h-20 bg-miyo-100 rounded-full flex items-center justify-center mb-4">
-                    <User size={40} className="text-miyo-800" />
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-miyo-100 rounded-full flex items-center justify-center mb-4">
+                    <User size={32} className="text-miyo-800 sm:w-10 sm:h-10" />
                   </div>
-                  <h2 className="text-xl font-bold mb-1">{userData.name || "Usuario"}</h2>
-                  <p className="text-sm text-gray-500 mb-4">{userData.email || "usuario@ejemplo.com"}</p>
+                  <h2 className="text-lg sm:text-xl font-bold mb-1">{userData.name || "Usuario"}</h2>
+                  <p className="text-sm text-gray-500 mb-4 break-all">{userData.email || "usuario@ejemplo.com"}</p>
                   
                   <div className="w-full pt-4 border-t">
                     <div className="flex items-center gap-3 py-2">
-                      <Building size={18} className="text-gray-500" />
-                      <span className="text-sm">Empresa: <strong>{companyName}</strong></span>
+                      <Building size={16} className="text-gray-500 flex-shrink-0" />
+                      <span className="text-xs sm:text-sm">Empresa: <strong>{companyName}</strong></span>
                     </div>
                     <div className="flex items-center gap-3 py-2">
-                      <GraduationCap size={18} className="text-gray-500" />
-                      <span className="text-sm">Cursos completados: <strong>0</strong></span>
+                      <GraduationCap size={16} className="text-gray-500 flex-shrink-0" />
+                      <span className="text-xs sm:text-sm">Cursos completados: <strong>0</strong></span>
                     </div>
                   </div>
                 </div>
@@ -98,24 +98,24 @@ const CompanyDashboard = () => {
           </div>
           
           {/* Main content */}
-          <div className="w-full md:w-3/4">
-            <h1 className="text-3xl font-bold mb-8">Bienvenido al portal de {companyName}</h1>
+          <div className="w-full lg:w-3/4">
+            <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Bienvenido al portal de {companyName}</h1>
             
             <Tabs defaultValue="cursos">
-              <TabsList className="mb-6">
-                <TabsTrigger value="cursos">Cursos</TabsTrigger>
-                <TabsTrigger value="progreso">Mi Progreso</TabsTrigger>
+              <TabsList className="mb-6 w-full sm:w-auto">
+                <TabsTrigger value="cursos" className="flex-1 sm:flex-none">Cursos</TabsTrigger>
+                <TabsTrigger value="progreso" className="flex-1 sm:flex-none">Mi Progreso</TabsTrigger>
               </TabsList>
               
               <TabsContent value="cursos">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                   {loading ? (
                     Array(4).fill(0).map((_, i) => (
                       <Card key={i} className="h-[280px] animate-pulse">
-                        <div className="bg-gray-200 aspect-video"></div>
+                        <div className="bg-gray-200 aspect-[4/3]"></div>
                         <CardContent className="p-4">
-                          <div className="h-5 bg-gray-200 rounded mb-4 w-1/3"></div>
-                          <div className="h-6 bg-gray-200 rounded mb-2"></div>
+                          <div className="h-4 bg-gray-200 rounded mb-4 w-1/3"></div>
+                          <div className="h-5 bg-gray-200 rounded mb-2"></div>
                           <div className="h-4 bg-gray-200 rounded mb-4"></div>
                         </CardContent>
                       </Card>
@@ -129,9 +129,9 @@ const CompanyDashboard = () => {
               </TabsContent>
               
               <TabsContent value="progreso">
-                <div className="rounded-lg border bg-card p-8 text-center">
+                <div className="rounded-lg border bg-card p-6 sm:p-8 text-center">
                   <h3 className="text-lg font-semibold mb-2">No hay progreso aún</h3>
-                  <p className="text-gray-500">
+                  <p className="text-sm sm:text-base text-gray-500">
                     Comienza tomando alguno de nuestros cursos de inversión para ver tu progreso aquí.
                   </p>
                 </div>
