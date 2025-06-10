@@ -16,9 +16,10 @@ export function useLessonStatus(lessons: Lesson[], modules: Module[], currentLes
       const isCurrent = lesson.id === currentLessonId;
       const isFirstInSequence = isFirstLessonInSequence(lesson, lessons, modules);
       
-      // MEJORADO: Lecciones completadas SIEMPRE son reproducibles
-      // Lecciones desbloqueadas también son reproducibles
-      // Primera lección en secuencia siempre es reproducible
+      // CORREGIDO: Lógica de reproducción más clara
+      // - Lecciones completadas (🏆) SIEMPRE reproducibles
+      // - Lecciones desbloqueadas (▶) reproducibles
+      // - Primera lección siempre reproducible
       const canPlay = isCompleted || !isLocked || isFirstInSequence;
       
       const status = {
@@ -27,16 +28,16 @@ export function useLessonStatus(lessons: Lesson[], modules: Module[], currentLes
         isCurrent,
         canPlay,
         isFirstInSequence,
-        // Agregar hash para optimización
+        // Mejorar hash para optimización
         _hash: `${isCompleted}-${isLocked}-${isCurrent}-${canPlay}-${isFirstInSequence}`
       };
       
       console.log(`📚 Lesson "${lesson.title}":`, {
-        isCompleted,
-        isLocked,
-        canPlay,
+        isCompleted: isCompleted ? '🏆' : '❌',
+        isLocked: isLocked ? '🔒' : '🔓',
+        canPlay: canPlay ? '✅' : '❌',
         isFirstInSequence,
-        isCurrent
+        isCurrent: isCurrent ? '🎵' : '⏸️'
       });
       
       lessonStatusMap.set(lesson.id, status);

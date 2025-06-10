@@ -57,20 +57,21 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     isAutoAdvanceAllowed
   );
 
-  // MEJORADO: Selección de lección con lógica simplificada
+  // CORREGIDO: Selección de lección con verificación mejorada
   const handleSelectLesson = useCallback((lesson: any, isManualSelection = true) => {
-    console.log('🎯 handleSelectLesson called:', lesson.title, 'isCompleted:', lesson.isCompleted, 'isLocked:', lesson.isLocked, 'isManual:', isManualSelection);
+    console.log('🎯 handleSelectLesson called:', lesson.title, 'isCompleted:', lesson.isCompleted ? '🏆' : '❌', 'isLocked:', lesson.isLocked ? '🔒' : '🔓', 'isManual:', isManualSelection);
     
-    // SIMPLIFICADO: Verificar si la lección es reproducible
+    // MEJORADO: Verificar si la lección es reproducible
     const isFirstInSequence = podcast ? isFirstLessonInSequence(lesson, podcast.lessons, podcast.modules) : false;
     const canSelectLesson = lesson.isCompleted || !lesson.isLocked || isFirstInSequence;
     
     if (!canSelectLesson) {
-      console.log('⚠️ Lesson cannot be selected - locked, not completed, and not first in sequence');
+      console.log('⚠️ Lesson cannot be selected - locked and not completed, not first in sequence');
       return;
     }
     
-    console.log('✅ Setting current lesson:', lesson.title, 'Type:', lesson.isCompleted ? 'REPLAY' : 'PROGRESS');
+    const lessonType = lesson.isCompleted ? 'REPLAY (🏆)' : 'PROGRESS (▶)';
+    console.log('✅ Setting current lesson:', lesson.title, 'Type:', lessonType);
     
     // Establecer la lección actual primero
     setCurrentLesson(lesson);
@@ -105,9 +106,9 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
       currentLessonExists: !!currentLesson
     });
 
-    // Inicializar lección actual cuando el podcast tenga lecciones y no haya lección actual establecida
+    // CORREGIDO: Solo inicializar si no hay lección actual y se necesita auto-posicionamiento
     if (podcast && podcast.lessons && podcast.lessons.length > 0 && user && !currentLesson) {
-      console.log('🎯 INITIALIZING CURRENT LESSON WITH CORRECT SEQUENCE...');
+      console.log('🎯 ATTEMPTING SMART AUTO-POSITIONING...');
       initializeCurrentLesson();
     }
   }, [podcast?.lessons?.length, podcast?.id, user?.id, currentLesson, initializeCurrentLesson]);
