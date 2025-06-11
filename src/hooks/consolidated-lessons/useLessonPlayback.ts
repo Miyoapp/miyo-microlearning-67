@@ -32,9 +32,9 @@ export function useLessonPlayback(
       return;
     }
     
-    // CORREGIDO: Lógica de acceso mejorada - lecciones completadas SIEMPRE reproducibles
+    // CORREGIDO: Lógica de acceso para permitir lecciones completadas SIEMPRE
     const reviewMode = isInReviewMode();
-    const canSelectLesson = reviewMode || lesson.isCompleted || !lesson.isLocked;
+    const canSelectLesson = lesson.isCompleted || !lesson.isLocked || reviewMode;
     
     if (!canSelectLesson) {
       console.log('🚫 Lesson cannot be selected - locked and not completed');
@@ -50,27 +50,29 @@ export function useLessonPlayback(
     
     manualSelectionActive.current = isManualSelection;
     
-    // MEJORADO: Auto-advance logic considerando el contexto
+    // CORREGIDO: Auto-advance logic para permitir secuencia desde lecciones completadas
     if (isManualSelection) {
       console.log('▶️ Manual selection - starting playback');
       setIsPlaying(true);
       
-      // CRÍTICO: Auto-advance rules - SIEMPRE permitir para continuar secuencia
-      console.log('✅ Manual selection - enable auto-advance for sequence continuation');
-      setIsAutoAdvanceAllowed(true);
+      // NUEVO: Si es una lección completada, permitir auto-advance para continuar secuencia
+      if (lesson.isCompleted) {
+        console.log('🏆 Selected completed lesson - enable auto-advance for sequence continuation');
+        setIsAutoAdvanceAllowed(true);
+      } else {
+        console.log('▶️ Selected incomplete lesson - enable auto-advance');
+        setIsAutoAdvanceAllowed(true);
+      }
     } else {
       setIsPlaying(false);
       setIsAutoAdvanceAllowed(false);
     }
     
-    // OPTIMIZADO: Tracking de inicio para lecciones no completadas o en review mode
+    // OPTIMIZADO: Tracking de inicio para todas las lecciones en review mode o incompletas
     if (podcast && isManualSelection) {
-      if (!lesson.isCompleted || reviewMode) {
-        console.log('📊 Tracking lesson start for:', lesson.isCompleted ? 'completed lesson in review' : 'incomplete lesson');
-        updateLessonPosition(lesson.id, podcast.id, 1);
-      } else {
-        console.log('🔄 Replay of completed lesson - no tracking needed');
-      }
+      console.log('📊 Tracking lesson start for:', lesson.isCompleted ? 'completed lesson (replay/sequence)' : 'incomplete lesson');
+      // En modo review o replay, track position sin afectar completion
+      updateLessonPosition(lesson.id, podcast.id, 1);
     }
   }, [podcast, updateLessonPosition, userProgress, isInReviewMode]);
 
@@ -98,21 +100,24 @@ export function useLessonPlayback(
       return;
     }
     
-    // CRÍTICO: Lógica de actualización mejorada para replay vs progreso
     const reviewMode = isInReviewMode();
     
-    // CASO 1: Review mode (100% completo) - permitir tracking sin restricciones
+    // CASO 1: Review mode (100% completo) - solo track position, no afectar completion
     if (reviewMode) {
       if (position > 5) {
-        console.log('📊 Review mode progress update:', currentLesson.title, position.toFixed(1) + '%');
+        console.log('📊 Review mode progress update (position only):', currentLesson.title, position.toFixed(1) + '%');
         updateLessonPosition(currentLesson.id, podcast.id, position);
       }
       return;
     }
     
-    // CASO 2: Lección completada en curso en progreso - NO actualizar progreso
+    // CASO 2: Lección completada en curso en progreso
     if (currentLesson.isCompleted) {
-      console.log('🔄 Replay mode - skipping progress update for completed lesson:', currentLesson.title);
+      // CORREGIDO: Permitir tracking de posición para secuencia continua
+      if (position > 5) {
+        console.log('🏆 Replay/sequence mode - tracking position for continuity:', currentLesson.title, position.toFixed(1) + '%');
+        updateLessonPosition(currentLesson.id, podcast.id, position);
+      }
       return;
     }
     

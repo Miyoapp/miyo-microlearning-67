@@ -1,4 +1,3 @@
-
 import { useEffect, useCallback } from 'react';
 import { Podcast } from '@/types';
 import { useUserLessonProgress } from './useUserLessonProgress';
@@ -57,11 +56,11 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     isAutoAdvanceAllowed
   );
 
-  // CORREGIDO: Selección de lección con verificación mejorada
+  // CORREGIDO: Selección de lección mejorada para lecciones completadas
   const handleSelectLesson = useCallback((lesson: any, isManualSelection = true) => {
     console.log('🎯 handleSelectLesson called:', lesson.title, 'isCompleted:', lesson.isCompleted ? '🏆' : '❌', 'isLocked:', lesson.isLocked ? '🔒' : '🔓', 'isManual:', isManualSelection);
     
-    // MEJORADO: Verificar si la lección es reproducible
+    // CORREGIDO: Verificar si la lección es reproducible (completadas SIEMPRE reproducibles)
     const isFirstInSequence = podcast ? isFirstLessonInSequence(lesson, podcast.lessons, podcast.modules) : false;
     const canSelectLesson = lesson.isCompleted || !lesson.isLocked || isFirstInSequence;
     
@@ -70,7 +69,7 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
       return;
     }
     
-    const lessonType = lesson.isCompleted ? 'REPLAY (🏆)' : 'PROGRESS (▶)';
+    const lessonType = lesson.isCompleted ? 'COMPLETED/REPLAY (🏆)' : 'PROGRESS (▶)';
     console.log('✅ Setting current lesson:', lesson.title, 'Type:', lessonType);
     
     // Establecer la lección actual primero
