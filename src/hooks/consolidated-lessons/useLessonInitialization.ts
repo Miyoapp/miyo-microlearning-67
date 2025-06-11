@@ -14,7 +14,7 @@ export function useLessonInitialization(
   setPodcast: (podcast: Podcast) => void
 ) {
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
-  const initializationRef = useRef(false);
+  const hasInitialized = useRef(false);
 
   const calculateLessonStates = useCallback((lessons: Lesson[], courseId: string) => {
     console.log('🔧 Calculating lesson states for course:', courseId);
@@ -98,7 +98,7 @@ export function useLessonInitialization(
     }
     
     // ÚLTIMO RECURSO: Solo si es la primera vez y no hay progreso
-    const hasAnyProgress = lessonProgress.some(p => p.is_completed || (p.position && p.position > 5));
+    const hasAnyProgress = lessonProgress.some(p => p.is_completed || (p.current_position && p.current_position > 5));
     if (!hasAnyProgress) {
       const firstLesson = getFirstLesson(lessons, podcast?.modules || []);
       if (firstLesson && !firstLesson.isLocked) {
@@ -127,7 +127,7 @@ export function useLessonInitialization(
     
     console.log('✅ Podcast updated with lesson states');
     setPodcast(updatedPodcast);
-    initializationRef.current = true;
+    hasInitialized.current = true;
   }, [podcast, user, calculateLessonStates, setPodcast]);
 
   const initializeCurrentLesson = useCallback(() => {
@@ -155,6 +155,7 @@ export function useLessonInitialization(
     currentLesson,
     setCurrentLesson,
     initializePodcastWithProgress,
-    initializeCurrentLesson
+    initializeCurrentLesson,
+    hasInitialized: hasInitialized.current
   };
 }
