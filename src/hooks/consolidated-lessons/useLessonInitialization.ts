@@ -72,43 +72,44 @@ export function useLessonInitialization(
     const courseProgress = userProgress.find(p => p.course_id === courseId);
     const isReviewMode = courseProgress?.is_completed && courseProgress?.progress_percentage === 100;
     
-    // CORREGIDO: Si el curso está 100% completo, NO forzar ninguna lección
+    // CORREGIDO: Si el curso está 100% completo, NO auto-posicionar
     if (isReviewMode) {
-      console.log('🏆 Course 100% complete - no auto-positioning, user should choose freely');
+      console.log('🏆 Course 100% complete - no auto-positioning in review mode');
       return null;
     }
     
     const orderedLessons = podcast ? getOrderedLessons(lessons, podcast.modules) : lessons;
     
-    // ESTRATEGIA CORREGIDA: Buscar la primera lección incompleta y desbloqueada
+    // ESTRATEGIA PRINCIPAL: Buscar la primera lección incompleta y desbloqueada (ícono ▶)
     const firstIncomplete = orderedLessons.find(lesson => 
       !lesson.isCompleted && !lesson.isLocked
     );
     
     if (firstIncomplete) {
-      console.log('🎯 Resume point: Next lesson to listen -', firstIncomplete.title);
+      console.log('🎯 Resume point found: Next lesson to continue (▶) -', firstIncomplete.title);
       return firstIncomplete;
     }
     
-    // FALLBACK MEJORADO: Si no hay lecciones incompletas disponibles
-    // Verificar si es porque todas están completadas
+    // VERIFICACIÓN: Si todas están completadas, no auto-posicionar
     const allCompleted = orderedLessons.every(lesson => lesson.isCompleted);
-    
     if (allCompleted) {
       console.log('🏆 All lessons completed - no auto-positioning needed');
       return null;
     }
     
-    // ÚLTIMO RECURSO: Solo si realmente no hay progreso, usar la primera lección
-    const firstLesson = getFirstLesson(lessons, podcast?.modules || []);
-    if (firstLesson && !firstLesson.isLocked) {
-      console.log('🎯 Resume point: First lesson (no progress detected) -', firstLesson.title);
-      return firstLesson;
+    // ÚLTIMO RECURSO: Solo si es la primera vez y no hay progreso
+    const hasAnyProgress = lessonProgress.some(p => p.is_completed || (p.position && p.position > 5));
+    if (!hasAnyProgress) {
+      const firstLesson = getFirstLesson(lessons, podcast?.modules || []);
+      if (firstLesson && !firstLesson.isLocked) {
+        console.log('🎯 First time access - starting with first lesson:', firstLesson.title);
+        return firstLesson;
+      }
     }
     
     console.log('❌ No suitable resume point found');
     return null;
-  }, [podcast, userProgress]);
+  }, [podcast, userProgress, lessonProgress]);
 
   const initializePodcastWithProgress = useCallback(() => {
     if (!podcast || !user) {
@@ -136,16 +137,16 @@ export function useLessonInitialization(
       return;
     }
 
-    console.log('🎯 INITIALIZING CURRENT LESSON WITH SMART RESUME...');
+    console.log('🎯 SMART AUTO-POSITIONING: Finding next lesson to continue...');
     
-    // CORREGIDO: Buscar punto de continuación inteligente
+    // CORREGIDO: Buscar punto de continuación inteligente (ícono ▶)
     const resumeLesson = findResumePoint(podcast.lessons, podcast.id);
     
     if (resumeLesson) {
-      console.log('🎯 Auto-positioning on next lesson to listen:', resumeLesson.title, 'completed:', resumeLesson.isCompleted, 'locked:', resumeLesson.isLocked);
+      console.log('🎯 Auto-positioned on next lesson to continue (▶):', resumeLesson.title, 'completed:', resumeLesson.isCompleted, 'locked:', resumeLesson.isLocked);
       setCurrentLesson(resumeLesson);
     } else {
-      console.log('🏆 No auto-positioning needed - course complete or user should choose freely');
+      console.log('🏆 No auto-positioning needed - user can choose freely');
       setCurrentLesson(null);
     }
   }, [podcast, findResumePoint]);

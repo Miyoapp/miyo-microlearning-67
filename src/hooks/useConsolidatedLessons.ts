@@ -1,4 +1,5 @@
-import { useEffect, useCallback } from 'react';
+
+import { useEffect, useCallback, useRef } from 'react';
 import { Podcast } from '@/types';
 import { useUserLessonProgress } from './useUserLessonProgress';
 import { useUserProgress } from './useUserProgress';
@@ -22,6 +23,10 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     userProgress,
     refetch: refetchCourseProgress 
   } = useUserProgress();
+
+  // NUEVO: Flag para controlar la inicialización automática
+  const hasAutoInitialized = useRef(false);
+  const hasUserMadeSelection = useRef(false);
 
   // Usar hooks especializados
   const {
@@ -56,17 +61,23 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     isAutoAdvanceAllowed
   );
 
-  // CORREGIDO: Selección de lección mejorada para lecciones completadas
+  // CORREGIDO: Selección de lección mejorada que marca la intervención manual
   const handleSelectLesson = useCallback((lesson: any, isManualSelection = true) => {
     console.log('🎯 handleSelectLesson called:', lesson.title, 'isCompleted:', lesson.isCompleted ? '🏆' : '❌', 'isLocked:', lesson.isLocked ? '🔒' : '🔓', 'isManual:', isManualSelection);
     
-    // CORREGIDO: Verificar si la lección es reproducible (completadas SIEMPRE reproducibles)
+    // Verificar si la lección es reproducible (completadas SIEMPRE reproducibles)
     const isFirstInSequence = podcast ? isFirstLessonInSequence(lesson, podcast.lessons, podcast.modules) : false;
     const canSelectLesson = lesson.isCompleted || !lesson.isLocked || isFirstInSequence;
     
     if (!canSelectLesson) {
       console.log('⚠️ Lesson cannot be selected - locked and not completed, not first in sequence');
       return;
+    }
+    
+    // NUEVO: Marcar que el usuario ha hecho una selección manual
+    if (isManualSelection) {
+      hasUserMadeSelection.current = true;
+      console.log('👤 User made manual selection - preventing future auto-initialization');
     }
     
     const lessonType = lesson.isCompleted ? 'COMPLETED/REPLAY (🏆)' : 'PROGRESS (▶)';
@@ -86,31 +97,57 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
       hasPodcast: !!podcast,
       hasUser: !!user,
       lessonProgressDefined: lessonProgress !== undefined,
-      userProgressDefined: userProgress !== undefined
+      userProgressDefined: userProgress !== undefined,
+      hasAutoInitialized: hasAutoInitialized.current
     });
 
-    if (podcast && user && lessonProgress !== undefined && userProgress !== undefined) {
-      console.log('📊 ALL DATA AVAILABLE - INITIALIZING WITH CORRECT SEQUENCE...');
+    if (podcast && user && lessonProgress !== undefined && userProgress !== undefined && !hasAutoInitialized.current) {
+      console.log('📊 ALL DATA AVAILABLE - INITIALIZING PODCAST WITH PROGRESS...');
       initializePodcastWithProgress();
+      hasAutoInitialized.current = true;
     }
   }, [podcast?.id, user?.id, lessonProgress, userProgress, initializePodcastWithProgress]);
 
-  // CRÍTICO: Inicializar lección actual cuando el podcast esté listo
+  // CRÍTICO: Auto-inicialización inteligente de lección actual (solo una vez y si no hay selección manual)
   useEffect(() => {
-    console.log('🎯 CURRENT LESSON INITIALIZATION EFFECT');
+    console.log('🎯 CURRENT LESSON AUTO-INITIALIZATION EFFECT');
     console.log('🔍 Conditions:', {
       hasPodcast: !!podcast,
       hasLessons: podcast?.lessons?.length > 0,
       hasUser: !!user,
-      currentLessonExists: !!currentLesson
+      currentLessonExists: !!currentLesson,
+      hasAutoInitialized: hasAutoInitialized.current,
+      hasUserMadeSelection: hasUserMadeSelection.current
     });
 
-    // CORREGIDO: Solo inicializar si no hay lección actual y se necesita auto-posicionamiento
-    if (podcast && podcast.lessons && podcast.lessons.length > 0 && user && !currentLesson) {
-      console.log('🎯 ATTEMPTING SMART AUTO-POSITIONING...');
+    // CORREGIDO: Solo auto-inicializar si:
+    // 1. Tenemos podcast y lecciones
+    // 2. No hay lección actual seleccionada
+    // 3. El usuario no ha hecho una selección manual
+    // 4. Ya se inicializó el podcast con progreso
+    if (
+      podcast && 
+      podcast.lessons && 
+      podcast.lessons.length > 0 && 
+      user && 
+      !currentLesson && 
+      hasAutoInitialized.current && 
+      !hasUserMadeSelection.current
+    ) {
+      console.log('🎯 AUTO-POSITIONING on next lesson to continue (▶)...');
       initializeCurrentLesson();
+    } else if (hasUserMadeSelection.current) {
+      console.log('👤 User has made manual selection - skipping auto-initialization');
     }
-  }, [podcast?.lessons?.length, podcast?.id, user?.id, currentLesson, initializeCurrentLesson]);
+  }, [
+    // ESTABILIZADO: Dependencias más específicas para evitar re-ejecuciones
+    podcast?.id,
+    podcast?.lessons?.length,
+    user?.id,
+    currentLesson?.id,
+    hasAutoInitialized.current,
+    initializeCurrentLesson
+  ]);
 
   return {
     currentLesson,
