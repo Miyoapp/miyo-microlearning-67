@@ -1,4 +1,3 @@
-
 import { useCallback, useMemo } from 'react';
 import { Lesson, Module } from '../types';
 import React from 'react';
@@ -33,15 +32,26 @@ const LearningPath = React.memo(({ lessons, modules, onSelectLesson, currentLess
     lessons.map(l => l.id).join('|')
   ]);
 
-  // OPTIMIZADO: Memoizar handler de click con dependencies más estables
+  // CORREGIDO: Handler de click que usa correctamente canPlay del status
   const handleLessonClick = useCallback((lesson: Lesson) => {
     const status = lessonStatusMap.get(lesson.id);
-    if (!status) return;
+    if (!status) {
+      console.log('❌ No status found for lesson:', lesson.title);
+      return;
+    }
     
     const { canPlay, isCompleted, isLocked, isFirstInSequence } = status;
     
+    console.log('🎯 LearningPath click validation:', {
+      lessonTitle: lesson.title,
+      canPlay,
+      isCompleted,
+      isLocked,
+      isFirstInSequence
+    });
+    
     if (canPlay) {
-      console.log('🎯 User clicked lesson:', lesson.title, 'canPlay:', canPlay, 'isCompleted:', isCompleted, 'isLocked:', isLocked, 'isFirst:', isFirstInSequence);
+      console.log('✅ Lesson is playable - proceeding with selection:', lesson.title);
       onSelectLesson(lesson);
     } else {
       console.log('🚫 Lesson not playable:', lesson.title, 'isLocked:', isLocked, 'isFirst:', isFirstInSequence);

@@ -1,4 +1,3 @@
-
 import { useEffect, useCallback, useRef } from 'react';
 import { Podcast } from '@/types';
 import { useUserLessonProgress } from './useUserLessonProgress';
@@ -61,18 +60,12 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     isAutoAdvanceAllowed
   );
 
-  // CORREGIDO: Selección de lección mejorada que marca la intervención manual
+  // CORREGIDO: Selección de lección simplificada que confía en la lógica de useLessonStatus
   const handleSelectLesson = useCallback((lesson: any, isManualSelection = true) => {
     console.log('🎯 handleSelectLesson called:', lesson.title, 'isCompleted:', lesson.isCompleted ? '🏆' : '❌', 'isLocked:', lesson.isLocked ? '🔒' : '🔓', 'isManual:', isManualSelection);
     
-    // Verificar si la lección es reproducible (completadas SIEMPRE reproducibles)
-    const isFirstInSequence = podcast ? isFirstLessonInSequence(lesson, podcast.lessons, podcast.modules) : false;
-    const canSelectLesson = lesson.isCompleted || !lesson.isLocked || isFirstInSequence;
-    
-    if (!canSelectLesson) {
-      console.log('⚠️ Lesson cannot be selected - locked and not completed, not first in sequence');
-      return;
-    }
+    // CORREGIDO: Eliminar validación redundante - confiar en que LearningPath solo pasa lecciones válidas
+    // La validación canPlay se hace en useLessonStatus.ts y se valida en LearningPath.tsx
     
     // NUEVO: Marcar que el usuario ha hecho una selección manual
     if (isManualSelection) {
@@ -88,7 +81,7 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     
     // Manejar reproducción
     handleSelectLessonFromPlayback(lesson, isManualSelection);
-  }, [setCurrentLesson, handleSelectLessonFromPlayback, podcast]);
+  }, [setCurrentLesson, handleSelectLessonFromPlayback]);
 
   // CRÍTICO: Inicializar podcast cuando todos los datos estén disponibles
   useEffect(() => {
