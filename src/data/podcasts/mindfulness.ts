@@ -7,7 +7,8 @@ export const mindfulnessPodcast: Podcast = {
   creator: {
     id: 'c4',
     name: 'Sarah Lee',
-    imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80'
+    imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80',
+    linkedinUrl: null
   },
   duration: 40,
   lessonCount: 4,
@@ -21,34 +22,42 @@ export const mindfulnessPodcast: Podcast = {
     {
       id: 'l4-1',
       title: 'Introduction to Mindfulness',
-      duration: 10,
-      audioUrl: '/placeholder.mp3',
+      duracion: 10,
+      urlAudio: '/placeholder.mp3',
       isCompleted: false,
-      isLocked: false
+      isLocked: false,
+      description: null,
+      orden: 1
     },
     {
       id: 'l4-2',
       title: 'Mindful Breathing Techniques',
-      duration: 11,
-      audioUrl: '/placeholder.mp3',
+      duracion: 11,
+      urlAudio: '/placeholder.mp3',
       isCompleted: false,
-      isLocked: true
+      isLocked: true,
+      description: null,
+      orden: 2
     },
     {
       id: 'l4-3',
       title: 'Body Scan Meditation',
-      duration: 9,
-      audioUrl: '/placeholder.mp3',
+      duracion: 9,
+      urlAudio: '/placeholder.mp3',
       isCompleted: false,
-      isLocked: true
+      isLocked: true,
+      description: null,
+      orden: 3
     },
     {
       id: 'l4-4',
       title: 'Integrating Mindfulness into Daily Life',
-      duration: 10,
-      audioUrl: '/placeholder.mp3',
+      duracion: 10,
+      urlAudio: '/placeholder.mp3',
       isCompleted: false,
-      isLocked: true
+      isLocked: true,
+      description: null,
+      orden: 4
     }
   ],
   modules: [
@@ -62,5 +71,8 @@ export const mindfulnessPodcast: Podcast = {
       title: 'Técnicas Avanzadas',
       lessonIds: ['l4-3', 'l4-4']
     }
-  ]
+  ],
+  tipo_curso: 'libre',
+  likes: 0,
+  dislikes: 0
 };

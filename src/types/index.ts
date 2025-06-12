@@ -1,6 +1,12 @@
+
 export interface CategoryModel {
   id: string;
   nombre: string;
+}
+
+export interface CreatorSocialMedia {
+  platform: string;
+  url: string;
 }
 
 export interface CreatorModel {
@@ -8,10 +14,7 @@ export interface CreatorModel {
   name: string;
   imageUrl: string;
   linkedinUrl: string | null;
-  socialMedia?: {
-    platform: string;
-    url: string;
-  }[];
+  socialMedia?: CreatorSocialMedia[];
 }
 
 export interface LessonModel {
@@ -25,11 +28,17 @@ export interface LessonModel {
   isCompleted: boolean;
 }
 
+// Add aliases for backward compatibility
+export type Lesson = LessonModel;
+
 export interface ModuleModel {
   id: string;
   title: string;
   lessonIds: string[];
 }
+
+// Add alias for backward compatibility
+export type Module = ModuleModel;
 
 export interface Podcast {
   id: string;
@@ -74,5 +83,5 @@ export interface SupabaseCurso {
   moneda?: string | null;
   likes: number;
   dislikes: number;
-  show?: boolean; // Nuevo campo para control de visibilidad
+  show?: boolean;
 }

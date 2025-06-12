@@ -7,7 +7,8 @@ export const speakingPodcast: Podcast = {
   creator: {
     id: 'c8',
     name: 'Olivia Parker',
-    imageUrl: 'https://images.unsplash.com/photo-1581403341630-a6e0b9d2d257?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80'
+    imageUrl: 'https://images.unsplash.com/photo-1581403341630-a6e0b9d2d257?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80',
+    linkedinUrl: null
   },
   duration: 42,
   lessonCount: 4,
@@ -21,34 +22,42 @@ export const speakingPodcast: Podcast = {
     {
       id: 'l8-1',
       title: 'Understanding Speech Anxiety',
-      duration: 10,
-      audioUrl: '/placeholder.mp3',
+      duracion: 10,
+      urlAudio: '/placeholder.mp3',
       isCompleted: false,
-      isLocked: false
+      isLocked: false,
+      description: null,
+      orden: 1
     },
     {
       id: 'l8-2',
       title: 'Structuring Your Presentation',
-      duration: 12,
-      audioUrl: '/placeholder.mp3',
+      duracion: 12,
+      urlAudio: '/placeholder.mp3',
       isCompleted: false,
-      isLocked: true
+      isLocked: true,
+      description: null,
+      orden: 2
     },
     {
       id: 'l8-3',
       title: 'Body Language and Voice Modulation',
-      duration: 11,
-      audioUrl: '/placeholder.mp3',
+      duracion: 11,
+      urlAudio: '/placeholder.mp3',
       isCompleted: false,
-      isLocked: true
+      isLocked: true,
+      description: null,
+      orden: 3
     },
     {
       id: 'l8-4',
       title: 'Engaging Your Audience',
-      duration: 9,
-      audioUrl: '/placeholder.mp3',
+      duracion: 9,
+      urlAudio: '/placeholder.mp3',
       isCompleted: false,
-      isLocked: true
+      isLocked: true,
+      description: null,
+      orden: 4
     }
   ],
   modules: [
@@ -62,5 +71,8 @@ export const speakingPodcast: Podcast = {
       title: 'Técnicas de Presentación',
       lessonIds: ['l8-3', 'l8-4']
     }
-  ]
+  ],
+  tipo_curso: 'libre',
+  likes: 0,
+  dislikes: 0
 };

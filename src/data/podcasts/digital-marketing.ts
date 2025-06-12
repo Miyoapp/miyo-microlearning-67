@@ -7,7 +7,8 @@ export const marketingPodcast: Podcast = {
   creator: {
     id: 'c5',
     name: 'David Kim',
-    imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80'
+    imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80',
+    linkedinUrl: null
   },
   duration: 58,
   lessonCount: 5,
@@ -21,42 +22,52 @@ export const marketingPodcast: Podcast = {
     {
       id: 'l5-1',
       title: 'Digital Marketing Overview',
-      duration: 12,
-      audioUrl: '/placeholder.mp3',
+      duracion: 12,
+      urlAudio: '/placeholder.mp3',
       isCompleted: false,
-      isLocked: false
+      isLocked: false,
+      description: null,
+      orden: 1
     },
     {
       id: 'l5-2',
       title: 'Social Media Marketing Strategies',
-      duration: 13,
-      audioUrl: '/placeholder.mp3',
+      duracion: 13,
+      urlAudio: '/placeholder.mp3',
       isCompleted: false,
-      isLocked: true
+      isLocked: true,
+      description: null,
+      orden: 2
     },
     {
       id: 'l5-3',
       title: 'Search Engine Optimization',
-      duration: 11,
-      audioUrl: '/placeholder.mp3',
+      duracion: 11,
+      urlAudio: '/placeholder.mp3',
       isCompleted: false,
-      isLocked: true
+      isLocked: true,
+      description: null,
+      orden: 3
     },
     {
       id: 'l5-4',
       title: 'Content Marketing',
-      duration: 10,
-      audioUrl: '/placeholder.mp3',
+      duracion: 10,
+      urlAudio: '/placeholder.mp3',
       isCompleted: false,
-      isLocked: true
+      isLocked: true,
+      description: null,
+      orden: 4
     },
     {
       id: 'l5-5',
       title: 'Analytics and Performance Tracking',
-      duration: 12,
-      audioUrl: '/placeholder.mp3',
+      duracion: 12,
+      urlAudio: '/placeholder.mp3',
       isCompleted: false,
-      isLocked: true
+      isLocked: true,
+      description: null,
+      orden: 5
     }
   ],
   modules: [
@@ -75,5 +86,8 @@ export const marketingPodcast: Podcast = {
       title: 'Aplicación Práctica',
       lessonIds: ['l5-5']
     }
-  ]
+  ],
+  tipo_curso: 'libre',
+  likes: 0,
+  dislikes: 0
 };

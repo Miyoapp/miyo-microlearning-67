@@ -7,7 +7,8 @@ export const financePodcast: Podcast = {
   creator: {
     id: 'c7',
     name: 'Robert Chen',
-    imageUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80'
+    imageUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80',
+    linkedinUrl: null
   },
   duration: 50,
   lessonCount: 5,
@@ -21,42 +22,52 @@ export const financePodcast: Podcast = {
     {
       id: 'l7-1',
       title: 'Budgeting Fundamentals',
-      duration: 10,
-      audioUrl: '/placeholder.mp3',
+      duracion: 10,
+      urlAudio: '/placeholder.mp3',
       isCompleted: false,
-      isLocked: false
+      isLocked: false,
+      description: null,
+      orden: 1
     },
     {
       id: 'l7-2',
       title: 'Debt Management Strategies',
-      duration: 11,
-      audioUrl: '/placeholder.mp3',
+      duracion: 11,
+      urlAudio: '/placeholder.mp3',
       isCompleted: false,
-      isLocked: true
+      isLocked: true,
+      description: null,
+      orden: 2
     },
     {
       id: 'l7-3',
       title: 'Saving and Emergency Funds',
-      duration: 9,
-      audioUrl: '/placeholder.mp3',
+      duracion: 9,
+      urlAudio: '/placeholder.mp3',
       isCompleted: false,
-      isLocked: true
+      isLocked: true,
+      description: null,
+      orden: 3
     },
     {
       id: 'l7-4',
       title: 'Introduction to Investing',
-      duration: 12,
-      audioUrl: '/placeholder.mp3',
+      duracion: 12,
+      urlAudio: '/placeholder.mp3',
       isCompleted: false,
-      isLocked: true
+      isLocked: true,
+      description: null,
+      orden: 4
     },
     {
       id: 'l7-5',
       title: 'Retirement Planning',
-      duration: 8,
-      audioUrl: '/placeholder.mp3',
+      duracion: 8,
+      urlAudio: '/placeholder.mp3',
       isCompleted: false,
-      isLocked: true
+      isLocked: true,
+      description: null,
+      orden: 5
     }
   ],
   modules: [
@@ -75,5 +86,8 @@ export const financePodcast: Podcast = {
       title: 'Planificación a Largo Plazo',
       lessonIds: ['l7-5']
     }
-  ]
+  ],
+  tipo_curso: 'libre',
+  likes: 0,
+  dislikes: 0
 };
