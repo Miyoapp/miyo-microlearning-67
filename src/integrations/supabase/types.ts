@@ -216,6 +216,7 @@ export type Database = {
           moneda: string | null
           numero_lecciones: number
           precio: number | null
+          show: boolean
           tipo_curso: string | null
           titulo: string
         }
@@ -233,6 +234,7 @@ export type Database = {
           moneda?: string | null
           numero_lecciones?: number
           precio?: number | null
+          show?: boolean
           tipo_curso?: string | null
           titulo: string
         }
@@ -250,6 +252,7 @@ export type Database = {
           moneda?: string | null
           numero_lecciones?: number
           precio?: number | null
+          show?: boolean
           tipo_curso?: string | null
           titulo?: string
         }

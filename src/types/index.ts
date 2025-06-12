@@ -1,67 +1,63 @@
-export interface Creator {
-  id: string;
-  name: string;
-  imageUrl: string;
-  linkedin_url?: string;
-  socialMedia?: CreatorSocialMedia[];
-}
-
-export interface CreatorSocialMedia {
-  platform: string;
-  url: string;
-}
-
-export interface Podcast {
-  id: string;
-  title: string;
-  creator: Creator;
-  duration: number; // in minutes
-  lessonCount: number;
-  category: CategoryModel;
-  imageUrl: string;
-  description: string;
-  lessons: Lesson[];
-  modules: Module[];
-  // New fields for premium courses and voting
-  tipo_curso?: 'libre' | 'pago';
-  precio?: number;
-  moneda?: string;
-  likes?: number;
-  dislikes?: number;
-}
-
-export interface Module {
-  id: string;
-  title: string;
-  lessonIds: string[];
-}
-
-export interface Lesson {
-  id: string;
-  title: string;
-  duration: number; // in minutes
-  audioUrl: string;
-  isCompleted: boolean;
-  isLocked: boolean;
-}
-
-// New CategoryModel interface to match the database table
 export interface CategoryModel {
   id: string;
   nombre: string;
 }
 
-// Keep the old Category type for backward compatibility
-export type Category = 
-  | 'Productivity' 
-  | 'Business' 
-  | 'Technology' 
-  | 'Personal Development' 
-  | 'Health' 
-  | 'Design'
-  | 'Marketing';
+export interface CreatorModel {
+  id: string;
+  name: string;
+  imageUrl: string;
+  linkedinUrl: string | null;
+  socialMedia?: {
+    platform: string;
+    url: string;
+  }[];
+}
 
-// Tipos para la integración con Supabase
+export interface LessonModel {
+  id: string;
+  title: string;
+  description: string | null;
+  urlAudio: string;
+  duracion: number;
+  orden: number;
+  isLocked: boolean;
+  isCompleted: boolean;
+}
+
+export interface ModuleModel {
+  id: string;
+  title: string;
+  lessonIds: string[];
+}
+
+export interface Podcast {
+  id: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  category: CategoryModel;
+  creator: CreatorModel;
+  duration: number;
+  lessonCount: number;
+  lessons: LessonModel[];
+  modules?: ModuleModel[];
+  tipo_curso: 'libre' | 'pago';
+  precio?: number | null;
+  moneda?: string | null;
+  likes: number;
+  dislikes: number;
+}
+
+export interface CategoriaLanding {
+  id: string;
+  nombre: string;
+  descripcion: string;
+  imagen_url: string;
+  audio_preview_url: string;
+  orden: number;
+}
+
 export interface SupabaseCurso {
   id: string;
   titulo: string;
@@ -73,82 +69,10 @@ export interface SupabaseCurso {
   numero_lecciones: number;
   fecha_creacion: string;
   fecha_actualizacion: string;
-  // New fields
-  tipo_curso?: 'libre' | 'pago';
-  precio?: number;
-  moneda?: string;
-  likes?: number;
-  dislikes?: number;
+  tipo_curso: 'libre' | 'pago';
+  precio?: number | null;
+  moneda?: string | null;
+  likes: number;
+  dislikes: number;
+  show?: boolean; // Nuevo campo para control de visibilidad
 }
-
-export interface SupabaseCategoria {
-  id: string;
-  nombre: string;
-  fecha_creacion: string;
-  fecha_actualizacion: string;
-}
-
-export interface SupabaseCreador {
-  id: string;
-  nombre: string;
-  imagen_url: string;
-  linkedin_url?: string;
-  fecha_creacion: string;
-  fecha_actualizacion: string;
-}
-
-export interface SupabaseCreadorSocialMedia {
-  id: string;
-  creador_id: string;
-  platform: string;
-  url: string;
-  fecha_creacion: string;
-  fecha_actualizacion: string;
-}
-
-export interface SupabaseModulo {
-  id: string;
-  titulo: string;
-  descripcion: string | null;
-  curso_id: string;
-  orden: number;
-  fecha_creacion: string;
-  fecha_actualizacion: string;
-}
-
-export interface SupabaseLeccion {
-  id: string;
-  titulo: string;
-  descripcion: string | null;
-  duracion: number;
-  url_audio: string;
-  modulo_id: string;
-  orden: number;
-  estado_inicial: 'disponible' | 'bloqueado';
-  fecha_creacion: string;
-  fecha_actualizacion: string;
-}
-
-// New types for voting and purchases
-export interface CourseVote {
-  id: string;
-  user_id: string;
-  curso_id: string;
-  tipo_voto: 'like' | 'dislike' | 'none';
-  created_at: string;
-  updated_at: string;
-}
-
-export interface CoursePurchase {
-  id: string;
-  user_id: string;
-  curso_id: string;
-  fecha_compra: string;
-  monto_pagado: number;
-  estado_pago: 'pendiente' | 'completado' | 'cancelado';
-  created_at: string;
-  updated_at: string;
-}
-
-// Importar tipos específicos del landing
-export * from './landing';

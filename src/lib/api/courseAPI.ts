@@ -4,13 +4,14 @@ import { Podcast, SupabaseCurso } from "@/types";
 import { podcasts } from "@/data/podcasts"; // Import sample data as fallback
 import { transformarCursoAModelo } from './transformers';
 
-// Función para obtener todos los cursos
+// Función para obtener todos los cursos (solo los visibles)
 export const obtenerCursos = async (): Promise<Podcast[]> => {
   try {
     console.log("Obteniendo cursos desde Supabase...");
     const { data, error } = await supabase
       .from('cursos')
-      .select('*');
+      .select('*')
+      .eq('show', true); // Filtrar solo cursos visibles
       
     if (error) {
       console.error("Error al obtener cursos, usando datos de muestra:", error);
@@ -18,11 +19,11 @@ export const obtenerCursos = async (): Promise<Podcast[]> => {
     }
     
     if (!data || data.length === 0) {
-      console.warn("No se encontraron cursos en la base de datos, utilizando datos de muestra");
+      console.warn("No se encontraron cursos visibles en la base de datos, utilizando datos de muestra");
       return podcasts; // Devolver datos de muestra si no hay cursos
     }
     
-    console.log(`Se encontraron ${data.length} cursos en la base de datos`);
+    console.log(`Se encontraron ${data.length} cursos visibles en la base de datos`);
     
     // Transform each course to the application format
     const promesas = data.map((curso) => {
@@ -53,7 +54,7 @@ export const obtenerCursos = async (): Promise<Podcast[]> => {
   }
 };
 
-// Función para obtener un curso por ID
+// Función para obtener un curso por ID (independiente del estado show para permitir acceso directo)
 export const obtenerCursoPorId = async (id: string): Promise<Podcast | null> => {
   try {
     console.log(`Obteniendo curso con ID: ${id}`);
