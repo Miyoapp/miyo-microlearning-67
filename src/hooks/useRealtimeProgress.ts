@@ -1,5 +1,5 @@
 
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback, useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { toast } from 'sonner';
@@ -15,15 +15,30 @@ export function useRealtimeProgress({
 }: UseRealtimeProgressProps = {}) {
   const { user } = useAuth();
   const [subscribed, setSubscribed] = useState(false);
+  const channelsRef = useRef<any[]>([]);
+  const setupRef = useRef(false);
 
   const setupRealtimeSubscriptions = useCallback(() => {
-    if (!user) return;
+    if (!user || setupRef.current) {
+      console.log('🔒 Skipping realtime setup - user:', !!user, 'already setup:', setupRef.current);
+      return;
+    }
 
     console.log('🔄 Setting up realtime subscriptions for user:', user.id);
+    setupRef.current = true;
+
+    // Clear any existing channels first
+    if (channelsRef.current.length > 0) {
+      console.log('🧹 Cleaning existing channels before setup');
+      channelsRef.current.forEach(channel => {
+        supabase.removeChannel(channel);
+      });
+      channelsRef.current = [];
+    }
 
     // Subscribe to lesson progress changes
     const lessonProgressChannel = supabase
-      .channel('lesson-progress-changes')
+      .channel(`lesson-progress-${user.id}`)
       .on(
         'postgres_changes',
         {
@@ -34,7 +49,6 @@ export function useRealtimeProgress({
         },
         (payload) => {
           console.log('📈 Lesson progress updated via realtime:', payload);
-          // Notify user with a subtle toast
           toast.success('Progreso de lección actualizado', {
             duration: 2000,
             position: 'bottom-right',
@@ -46,12 +60,15 @@ export function useRealtimeProgress({
         if (status === 'SUBSCRIBED') {
           console.log('✅ Successfully subscribed to lesson progress changes');
           setSubscribed(true);
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('❌ Error subscribing to lesson progress channel');
+          setSubscribed(false);
         }
       });
 
     // Subscribe to course progress changes
     const courseProgressChannel = supabase
-      .channel('course-progress-changes')
+      .channel(`course-progress-${user.id}`)
       .on(
         'postgres_changes',
         {
@@ -62,7 +79,6 @@ export function useRealtimeProgress({
         },
         (payload) => {
           console.log('📊 Course progress updated via realtime:', payload);
-          // Notify user with a subtle toast
           toast.success('Progreso del curso actualizado', {
             duration: 2000, 
             position: 'bottom-right',
@@ -74,34 +90,52 @@ export function useRealtimeProgress({
         if (status === 'SUBSCRIBED') {
           console.log('✅ Successfully subscribed to course progress changes');
           setSubscribed(true);
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('❌ Error subscribing to course progress channel');
+          setSubscribed(false);
         }
       });
+
+    // Store channels for cleanup
+    channelsRef.current = [lessonProgressChannel, courseProgressChannel];
 
     // Return cleanup function
     return () => {
       console.log('🔌 Cleaning up realtime subscriptions');
-      supabase.removeChannel(lessonProgressChannel);
-      supabase.removeChannel(courseProgressChannel);
+      channelsRef.current.forEach(channel => {
+        supabase.removeChannel(channel);
+      });
+      channelsRef.current = [];
+      setupRef.current = false;
+      setSubscribed(false);
     };
   }, [user?.id, onLessonProgressUpdate, onCourseProgressUpdate]);
 
   // Set up realtime progress monitor
   useEffect(() => {
+    if (!user) {
+      console.log('🚫 No user, skipping realtime setup');
+      return;
+    }
+
     const cleanup = setupRealtimeSubscriptions();
-    
-    // Reconnect subscriptions if they fail
-    const reconnectInterval = setInterval(() => {
-      if (user && !subscribed) {
-        console.log('🔄 Attempting to reconnect realtime subscriptions');
-        setupRealtimeSubscriptions();
-      }
-    }, 10000); // Check every 10 seconds
     
     return () => {
       cleanup?.();
-      clearInterval(reconnectInterval);
     };
-  }, [setupRealtimeSubscriptions, user, subscribed]);
+  }, [setupRealtimeSubscriptions, user]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      console.log('🧹 Component unmounting, cleaning up all realtime subscriptions');
+      channelsRef.current.forEach(channel => {
+        supabase.removeChannel(channel);
+      });
+      channelsRef.current = [];
+      setupRef.current = false;
+    };
+  }, []);
 
   return {
     setupRealtimeSubscriptions,
