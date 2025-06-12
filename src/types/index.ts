@@ -1,4 +1,3 @@
-
 export interface CategoryModel {
   id: string;
   nombre: string;
@@ -103,7 +102,7 @@ export interface SupabaseLeccion {
   duracion: number;
   modulo_id: string;
   orden: number;
-  estado_inicial: 'desbloqueado' | 'bloqueado';
+  estado_inicial: 'disponible' | 'bloqueado';
   fecha_creacion: string;
   fecha_actualizacion: string;
 }
