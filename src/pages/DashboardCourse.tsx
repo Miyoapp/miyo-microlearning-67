@@ -7,6 +7,7 @@ import { useUserProgress } from '@/hooks/useUserProgress';
 import { useConsolidatedLessons } from '@/hooks/useConsolidatedLessons';
 import { useCourseRealtimeSync } from '@/hooks/course/useCourseRealtimeSync';
 import { useCourseAccess } from '@/hooks/course/useCourseAccess';
+import { useRealtimeProgress } from '@/hooks/useRealtimeProgress';
 import CoursePageHeader from '@/components/course/CoursePageHeader';
 import CourseMainContent from '@/components/course/CourseMainContent';
 import AudioPlayer from '@/components/AudioPlayer';
@@ -38,6 +39,14 @@ const DashboardCourse = () => {
     podcast,
     initializePodcastWithProgress,
     refetch
+  });
+
+  // NEW: Set up realtime progress updates for the CourseStats table
+  useRealtimeProgress({
+    onCourseProgressUpdate: () => {
+      console.log('🔄 Real-time course progress update detected, refreshing Tu progreso table');
+      refetch(); // This will update the userProgress state
+    }
   });
   
   const courseProgress = userProgress.find(p => p.course_id === id);
@@ -97,6 +106,20 @@ const DashboardCourse = () => {
     handleSelectLesson(lesson, true);
   };
 
+  // NEW: Enhanced lesson complete handler with real-time progress trigger
+  const handleLessonCompleteEnhanced = async () => {
+    console.log('🏁 Enhanced lesson complete handler triggered');
+    
+    // Execute the existing lesson completion logic
+    await handleLessonComplete();
+    
+    // Trigger immediate progress refresh to update CourseStats
+    setTimeout(() => {
+      console.log('🔄 Triggering progress refresh after lesson completion');
+      refetch();
+    }, 500); // Small delay to ensure DB updates are complete
+  };
+
   if (isLoading) {
     return (
       <DashboardLayout>
@@ -147,7 +170,7 @@ const DashboardCourse = () => {
           lesson={currentLesson}
           isPlaying={isPlaying}
           onTogglePlay={handleTogglePlay}
-          onComplete={handleLessonComplete}
+          onComplete={handleLessonCompleteEnhanced}
           onProgressUpdate={handleProgressUpdate}
         />
       )}
