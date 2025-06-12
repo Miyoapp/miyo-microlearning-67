@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 import CategoryCard from './CategoryCard';
 import { CategoriaLanding } from '@/types/landing';
 import { obtenerCategoriasLanding } from '@/lib/api/landingAPI';
@@ -10,6 +11,7 @@ const CategoryCarousel: React.FC = () => {
   const [categorias, setCategorias] = useState<CategoriaLanding[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
   // Cargar categorías al montar el componente
   useEffect(() => {
@@ -40,6 +42,10 @@ const CategoryCarousel: React.FC = () => {
   const handleCategoryClick = (categoria: CategoriaLanding) => {
     console.log('Categoría seleccionada:', categoria.nombre);
     // Aquí se puede implementar la navegación o modal de registro
+  };
+
+  const handleEmpiezaAhora = () => {
+    navigate('/login?mode=signup');
   };
 
   if (isLoading) {
@@ -100,6 +106,7 @@ const CategoryCarousel: React.FC = () => {
             <Button 
               size="lg" 
               className="bg-miyo-800 hover:bg-miyo-700 text-white px-8 py-4 h-auto text-lg font-medium"
+              onClick={handleEmpiezaAhora}
             >
               Empieza Ahora
             </Button>

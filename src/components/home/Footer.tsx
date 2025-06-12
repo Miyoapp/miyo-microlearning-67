@@ -37,8 +37,36 @@ const Footer = () => {
           <div>
             <h3 className="font-semibold text-gray-900 mb-4">Contacto</h3>
             <ul className="space-y-3">
-              <li><a href="#" className="text-gray-600 hover:text-miyo-800 transition-colors">Feedback</a></li>
-              <li><a href="#" className="text-gray-600 hover:text-miyo-800 transition-colors">Contacto</a></li>
+              <li>
+                <a 
+                  href="https://miyoapp.fillout.com/t/aBiayNmKmAus" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-gray-600 hover:text-miyo-800 transition-colors"
+                >
+                  Feedback
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="https://miyoapp.fillout.com/t/qbHVDuoNvPus" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-gray-600 hover:text-miyo-800 transition-colors"
+                >
+                  Contacto
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="https://miyoapp.fillout.com/t/vMKkn6YUWxus" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-gray-600 hover:text-miyo-800 transition-colors"
+                >
+                  Quiero ser creador de contenido
+                </a>
+              </li>
             </ul>
           </div>
         </div>

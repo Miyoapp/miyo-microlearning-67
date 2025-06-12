@@ -30,7 +30,7 @@ const FavoriteMoments = () => {
     {
       id: 5,
       title: "Antes de dormir",
-      image: "https://images.unsplash.com/photo-1520637836862-4d197d17c61a?w=300&h=200&fit=crop",
+      image: "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=300&h=200&fit=crop",
       description: "Termina el día con pensamientos positivos"
     }
   ];
