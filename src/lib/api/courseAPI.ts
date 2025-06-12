@@ -56,33 +56,30 @@ export const obtenerCursos = async (): Promise<Podcast[]> => {
 // Función para obtener un curso por ID
 export const obtenerCursoPorId = async (id: string): Promise<Podcast | null> => {
   try {
-    console.log(`🔍 Obteniendo curso con ID: ${id}`);
-    
-    // First try to get from sample data for known IDs
-    const podcastMuestra = podcasts.find(p => p.id === id);
-    if (podcastMuestra) {
-      console.log(`✅ Curso encontrado en datos de muestra: ${podcastMuestra.title}`);
-      return podcastMuestra;
-    }
-    
-    // If not in sample data, try Supabase
+    console.log(`Obteniendo curso con ID: ${id}`);
     const { data, error } = await supabase
       .from('cursos')
       .select('*')
       .eq('id', id)
-      .maybeSingle();
+      .maybeSingle(); // Usar maybeSingle en lugar de single para evitar errores
       
     if (error) {
-      console.error(`❌ Error al obtener curso desde Supabase:`, error);
-      return null;
+      if (error.code === 'PGRST116') {
+        // No se encontró el curso, intentar buscar en los datos de muestra
+        console.warn("No se encontró el curso en la base de datos, buscando en datos de muestra");
+        const podcastMuestra = podcasts.find(p => p.id === id);
+        return podcastMuestra || null;
+      }
+      console.error("Error al obtener curso:", error);
+      throw error;
     }
     
     if (!data) {
-      console.warn(`⚠️ No se encontró el curso con ID: ${id}`);
-      return null;
+      // No se encontró el curso, intentar buscar en los datos de muestra
+      console.warn("No se encontró el curso en la base de datos, buscando en datos de muestra");
+      const podcastMuestra = podcasts.find(p => p.id === id);
+      return podcastMuestra || null;
     }
-    
-    console.log(`✅ Curso encontrado en Supabase: ${data.titulo}`);
     
     // Cast the data to SupabaseCurso to handle type compatibility
     const supabaseCurso: SupabaseCurso = {
@@ -105,7 +102,9 @@ export const obtenerCursoPorId = async (id: string): Promise<Podcast | null> => 
     
     return transformarCursoAModelo(supabaseCurso);
   } catch (error) {
-    console.error(`❌ Error inesperado al obtener curso:`, error);
-    return null;
+    console.error("Error al obtener curso, buscando en datos de muestra:", error);
+    // Intentar buscar en los datos de muestra
+    const podcastMuestra = podcasts.find(p => p.id === id);
+    return podcastMuestra || null;
   }
 };

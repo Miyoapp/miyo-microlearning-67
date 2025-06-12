@@ -3,7 +3,6 @@ import { useCallback, useRef } from 'react';
 import { Lesson, Podcast } from '@/types';
 import { User } from '@supabase/supabase-js';
 import { getNextLesson } from './lessonOrderUtils';
-import { toast } from 'sonner';
 
 export function useLessonCompletion(
   currentLesson: Lesson | null,
@@ -80,11 +79,6 @@ export function useLessonCompletion(
               // Marcar como completada en BD
               markLessonCompleteInDB(nextLesson.id, podcast.id);
               updateLessonPosition(nextLesson.id, podcast.id, 100);
-              
-              // NEW: Signal progress update
-              setTimeout(() => {
-                refetchCourseProgress();
-              }, 300);
             }
             
             setCurrentLesson({ ...nextLesson, isCompleted: true });
@@ -115,12 +109,6 @@ export function useLessonCompletion(
         const updatedPodcast = { ...podcast, lessons: updatedLessons };
         setPodcast(updatedPodcast);
         
-        // NEW: Display visual feedback on completion
-        toast.success('¡Lección completada!', {
-          description: `Has completado: ${currentLesson.title}`,
-          duration: 3000,
-        });
-        
         // Auto-advance a la siguiente lección desbloqueada
         if (isAutoAdvanceAllowed && nextLesson) {
           console.log('⏭️ Auto-advance to newly unlocked:', nextLesson.title);
@@ -133,38 +121,14 @@ export function useLessonCompletion(
         }
         
         // Background DB updates solo para completion real
-        try {
-          // Execute DB updates in parallel for efficiency
-          await Promise.all([
-            markLessonCompleteInDB(currentLesson.id, podcast.id),
-            updateLessonPosition(currentLesson.id, podcast.id, 100)
-          ]);
-          
+        Promise.all([
+          markLessonCompleteInDB(currentLesson.id, podcast.id),
+          updateLessonPosition(currentLesson.id, podcast.id, 100)
+        ]).then(() => {
           console.log('💾 Background DB updates completed for first completion');
-          
-          // NEW: Explicitly trigger refresh after background updates
-          setTimeout(() => {
-            console.log('🔄 Triggering progress refresh after DB updates');
-            refetchLessonProgress();
-            refetchCourseProgress(); 
-          }, 300);
-          
-          // Check if this completion causes a progress threshold to be reached
-          const estimatedProgress = Math.round((updatedLessons.filter(l => l.isCompleted).length / podcast.lessons.length) * 100);
-          
-          if (estimatedProgress >= 50 && estimatedProgress < 100) {
-            toast.success('¡Has llegado a mitad del camino!', { 
-              duration: 4000,
-            });
-          } else if (estimatedProgress >= 100) {
-            toast.success('¡Felicidades! Has completado todo el curso', {
-              duration: 5000,
-            });
-          }
-          
-        } catch (dbError) {
+        }).catch(dbError => {
           console.error('❌ Background DB update failed:', dbError);
-        }
+        });
       }
       
     } catch (error) {
@@ -183,8 +147,6 @@ export function useLessonCompletion(
     setIsPlaying,
     markLessonCompleteInDB,
     updateLessonPosition,
-    refetchLessonProgress,
-    refetchCourseProgress,
     isAutoAdvanceAllowed
   ]);
 

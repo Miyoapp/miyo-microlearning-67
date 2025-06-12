@@ -7,29 +7,19 @@ import { useToast } from "@/components/ui/use-toast";
 export function useCourseData(courseId: string | undefined) {
   const [podcast, setPodcast] = useState<Podcast | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   
   useEffect(() => {
     const cargarCurso = async () => {
-      if (!courseId) {
-        setIsLoading(false);
-        return;
-      }
+      if (!courseId) return;
       
       try {
-        console.log('🔍 Loading course with ID:', courseId);
         setIsLoading(true);
-        setError(null);
-        
         const podcastData = await obtenerCursoPorId(courseId);
         
         if (podcastData) {
-          console.log('✅ Course loaded successfully:', podcastData.title);
-          
           // Generate modules if they don't exist
           if (!podcastData.modules || podcastData.modules.length === 0) {
-            console.log('📦 Generating default modules for course');
             const defaultModules = createDefaultModules(podcastData);
             podcastData.modules = defaultModules;
           }
@@ -39,20 +29,16 @@ export function useCourseData(courseId: string | undefined) {
           podcastData.lessons = updatedLessons;
           
           setPodcast(podcastData);
-        } else {
-          console.error('❌ Course not found:', courseId);
-          setError('Curso no encontrado');
         }
         
+        setIsLoading(false);
       } catch (error) {
-        console.error("❌ Error loading course:", error);
-        setError('Error al cargar el curso');
+        console.error("Error al cargar curso:", error);
         toast({
           title: "Error al cargar curso",
           description: "No se pudo cargar el curso solicitado. Por favor, intenta de nuevo.",
           variant: "destructive"
         });
-      } finally {
         setIsLoading(false);
       }
     };
@@ -60,15 +46,11 @@ export function useCourseData(courseId: string | undefined) {
     cargarCurso();
   }, [courseId, toast]);
 
-  return { podcast, setPodcast, isLoading, error };
+  return { podcast, setPodcast, isLoading };
 }
 
 // Helper functions
 function createDefaultModules(podcast: Podcast) {
-  if (!podcast.lessons || podcast.lessons.length === 0) {
-    return [];
-  }
-
   return [
     {
       id: 'module-1',
@@ -90,14 +72,14 @@ function createDefaultModules(podcast: Podcast) {
 
 // Inicializar el estado de las lecciones (solo la primera lección del primer módulo desbloqueada)
 function initializeLessonsState(podcast: Podcast) {
-  // Si no hay módulos o lecciones, devolver las lecciones tal cual
-  if (!podcast.modules || podcast.modules.length === 0 || !podcast.lessons || podcast.lessons.length === 0) {
-    return podcast.lessons || [];
+  // Si no hay módulos, devolver las lecciones tal cual
+  if (!podcast.modules || podcast.modules.length === 0) {
+    return podcast.lessons;
   }
   
   // Obtener el ID de la primera lección del primer módulo
   const firstModule = podcast.modules[0];
-  const firstLessonId = firstModule.lessonIds && firstModule.lessonIds.length > 0 ? firstModule.lessonIds[0] : null;
+  const firstLessonId = firstModule.lessonIds[0];
   
   // Actualizar el estado de todas las lecciones
   return podcast.lessons.map(lesson => {
