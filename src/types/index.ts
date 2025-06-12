@@ -13,7 +13,7 @@ export interface CreatorModel {
   id: string;
   name: string;
   imageUrl: string;
-  linkedinUrl: string | null;
+  linkedinUrl?: string | null;
   socialMedia?: CreatorSocialMedia[];
 }
 
@@ -30,6 +30,7 @@ export interface LessonModel {
 
 // Add aliases for backward compatibility
 export type Lesson = LessonModel;
+export type Creator = CreatorModel;
 
 export interface ModuleModel {
   id: string;
@@ -84,4 +85,35 @@ export interface SupabaseCurso {
   likes: number;
   dislikes: number;
   show?: boolean;
+}
+
+// Add missing Supabase types
+export interface SupabaseCategoria {
+  id: string;
+  nombre: string;
+  fecha_creacion: string;
+  fecha_actualizacion: string;
+}
+
+export interface SupabaseLeccion {
+  id: string;
+  titulo: string;
+  descripcion: string | null;
+  url_audio: string;
+  duracion: number;
+  modulo_id: string;
+  orden: number;
+  estado_inicial: 'desbloqueado' | 'bloqueado';
+  fecha_creacion: string;
+  fecha_actualizacion: string;
+}
+
+export interface SupabaseModulo {
+  id: string;
+  titulo: string;
+  descripcion: string | null;
+  curso_id: string;
+  orden: number;
+  fecha_creacion: string;
+  fecha_actualizacion: string;
 }

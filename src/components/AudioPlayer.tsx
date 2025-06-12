@@ -45,7 +45,7 @@ const AudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgressUp
       <div className="miyo-container py-4">
         <audio
           ref={audioRef}
-          src={lesson.audioUrl}
+          src={lesson.urlAudio}
           onTimeUpdate={updateTime}
           onLoadedMetadata={handleMetadata}
           onEnded={handleAudioEnded}
@@ -57,7 +57,7 @@ const AudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgressUp
             <LessonInfo 
               title={lesson.title} 
               currentTime={currentTime} 
-              duration={duration || lesson.duration} 
+              duration={duration || lesson.duracion} 
             />
           </div>
           
@@ -77,7 +77,7 @@ const AudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgressUp
             
             <ProgressBar 
               currentTime={currentTime} 
-              duration={duration || (lesson.duration * 60)} 
+              duration={duration || (lesson.duracion * 60)} 
               onSeek={handleSeek} 
             />
           </div>

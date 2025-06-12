@@ -63,6 +63,7 @@ export const transformarCursoAModelo = async (curso: SupabaseCurso): Promise<Pod
         id: "unknown",
         name: "Creador Desconocido",
         imageUrl: "/placeholder.svg",
+        linkedinUrl: null,
         socialMedia: []
       },
       category: {

@@ -64,10 +64,12 @@ export const obtenerLecciones = async (cursoId: string): Promise<Lesson[]> => {
       return {
         id: leccion.id,
         title: leccion.titulo,
-        duration: leccion.duracion,
-        audioUrl: leccion.url_audio,
+        duracion: leccion.duracion,
+        urlAudio: leccion.url_audio,
         isCompleted: false,
-        isLocked: leccion.estado_inicial === 'bloqueado' && !isFirstLesson
+        isLocked: leccion.estado_inicial === 'bloqueado' && !isFirstLesson,
+        description: leccion.descripcion,
+        orden: leccion.orden
       };
     });
     

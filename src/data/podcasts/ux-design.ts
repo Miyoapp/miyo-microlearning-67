@@ -7,7 +7,8 @@ export const uxPodcast: Podcast = {
   creator: {
     id: 'c2',
     name: 'Alex Chen',
-    imageUrl: 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80'
+    imageUrl: 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80',
+    linkedinUrl: null
   },
   duration: 45,
   lessonCount: 4,
@@ -21,34 +22,42 @@ export const uxPodcast: Podcast = {
     {
       id: 'l2-1',
       title: 'The Foundation of Good UX',
-      duration: 11,
-      audioUrl: '/placeholder.mp3',
+      duracion: 11,
+      urlAudio: '/placeholder.mp3',
       isCompleted: false,
-      isLocked: false
+      isLocked: false,
+      description: null,
+      orden: 1
     },
     {
       id: 'l2-2',
       title: 'User Research Techniques',
-      duration: 12,
-      audioUrl: '/placeholder.mp3',
+      duracion: 12,
+      urlAudio: '/placeholder.mp3',
       isCompleted: false,
-      isLocked: true
+      isLocked: true,
+      description: null,
+      orden: 2
     },
     {
       id: 'l2-3',
       title: 'Wireframing and Prototyping',
-      duration: 13,
-      audioUrl: '/placeholder.mp3',
+      duracion: 13,
+      urlAudio: '/placeholder.mp3',
       isCompleted: false,
-      isLocked: true
+      isLocked: true,
+      description: null,
+      orden: 3
     },
     {
       id: 'l2-4',
       title: 'Usability Testing',
-      duration: 9,
-      audioUrl: '/placeholder.mp3',
+      duracion: 9,
+      urlAudio: '/placeholder.mp3',
       isCompleted: false,
-      isLocked: true
+      isLocked: true,
+      description: null,
+      orden: 4
     }
   ],
   modules: [
@@ -62,5 +71,8 @@ export const uxPodcast: Podcast = {
       title: 'Técnicas Intermedias',
       lessonIds: ['l2-3', 'l2-4']
     }
-  ]
+  ],
+  tipo_curso: 'libre',
+  likes: 0,
+  dislikes: 0
 };
