@@ -26,7 +26,7 @@ const ProgressBar = ({ currentTime, duration, onSeek }: ProgressBarProps) => {
         onChange={handleSeek}
         className="w-full accent-miyo-800 h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer"
         style={{
-          background: `linear-gradient(to right, #1e40af 0%, #1e40af ${(validCurrentTime / validDuration) * 100}%, #e5e7eb ${(validCurrentTime / validDuration) * 100}%, #e5e7eb 100%)`
+          background: `linear-gradient(to right, #5e16ea 0%, #5e16ea ${(validCurrentTime / validDuration) * 100}%, #e5e7eb ${(validCurrentTime / validDuration) * 100}%, #e5e7eb 100%)`
         }}
       />
     </div>

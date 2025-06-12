@@ -36,13 +36,13 @@ const LessonItem = React.memo(({ lesson, index, status, classes, onLessonClick }
         className={nodeClasses}
         onClick={() => onLessonClick(lesson)}
       >
-        {/* OPTIMIZADO: Lógica de iconos más clara y estable */}
+        {/* CORREGIDO: Tamaño consistente de íconos (18px) */}
         {isCompleted ? (
-          <Trophy size={16} />
+          <Trophy size={18} />
         ) : canPlay ? (
-          <Play size={16} fill="white" />
+          <Play size={18} fill="white" />
         ) : (
-          <Lock size={16} />
+          <Lock size={18} />
         )}
       </div>
       
@@ -53,12 +53,12 @@ const LessonItem = React.memo(({ lesson, index, status, classes, onLessonClick }
         </div>
       )}
       
-      {/* Título de la lección */}
+      {/* Título de la lección con ancho fijo para evitar afectar íconos */}
       <div 
-        className={cn("ml-3", { "cursor-pointer": canPlay, "cursor-not-allowed": !canPlay })}
+        className={cn("ml-3 flex-1 max-w-[280px]", { "cursor-pointer": canPlay, "cursor-not-allowed": !canPlay })}
         onClick={() => onLessonClick(lesson)}
       >
-        <div className={textClasses}>
+        <div className={cn(textClasses, "leading-snug")}>
           {lesson.title}
           {isCurrent && (
             <span className="ml-2 text-xs text-green-600">● Reproduciendo</span>
