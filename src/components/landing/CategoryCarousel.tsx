@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -31,17 +30,38 @@ const CategoryCarousel: React.FC = () => {
     cargarCategorias();
   }, []);
 
-  // Loop infinito: al llegar al final, sigue desde el inicio
+  // Al poner el mouse sobre una tarjeta, la centralizamos
+  const handleCardHover = (idxEnCarrusel: number) => {
+    // El idxEnCarrusel es el índice en el vector `displayed`
+    // Debemos convertirlo al índice global de categorías
+    if (categorias.length === 0) return;
+    const centro = Math.floor(VISIBLE_CARDS / 2);
+    // El displayed está calculado de [-2, -1, 0, 1, 2] respecto al central
+    // currentIndex real = idxCategoria + (idxEnCarrusel-centro)
+    // Queremos mover el currentIndex tal que la tarjeta hovered sea el centro
+    const displayed = getDisplayCategorias();
+    const hoveredCategoria = displayed[idxEnCarrusel];
+    const hoveredIdxGlobal = categorias.findIndex(c => c.id === hoveredCategoria.id);
+    setCurrentIndex(hoveredIdxGlobal);
+  };
+
+  // Ajuste: Para evitar zonas en blanco, si hay menos de VISIBLE_CARDS, repetimos las tarjetas
   const getDisplayCategorias = () => {
     const length = categorias.length;
     if (length === 0) return [];
-
-    const display: CategoriaLanding[] = [];
-    for (let i = -Math.floor(VISIBLE_CARDS / 2); i <= Math.floor(VISIBLE_CARDS / 2); i++) {
-      let idx = (currentIndex + i + length) % length;
-      display.push(categorias[idx]);
+    // Repetimos categorías hasta llenar el mínimo necesario
+    const needed = VISIBLE_CARDS;
+    let repeated = [];
+    while(repeated.length < needed) {
+      repeated = repeated.concat(categorias);
     }
-    return display;
+    // Y recortamos para obtener siempre VISIBLE_CARDS alrededor del currentIndex
+    const arr = [];
+    for (let i = -Math.floor(VISIBLE_CARDS/2); i <= Math.floor(VISIBLE_CARDS/2); i++) {
+      let idx = (currentIndex + i + categorias.length) % categorias.length;
+      arr.push(categorias[idx]);
+    }
+    return arr;
   };
 
   const goNext = () => {
@@ -128,7 +148,7 @@ const CategoryCarousel: React.FC = () => {
                 const isCenter = idx === Math.floor(displayed.length / 2);
                 return (
                   <div
-                    key={categoria.id}
+                    key={categoria.id + '_' + idx}
                     className={`flex-shrink-0 transition-all duration-300 ease-in-out
                       ${isCenter
                         ? "z-20 scale-110 shadow-2xl ring-4 ring-[#5e17eb] bg-white"
@@ -145,6 +165,7 @@ const CategoryCarousel: React.FC = () => {
                       cursor: "pointer",
                       transition: "all 0.3s cubic-bezier(.4,2.2,.2,1)"
                     }}
+                    onMouseEnter={() => handleCardHover(idx)}
                   >
                     <CategoryCard
                       categoria={categoria}
@@ -153,6 +174,7 @@ const CategoryCarousel: React.FC = () => {
                       currentlyPlaying={currentlyPlaying}
                       onAudioPlay={handleAudioPlay}
                       onAudioStop={handleAudioStop}
+                      // extra?
                     />
                   </div>
                 );

@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import { Play, Pause } from 'lucide-react';
 import { CategoriaLanding } from '@/types/landing';
@@ -80,9 +79,8 @@ const CategoryCard = ({
           : '1.5px solid #eee'
       }}
     >
-      {/* Imagen + audio */}
-      <div className="flex flex-col items-center w-full h-full px-4 pt-6 pb-4">
-        {/* Imagen */}
+      {/* Imagen */}
+      <div className="relative flex flex-col items-center w-full h-full px-4 pt-6 pb-4">
         <img
           src={categoria.imagen_url}
           alt={categoria.nombre}
@@ -94,23 +92,21 @@ const CategoryCard = ({
           }}
         />
 
-        {/* Play/Pause Button Overlay */}
+        {/* Play/Pause Button ALWAYS VISIBLE IF audio_preview*/}
         {categoria.audio_preview_url && (
           <button
             onClick={handlePlayPause}
             tabIndex={0}
             className={`
               absolute
-              bottom-0 left-0 right-0 z-30
-              mx-auto
-              mt-[-32px]
-              w-fit
-              flex items-center gap-2
-              py-2 px-5
-              rounded-b-[24px]
-              ${expanded ? 'h-20 bg-[#24164b] bg-opacity-95 justify-between' : 'h-12 bg-[#f8f5fd] bg-opacity-95'}
-              shadow-lg
+              bottom-4 right-4 z-30
+              bg-white border-2 border-[#5e17eb] shadow-md
+              flex items-center justify-center
+              rounded-full
+              w-14 h-14
               transition-all duration-300
+              ${expanded ? "scale-110" : "scale-100"}
+              hover:bg-[#f8f5fd]
             `}
             style={{
               color: '#5e17eb'
@@ -118,33 +114,13 @@ const CategoryCard = ({
             onMouseDown={e => e.stopPropagation()}
             onMouseUp={e => e.stopPropagation()}
           >
-            <span className="flex items-center">
-              {isPlaying
-                ? <Pause className="w-8 h-8" style={{ color: '#5e17eb' }} />
-                : <Play className="w-8 h-8" style={{ color: '#5e17eb' }} />
-              }
-            </span>
-            {/* Detalle audio para expandido */}
-            {expanded ? (
-              <div className="flex flex-col items-start justify-center ml-2">
-                <span className="text-white text-lg font-medium">Listen</span>
-                <div className="mt-1 w-36 h-2 bg-[#423463] rounded-full overflow-hidden">
-                  <div
-                    className="bg-[#fff] h-2 rounded-full transition-all duration-150"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-              </div>
-            ) : null}
-            {/* Tiempo cuando expandido */}
-            {expanded && audioRef.current && audioRef.current.duration ? (
-              <span className="ml-4 text-white text-base font-semibold">
-                {formatDuration(audioRef.current.duration)}
-              </span>
-            ) : null}
+            {isPlaying
+              ? <Pause className="w-8 h-8" style={{ color: '#5e17eb' }} />
+              : <Play className="w-8 h-8" style={{ color: '#5e17eb' }} />
+            }
           </button>
         )}
-        {/* Audio Element (oculto) */}
+        {/* Audio Element HIDDEN */}
         {categoria.audio_preview_url && (
           <audio
             ref={audioRef}
@@ -162,6 +138,23 @@ const CategoryCard = ({
         </h3>
         {expanded && categoria.descripcion && (
           <p className="text-center text-gray-700 text-sm">{categoria.descripcion}</p>
+        )}
+        {/* Barra de progreso mini solo si expanded */}
+        {expanded && categoria.audio_preview_url && (
+          <div className="mt-2 w-full flex flex-col items-center">
+            <div className="w-36 h-2 bg-[#423463] rounded-full overflow-hidden">
+              <div
+                className="bg-[#fff] h-2 rounded-full transition-all duration-150"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            {/* Tiempo total del audio preview */}
+            {audioRef.current && audioRef.current.duration ? (
+              <span className="mt-1 text-gray-700 text-xs font-semibold">
+                {formatDuration(audioRef.current.duration)}
+              </span>
+            ) : null}
+          </div>
         )}
       </div>
     </div>
