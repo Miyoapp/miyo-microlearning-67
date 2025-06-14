@@ -109,7 +109,7 @@ const CategoryCarousel: React.FC = () => {
                 {categorias.map(categoria => (
                   <div 
                     key={categoria.id} 
-                    className="flex-shrink-0 px-2" 
+                    className="flex-shrink-0 px-2 relative hover:z-20 transition-all duration-300" 
                     style={{
                       width: `${100 / categorias.length}%`
                     }}
