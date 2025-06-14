@@ -6,31 +6,31 @@ const FavoriteMoments = () => {
     {
       id: 1,
       title: "Manejando",
-      image: "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=300&h=200&fit=crop",
+      image: "https://images.unsplash.com/photo-1618526952809-513c7c2c30b2?w=300&h=400&fit=crop",
       description: "Aprovecha el trayecto para crecer"
     },
     {
       id: 2,
       title: "Entrenando",
-      image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=300&h=200&fit=crop",
+      image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=300&h=400&fit=crop",
       description: "Fortalece cuerpo y mente al mismo tiempo"
     },
     {
       id: 3,
       title: "Transporte",
-      image: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=300&h=200&fit=crop",
+      image: "https://images.unsplash.com/photo-1560271018-91c3c401398a?w=300&h=400&fit=crop",
       description: "Convierte cada viaje en una oportunidad"
     },
     {
       id: 4,
       title: "Tomando café",
-      image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=300&h=200&fit=crop",
+      image: "https://images.unsplash.com/photo-1559526334-a740a33c9448?w=300&h=400&fit=crop",
       description: "Momentos de pausa para reflexionar"
     },
     {
       id: 5,
       title: "Antes de dormir",
-      image: "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=300&h=200&fit=crop",
+      image: "https://images.unsplash.com/photo-1529590024845-5148f07328e7?w=300&h=400&fit=crop",
       description: "Termina el día con pensamientos positivos"
     }
   ];
