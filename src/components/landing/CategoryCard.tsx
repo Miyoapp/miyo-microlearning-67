@@ -1,171 +1,107 @@
-import React, { useRef, useEffect, useState } from 'react';
+
+import React, { useState } from 'react';
 import { Play, Pause } from 'lucide-react';
 import { CategoriaLanding } from '@/types/landing';
 
 interface CategoryCardProps {
   categoria: CategoriaLanding;
-  expanded: boolean;
-  onClick?: (categoria: CategoriaLanding) => void;
-  currentlyPlaying: string | null;
-  onAudioPlay: (categoryId: string) => void;
-  onAudioStop: () => void;
 }
 
-const CategoryCard = ({
-  categoria,
-  expanded,
-  onClick,
-  currentlyPlaying,
-  onAudioPlay,
-  onAudioStop
-}: CategoryCardProps) => {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [progress, setProgress] = useState(0);
-  const isPlaying = currentlyPlaying === categoria.id;
+const CategoryCard = ({ categoria }: CategoryCardProps) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [audioRef] = useState<HTMLAudioElement | null>(null);
 
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (audio) {
-      if (isPlaying) {
-        audio.play().catch(console.error);
-      } else {
-        audio.pause();
-        audio.currentTime = 0;
-        setProgress(0);
-      }
+  // Imagen por defecto para "Antes de dormir"
+  const getImageForCategory = (nombre: string, imagenUrl: string) => {
+    if (nombre.toLowerCase().includes('antes de dormir') && !imagenUrl) {
+      return 'https://images.unsplash.com/photo-1721322800607-8c38375eef04?auto=format&fit=crop&w=400&q=80';
     }
-  }, [isPlaying]);
+    return imagenUrl;
+  };
 
   const handlePlayPause = (e: React.MouseEvent) => {
     e.stopPropagation();
+    
     if (!categoria.audio_preview_url) return;
-    if (isPlaying) {
-      onAudioStop();
-    } else {
-      onAudioPlay(categoria.id);
+    
+    if (audioRef) {
+      if (isPlaying) {
+        audioRef.pause();
+      } else {
+        audioRef.play();
+      }
+      setIsPlaying(!isPlaying);
     }
   };
 
-  const handleCardClick = () => {
-    if (onClick) onClick(categoria);
-  };
-
-  const handleAudioEnded = () => {
-    onAudioStop();
-  };
-
-  const handleTimeUpdate = () => {
-    if (audioRef.current && audioRef.current.duration) {
-      const percentage =
-        (audioRef.current.currentTime / audioRef.current.duration) * 100;
-      setProgress(percentage);
-    }
-  };
+  const imageUrl = getImageForCategory(categoria.nombre, categoria.imagen_url);
 
   return (
-    <div
-      className={`
-        relative w-full h-full flex flex-col items-center justify-between bg-[#f8f5fd] rounded-[26px] shadow-xl transition-all duration-300
-        ${expanded ? 'scale-105 z-20' : 'scale-95 opacity-70 z-10'}
-        hover:scale-105 hover:opacity-90 cursor-pointer
-      `}
-      onClick={handleCardClick}
-      style={{
-        boxShadow: expanded
-          ? '0 10px 32px rgba(94,23,235,0.20)'
-          : '0 2px 16px rgba(94,23,235,0.05)',
-        border: expanded
-          ? '2.5px solid #675AFF'
-          : '1.5px solid #eee'
-      }}
-    >
-      {/* Imagen */}
-      <div className="relative flex flex-col items-center w-full h-full px-4 pt-6 pb-4">
-        <img
-          src={categoria.imagen_url}
-          alt={categoria.nombre}
-          className={`w-full object-contain mx-auto transition-all duration-300
-            ${expanded ? 'h-[205px] mb-4' : 'h-[110px] mb-2'}
-          `}
-          style={{
-            borderRadius: '18px'
+    <div className="group relative bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer">
+      {/* Audio element */}
+      {categoria.audio_preview_url && (
+        <audio
+          ref={(ref) => {
+            if (ref) {
+              (audioRef as any) = ref;
+              ref.addEventListener('ended', () => setIsPlaying(false));
+            }
           }}
+          src={categoria.audio_preview_url}
+          preload="none"
         />
-
-        {/* Play/Pause Button ALWAYS VISIBLE IF audio_preview*/}
+      )}
+      
+      {/* Image container */}
+      <div className="relative h-48 bg-gradient-to-br from-miyo-100 to-miyo-200 overflow-hidden">
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={categoria.nombre}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            onError={(e) => {
+              // Fallback en caso de error de imagen
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <div className="text-miyo-600 text-4xl font-bold opacity-20">
+              {categoria.nombre.charAt(0).toUpperCase()}
+            </div>
+          </div>
+        )}
+        
+        {/* Play button overlay */}
         {categoria.audio_preview_url && (
           <button
             onClick={handlePlayPause}
-            tabIndex={0}
-            className={`
-              absolute
-              bottom-4 right-4 z-30
-              bg-white border-2 border-[#5e17eb] shadow-md
-              flex items-center justify-center
-              rounded-full
-              w-14 h-14
-              transition-all duration-300
-              ${expanded ? "scale-110" : "scale-100"}
-              hover:bg-[#f8f5fd]
-            `}
-            style={{
-              color: '#5e17eb'
-            }}
-            onMouseDown={e => e.stopPropagation()}
-            onMouseUp={e => e.stopPropagation()}
+            className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
           >
-            {isPlaying
-              ? <Pause className="w-8 h-8" style={{ color: '#5e17eb' }} />
-              : <Play className="w-8 h-8" style={{ color: '#5e17eb' }} />
-            }
+            <div className="bg-white/90 backdrop-blur-sm rounded-full p-3 hover:bg-white transition-colors">
+              {isPlaying ? (
+                <Pause className="w-6 h-6 text-miyo-800" />
+              ) : (
+                <Play className="w-6 h-6 text-miyo-800 ml-0.5" />
+              )}
+            </div>
           </button>
         )}
-        {/* Audio Element HIDDEN */}
-        {categoria.audio_preview_url && (
-          <audio
-            ref={audioRef}
-            src={categoria.audio_preview_url}
-            preload="none"
-            onEnded={handleAudioEnded}
-            onTimeUpdate={handleTimeUpdate}
-          />
-        )}
       </div>
-      {/* Nombre y descripción */}
-      <div className={`px-4 w-full flex flex-col ${expanded ? "mb-5" : ""}`}>
-        <h3 className={`text-center font-bold ${expanded ? 'text-xl' : 'text-lg'} text-[#2a2a33] mb-2`}>
+      
+      {/* Content */}
+      <div className="p-6">
+        <h3 className="text-xl font-semibold text-gray-900 mb-2 group-hover:text-miyo-800 transition-colors">
           {categoria.nombre}
         </h3>
-        {expanded && categoria.descripcion && (
-          <p className="text-center text-gray-700 text-sm">{categoria.descripcion}</p>
-        )}
-        {/* Barra de progreso mini solo si expanded */}
-        {expanded && categoria.audio_preview_url && (
-          <div className="mt-2 w-full flex flex-col items-center">
-            <div className="w-36 h-2 bg-[#423463] rounded-full overflow-hidden">
-              <div
-                className="bg-[#fff] h-2 rounded-full transition-all duration-150"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-            {/* Tiempo total del audio preview */}
-            {audioRef.current && audioRef.current.duration ? (
-              <span className="mt-1 text-gray-700 text-xs font-semibold">
-                {formatDuration(audioRef.current.duration)}
-              </span>
-            ) : null}
-          </div>
+        {categoria.descripcion && (
+          <p className="text-gray-600 text-sm line-clamp-2">
+            {categoria.descripcion}
+          </p>
         )}
       </div>
     </div>
   );
 };
-
-// Helper para dar formato a segundos
-function formatDuration(secs: number): string {
-  const m = Math.floor(secs / 60);
-  const s = Math.floor(secs % 60);
-  return `${m}:${s.toString().padStart(2, '0')}`;
-}
 
 export default CategoryCard;
