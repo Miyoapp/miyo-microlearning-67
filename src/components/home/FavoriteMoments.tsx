@@ -6,31 +6,31 @@ const FavoriteMoments = () => {
     {
       id: 1,
       title: "Manejando",
-      image: "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=300&h=200&fit=crop",
+      image: "https://images.unsplash.com/photo-1518887574845-c445b9a70352?auto=format&fit=crop&w=600&q=80", // Modern car dashboard/driver POV
       description: "Aprovecha el trayecto para crecer"
     },
     {
       id: 2,
       title: "Entrenando",
-      image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=300&h=200&fit=crop",
+      image: "https://images.unsplash.com/photo-1517832606294-7e43b19245d8?auto=format&fit=crop&w=600&q=80", // Modern gym/people listening & training
       description: "Fortalece cuerpo y mente al mismo tiempo"
     },
     {
       id: 3,
       title: "Transporte",
-      image: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=300&h=200&fit=crop",
+      image: "https://images.unsplash.com/photo-1482062364825-616fd23b8fc1?auto=format&fit=crop&w=600&q=80", // Modern urban train/metro scene
       description: "Convierte cada viaje en una oportunidad"
     },
     {
       id: 4,
       title: "Tomando café",
-      image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=300&h=200&fit=crop",
+      image: "https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=600&q=80", // Stylish coffee shop with laptop or headphones
       description: "Momentos de pausa para reflexionar"
     },
     {
       id: 5,
       title: "Antes de dormir",
-      image: "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=300&h=200&fit=crop",
+      image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80", // Night lamp, cozy bed, young person with headphones
       description: "Termina el día con pensamientos positivos"
     }
   ];
@@ -83,3 +83,4 @@ const FavoriteMoments = () => {
 };
 
 export default FavoriteMoments;
+
