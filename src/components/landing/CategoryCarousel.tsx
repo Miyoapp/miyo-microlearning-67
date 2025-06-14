@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -7,14 +7,16 @@ import CategoryCard from './CategoryCard';
 import { CategoriaLanding } from '@/types/landing';
 import { obtenerCategoriasLanding } from '@/lib/api/landingAPI';
 
+const VISIBLE_CARDS = 5; // Siempre hay un card central destacado, 2 a cada lado
+
 const CategoryCarousel: React.FC = () => {
   const [categorias, setCategorias] = useState<CategoriaLanding[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0); // El index del "centro"
   const [isLoading, setIsLoading] = useState(true);
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
   const navigate = useNavigate();
+  const carouselRef = useRef<HTMLDivElement>(null);
 
-  // Cargar categorías al montar el componente
   useEffect(() => {
     const cargarCategorias = async () => {
       try {
@@ -29,20 +31,30 @@ const CategoryCarousel: React.FC = () => {
     cargarCategorias();
   }, []);
 
-  const itemsPerPage = 3;
-  const maxIndex = Math.max(0, categorias.length - itemsPerPage);
+  // Loop infinito: al llegar al final, sigue desde el inicio
+  const getDisplayCategorias = () => {
+    const length = categorias.length;
+    if (length === 0) return [];
 
-  const nextSlide = () => {
-    setCurrentIndex(prev => Math.min(prev + 1, maxIndex));
+    const display: CategoriaLanding[] = [];
+    for (let i = -Math.floor(VISIBLE_CARDS / 2); i <= Math.floor(VISIBLE_CARDS / 2); i++) {
+      let idx = (currentIndex + i + length) % length;
+      display.push(categorias[idx]);
+    }
+    return display;
   };
 
-  const prevSlide = () => {
-    setCurrentIndex(prev => Math.max(prev - 1, 0));
+  const goNext = () => {
+    setCurrentIndex((prev) => (prev + 1) % categorias.length);
+  };
+
+  const goPrev = () => {
+    setCurrentIndex((prev) => (prev - 1 + categorias.length) % categorias.length);
   };
 
   const handleCategoryClick = (categoria: CategoriaLanding) => {
-    console.log('Categoría seleccionada:', categoria.nombre);
-    // Aquí se puede implementar la navegación o modal de registro
+    // Aquí puedes abrir un modal o navegar
+    // console.log('Categoría seleccionada:', categoria.nombre);
   };
 
   const handleEmpiezaAhora = () => {
@@ -59,7 +71,7 @@ const CategoryCarousel: React.FC = () => {
 
   if (isLoading) {
     return (
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
+      <section className="py-16 bg-white">
         <div className="miyo-container">
           <div className="flex justify-center items-center py-20">
             <div className="text-lg text-gray-600">Cargando categorías...</div>
@@ -71,7 +83,7 @@ const CategoryCarousel: React.FC = () => {
 
   if (categorias.length === 0) {
     return (
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
+      <section className="py-16 bg-white">
         <div className="miyo-container">
           <div className="flex justify-center items-center py-20">
             <div className="text-lg text-gray-600">No hay categorías disponibles</div>
@@ -81,12 +93,14 @@ const CategoryCarousel: React.FC = () => {
     );
   }
 
+  const displayed = getDisplayCategorias();
+
   return (
-    <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
+    <section className="py-16 bg-white">
       <div className="miyo-container">
         <div className="max-w-7xl mx-auto">
-          {/* Título y subtítulo */}
-          <div className="text-center mb-16">
+          {/* Título */}
+          <div className="text-center mb-10">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
               Tu camino empieza aquí
             </h2>
@@ -94,85 +108,71 @@ const CategoryCarousel: React.FC = () => {
               Explora temas que te inspiren, reten y desarrollen
             </p>
           </div>
+          {/* Carrusel */}
+          <div className="relative flex justify-center items-center" ref={carouselRef}>
+            {/* Flecha Izquierda */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute left-0 z-10 bg-white/80 hover:bg-white"
+              onClick={goPrev}
+              aria-label="Anterior"
+            >
+              <ChevronLeft className="h-8 w-8 text-[#5e17eb]" />
+            </Button>
 
-          {/* Carousel mejorado */}
-          <div className="relative px-12">
-            {/* Contenedor del carousel */}
-            <div className="overflow-hidden">
-              <div 
-                className="flex transition-transform duration-500 ease-in-out gap-8" 
-                style={{
-                  transform: `translateX(-${currentIndex * (100 / itemsPerPage)}%)`,
-                  width: `${categorias.length / itemsPerPage * 100}%`
-                }}
-              >
-                {categorias.map(categoria => (
-                  <div 
-                    key={categoria.id} 
-                    className="flex-shrink-0 px-2 relative hover:z-20 transition-all duration-300" 
+            {/* Carrusel Central */}
+            <div className="flex transition-all duration-500 gap-6 mx-14 w-full justify-center items-end select-none">
+              {displayed.map((categoria, idx) => {
+                // El índice central está expandido
+                const isCenter = idx === Math.floor(displayed.length / 2);
+                return (
+                  <div
+                    key={categoria.id}
+                    className={`flex-shrink-0 transition-all duration-300 ease-in-out
+                      ${isCenter
+                        ? "z-20 scale-110 shadow-2xl ring-4 ring-[#5e17eb] bg-white"
+                        : "z-10 scale-95 opacity-70 hover:opacity-90"
+                      }
+                    `}
                     style={{
-                      width: `${100 / categorias.length}%`
+                      minWidth: isCenter ? 240 : 160,
+                      maxWidth: isCenter ? 290 : 180,
+                      height: isCenter ? 370 : 230,
+                      marginTop: isCenter ? 0 : 35,
+                      borderRadius: 26,
+                      background: "#f8f5fd",
+                      cursor: "pointer",
+                      transition: "all 0.3s cubic-bezier(.4,2.2,.2,1)"
                     }}
                   >
-                    <CategoryCard 
+                    <CategoryCard
                       categoria={categoria}
+                      expanded={isCenter}
                       onClick={handleCategoryClick}
                       currentlyPlaying={currentlyPlaying}
                       onAudioPlay={handleAudioPlay}
                       onAudioStop={handleAudioStop}
                     />
                   </div>
-                ))}
-              </div>
+                );
+              })}
             </div>
-
-            {/* Flechas de navegación mejoradas */}
-            {categorias.length > itemsPerPage && (
-              <>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="absolute left-0 top-1/2 -translate-y-1/2 bg-white shadow-xl border-gray-200 hover:bg-gray-50 hover:shadow-2xl transition-all duration-300 z-10 w-12 h-12 rounded-full"
-                  onClick={prevSlide} 
-                  disabled={currentIndex === 0}
-                >
-                  <ChevronLeft className="h-6 w-6 text-gray-700" />
-                </Button>
-
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="absolute right-0 top-1/2 -translate-y-1/2 bg-white shadow-xl border-gray-200 hover:bg-gray-50 hover:shadow-2xl transition-all duration-300 z-10 w-12 h-12 rounded-full"
-                  onClick={nextSlide} 
-                  disabled={currentIndex >= maxIndex}
-                >
-                  <ChevronRight className="h-6 w-6 text-gray-700" />
-                </Button>
-              </>
-            )}
+            {/* Flecha Derecha */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-0 z-10 bg-white/80 hover:bg-white"
+              onClick={goNext}
+              aria-label="Siguiente"
+            >
+              <ChevronRight className="h-8 w-8 text-[#5e17eb]" />
+            </Button>
           </div>
-
-          {/* Indicadores de posición */}
-          {categorias.length > itemsPerPage && (
-            <div className="flex justify-center mt-8 space-x-2">
-              {Array.from({ length: maxIndex + 1 }).map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentIndex(index)}
-                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                    index === currentIndex 
-                      ? 'bg-miyo-800 scale-125' 
-                      : 'bg-gray-300 hover:bg-gray-400'
-                  }`}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* Botón CTA centrado */}
-          <div className="text-center mt-16">
-            <Button 
-              size="lg" 
+          {/* Botón CTA */}
+          <div className="text-center mt-10">
+            <Button
+              size="lg"
               className="bg-miyo-800 hover:bg-miyo-700 text-white px-8 py-4 h-auto text-lg font-medium transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
               onClick={handleEmpiezaAhora}
             >
