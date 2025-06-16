@@ -15,7 +15,6 @@ import {
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/components/auth/AuthProvider';
 import Logo from '@/components/common/Logo';
-import BranchIndicator from '@/components/common/BranchIndicator';
 
 const DashboardSidebar = () => {
   const location = useLocation();
@@ -42,10 +41,7 @@ const DashboardSidebar = () => {
   return (
     <Sidebar className="border-r border-gray-200 bg-white">
       <SidebarHeader className="p-6 bg-white">
-        <div className="flex flex-col gap-3">
-          <Logo />
-          <BranchIndicator />
-        </div>
+        <Logo />
       </SidebarHeader>
       
       <SidebarContent className="bg-white">
