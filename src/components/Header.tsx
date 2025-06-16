@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from './auth/AuthProvider';
 import Logo from './common/Logo';
+import BranchIndicator from './common/BranchIndicator';
 
 const Header = () => {
   const { user, signOut, forceLogout } = useAuth();
@@ -38,7 +39,10 @@ const Header = () => {
     <header className="bg-white shadow-sm border-b">
       <div className="miyo-container">
         <div className="flex items-center justify-between h-16">
-          <Logo onClick={handleLogoClick} />
+          <div className="flex items-center gap-4">
+            <Logo onClick={handleLogoClick} />
+            <BranchIndicator />
+          </div>
           
           <nav className="flex items-center space-x-4">
             {user ? (
