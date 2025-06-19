@@ -11,15 +11,23 @@ export function useCourseData(courseId: string | undefined) {
   
   useEffect(() => {
     const cargarCurso = async () => {
-      if (!courseId) return;
+      if (!courseId) {
+        console.log('❌ No courseId provided');
+        setIsLoading(false);
+        return;
+      }
       
       try {
+        console.log('🔄 Loading course with ID:', courseId);
         setIsLoading(true);
+        
         const podcastData = await obtenerCursoPorId(courseId);
+        console.log('📚 Course data received:', podcastData ? 'Success' : 'No data');
         
         if (podcastData) {
           // Generate modules if they don't exist
           if (!podcastData.modules || podcastData.modules.length === 0) {
+            console.log('🔧 Generating default modules');
             const defaultModules = createDefaultModules(podcastData);
             podcastData.modules = defaultModules;
           }
@@ -28,12 +36,15 @@ export function useCourseData(courseId: string | undefined) {
           const updatedLessons = initializeLessonsState(podcastData);
           podcastData.lessons = updatedLessons;
           
+          console.log('✅ Course loaded successfully:', podcastData.title);
           setPodcast(podcastData);
+        } else {
+          console.log('❌ No course data found for ID:', courseId);
         }
         
         setIsLoading(false);
       } catch (error) {
-        console.error("Error al cargar curso:", error);
+        console.error("❌ Error loading course:", error);
         toast({
           title: "Error al cargar curso",
           description: "No se pudo cargar el curso solicitado. Por favor, intenta de nuevo.",
@@ -51,6 +62,7 @@ export function useCourseData(courseId: string | undefined) {
 
 // Helper functions
 function createDefaultModules(podcast: Podcast) {
+  console.log('📝 Creating default modules for:', podcast.title);
   return [
     {
       id: 'module-1',
@@ -72,14 +84,19 @@ function createDefaultModules(podcast: Podcast) {
 
 // Inicializar el estado de las lecciones (solo la primera lección del primer módulo desbloqueada)
 function initializeLessonsState(podcast: Podcast) {
+  console.log('🎯 Initializing lessons state for:', podcast.title);
+  
   // Si no hay módulos, devolver las lecciones tal cual
   if (!podcast.modules || podcast.modules.length === 0) {
+    console.log('⚠️ No modules found, returning lessons as-is');
     return podcast.lessons;
   }
   
   // Obtener el ID de la primera lección del primer módulo
   const firstModule = podcast.modules[0];
   const firstLessonId = firstModule.lessonIds[0];
+  
+  console.log('🔓 First lesson ID to unlock:', firstLessonId);
   
   // Actualizar el estado de todas las lecciones
   return podcast.lessons.map(lesson => {

@@ -7,23 +7,23 @@ import { transformarCursoAModelo } from './transformers';
 // Función para obtener todos los cursos (solo los visibles)
 export const obtenerCursos = async (): Promise<Podcast[]> => {
   try {
-    console.log("Obteniendo cursos desde Supabase...");
+    console.log("🔄 Fetching courses from Supabase...");
     const { data, error } = await supabase
       .from('cursos')
       .select('*')
       .eq('show', true); // Filtrar solo cursos visibles
       
     if (error) {
-      console.error("Error al obtener cursos, usando datos de muestra:", error);
+      console.error("❌ Error fetching courses, using sample data:", error);
       return podcasts; // Devolver datos de muestra en caso de error
     }
     
     if (!data || data.length === 0) {
-      console.warn("No se encontraron cursos visibles en la base de datos, utilizando datos de muestra");
+      console.warn("⚠️ No visible courses found in database, using sample data");
       return podcasts; // Devolver datos de muestra si no hay cursos
     }
     
-    console.log(`Se encontraron ${data.length} cursos visibles en la base de datos`);
+    console.log(`✅ Found ${data.length} visible courses in database`);
     
     // Transform each course to the application format
     const promesas = data.map((curso) => {
@@ -49,7 +49,7 @@ export const obtenerCursos = async (): Promise<Podcast[]> => {
     });
     return Promise.all(promesas);
   } catch (error) {
-    console.error("Error al obtener cursos, usando datos de muestra:", error);
+    console.error("❌ Error fetching courses, using sample data:", error);
     return podcasts; // Devolver datos de muestra en caso de error
   }
 };
@@ -57,7 +57,7 @@ export const obtenerCursos = async (): Promise<Podcast[]> => {
 // Función para obtener un curso por ID (independiente del estado show para permitir acceso directo)
 export const obtenerCursoPorId = async (id: string): Promise<Podcast | null> => {
   try {
-    console.log(`Obteniendo curso con ID: ${id}`);
+    console.log(`🔄 Fetching course with ID: ${id}`);
     const { data, error } = await supabase
       .from('cursos')
       .select('*')
@@ -67,20 +67,32 @@ export const obtenerCursoPorId = async (id: string): Promise<Podcast | null> => 
     if (error) {
       if (error.code === 'PGRST116') {
         // No se encontró el curso, intentar buscar en los datos de muestra
-        console.warn("No se encontró el curso en la base de datos, buscando en datos de muestra");
+        console.warn(`⚠️ Course not found in database, searching in sample data for ID: ${id}`);
         const podcastMuestra = podcasts.find(p => p.id === id);
-        return podcastMuestra || null;
+        if (podcastMuestra) {
+          console.log(`✅ Found course in sample data: ${podcastMuestra.title}`);
+          return podcastMuestra;
+        }
+        console.log(`❌ Course not found in sample data either: ${id}`);
+        return null;
       }
-      console.error("Error al obtener curso:", error);
+      console.error("❌ Error fetching course:", error);
       throw error;
     }
     
     if (!data) {
       // No se encontró el curso, intentar buscar en los datos de muestra
-      console.warn("No se encontró el curso en la base de datos, buscando en datos de muestra");
+      console.warn(`⚠️ Course not found in database, searching in sample data for ID: ${id}`);
       const podcastMuestra = podcasts.find(p => p.id === id);
-      return podcastMuestra || null;
+      if (podcastMuestra) {
+        console.log(`✅ Found course in sample data: ${podcastMuestra.title}`);
+        return podcastMuestra;
+      }
+      console.log(`❌ Course not found in sample data either: ${id}`);
+      return null;
     }
+    
+    console.log(`✅ Course found in database: ${data.titulo}`);
     
     // Cast the data to SupabaseCurso to handle type compatibility
     const supabaseCurso: SupabaseCurso = {
@@ -101,11 +113,18 @@ export const obtenerCursoPorId = async (id: string): Promise<Podcast | null> => 
       dislikes: data.dislikes
     };
     
-    return transformarCursoAModelo(supabaseCurso);
+    const transformedCourse = await transformarCursoAModelo(supabaseCurso);
+    console.log(`✅ Course transformed successfully: ${transformedCourse.title}`);
+    return transformedCourse;
   } catch (error) {
-    console.error("Error al obtener curso, buscando en datos de muestra:", error);
+    console.error(`❌ Error fetching course, searching in sample data for ID: ${id}:`, error);
     // Intentar buscar en los datos de muestra
     const podcastMuestra = podcasts.find(p => p.id === id);
-    return podcastMuestra || null;
+    if (podcastMuestra) {
+      console.log(`✅ Found course in sample data as fallback: ${podcastMuestra.title}`);
+      return podcastMuestra;
+    }
+    console.log(`❌ Course not found anywhere: ${id}`);
+    return null;
   }
 };

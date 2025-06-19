@@ -19,7 +19,8 @@ export function useCourseAccess(podcast: Podcast | null) {
       courseId: podcast.id, 
       courseTitle: podcast.title,
       courseType: podcast.tipo_curso,
-      isPremium
+      isPremium,
+      precio: podcast.precio
     });
     
     // CRITICAL FIX: For free courses, ALWAYS grant access
@@ -33,7 +34,8 @@ export function useCourseAccess(podcast: Podcast | null) {
     console.log('💰 PREMIUM COURSE ACCESS CHECK:', { 
       hasAccess, 
       courseId: podcast.id,
-      courseTitle: podcast.title
+      courseTitle: podcast.title,
+      userHasPurchased: hasAccess
     });
     
     return { isPremium, hasAccess };
