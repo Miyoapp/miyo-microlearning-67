@@ -13,8 +13,8 @@ import AudioPlayer from '@/components/AudioPlayer';
 import CheckoutModal from '@/components/course/CheckoutModal';
 
 const DashboardCourse = () => {
-  const { id } = useParams<{ id: string }>();
-  const { podcast, setPodcast, isLoading } = useCourseData(id);
+  const { courseId } = useParams<{ courseId: string }>();
+  const { podcast, setPodcast, isLoading } = useCourseData(courseId);
   const { userProgress, toggleSaveCourse, startCourse, refetch } = useUserProgress();
   const [showCheckout, setShowCheckout] = useState(false);
   
@@ -40,7 +40,7 @@ const DashboardCourse = () => {
     refetch
   });
   
-  const courseProgress = userProgress.find(p => p.course_id === id);
+  const courseProgress = userProgress.find(p => p.course_id === courseId);
   const isSaved = courseProgress?.is_saved || false;
   const hasStarted = (courseProgress?.progress_percentage || 0) > 0;
   const progressPercentage = courseProgress?.progress_percentage || 0;
@@ -54,7 +54,7 @@ const DashboardCourse = () => {
     hasAccess,
     isPremium,
     shouldShow: !!currentLesson && hasAccess,
-    courseId: id
+    courseId: courseId
   });
 
   const handleStartLearning = async () => {

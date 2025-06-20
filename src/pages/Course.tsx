@@ -12,10 +12,10 @@ import { useCourseData } from '@/hooks/useCourseData';
 import { useConsolidatedLessons } from '@/hooks/useConsolidatedLessons';
 
 const Course = () => {
-  const { id } = useParams<{ id: string }>();
-  console.log('📍 Course page loaded with ID:', id);
+  const { courseId } = useParams<{ courseId: string }>();
+  console.log('📍 Course page loaded with ID:', courseId);
   
-  const { podcast, setPodcast, isLoading } = useCourseData(id);
+  const { podcast, setPodcast, isLoading } = useCourseData(courseId);
   const { 
     currentLesson, 
     isPlaying, 
