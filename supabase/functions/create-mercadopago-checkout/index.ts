@@ -61,7 +61,7 @@ serve(async (req) => {
         pending: `${req.headers.get('origin')}/payment/pending`
       },
       auto_return: 'approved',
-      external_reference: `${user.id}-${courseId}`,
+      external_reference: `${user.id}|${courseId}`,
       notification_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/verify-mercadopago-payment`
     }
 

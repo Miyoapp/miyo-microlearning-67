@@ -72,12 +72,15 @@ const PaymentSuccess = () => {
   const handleGoToCourse = () => {
     let courseId = null;
     
-    // Try to extract course ID from external_reference
+    // Extract course ID from external_reference using | separator
     if (externalReference) {
-      const parts = externalReference.split('-');
+      const parts = externalReference.split('|');
       if (parts.length >= 2) {
         courseId = parts[1];
         console.log('📋 Extracted course ID from external_reference:', courseId);
+        console.log('🔍 External reference parts:', parts);
+      } else {
+        console.log('⚠️ Invalid external_reference format:', externalReference);
       }
     }
     
