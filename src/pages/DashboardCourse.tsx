@@ -14,9 +14,12 @@ import CheckoutModal from '@/components/course/CheckoutModal';
 
 const DashboardCourse = () => {
   const { courseId } = useParams<{ courseId: string }>();
-  const { podcast, setPodcast, isLoading } = useCourseData(courseId);
+  const { podcast, setPodcast, isLoading: courseLoading } = useCourseData(courseId);
   const { userProgress, toggleSaveCourse, startCourse, refetch } = useUserProgress();
   const [showCheckout, setShowCheckout] = useState(false);
+  
+  // Course access and premium status
+  const { isPremium, hasAccess, isLoading: accessLoading, refetchPurchases } = useCourseAccess(podcast);
   
   // Use consolidated lessons hook
   const { 
@@ -29,9 +32,6 @@ const DashboardCourse = () => {
     handleProgressUpdate,
     initializePodcastWithProgress
   } = useConsolidatedLessons(podcast, setPodcast);
-  
-  // Course access and premium status
-  const { isPremium, hasAccess, refetchPurchases } = useCourseAccess(podcast);
   
   // Set up realtime sync
   useCourseRealtimeSync({
@@ -47,19 +47,24 @@ const DashboardCourse = () => {
   const isCompleted = courseProgress?.is_completed || false;
   const isReviewMode = isCompleted && progressPercentage === 100;
 
-  // CRITICAL DEBUG: Log audio player visibility conditions
-  console.log('🎵 AUDIO PLAYER VISIBILITY DEBUG:', {
-    hasCurrentLesson: !!currentLesson,
-    currentLessonTitle: currentLesson?.title,
-    hasAccess,
+  // CRITICAL DEBUG: Log access state
+  console.log('🎭 DASHBOARD COURSE ACCESS STATE:', {
+    courseId,
+    courseLoading,
+    accessLoading,
     isPremium,
-    shouldShow: !!currentLesson && hasAccess,
-    courseId: courseId
+    hasAccess,
+    podcast: !!podcast,
+    courseTitle: podcast?.title
   });
+
+  // Loading state: show loading while course or access is loading
+  const isLoading = courseLoading || accessLoading;
 
   const handleStartLearning = async () => {
     if (podcast) {
       if (isPremium && !hasAccess) {
+        console.log('🔒 Premium course without access - showing checkout');
         setShowCheckout(true);
         return;
       }
@@ -83,12 +88,14 @@ const DashboardCourse = () => {
   };
 
   const handlePurchaseComplete = () => {
+    console.log('🎉 Purchase completed, refetching purchases...');
     refetchPurchases();
   };
 
   const handleLessonSelect = (lesson: any) => {
     // Check if user has access to this lesson
     if (isPremium && !hasAccess) {
+      console.log('🔒 Lesson access denied - showing checkout');
       setShowCheckout(true);
       return;
     }
@@ -101,7 +108,9 @@ const DashboardCourse = () => {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center py-20">
-          <div className="text-lg text-gray-600">Cargando curso...</div>
+          <div className="text-lg text-gray-600">
+            {courseLoading ? 'Cargando curso...' : 'Verificando acceso...'}
+          </div>
         </div>
       </DashboardLayout>
     );
@@ -112,7 +121,10 @@ const DashboardCourse = () => {
       <DashboardLayout>
         <div className="text-center py-20 px-4">
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">Curso no encontrado</h2>
-          <p className="text-sm sm:text-base text-gray-600">El curso que buscas no existe o no está disponible.</p>
+          <p className="text-sm sm:text-base text-gray-600">
+            El curso que buscas no existe o no está disponible.
+          </p>
+          <p className="text-xs text-gray-500 mt-2">ID del curso: {courseId}</p>
         </div>
       </DashboardLayout>
     );
@@ -141,7 +153,7 @@ const DashboardCourse = () => {
         </div>
       </DashboardLayout>
       
-      {/* CRITICAL FIX: Always show audio player when there's a current lesson and user has access */}
+      {/* Audio player - only show when there's a current lesson and user has access */}
       {currentLesson && hasAccess && (
         <AudioPlayer 
           lesson={currentLesson}

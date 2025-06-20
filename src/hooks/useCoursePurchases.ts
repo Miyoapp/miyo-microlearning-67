@@ -18,38 +18,52 @@ export function useCoursePurchases() {
 
   const fetchPurchases = async () => {
     if (!user) {
+      console.log('🛒 No user found, skipping purchases fetch');
       setLoading(false);
       return;
     }
 
     try {
+      console.log('🛒 Fetching purchases for user:', user.id);
+      
       const { data, error } = await supabase
         .from('compras_cursos')
         .select('*')
         .eq('user_id', user.id)
         .eq('estado_pago', 'completado');
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error fetching purchases:', error);
+        throw error;
+      }
+      
+      console.log('🛒 Raw purchases data from DB:', data);
       
       // Transform the data to match our interface with proper type casting
       const transformedData: CoursePurchase[] = (data || []).map(item => ({
         id: item.id,
-        course_id: item.curso_id,
+        course_id: item.curso_id, // Note: DB column is curso_id, interface expects course_id
         fecha_compra: item.fecha_compra,
         monto_pagado: item.monto_pagado,
         estado_pago: item.estado_pago as 'pendiente' | 'completado' | 'cancelado'
       }));
       
+      console.log('🛒 Transformed purchases:', transformedData);
+      console.log('🛒 Course IDs user has purchased:', transformedData.map(p => p.course_id));
+      
       setPurchases(transformedData);
     } catch (error) {
-      console.error('Error fetching purchases:', error);
+      console.error('❌ Error fetching purchases:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const hasPurchased = (courseId: string) => {
-    return purchases.some(p => p.course_id === courseId);
+    const purchased = purchases.some(p => p.course_id === courseId);
+    console.log('🛒 Checking if user has purchased course:', courseId, '- Result:', purchased);
+    console.log('🛒 Available purchases:', purchases.map(p => ({ id: p.course_id, estado: p.estado_pago })));
+    return purchased;
   };
 
   const createPurchase = async (courseId: string, amount: number) => {
@@ -77,6 +91,35 @@ export function useCoursePurchases() {
 
   useEffect(() => {
     fetchPurchases();
+  }, [user]);
+
+  // Set up real-time subscription to purchases
+  useEffect(() => {
+    if (!user) return;
+
+    console.log('🔄 Setting up real-time subscription for purchases');
+    
+    const channel = supabase
+      .channel('purchases-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'compras_cursos',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('🔄 Real-time purchase update:', payload);
+          fetchPurchases(); // Refetch purchases when there's a change
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('🔌 Cleaning up purchases subscription');
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   return {

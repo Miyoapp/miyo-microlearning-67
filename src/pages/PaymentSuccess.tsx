@@ -17,14 +17,23 @@ const PaymentSuccess = () => {
   const preferenceId = searchParams.get('preference_id');
   const externalReference = searchParams.get('external_reference');
 
+  console.log('💳 Payment Success Page - URL Params:', {
+    paymentId,
+    preferenceId,
+    externalReference
+  });
+
   useEffect(() => {
     const verifyPayment = async () => {
       if (!paymentId || !preferenceId) {
+        console.log('⚠️ Missing payment parameters');
         setIsVerifying(false);
         return;
       }
 
       try {
+        console.log('🔍 Verifying payment with Supabase function...');
+        
         const { data, error } = await supabase.functions.invoke('verify-mercadopago-payment', {
           body: {
             payment_id: paymentId,
@@ -32,16 +41,25 @@ const PaymentSuccess = () => {
           }
         });
 
+        console.log('🔍 Verification result:', { data, error });
+
         if (error) throw error;
 
         if (data.success && data.status === 'approved') {
+          console.log('✅ Payment verified and approved');
           setVerified(true);
           toast.success('¡Pago confirmado! Ya tienes acceso al curso.');
+          
+          // Add a delay to allow the webhook to process
+          setTimeout(() => {
+            console.log('⏰ Redirecting after verification delay...');
+          }, 2000);
         } else {
+          console.log('⏳ Payment pending confirmation');
           toast.error('El pago está pendiente de confirmación.');
         }
       } catch (error) {
-        console.error('Error verifying payment:', error);
+        console.error('❌ Error verifying payment:', error);
         toast.error('Error al verificar el pago.');
       } finally {
         setIsVerifying(false);
@@ -52,10 +70,22 @@ const PaymentSuccess = () => {
   }, [paymentId, preferenceId]);
 
   const handleGoToCourse = () => {
+    let courseId = null;
+    
+    // Try to extract course ID from external_reference
     if (externalReference) {
-      const courseId = externalReference.split('-')[1];
+      const parts = externalReference.split('-');
+      if (parts.length >= 2) {
+        courseId = parts[1];
+        console.log('📋 Extracted course ID from external_reference:', courseId);
+      }
+    }
+    
+    if (courseId) {
+      console.log('🎯 Navigating to course:', courseId);
       navigate(`/dashboard/course/${courseId}`);
     } else {
+      console.log('🏠 No course ID found, navigating to dashboard');
       navigate('/dashboard');
     }
   };
@@ -96,14 +126,18 @@ const PaymentSuccess = () => {
                 ID de pago: <span className="font-mono">{paymentId}</span>
               </p>
             )}
+            {externalReference && (
+              <p className="text-sm text-gray-600">
+                Referencia: <span className="font-mono">{externalReference}</span>
+              </p>
+            )}
           </div>
           <div className="flex gap-2">
             <Button 
               onClick={handleGoToCourse} 
               className="flex-1"
-              disabled={!verified}
             >
-              {verified ? 'Ir al curso' : 'Ir al dashboard'}
+              {verified && externalReference ? 'Ir al curso' : 'Ir al dashboard'}
             </Button>
             <Button 
               variant="outline" 
