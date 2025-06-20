@@ -55,24 +55,54 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
     setProcessing(true);
     
     try {
+      // 🔍 Debug: Check authentication state
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      console.log('🔐 Authentication Debug - CheckoutModal:', {
+        hasSession: !!session,
+        hasUser: !!session?.user,
+        userId: session?.user?.id,
+        sessionError,
+        accessToken: session?.access_token ? 'Present' : 'Missing'
+      });
+
+      if (!session || !session.access_token) {
+        console.error('❌ No valid session or access token found');
+        toast.error('Debes iniciar sesión para continuar');
+        setProcessing(false);
+        return;
+      }
+
+      console.log('💳 Creating MercadoPago checkout with explicit auth header');
+      
       const { data, error } = await supabase.functions.invoke('create-mercadopago-checkout', {
         body: {
           courseId: course.id,
           amount: course.precio,
           currency: course.moneda || 'ARS'
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
         }
       });
 
-      if (error) throw error;
+      console.log('💳 MercadoPago checkout response:', { data, error });
+
+      if (error) {
+        console.error('❌ Error from checkout function:', error);
+        throw error;
+      }
 
       if (data.success && data.init_point) {
+        console.log('✅ Redirecting to MercadoPago:', data.init_point);
         // Redirect to Mercado Pago checkout
         window.location.href = data.init_point;
       } else {
+        console.error('❌ Invalid response from checkout function:', data);
         throw new Error('Error al crear el checkout');
       }
     } catch (error) {
-      console.error('Error creating checkout:', error);
+      console.error('❌ Error creating checkout:', error);
       toast.error('Error al procesar el pago. Inténtalo de nuevo.');
       setProcessing(false);
     }

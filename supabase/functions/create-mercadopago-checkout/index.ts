@@ -15,8 +15,19 @@ serve(async (req) => {
   try {
     const { courseId, amount, currency = 'ARS' } = await req.json()
     
-    // Get the authorization header
-    const authHeader = req.headers.get('Authorization')!
+    // 🔍 Debug: Log received headers and authentication
+    const authHeader = req.headers.get('Authorization')
+    console.log('🔐 Backend Auth Debug:', {
+      hasAuthHeader: !!authHeader,
+      authHeaderFormat: authHeader ? authHeader.substring(0, 20) + '...' : 'None',
+      userAgent: req.headers.get('User-Agent'),
+      origin: req.headers.get('origin')
+    })
+    
+    if (!authHeader) {
+      console.error('❌ No Authorization header found in request')
+      throw new Error('Authorization header requerido')
+    }
     
     // Create Supabase client
     const supabaseClient = createClient(
@@ -26,8 +37,15 @@ serve(async (req) => {
     )
     
     // Get user
-    const { data: { user } } = await supabaseClient.auth.getUser()
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
+    console.log('👤 User authentication result:', {
+      hasUser: !!user,
+      userId: user?.id,
+      userError: userError?.message
+    })
+    
     if (!user) {
+      console.error('❌ Usuario no autenticado:', userError)
       throw new Error('Usuario no autenticado')
     }
 
@@ -39,12 +57,21 @@ serve(async (req) => {
       .single()
 
     if (courseError || !course) {
+      console.error('❌ Course not found:', { courseId, courseError })
       throw new Error('Curso no encontrado')
     }
 
+    console.log('📚 Course found:', { courseId, title: course.titulo, price: course.precio })
+
     // Create preference with Mercado Pago
     const accessToken = Deno.env.get('MERCADOPAGO_ACCESS_TOKEN')
+    console.log('💳 MercadoPago token check:', {
+      hasToken: !!accessToken,
+      tokenLength: accessToken ? accessToken.length : 0
+    })
+    
     if (!accessToken) {
+      console.error('❌ MercadoPago token not configured')
       throw new Error('Token de Mercado Pago no configurado')
     }
 
@@ -65,6 +92,12 @@ serve(async (req) => {
       notification_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/verify-mercadopago-payment`
     }
 
+    console.log('💳 Creating MercadoPago preference:', {
+      external_reference: preference.external_reference,
+      amount: preference.items[0].unit_price,
+      currency: preference.items[0].currency_id
+    })
+
     const mpResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
       method: 'POST',
       headers: {
@@ -76,11 +109,15 @@ serve(async (req) => {
 
     if (!mpResponse.ok) {
       const error = await mpResponse.text()
-      console.error('Error creating MP preference:', error)
+      console.error('❌ Error creating MP preference:', error)
       throw new Error('Error al crear preferencia de pago')
     }
 
     const preferenceData = await mpResponse.json()
+    console.log('✅ MercadoPago preference created:', {
+      preferenceId: preferenceData.id,
+      initPoint: preferenceData.init_point
+    })
 
     // Save transaction in database
     const { error: dbError } = await supabaseClient
@@ -95,9 +132,11 @@ serve(async (req) => {
       })
 
     if (dbError) {
-      console.error('Error saving transaction:', dbError)
+      console.error('❌ Error saving transaction:', dbError)
       throw new Error('Error al guardar transacción')
     }
+
+    console.log('✅ Transaction saved successfully')
 
     return new Response(
       JSON.stringify({
@@ -111,7 +150,7 @@ serve(async (req) => {
       },
     )
   } catch (error) {
-    console.error('Error:', error)
+    console.error('❌ Error:', error)
     return new Response(
       JSON.stringify({
         success: false,
