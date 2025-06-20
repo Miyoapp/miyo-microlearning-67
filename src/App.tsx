@@ -9,7 +9,7 @@ import Header from './components/Header';
 import Home from './pages/Home';
 import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
-import Course from './pages/Course';
+import DashboardCourse from './pages/DashboardCourse';
 import DashboardDiscover from './pages/DashboardDiscover';
 import DashboardMyRoutes from './pages/DashboardMyRoutes';
 import NotFound from './pages/NotFound';
@@ -33,7 +33,7 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/dashboard/discover" element={<DashboardDiscover />} />
             <Route path="/dashboard/my-routes" element={<DashboardMyRoutes />} />
-            <Route path="/dashboard/course/:courseId" element={<Course />} />
+            <Route path="/dashboard/course/:courseId" element={<DashboardCourse />} />
 
             {/* Payment result pages */}
             <Route path="/payment/success" element={<PaymentSuccess />} />
