@@ -1,63 +1,85 @@
 
+import React from 'react';
 import { Link } from 'react-router-dom';
+import { Play, Clock, BookOpen } from 'lucide-react';
 import { Podcast } from '../types';
-import { Clock, Headphones } from 'lucide-react';
-import { formatMinutesToHumanReadable } from '@/lib/formatters';
-import PremiumBadge from '@/components/PremiumBadge';
+import { Button } from '@/components/ui/button';
+import PremiumBadge from './PremiumBadge';
+import { formatDuration } from '@/lib/formatters';
 
 interface PodcastCardProps {
   podcast: Podcast;
 }
 
-const PodcastCard = ({ podcast }: PodcastCardProps) => {
+const PodcastCard: React.FC<PodcastCardProps> = ({ podcast }) => {
+  const totalDuration = podcast.lessons.reduce((acc, lesson) => acc + lesson.duration, 0);
+  const lessonsCount = podcast.lessons.length;
+
   return (
     <Link 
-      to={`/course/${podcast.id}`} 
-      className="card-hover bg-white rounded-2xl overflow-hidden shadow-sm w-full h-full flex flex-col group"
+      to={`/dashboard/course/${podcast.id}`}
+      className="group block w-full"
     >
-      <div className="aspect-[4/3] relative overflow-hidden flex-shrink-0">
-        <img 
-          src={podcast.imageUrl}
-          alt={podcast.title}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-        />
-        {podcast.tipo_curso === 'pago' && (
-          <PremiumBadge />
-        )}
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3 sm:p-4">
-          <span className="inline-block px-2 sm:px-3 py-1 bg-miyo-800/90 text-white text-xs font-medium rounded-full">
-            {podcast.category.nombre}
-          </span>
-        </div>
-      </div>
-      
-      <div className="p-4 sm:p-6 flex-1 flex flex-col justify-between min-h-0">
-        <div className="flex-1">
-          <h3 className="text-lg sm:text-xl font-bold mb-3 line-clamp-2 leading-tight">
-            {podcast.title}
-          </h3>
+      <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 border border-gray-100">
+        {/* Image Container */}
+        <div className="relative aspect-[4/3] overflow-hidden">
+          <img
+            src={podcast.imageUrl}
+            alt={podcast.title}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            loading="lazy"
+          />
           
-          <div className="mb-4">
-            <div className="flex items-center gap-2">
-              <img 
-                src={podcast.creator.imageUrl} 
-                alt={podcast.creator.name}
-                className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-cover flex-shrink-0"
-              />
-              <span className="text-sm text-gray-600 truncate">{podcast.creator.name}</span>
+          {/* Premium Badge */}
+          {podcast.isPremium && (
+            <div className="absolute top-3 right-3">
+              <PremiumBadge size="sm" />
             </div>
+          )}
+          
+          {/* Play Button Overlay */}
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+            <Button
+              size="icon"
+              className="w-12 h-12 rounded-full bg-white/90 backdrop-blur-sm text-miyo-800 hover:bg-white hover:text-miyo-700 transform scale-0 group-hover:scale-100 transition-transform duration-300 shadow-lg"
+            >
+              <Play className="h-5 w-5 ml-0.5" />
+            </Button>
           </div>
         </div>
         
-        <div className="flex items-center justify-between gap-4 mt-auto pt-3 border-t border-gray-100">
-          <div className="flex items-center text-sm text-gray-500">
-            <Clock size={16} className="mr-1 flex-shrink-0" />
-            <span>{formatMinutesToHumanReadable(podcast.duration)}</span>
+        {/* Content */}
+        <div className="p-5">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-miyo-800 transition-colors">
+            {podcast.title}
+          </h3>
+          
+          <p className="text-sm text-gray-600 mb-3 line-clamp-1">
+            {podcast.category.name}
+          </p>
+          
+          {/* Creator Info */}
+          <div className="flex items-center space-x-2 mb-3">
+            <img
+              src={podcast.creator.avatar || '/placeholder.svg'}
+              alt={podcast.creator.name}
+              className="w-6 h-6 rounded-full object-cover"
+            />
+            <span className="text-sm text-gray-700 font-medium">
+              {podcast.creator.name}
+            </span>
           </div>
           
-          <div className="flex items-center text-sm text-gray-500">
-            <Headphones size={16} className="mr-1 flex-shrink-0" />
-            <span>{podcast.lessonCount} lecciones</span>
+          {/* Stats */}
+          <div className="flex items-center justify-between text-sm text-gray-500">
+            <div className="flex items-center space-x-1">
+              <BookOpen className="h-4 w-4" />
+              <span>{lessonsCount} lecciones</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <Clock className="h-4 w-4" />
+              <span>{formatDuration(totalDuration)}</span>
+            </div>
           </div>
         </div>
       </div>

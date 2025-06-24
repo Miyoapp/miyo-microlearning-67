@@ -6,20 +6,23 @@ import { useAuth } from './auth/AuthProvider';
 import Logo from './common/Logo';
 
 const Header = () => {
-  const { user, signOut, forceLogout } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
       console.log('Header: Starting logout process...');
-      await signOut();
+      const { error } = await signOut();
+      
+      if (error) {
+        console.error('Header: Error during logout:', error);
+        return;
+      }
+      
       console.log('Header: Logout successful, navigating to home...');
       navigate('/');
     } catch (error) {
       console.error('Header: Error during logout:', error);
-      // En caso de error, usar forceLogout como fallback
-      forceLogout();
-      navigate('/');
     }
   };
 
