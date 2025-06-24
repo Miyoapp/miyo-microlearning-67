@@ -14,8 +14,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showResendButton, setShowResendButton] = useState(false);
-  const { signIn, signUp, resendVerificationEmail } = useAuth();
+  const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
@@ -30,7 +29,6 @@ const LoginPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setShowResendButton(false);
 
     try {
       const { error } = isSignUp 
@@ -38,12 +36,7 @@ const LoginPage = () => {
         : await signIn(email, password);
 
       if (error) {
-        if (error.code === 'email_not_confirmed') {
-          toast.error(error.message);
-          setShowResendButton(true);
-        } else {
-          toast.error(error.message);
-        }
+        toast.error(error.message);
       } else {
         if (isSignUp) {
           // Redirigir a la página de confirmación después del registro
@@ -60,15 +53,6 @@ const LoginPage = () => {
     }
   };
 
-  const handleResendVerification = async () => {
-    setLoading(true);
-    const { error } = await resendVerificationEmail();
-    if (error) {
-      toast.error('Error al reenviar email: ' + error.message);
-    }
-    setLoading(false);
-  };
-
   const toggleMode = () => {
     const newMode = !isSignUp;
     setIsSignUp(newMode);
@@ -76,7 +60,6 @@ const LoginPage = () => {
     setName('');
     setEmail('');
     setPassword('');
-    setShowResendButton(false);
     // Update URL parameter
     navigate(`/login${newMode ? '?mode=signup' : ''}`, { replace: true });
   };
@@ -134,18 +117,6 @@ const LoginPage = () => {
             >
               {loading ? 'Cargando...' : (isSignUp ? 'Crear cuenta' : 'Iniciar sesión')}
             </Button>
-            
-            {showResendButton && !isSignUp && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleResendVerification}
-                className="w-full"
-                disabled={loading}
-              >
-                {loading ? 'Reenviando...' : 'Reenviar email de verificación'}
-              </Button>
-            )}
             
             <div className="text-center">
               <button

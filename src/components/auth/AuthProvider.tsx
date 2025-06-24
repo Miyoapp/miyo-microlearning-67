@@ -12,7 +12,6 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, name?: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
-  resendVerificationEmail: () => Promise<{ error: any }>;
   forceLogout: () => void;
 }
 
@@ -189,32 +188,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { error };
   };
 
-  const resendVerificationEmail = async () => {
-    if (!user?.email) {
-      return { error: { message: 'No hay usuario autenticado' } };
-    }
-
-    try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: user.email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/login`
-        }
-      });
-
-      if (error) {
-        return { error };
-      }
-
-      toast.success('Email de verificación reenviado');
-      return { error: null };
-    } catch (error) {
-      console.error('Error resending verification email:', error);
-      return { error: { message: 'Error al reenviar el email de verificación' } };
-    }
-  };
-
   const signOut = async () => {
     try {
       console.log('Starting signOut process...');
@@ -255,7 +228,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signIn,
     signUp,
     signOut,
-    resendVerificationEmail,
     forceLogout,
   };
 
