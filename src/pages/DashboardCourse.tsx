@@ -8,17 +8,15 @@ import { useConsolidatedLessons } from '@/hooks/useConsolidatedLessons';
 import { useCourseRealtimeSync } from '@/hooks/course/useCourseRealtimeSync';
 import { useCourseAccess } from '@/hooks/course/useCourseAccess';
 import CoursePageHeader from '@/components/course/CoursePageHeader';
-import CourseMainContent from '@/components/course/CourseMainContent';
-import AudioPlayer from '@/components/AudioPlayer';
-import CheckoutModal from '@/components/course/CheckoutModal';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { RefreshCw, AlertCircle } from 'lucide-react';
+import CourseLoadingSkeleton from '@/components/course/CourseLoadingSkeleton';
+import CourseErrorState from '@/components/course/CourseErrorState';
+import CourseNotFoundState from '@/components/course/CourseNotFoundState';
+import CourseAccessHandler from '@/components/course/CourseAccessHandler';
 
 const DashboardCourse = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const { podcast, setPodcast, isLoading: courseLoading, error: courseError, retry: retryCourse } = useCourseData(courseId);
-  const { userProgress, loading: progressLoading, refetch } = useUserProgress();
+  const { userProgress, loading: progressLoading, refetch, startCourse, toggleSaveCourse } = useUserProgress();
   const [showCheckout, setShowCheckout] = useState(false);
   
   // Course access and premium status
@@ -125,62 +123,22 @@ const DashboardCourse = () => {
     }
   };
 
+  const handleGoBack = () => {
+    window.history.back();
+  };
+
+  // Determine loading message
+  const getLoadingMessage = () => {
+    if (courseLoading) return 'Cargando curso...';
+    if (accessLoading) return 'Verificando acceso...';
+    return 'Cargando progreso...';
+  };
+
   // CRITICAL FIX: Show skeleton loading only when data is actually loading
   if (isDataLoading || isProgressStillLoading) {
     return (
       <DashboardLayout>
-        <div className="max-w-7xl mx-auto pb-20 sm:pb-24">
-          <div className="p-4 sm:p-0">
-            <div className="space-y-6">
-              {/* Header skeleton */}
-              <div className="space-y-4">
-                <Skeleton className="h-8 w-64" />
-                <Skeleton className="h-4 w-96" />
-              </div>
-              
-              {/* Course info skeleton */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 space-y-6">
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    <Skeleton className="h-48 w-full sm:w-48 rounded-lg" />
-                    <div className="flex-1 space-y-4">
-                      <Skeleton className="h-6 w-3/4" />
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-4 w-5/6" />
-                      <div className="flex gap-2">
-                        <Skeleton className="h-10 w-32" />
-                        <Skeleton className="h-10 w-32" />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Learning path skeleton */}
-                  <div className="space-y-4">
-                    <Skeleton className="h-6 w-48" />
-                    <div className="space-y-2">
-                      {[1, 2, 3].map((i) => (
-                        <Skeleton key={i} className="h-16 w-full" />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <Skeleton className="h-32 w-full" />
-                  <Skeleton className="h-24 w-full" />
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="text-center mt-8">
-            <div className="text-sm text-gray-500">
-              {courseLoading ? 'Cargando curso...' : 
-               accessLoading ? 'Verificando acceso...' : 
-               'Cargando progreso...'}
-            </div>
-          </div>
-        </div>
+        <CourseLoadingSkeleton loadingMessage={getLoadingMessage()} />
       </DashboardLayout>
     );
   }
@@ -189,22 +147,11 @@ const DashboardCourse = () => {
   if (hasError) {
     return (
       <DashboardLayout>
-        <div className="text-center py-20 px-4">
-          <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
-            Error al cargar el curso
-          </h2>
-          <p className="text-sm sm:text-base text-gray-600 mb-6">
-            {courseError || accessError || 'Ha ocurrido un error inesperado.'}
-          </p>
-          <Button onClick={handleRetry} className="mr-4">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Intentar de nuevo
-          </Button>
-          <Button variant="outline" onClick={() => window.history.back()}>
-            Volver
-          </Button>
-        </div>
+        <CourseErrorState
+          error={courseError || accessError || 'Ha ocurrido un error inesperado.'}
+          onRetry={handleRetry}
+          onGoBack={handleGoBack}
+        />
       </DashboardLayout>
     );
   }
@@ -213,20 +160,11 @@ const DashboardCourse = () => {
   if (!podcast) {
     return (
       <DashboardLayout>
-        <div className="text-center py-20 px-4">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">Curso no encontrado</h2>
-          <p className="text-sm sm:text-base text-gray-600 mb-6">
-            El curso que buscas no existe o no está disponible.
-          </p>
-          <p className="text-xs text-gray-500 mb-6">ID del curso: {courseId}</p>
-          <Button onClick={handleRetry} className="mr-4">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Buscar de nuevo
-          </Button>
-          <Button variant="outline" onClick={() => window.history.back()}>
-            Volver
-          </Button>
-        </div>
+        <CourseNotFoundState
+          courseId={courseId}
+          onRetry={handleRetry}
+          onGoBack={handleGoBack}
+        />
       </DashboardLayout>
     );
   }
@@ -247,7 +185,7 @@ const DashboardCourse = () => {
         <div className="max-w-7xl mx-auto pb-20 sm:pb-24">
           <CoursePageHeader isReviewMode={isReviewMode} />
           
-          <CourseMainContent
+          <CourseAccessHandler
             podcast={podcast}
             currentLesson={currentLesson}
             hasStarted={hasStarted}
@@ -256,40 +194,20 @@ const DashboardCourse = () => {
             isCompleted={isCompleted}
             isPremium={isPremium}
             hasAccess={hasAccess}
+            isPlaying={isPlaying}
+            showCheckout={showCheckout}
             onStartLearning={handleStartLearning}
             onToggleSave={handleToggleSave}
             onSelectLesson={handleLessonSelect}
             onShowCheckout={() => setShowCheckout(true)}
+            onCloseCheckout={() => setShowCheckout(false)}
+            onTogglePlay={handleTogglePlay}
+            onLessonComplete={handleLessonComplete}
+            onProgressUpdate={handleProgressUpdate}
+            onPurchaseComplete={handlePurchaseComplete}
           />
         </div>
       </DashboardLayout>
-      
-      {/* Audio player - only show when there's a current lesson and user has access */}
-      {currentLesson && hasAccess && (
-        <AudioPlayer 
-          lesson={currentLesson}
-          isPlaying={isPlaying}
-          onTogglePlay={handleTogglePlay}
-          onComplete={handleLessonComplete}
-          onProgressUpdate={handleProgressUpdate}
-        />
-      )}
-
-      {/* Checkout Modal */}
-      {isPremium && (
-        <CheckoutModal
-          isOpen={showCheckout}
-          onClose={() => setShowCheckout(false)}
-          course={{
-            id: podcast.id,
-            title: podcast.title,
-            precio: podcast.precio || 0,
-            imageUrl: podcast.imageUrl,
-            moneda: podcast.moneda || 'USD'
-          }}
-          onPurchaseComplete={handlePurchaseComplete}
-        />
-      )}
     </>
   );
 };
