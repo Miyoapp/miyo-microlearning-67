@@ -40,9 +40,9 @@ const EmailConfirmation = () => {
           </div>
           
           <div className="pt-4">
-            <Link to="/login">
+            <Link to="/">
               <Button className="w-full bg-miyo-800 hover:bg-miyo-900">
-                Ir al inicio de sesión
+                Volver al Inicio
               </Button>
             </Link>
           </div>
