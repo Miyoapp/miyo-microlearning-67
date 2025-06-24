@@ -28,17 +28,24 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({ open, onOpenChange }) 
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const [showResendButton, setShowResendButton] = useState(false);
+  const { signIn, signUp, resendVerificationEmail } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setShowResendButton(false);
 
     if (mode === 'login') {
       const { error } = await signIn(email, password);
       if (error) {
-        toast.error('Error al iniciar sesión: ' + error.message);
+        if (error.code === 'email_not_confirmed') {
+          toast.error(error.message);
+          setShowResendButton(true);
+        } else {
+          toast.error('Error al iniciar sesión: ' + error.message);
+        }
       } else {
         toast.success('¡Sesión iniciada correctamente!');
         onOpenChange(false);
@@ -54,6 +61,15 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({ open, onOpenChange }) 
       }
     }
 
+    setLoading(false);
+  };
+
+  const handleResendVerification = async () => {
+    setLoading(true);
+    const { error } = await resendVerificationEmail();
+    if (error) {
+      toast.error('Error al reenviar email: ' + error.message);
+    }
     setLoading(false);
   };
 
@@ -101,6 +117,19 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({ open, onOpenChange }) 
             >
               {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
             </Button>
+            
+            {showResendButton && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleResendVerification}
+                className="w-full"
+                disabled={loading}
+              >
+                {loading ? 'Reenviando...' : 'Reenviar email de verificación'}
+              </Button>
+            )}
+            
             <Button
               type="button"
               variant="link"

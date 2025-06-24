@@ -2,12 +2,13 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useAuth } from './auth/AuthProvider';
 import Logo from './common/Logo';
 import { toast } from 'sonner';
 
 const Header = () => {
-  const { user, signOut, forceLogout } = useAuth();
+  const { user, signOut, forceLogout, isEmailVerified, resendVerificationEmail } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -26,6 +27,13 @@ const Header = () => {
     }
   };
 
+  const handleResendVerification = async () => {
+    const { error } = await resendVerificationEmail();
+    if (error) {
+      toast.error('Error al reenviar email: ' + error.message);
+    }
+  };
+
   const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (user) {
       e.preventDefault();
@@ -35,7 +43,7 @@ const Header = () => {
   };
 
   // Debug: mostrar el estado actual en consola
-  console.log('Header render - User:', user?.email || 'No user', 'Path:', window.location.pathname);
+  console.log('Header render - User:', user?.email || 'No user', 'Verified:', isEmailVerified, 'Path:', window.location.pathname);
 
   return (
     <header className="bg-white shadow-sm border-b">
@@ -46,9 +54,26 @@ const Header = () => {
           <nav className="flex items-center space-x-4">
             {user ? (
               <>
-                <span className="text-sm text-gray-600">
-                  Hola, {user.email}
-                </span>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-600">
+                    Hola, {user.email}
+                  </span>
+                  {!isEmailVerified && (
+                    <div className="flex items-center space-x-2">
+                      <Badge variant="destructive" className="text-xs">
+                        Email no verificado
+                      </Badge>
+                      <Button 
+                        onClick={handleResendVerification}
+                        variant="ghost" 
+                        size="sm"
+                        className="text-xs text-miyo-800 hover:bg-miyo-100"
+                      >
+                        Reenviar
+                      </Button>
+                    </div>
+                  )}
+                </div>
                 <Button 
                   onClick={handleLogout}
                   variant="outline" 
