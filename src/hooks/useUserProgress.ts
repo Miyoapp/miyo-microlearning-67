@@ -18,67 +18,91 @@ export function useUserProgress() {
   const [isFetching, setIsFetching] = useState(false);
   const { user } = useAuth();
   const abortControllerRef = useRef<AbortController | null>(null);
+  const fetchAttemptRef = useRef(0);
+  const lastFetchTimeRef = useRef<number>(0);
 
   const fetchUserProgress = useCallback(async () => {
+    const currentAttempt = ++fetchAttemptRef.current;
+    const currentTime = Date.now();
+    
+    console.log(`🔍 [useUserProgress] Fetch attempt #${currentAttempt} - User:`, user?.id || 'none');
+    console.log(`🔍 [useUserProgress] Current state - loading: ${loading}, isFetching: ${isFetching}`);
+    console.log(`🔍 [useUserProgress] Time since last fetch: ${currentTime - lastFetchTimeRef.current}ms`);
+    
     if (!user) {
+      console.log('❌ [useUserProgress] No user found, setting loading to false');
       setLoading(false);
       return;
     }
 
-    // Evitar llamadas duplicadas
+    // Evitar llamadas duplicadas con timestamp mínimo
     if (isFetching) {
-      console.log('🚫 Progress fetch already in progress, skipping...');
+      console.log('🚫 [useUserProgress] Already fetching, skipping attempt #' + currentAttempt);
+      return;
+    }
+
+    // Evitar llamadas muy frecuentes (menos de 1 segundo)
+    if (currentTime - lastFetchTimeRef.current < 1000) {
+      console.log('🚫 [useUserProgress] Too frequent call, skipping attempt #' + currentAttempt);
       return;
     }
 
     // Cancelar petición anterior si existe
     if (abortControllerRef.current) {
+      console.log('🔄 [useUserProgress] Aborting previous request');
       abortControllerRef.current.abort();
     }
 
     setIsFetching(true);
+    lastFetchTimeRef.current = currentTime;
     abortControllerRef.current = new AbortController();
 
     try {
-      console.log('🔄 Fetching user progress for user:', user.id);
+      console.log('🔄 [useUserProgress] Starting fetch for user:', user.id);
       
       const { data, error } = await supabase
         .from('user_course_progress')
         .select('*')
-        .eq('user_id', user.id)
-        .abortSignal(abortControllerRef.current.signal);
+        .eq('user_id', user.id);
+
+      // Verificar si la petición fue cancelada
+      if (abortControllerRef.current?.signal.aborted) {
+        console.log('🔄 [useUserProgress] Request was aborted');
+        return;
+      }
 
       if (error) {
-        console.error('Error fetching user progress:', error);
+        console.error('❌ [useUserProgress] Error fetching user progress:', error);
         throw error;
       }
       
-      console.log('✅ Fetched user progress from DB:', data?.length || 0, 'records');
+      console.log('✅ [useUserProgress] Fetched user progress:', data?.length || 0, 'records');
       setUserProgress(data || []);
     } catch (error: any) {
       if (error.name === 'AbortError') {
-        console.log('🔄 Progress fetch was cancelled');
+        console.log('🔄 [useUserProgress] Fetch was cancelled');
         return;
       }
-      console.error('Error fetching user progress:', error);
+      console.error('❌ [useUserProgress] Error fetching user progress:', error);
       toast.error('Error al cargar el progreso');
     } finally {
+      console.log('🏁 [useUserProgress] Fetch completed, setting states to false');
       setLoading(false);
       setIsFetching(false);
       abortControllerRef.current = null;
     }
-  }, [user, isFetching]);
+  }, [user?.id, isFetching]); // Cambié dependencias para ser más específicas
 
   const updateCourseProgress = async (courseId: string, updates: Partial<UserCourseProgress>) => {
     if (!user) {
-      console.log('No user found, cannot update progress');
+      console.log('❌ [useUserProgress] No user found, cannot update progress');
       return;
     }
 
     // Check if course is already 100% complete (review mode)
     const currentProgress = userProgress.find(p => p.course_id === courseId);
     if (currentProgress?.is_completed && currentProgress?.progress_percentage === 100) {
-      console.log('🔒 Course already 100% complete, preserving progress in review mode:', courseId);
+      console.log('🔒 [useUserProgress] Course already 100% complete, preserving progress in review mode:', courseId);
       // Only allow saving/unsaving in review mode
       if (updates.is_saved !== undefined) {
         const preservedUpdates = {
@@ -91,7 +115,7 @@ export function useUserProgress() {
       }
     }
 
-    console.log('Updating course progress for:', courseId, 'with updates:', updates);
+    console.log('🔄 [useUserProgress] Updating course progress for:', courseId, 'with updates:', updates);
 
     try {
       const { data, error } = await supabase
@@ -112,11 +136,11 @@ export function useUserProgress() {
         .select();
 
       if (error) {
-        console.error('Error updating course progress:', error);
+        console.error('❌ [useUserProgress] Error updating course progress:', error);
         throw error;
       }
       
-      console.log('Successfully updated course progress in DB:', data);
+      console.log('✅ [useUserProgress] Successfully updated course progress in DB:', data);
       
       // Update local state immediately for better UX
       setUserProgress(prev => {
@@ -137,16 +161,16 @@ export function useUserProgress() {
               ? updatedProgress
               : p
           );
-          console.log('Updated local progress state:', newProgress);
+          console.log('🔄 [useUserProgress] Updated local progress state:', newProgress);
           return newProgress;
         } else {
           const newProgress = [...prev, updatedProgress];
-          console.log('Added new progress to local state:', newProgress);
+          console.log('🔄 [useUserProgress] Added new progress to local state:', newProgress);
           return newProgress;
         }
       });
     } catch (error) {
-      console.error('Error updating course progress:', error);
+      console.error('❌ [useUserProgress] Error updating course progress:', error);
       toast.error('Error al actualizar el progreso');
     }
   };
@@ -155,7 +179,7 @@ export function useUserProgress() {
     const currentProgress = userProgress.find(p => p.course_id === courseId);
     const newSavedState = !currentProgress?.is_saved;
     
-    console.log('Toggling save for course:', courseId, 'from', currentProgress?.is_saved, 'to', newSavedState);
+    console.log('🔄 [useUserProgress] Toggling save for course:', courseId, 'from', currentProgress?.is_saved, 'to', newSavedState);
     
     // Update local state immediately for better UX
     setUserProgress(prev => {
@@ -166,7 +190,7 @@ export function useUserProgress() {
             ? { ...p, is_saved: newSavedState }
             : p
         );
-        console.log('Updated local state for save toggle:', updated);
+        console.log('🔄 [useUserProgress] Updated local state for save toggle:', updated);
         return updated;
       } else {
         const newEntry = {
@@ -176,7 +200,7 @@ export function useUserProgress() {
           is_saved: newSavedState,
           last_listened_at: new Date().toISOString()
         };
-        console.log('Created new entry for save toggle:', newEntry);
+        console.log('🔄 [useUserProgress] Created new entry for save toggle:', newEntry);
         return [...prev, newEntry];
       }
     });
@@ -186,7 +210,7 @@ export function useUserProgress() {
   };
 
   const startCourse = async (courseId: string) => {
-    console.log('Starting course:', courseId);
+    console.log('🔄 [useUserProgress] Starting course:', courseId);
     // When a user starts a course, update their progress to show it in "Continue Learning"
     await updateCourseProgress(courseId, { 
       progress_percentage: 1, // Small progress to show it started
@@ -195,15 +219,19 @@ export function useUserProgress() {
   };
 
   useEffect(() => {
+    console.log('🔄 [useUserProgress] useEffect triggered with user:', user?.id || 'none');
+    console.log('🔄 [useUserProgress] useEffect dependencies - user.id:', user?.id);
+    
     fetchUserProgress();
     
     // Cleanup on unmount
     return () => {
+      console.log('🧹 [useUserProgress] Cleanup: aborting requests');
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
     };
-  }, [fetchUserProgress]);
+  }, [user?.id]); // Solo depender del user.id, no de fetchUserProgress
 
   return {
     userProgress,

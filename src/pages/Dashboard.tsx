@@ -15,6 +15,8 @@ const Dashboard = () => {
   const [allCourses, setAllCourses] = useState<Podcast[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   
+  console.log('🔍 [Dashboard] Component render - User:', user?.id || 'none');
+  
   // Usar hooks optimizados
   const { profile, loading: profileLoading } = useUserProfile();
   const { userProgress, toggleSaveCourse, isFetching: progressFetching } = useUserProgress();
@@ -25,14 +27,25 @@ const Dashboard = () => {
     new Date(profile.created_at).toDateString() === new Date().toDateString() : 
     false;
 
+  console.log('🔍 [Dashboard] Hooks state:', {
+    profileLoading,
+    progressFetching,
+    userProgressCount: userProgress.length,
+    coursesCount: allCourses.length,
+    loading
+  });
+
   useEffect(() => {
+    console.log('🔄 [Dashboard] Loading courses effect triggered');
+    
     const loadCourses = async () => {
       try {
+        console.log('🔄 [Dashboard] Starting courses fetch');
         const courses = await obtenerCursos();
-        console.log('Dashboard: Loaded courses:', courses.length);
+        console.log('✅ [Dashboard] Loaded courses:', courses.length);
         setAllCourses(courses);
       } catch (error) {
-        console.error('Error loading courses:', error);
+        console.error('❌ [Dashboard] Error loading courses:', error);
       } finally {
         setLoading(false);
       }
@@ -84,12 +97,12 @@ const Dashboard = () => {
     });
 
   const handlePlayCourse = (courseId: string) => {
-    console.log('Dashboard: Navigating to course without modifying progress:', courseId);
+    console.log('🔄 [Dashboard] Navigating to course without modifying progress:', courseId);
     navigate(`/dashboard/course/${courseId}`);
   };
 
   const handleToggleSave = async (courseId: string) => {
-    console.log('Dashboard: Toggling save for course:', courseId);
+    console.log('🔄 [Dashboard] Toggling save for course:', courseId);
     await toggleSaveCourse(courseId);
     // Removido refetch() innecesario - el estado local ya se actualiza
   };
@@ -99,6 +112,7 @@ const Dashboard = () => {
   };
 
   if (loading || profileLoading) {
+    console.log('🔄 [Dashboard] Showing loading state - loading:', loading, 'profileLoading:', profileLoading);
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center py-20">
@@ -111,6 +125,13 @@ const Dashboard = () => {
   const welcomeMessage = isFirstTimeUser 
     ? `¡Bienvenido(a), ${userName}!` 
     : `¡Bienvenido(a) de vuelta, ${userName}!`;
+
+  console.log('🔍 [Dashboard] Rendering dashboard with:', {
+    welcomeMessage,
+    continueLearningCount: continueLearningCourses.length,
+    recommendedCount: recommendedCourses.length,
+    premiumCount: premiumCourses.length
+  });
 
   return (
     <DashboardLayout>
