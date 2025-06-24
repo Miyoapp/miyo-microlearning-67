@@ -4,7 +4,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from './auth/AuthProvider';
 import Logo from './common/Logo';
-import { toast } from 'sonner';
 
 const Header = () => {
   const { user, signOut, forceLogout } = useAuth();
@@ -13,14 +12,14 @@ const Header = () => {
   const handleLogout = async () => {
     try {
       console.log('Header: Starting logout process...');
-      toast.success('Cerrando sesión...');
       await signOut();
-      // El AuthProvider se encarga de la redirección
+      console.log('Header: Logout successful, navigating to home...');
+      navigate('/');
     } catch (error) {
       console.error('Header: Error during logout:', error);
-      toast.error('Error al cerrar sesión, forzando logout...');
       // En caso de error, usar forceLogout como fallback
       forceLogout();
+      navigate('/');
     }
   };
 
@@ -44,11 +43,9 @@ const Header = () => {
           <nav className="flex items-center space-x-4">
             {user ? (
               <>
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-600">
-                    Hola, {user.email}
-                  </span>
-                </div>
+                <span className="text-sm text-gray-600">
+                  Hola, {user.email}
+                </span>
                 <Button 
                   onClick={handleLogout}
                   variant="outline" 

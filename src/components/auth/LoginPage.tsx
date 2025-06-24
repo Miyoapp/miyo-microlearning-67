@@ -39,8 +39,7 @@ const LoginPage = () => {
         toast.error(error.message);
       } else {
         if (isSignUp) {
-          // Redirigir a la página de confirmación después del registro
-          navigate('/registration-confirmation');
+          toast.success('¡Cuenta creada! Revisa tu email para confirmar.');
         } else {
           toast.success('¡Bienvenido de vuelta!');
           navigate('/dashboard');
