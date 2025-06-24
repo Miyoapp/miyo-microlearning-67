@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { useCourseData } from '@/hooks/useCourseData';
@@ -18,6 +17,12 @@ const DashboardCourse = () => {
   const { podcast, setPodcast, isLoading: courseLoading, error: courseError, retry: retryCourse } = useCourseData(courseId);
   const { userProgress, loading: progressLoading, refetch, startCourse, toggleSaveCourse } = useUserProgress();
   const [showCheckout, setShowCheckout] = useState(false);
+  
+  // STABLE REFERENCE: Keep last valid podcast to prevent blank screens during transitions
+  const lastValidPodcast = useRef(podcast);
+  if (podcast) {
+    lastValidPodcast.current = podcast;
+  }
   
   // Course access and premium status
   const { isPremium, hasAccess, isLoading: accessLoading, error: accessError, refetchPurchases } = useCourseAccess(podcast);
@@ -49,37 +54,63 @@ const DashboardCourse = () => {
   const isCompleted = courseProgress?.is_completed || false;
   const isReviewMode = isCompleted && progressPercentage === 100;
 
-  // CRITICAL DEBUG: Log access state
-  console.log('🎭 DASHBOARD COURSE ACCESS STATE:', {
+  // ENHANCED DIAGNOSTIC: Log complete state during render
+  console.log('🎭 DASHBOARD COURSE COMPLETE STATE:', {
+    timestamp: new Date().toISOString(),
     courseId,
-    courseLoading,
-    progressLoading,
-    accessLoading,
-    isPremium,
-    hasAccess,
-    podcast: !!podcast,
-    courseTitle: podcast?.title,
-    courseError,
-    accessError,
-    userProgressLength: userProgress.length,
-    courseProgress: !!courseProgress
+    dataStates: {
+      courseLoading,
+      progressLoading,
+      accessLoading,
+      userProgressLength: userProgress.length,
+      userProgressIsArray: Array.isArray(userProgress)
+    },
+    podcastInfo: {
+      podcastExists: !!podcast,
+      podcastId: podcast?.id,
+      podcastTitle: podcast?.title,
+      lastValidPodcastExists: !!lastValidPodcast.current,
+      lastValidPodcastId: lastValidPodcast.current?.id
+    },
+    accessInfo: {
+      isPremium,
+      hasAccess,
+      accessError: !!accessError
+    },
+    progressInfo: {
+      courseProgress: !!courseProgress,
+      hasStarted,
+      isSaved,
+      progressPercentage,
+      isCompleted,
+      isReviewMode
+    },
+    errors: {
+      courseError: !!courseError,
+      accessError: !!accessError,
+      hasAnyError: !!(courseError || accessError)
+    }
   });
 
   // Handle any errors that occurred
   const hasError = courseError || accessError;
   
-  // CRITICAL FIX: Only show loading when actually loading data, not when arrays are empty
+  // IMPROVED LOADING DETECTION: More precise loading state detection
   const isActuallyLoading = courseLoading || accessLoading || (progressLoading && userProgress === undefined);
+  const isDataTransition = !isActuallyLoading && !podcast && lastValidPodcast.current;
+
+  // TRANSITION PROTECTION: Use stable podcast reference during transitions
+  const displayPodcast = podcast || (isDataTransition ? lastValidPodcast.current : null);
 
   const handleStartLearning = async () => {
-    if (podcast) {
+    if (displayPodcast) {
       if (isPremium && !hasAccess) {
         console.log('🔒 Premium course without access - showing checkout');
         setShowCheckout(true);
         return;
       }
 
-      await startCourse(podcast.id);
+      await startCourse(displayPodcast.id);
       await refetch();
       
       // Scroll to the learning path section
@@ -87,13 +118,13 @@ const DashboardCourse = () => {
       if (learningPathElement) {
         learningPathElement.scrollIntoView({ behavior: 'smooth' });
       }
-      console.log('Started learning course:', podcast.title);
+      console.log('Started learning course:', displayPodcast.title);
     }
   };
 
   const handleToggleSave = () => {
-    if (podcast) {
-      toggleSaveCourse(podcast.id);
+    if (displayPodcast) {
+      toggleSaveCourse(displayPodcast.id);
     }
   };
 
@@ -131,11 +162,17 @@ const DashboardCourse = () => {
     if (courseLoading) return 'Cargando curso...';
     if (accessLoading) return 'Verificando acceso...';
     if (progressLoading) return 'Cargando progreso...';
+    if (isDataTransition) return 'Sincronizando datos...';
     return 'Cargando...';
   };
 
-  // CRITICAL FIX: Only show skeleton loading when data is actually being fetched
-  if (isActuallyLoading) {
+  // ENHANCED LOADING PROTECTION: Show skeleton for both loading and transitions
+  if (isActuallyLoading || isDataTransition) {
+    console.log('🔄 Showing loading state:', { 
+      isActuallyLoading, 
+      isDataTransition,
+      reason: isActuallyLoading ? 'data loading' : 'data transition'
+    });
     return (
       <DashboardLayout>
         <CourseLoadingSkeleton loadingMessage={getLoadingMessage()} />
@@ -145,6 +182,7 @@ const DashboardCourse = () => {
 
   // Error state: show error with retry option
   if (hasError) {
+    console.log('❌ Showing error state:', { courseError, accessError });
     return (
       <DashboardLayout>
         <CourseErrorState
@@ -157,7 +195,8 @@ const DashboardCourse = () => {
   }
 
   // Course not found state
-  if (!podcast) {
+  if (!displayPodcast) {
+    console.log('📭 Showing course not found state');
     return (
       <DashboardLayout>
         <CourseNotFoundState
@@ -169,14 +208,14 @@ const DashboardCourse = () => {
     );
   }
 
-  // SUCCESS: Render course content even with empty user data
-  // Empty arrays are valid states for new users
-  console.log('✅ Rendering course content:', {
-    courseTitle: podcast.title,
+  // SUCCESS: Render course content with stable data
+  console.log('✅ Rendering course content with stable data:', {
+    courseTitle: displayPodcast.title,
     hasUserProgress: userProgress.length > 0,
     courseProgress: !!courseProgress,
     isPremium,
     hasAccess,
+    usingLastValidPodcast: displayPodcast === lastValidPodcast.current && !podcast,
     emptyDataIsValid: true
   });
 
@@ -187,7 +226,7 @@ const DashboardCourse = () => {
           <CoursePageHeader isReviewMode={isReviewMode} />
           
           <CourseAccessHandler
-            podcast={podcast}
+            podcast={displayPodcast}
             currentLesson={currentLesson}
             hasStarted={hasStarted}
             isSaved={isSaved}

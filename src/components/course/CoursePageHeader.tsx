@@ -10,6 +10,16 @@ interface CoursePageHeaderProps {
 const CoursePageHeader: React.FC<CoursePageHeaderProps> = ({ isReviewMode }) => {
   const navigate = useNavigate();
 
+  // DIAGNOSTIC: Monitor header state and props
+  console.log('📋 COURSE PAGE HEADER RENDER:', {
+    timestamp: new Date().toISOString(),
+    isReviewMode,
+    isReviewModeValid: typeof isReviewMode === 'boolean' || isReviewMode === undefined,
+    propsReceived: {
+      isReviewMode: isReviewMode !== undefined ? (isReviewMode ? 'true' : 'false') : 'undefined'
+    }
+  });
+
   return (
     <div className="mb-6 sm:mb-8 px-4 sm:px-0">
       {/* Back arrow button */}

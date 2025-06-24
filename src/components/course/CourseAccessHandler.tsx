@@ -48,6 +48,35 @@ const CourseAccessHandler: React.FC<CourseAccessHandlerProps> = ({
   onProgressUpdate,
   onPurchaseComplete
 }) => {
+  // DIAGNOSTIC: Monitor props validity during render
+  console.log('🎬 COURSE ACCESS HANDLER RENDER:', {
+    timestamp: new Date().toISOString(),
+    podcastValid: !!podcast,
+    podcastId: podcast?.id,
+    podcastTitle: podcast?.title,
+    currentLessonValid: !!currentLesson,
+    currentLessonId: currentLesson?.id,
+    hasStarted,
+    isSaved,
+    progressPercentage,
+    isCompleted,
+    isPremium,
+    hasAccess,
+    isPlaying,
+    showCheckout,
+    propsReceived: {
+      podcast: podcast ? 'valid' : 'invalid',
+      currentLesson: currentLesson ? 'valid' : 'null',
+      hasAccess: hasAccess ? 'granted' : 'denied'
+    }
+  });
+
+  // GUARD: Ensure podcast is valid before rendering
+  if (!podcast) {
+    console.error('❌ CourseAccessHandler received invalid podcast prop');
+    return null;
+  }
+
   return (
     <>
       <CourseMainContent
