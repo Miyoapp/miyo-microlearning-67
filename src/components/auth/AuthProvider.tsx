@@ -1,9 +1,7 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType {
   user: User | null;
@@ -122,11 +120,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               checkEmailVerificationAsync(session.user.id);
             }, 0);
 
-            // Redirección automática solo en SIGNED_IN y no en páginas de auth
+            // Redirección automática solo en SIGNED_IN y DIRECTA al dashboard
             if (event === 'SIGNED_IN') {
               const currentPath = window.location.pathname;
               if (currentPath === '/login' || currentPath === '/' || currentPath === '/registration-confirmation') {
-                console.log('Auto-redirecting to dashboard after successful login');
+                console.log('Direct redirect to dashboard after successful login');
                 window.location.href = '/dashboard';
               }
             }
@@ -193,7 +191,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error };
       }
 
-      // No hacer redirección manual aquí - AuthProvider se encarga
+      // AuthProvider se encarga de la redirección automática
       return { error: null };
     } catch (error) {
       console.error('Unexpected error during sign in:', error);
