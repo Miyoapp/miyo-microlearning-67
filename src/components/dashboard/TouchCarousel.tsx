@@ -3,9 +3,22 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import CourseCardWithProgress from './CourseCardWithProgress';
+import { Podcast } from '@/types';
 
 interface TouchCarouselProps {
-  children: React.ReactNode[];
+  title?: string;
+  children?: React.ReactNode[];
+  courses?: Array<{
+    podcast: Podcast;
+    progress?: number;
+    isPlaying?: boolean;
+    isSaved?: boolean;
+  }>;
+  showProgress?: boolean;
+  onPlayCourse?: (courseId: string) => void;
+  onToggleSave?: (courseId: string) => void;
+  onCourseClick?: (courseId: string) => void;
   className?: string;
   itemsPerView?: {
     mobile: number;
@@ -15,7 +28,13 @@ interface TouchCarouselProps {
 }
 
 const TouchCarousel: React.FC<TouchCarouselProps> = ({
+  title,
   children,
+  courses,
+  showProgress = true,
+  onPlayCourse,
+  onToggleSave,
+  onCourseClick,
   className,
   itemsPerView = { mobile: 1, tablet: 2, desktop: 3 }
 }) => {
@@ -35,6 +54,20 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
     window.addEventListener('resize', checkScreenSize);
     return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
+
+  // Use courses if provided, otherwise use children
+  const items = courses || children || [];
+  
+  if (items.length === 0) {
+    return (
+      <div className="mb-6 sm:mb-8">
+        {title && <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 px-4 sm:px-0">{title}</h2>}
+        <div className="text-gray-500 text-center py-6 sm:py-8 text-sm sm:text-base">
+          No hay cursos disponibles en esta sección
+        </div>
+      </div>
+    );
+  }
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!scrollContainerRef.current) return;
@@ -81,7 +114,7 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
   };
 
   const itemsVisible = getItemsPerCurrentView();
-  const maxIndex = Math.max(0, children.length - itemsVisible);
+  const maxIndex = Math.max(0, items.length - itemsVisible);
   const canScrollLeft = currentIndex > 0;
   const canScrollRight = currentIndex < maxIndex;
 
@@ -90,7 +123,7 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
     setCurrentIndex(newIndex);
     
     if (scrollContainerRef.current) {
-      const itemWidth = scrollContainerRef.current.scrollWidth / children.length;
+      const itemWidth = scrollContainerRef.current.scrollWidth / items.length;
       scrollContainerRef.current.scrollTo({
         left: newIndex * itemWidth,
         behavior: 'smooth'
@@ -107,64 +140,94 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
   };
 
   return (
-    <div className={cn("relative", className)}>
-      {/* Desktop navigation arrows */}
-      {isDesktop && canScrollLeft && (
-        <Button
-          variant="outline"
-          size="icon"
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 backdrop-blur-sm border-gray-200 hover:bg-white shadow-lg"
-          onClick={handlePrevious}
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-      )}
-
-      {/* Scrollable container */}
-      <div
-        ref={scrollContainerRef}
-        className={cn(
-          "flex gap-4 overflow-x-auto scrollbar-hide",
-          "cursor-grab active:cursor-grabbing",
-          isDragging && "cursor-grabbing"
-        )}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        style={{
-          scrollSnapType: 'x mandatory',
-          WebkitOverflowScrolling: 'touch'
-        }}
-      >
-        {children.map((child, index) => (
-          <div
-            key={index}
-            className={cn(
-              "flex-none scroll-snap-align-start",
-              "w-full md:w-1/2 lg:w-1/3"
-            )}
-            style={{ scrollSnapAlign: 'start' }}
+    <div className={cn("mb-6 sm:mb-8", className)}>
+      {title && <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 px-4 sm:px-0">{title}</h2>}
+      
+      <div className="relative px-4 sm:px-0">
+        {/* Desktop navigation arrows */}
+        {isDesktop && canScrollLeft && (
+          <Button
+            variant="outline"
+            size="icon"
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 backdrop-blur-sm border-gray-200 hover:bg-white shadow-lg"
+            onClick={handlePrevious}
           >
-            {child}
-          </div>
-        ))}
-      </div>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+        )}
 
-      {/* Desktop navigation arrows */}
-      {isDesktop && canScrollRight && (
-        <Button
-          variant="outline"
-          size="icon"
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 backdrop-blur-sm border-gray-200 hover:bg-white shadow-lg"
-          onClick={handleNext}
+        {/* Scrollable container */}
+        <div
+          ref={scrollContainerRef}
+          className={cn(
+            "flex gap-4 overflow-x-auto scrollbar-hide",
+            "cursor-grab active:cursor-grabbing",
+            isDragging && "cursor-grabbing"
+          )}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          style={{
+            scrollSnapType: 'x mandatory',
+            WebkitOverflowScrolling: 'touch'
+          }}
         >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      )}
+          {courses ? (
+            // Render course cards
+            courses.map((course) => (
+              <div
+                key={course.podcast.id}
+                className={cn(
+                  "flex-none scroll-snap-align-start",
+                  "w-full md:w-1/2 lg:w-1/3"
+                )}
+                style={{ scrollSnapAlign: 'start' }}
+              >
+                <CourseCardWithProgress
+                  podcast={course.podcast}
+                  progress={course.progress}
+                  isPlaying={course.isPlaying}
+                  isSaved={course.isSaved}
+                  showProgress={showProgress}
+                  onPlay={() => onPlayCourse?.(course.podcast.id)}
+                  onToggleSave={() => onToggleSave?.(course.podcast.id)}
+                  onClick={() => onCourseClick?.(course.podcast.id)}
+                />
+              </div>
+            ))
+          ) : (
+            // Render children
+            children?.map((child, index) => (
+              <div
+                key={index}
+                className={cn(
+                  "flex-none scroll-snap-align-start",
+                  "w-full md:w-1/2 lg:w-1/3"
+                )}
+                style={{ scrollSnapAlign: 'start' }}
+              >
+                {child}
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Desktop navigation arrows */}
+        {isDesktop && canScrollRight && (
+          <Button
+            variant="outline"
+            size="icon"
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 backdrop-blur-sm border-gray-200 hover:bg-white shadow-lg"
+            onClick={handleNext}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
     </div>
   );
 };
