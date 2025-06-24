@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
@@ -63,7 +64,8 @@ const DashboardCourse = () => {
       progressLoading,
       accessLoading,
       userProgressLength: userProgress.length,
-      userProgressIsArray: Array.isArray(userProgress)
+      userProgressIsArray: Array.isArray(userProgress),
+      progressLoadingAndEmpty: progressLoading && userProgress.length === 0
     },
     podcastInfo: {
       podcastExists: !!podcast,
@@ -75,7 +77,8 @@ const DashboardCourse = () => {
     accessInfo: {
       isPremium,
       hasAccess,
-      accessError: !!accessError
+      accessError: !!accessError,
+      isFreeCourseShouldAlwaysRender: !isPremium
     },
     progressInfo: {
       courseProgress: !!courseProgress,
@@ -95,12 +98,31 @@ const DashboardCourse = () => {
   // Handle any errors that occurred
   const hasError = courseError || accessError;
   
-  // IMPROVED LOADING DETECTION: More precise loading state detection
-  const isActuallyLoading = courseLoading || accessLoading || (progressLoading && userProgress === undefined);
+  // FIXED LOADING DETECTION: More precise loading state detection
+  // Only consider it loading if we're actually fetching data AND don't have existing data
+  const isActuallyLoading = (courseLoading && !podcast && !lastValidPodcast.current) || 
+                           (accessLoading && !podcast) || 
+                           (progressLoading && userProgress.length === 0 && !Array.isArray(userProgress));
+  
+  // IMPROVED TRANSITION DETECTION: Check if we're in a data transition state
   const isDataTransition = !isActuallyLoading && !podcast && lastValidPodcast.current;
 
-  // TRANSITION PROTECTION: Use stable podcast reference during transitions
-  const displayPodcast = podcast || (isDataTransition ? lastValidPodcast.current : null);
+  // STABILIZED PODCAST REFERENCE: Always prefer current podcast, fallback to stable reference
+  const displayPodcast = podcast || lastValidPodcast.current;
+
+  // CRITICAL FIX: Never show blank screen for free courses or when we have valid data
+  const shouldForceRender = displayPodcast && (!isPremium || hasAccess || isDataTransition);
+  const shouldShowContent = shouldForceRender || (displayPodcast && !hasError);
+
+  console.log('🎭 RENDER DECISION LOGIC:', {
+    isActuallyLoading,
+    isDataTransition,
+    shouldForceRender,
+    shouldShowContent,
+    hasValidDisplayPodcast: !!displayPodcast,
+    isFreeCourseShouldRender: displayPodcast && !isPremium,
+    hasErrorButShouldStillRender: hasError && shouldForceRender
+  });
 
   const handleStartLearning = async () => {
     if (displayPodcast) {
@@ -166,12 +188,12 @@ const DashboardCourse = () => {
     return 'Cargando...';
   };
 
-  // ENHANCED LOADING PROTECTION: Show skeleton for both loading and transitions
-  if (isActuallyLoading || isDataTransition) {
+  // PRIORITIZE CONTENT OVER LOADING: Only show loading if we truly have no data
+  if (isActuallyLoading && !shouldShowContent) {
     console.log('🔄 Showing loading state:', { 
       isActuallyLoading, 
-      isDataTransition,
-      reason: isActuallyLoading ? 'data loading' : 'data transition'
+      shouldShowContent: false,
+      reason: 'no valid data available'
     });
     return (
       <DashboardLayout>
@@ -180,9 +202,9 @@ const DashboardCourse = () => {
     );
   }
 
-  // Error state: show error with retry option
-  if (hasError) {
-    console.log('❌ Showing error state:', { courseError, accessError });
+  // Error state: Only show if we have an error AND no valid content to display
+  if (hasError && !shouldShowContent) {
+    console.log('❌ Showing error state:', { courseError, accessError, hasValidContent: false });
     return (
       <DashboardLayout>
         <CourseErrorState
@@ -194,8 +216,8 @@ const DashboardCourse = () => {
     );
   }
 
-  // Course not found state
-  if (!displayPodcast) {
+  // Course not found state: Only if we truly have no podcast data after loading
+  if (!displayPodcast && !isActuallyLoading) {
     console.log('📭 Showing course not found state');
     return (
       <DashboardLayout>
@@ -208,6 +230,16 @@ const DashboardCourse = () => {
     );
   }
 
+  // GUARANTEE RENDER: If we have a podcast, always render content
+  if (!displayPodcast) {
+    console.log('⚠️ No displayPodcast but should render - using skeleton as fallback');
+    return (
+      <DashboardLayout>
+        <CourseLoadingSkeleton loadingMessage="Preparando curso..." />
+      </DashboardLayout>
+    );
+  }
+
   // SUCCESS: Render course content with stable data
   console.log('✅ Rendering course content with stable data:', {
     courseTitle: displayPodcast.title,
@@ -216,7 +248,7 @@ const DashboardCourse = () => {
     isPremium,
     hasAccess,
     usingLastValidPodcast: displayPodcast === lastValidPodcast.current && !podcast,
-    emptyDataIsValid: true
+    isGuaranteedRender: true
   });
 
   return (
