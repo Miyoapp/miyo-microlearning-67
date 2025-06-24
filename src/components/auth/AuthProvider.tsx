@@ -173,19 +173,77 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signUp = async (email: string, password: string, name?: string) => {
-    // Configurar la URL de redirección para que apunte al login del landing
-    const redirectUrl = `${window.location.origin}/login`;
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          name: name || email
+    try {
+      console.log('Starting signup process for:', email);
+      
+      // Configurar la URL de redirección correctamente
+      const siteUrl = window.location.origin;
+      const redirectUrl = `${siteUrl}/login`;
+      
+      console.log('Redirect URL configured as:', redirectUrl);
+
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            name: name || email
+          }
         }
+      });
+
+      if (error) {
+        console.error('Signup error:', error);
+        return { error };
       }
-    });
-    return { error };
+
+      console.log('Signup successful:', data);
+      
+      // Verificar si el perfil se creó correctamente
+      if (data.user) {
+        console.log('User created with ID:', data.user.id);
+        
+        // Esperar un momento para que el trigger se ejecute
+        setTimeout(async () => {
+          try {
+            const { data: profile, error: profileError } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', data.user.id)
+              .single();
+            
+            if (profileError) {
+              console.error('Profile not found after signup:', profileError);
+              // Crear manualmente el perfil si no existe
+              const { error: insertError } = await supabase
+                .from('profiles')
+                .insert({
+                  id: data.user.id,
+                  email: data.user.email,
+                  name: name || data.user.email,
+                  email_verified: false
+                });
+              
+              if (insertError) {
+                console.error('Error creating profile manually:', insertError);
+              } else {
+                console.log('Profile created manually');
+              }
+            } else {
+              console.log('Profile found:', profile);
+            }
+          } catch (err) {
+            console.error('Error checking/creating profile:', err);
+          }
+        }, 1000);
+      }
+
+      return { error: null };
+    } catch (error) {
+      console.error('Unexpected error during sign up:', error);
+      return { error: { message: 'Error inesperado durante el registro' } };
+    }
   };
 
   const signOut = async () => {
