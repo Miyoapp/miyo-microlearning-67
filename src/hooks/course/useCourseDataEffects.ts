@@ -49,35 +49,63 @@ export function useCourseDataEffects({
     }
   }, [courseId, location.pathname, location.key, navigationType]);
 
-  // Window focus listener for tab switching detection with debouncing
+  // OPTIMIZED FOCUS LISTENER: Reduced aggressiveness with better debouncing
   useEffect(() => {
     let focusTimeout: NodeJS.Timeout;
+    let lastFocusTime = 0;
     
     const handleFocus = () => {
+      const now = Date.now();
+      
+      // TAB SWITCH DETECTION: Enhanced logging
+      console.log('🔄 TAB FOCUS EVENT DETECTED:', {
+        timestamp: new Date().toISOString(),
+        documentHidden: document.hidden,
+        documentVisibilityState: document.visibilityState,
+        timeSinceLastFocus: now - lastFocusTime,
+        hasPodcast: !!podcast,
+        hasError: !!error,
+        courseId,
+        isCurrentlyLoading: isLoadingRef.current,
+        shouldConsiderRefetch: (now - lastFocusTime) > 5000 // Only if >5 seconds since last focus
+      });
+      
       // DEBOUNCE: Clear any pending focus handlers
       if (focusTimeout) {
         clearTimeout(focusTimeout);
       }
       
-      // DELAY: Wait a bit to avoid rapid successive calls
+      // RATE LIMITING: Only handle focus if enough time has passed
+      if (now - lastFocusTime < 5000) {
+        console.log('🔄 Focus event ignored - too recent (rate limited)');
+        return;
+      }
+      
+      lastFocusTime = now;
+      
+      // EXTENDED DELAY: Wait longer to avoid rapid successive calls
       focusTimeout = setTimeout(() => {
         logDebugInfo('Window focus detected - checking if refetch needed', {
           hasPodcast: !!podcast,
           hasError: !!error,
           currentCourseId: courseId,
           isCurrentlyLoading: isLoadingRef.current,
-          lastLoadedCourseId: lastLoadedCourseId.current
+          lastLoadedCourseId: lastLoadedCourseId.current,
+          timeSinceLastFocus: Date.now() - lastFocusTime
         });
         
-        // SMART REFETCH: Only refetch if we have an error, no data, or course changed
-        const shouldRefetch = (error || !podcast) && 
+        // CONSERVATIVE REFETCH: Only refetch if we have a real problem
+        const hasRealProblem = error && !podcast;
+        const courseChanged = courseId && lastLoadedCourseId.current !== courseId;
+        const shouldRefetch = (hasRealProblem || courseChanged) && 
                              courseId && 
-                             !isLoadingRef.current &&
-                             lastLoadedCourseId.current !== courseId;
+                             !isLoadingRef.current;
         
         if (shouldRefetch) {
           logDebugInfo('Refetching due to window focus', {
-            reason: error ? 'has error' : 'no podcast data'
+            reason: hasRealProblem ? 'has error and no data' : 'course changed',
+            hasError: !!error,
+            hasPodcast: !!podcast
           });
           isLoadingRef.current = true;
           lastLoadedCourseId.current = courseId;
@@ -85,13 +113,25 @@ export function useCourseDataEffects({
           cargarCurso().finally(() => {
             isLoadingRef.current = false;
           });
+        } else {
+          console.log('🔄 Focus refetch skipped - data is stable:', {
+            hasPodcast: !!podcast,
+            hasError: !!error,
+            isLoading: isLoadingRef.current,
+            reason: 'no real problem detected'
+          });
         }
-      }, 100); // 100ms debounce
+      }, 500); // Increased debounce to 500ms
     };
 
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        logDebugInfo('Page became visible - checking if refetch needed');
+        console.log('👁️ TAB VISIBILITY CHANGE - Page became visible:', {
+          timestamp: new Date().toISOString(),
+          courseId,
+          hasPodcast: !!podcast,
+          hasError: !!error
+        });
         handleFocus();
       }
     };

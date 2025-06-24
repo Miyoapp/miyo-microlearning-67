@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
@@ -19,10 +18,24 @@ const DashboardCourse = () => {
   const { userProgress, loading: progressLoading, refetch, startCourse, toggleSaveCourse } = useUserProgress();
   const [showCheckout, setShowCheckout] = useState(false);
   
-  // STABLE REFERENCE: Keep last valid podcast to prevent blank screens during transitions
+  // ENHANCED STABLE REFERENCE: Keep last valid podcast with timeout-based cleanup
   const lastValidPodcast = useRef(podcast);
+  const podcastClearTimeout = useRef<NodeJS.Timeout | null>(null);
+  
   if (podcast) {
     lastValidPodcast.current = podcast;
+    // Clear any pending timeout to clear the reference
+    if (podcastClearTimeout.current) {
+      clearTimeout(podcastClearTimeout.current);
+      podcastClearTimeout.current = null;
+    }
+  } else if (lastValidPodcast.current && !podcastClearTimeout.current) {
+    // Only start timeout if we had valid data and no timeout is running
+    podcastClearTimeout.current = setTimeout(() => {
+      console.log('🕐 TIMEOUT: Clearing stable podcast reference after extended period without data');
+      lastValidPodcast.current = null;
+      podcastClearTimeout.current = null;
+    }, 30000); // 30 second timeout to prevent permanent stale data
   }
   
   // Course access and premium status
@@ -47,7 +60,7 @@ const DashboardCourse = () => {
     refetch
   });
   
-  // CRITICAL FIX: Proper empty data handling
+  // Course progress calculations
   const courseProgress = userProgress.find(p => p.course_id === courseId) || null;
   const isSaved = courseProgress?.is_saved || false;
   const hasStarted = (courseProgress?.progress_percentage || 0) > 0;
@@ -55,73 +68,49 @@ const DashboardCourse = () => {
   const isCompleted = courseProgress?.is_completed || false;
   const isReviewMode = isCompleted && progressPercentage === 100;
 
-  // ENHANCED DIAGNOSTIC: Log complete state during render
-  console.log('🎭 DASHBOARD COURSE COMPLETE STATE:', {
+  // DEFINITIVE DISPLAY PODCAST: Always prefer current, with stable fallback
+  const displayPodcast = podcast || lastValidPodcast.current;
+
+  // TAB SWITCH DETECTION: Enhanced logging for tab switching
+  console.log('🎭 TAB SWITCH DIAGNOSTIC - DASHBOARD COURSE STATE:', {
     timestamp: new Date().toISOString(),
+    documentHidden: document.hidden,
+    documentVisibilityState: document.visibilityState,
     courseId,
     dataStates: {
       courseLoading,
       progressLoading,
       accessLoading,
-      userProgressLength: userProgress.length,
-      userProgressIsArray: Array.isArray(userProgress),
-      progressLoadingAndEmpty: progressLoading && userProgress.length === 0
+      hasPodcast: !!podcast,
+      hasLastValidPodcast: !!lastValidPodcast.current,
+      hasDisplayPodcast: !!displayPodcast,
+      userProgressCount: userProgress.length,
+      timeoutActive: !!podcastClearTimeout.current
     },
-    podcastInfo: {
-      podcastExists: !!podcast,
-      podcastId: podcast?.id,
-      podcastTitle: podcast?.title,
-      lastValidPodcastExists: !!lastValidPodcast.current,
-      lastValidPodcastId: lastValidPodcast.current?.id
-    },
-    accessInfo: {
-      isPremium,
-      hasAccess,
-      accessError: !!accessError,
-      isFreeCourseShouldAlwaysRender: !isPremium
-    },
-    progressInfo: {
-      courseProgress: !!courseProgress,
-      hasStarted,
-      isSaved,
-      progressPercentage,
-      isCompleted,
-      isReviewMode
-    },
-    errors: {
-      courseError: !!courseError,
-      accessError: !!accessError,
-      hasAnyError: !!(courseError || accessError)
+    renderDecision: {
+      shouldShowContent: !!displayPodcast,
+      hasError: !!(courseError || accessError),
+      isLoadingWithoutData: !displayPodcast && (courseLoading || progressLoading),
+      stableReferenceProtection: !!lastValidPodcast.current && !podcast
     }
   });
 
-  // Handle any errors that occurred
+  // SIMPLIFIED LOADING LOGIC: Only show loading if we truly have no data
+  const isActuallyLoading = !displayPodcast && (courseLoading || progressLoading);
+  
+  // Error handling
   const hasError = courseError || accessError;
-  
-  // FIXED LOADING DETECTION: More precise loading state detection
-  // Only consider it loading if we're actually fetching data AND don't have existing data
-  const isActuallyLoading = (courseLoading && !podcast && !lastValidPodcast.current) || 
-                           (accessLoading && !podcast) || 
-                           (progressLoading && userProgress.length === 0 && !Array.isArray(userProgress));
-  
-  // IMPROVED TRANSITION DETECTION: Check if we're in a data transition state
-  const isDataTransition = !isActuallyLoading && !podcast && lastValidPodcast.current;
 
-  // STABILIZED PODCAST REFERENCE: Always prefer current podcast, fallback to stable reference
-  const displayPodcast = podcast || lastValidPodcast.current;
+  // DEFINITIVE RENDER GUARD: Always show content if we have valid data
+  const shouldShowContent = !!displayPodcast;
 
-  // CRITICAL FIX: Never show blank screen for free courses or when we have valid data
-  const shouldForceRender = displayPodcast && (!isPremium || hasAccess || isDataTransition);
-  const shouldShowContent = shouldForceRender || (displayPodcast && !hasError);
-
-  console.log('🎭 RENDER DECISION LOGIC:', {
-    isActuallyLoading,
-    isDataTransition,
-    shouldForceRender,
+  console.log('🔒 FINAL RENDER DECISION:', {
     shouldShowContent,
-    hasValidDisplayPodcast: !!displayPodcast,
-    isFreeCourseShouldRender: displayPodcast && !isPremium,
-    hasErrorButShouldStillRender: hasError && shouldForceRender
+    isActuallyLoading,
+    hasError: !!hasError,
+    displayPodcastValid: !!displayPodcast,
+    courseTitle: displayPodcast?.title,
+    guaranteedRender: shouldShowContent ? 'YES - CONTENT WILL RENDER' : 'NO - FALLBACK STATE'
   });
 
   const handleStartLearning = async () => {
@@ -179,80 +168,18 @@ const DashboardCourse = () => {
     window.history.back();
   };
 
-  // Determine loading message
-  const getLoadingMessage = () => {
-    if (courseLoading) return 'Cargando curso...';
-    if (accessLoading) return 'Verificando acceso...';
-    if (progressLoading) return 'Cargando progreso...';
-    if (isDataTransition) return 'Sincronizando datos...';
-    return 'Cargando...';
-  };
-
-  // PRIORITIZE CONTENT OVER LOADING: Only show loading if we truly have no data
-  if (isActuallyLoading && !shouldShowContent) {
-    console.log('🔄 Showing loading state:', { 
-      isActuallyLoading, 
-      shouldShowContent: false,
-      reason: 'no valid data available'
+  // PRIORITY 1: Show content if we have valid data (NEVER BLANK SCREEN)
+  if (shouldShowContent) {
+    console.log('✅ RENDERING CONTENT - Guaranteed non-blank screen:', {
+      courseTitle: displayPodcast.title,
+      isCurrentData: !!podcast,
+      isStableReference: !podcast && !!lastValidPodcast.current,
+      hasUserProgress: userProgress.length > 0,
+      courseProgress: !!courseProgress,
+      renderStrategy: 'CONTENT_PRIORITY'
     });
+
     return (
-      <DashboardLayout>
-        <CourseLoadingSkeleton loadingMessage={getLoadingMessage()} />
-      </DashboardLayout>
-    );
-  }
-
-  // Error state: Only show if we have an error AND no valid content to display
-  if (hasError && !shouldShowContent) {
-    console.log('❌ Showing error state:', { courseError, accessError, hasValidContent: false });
-    return (
-      <DashboardLayout>
-        <CourseErrorState
-          error={courseError || accessError || 'Ha ocurrido un error inesperado.'}
-          onRetry={handleRetry}
-          onGoBack={handleGoBack}
-        />
-      </DashboardLayout>
-    );
-  }
-
-  // Course not found state: Only if we truly have no podcast data after loading
-  if (!displayPodcast && !isActuallyLoading) {
-    console.log('📭 Showing course not found state');
-    return (
-      <DashboardLayout>
-        <CourseNotFoundState
-          courseId={courseId}
-          onRetry={handleRetry}
-          onGoBack={handleGoBack}
-        />
-      </DashboardLayout>
-    );
-  }
-
-  // GUARANTEE RENDER: If we have a podcast, always render content
-  if (!displayPodcast) {
-    console.log('⚠️ No displayPodcast but should render - using skeleton as fallback');
-    return (
-      <DashboardLayout>
-        <CourseLoadingSkeleton loadingMessage="Preparando curso..." />
-      </DashboardLayout>
-    );
-  }
-
-  // SUCCESS: Render course content with stable data
-  console.log('✅ Rendering course content with stable data:', {
-    courseTitle: displayPodcast.title,
-    hasUserProgress: userProgress.length > 0,
-    courseProgress: !!courseProgress,
-    isPremium,
-    hasAccess,
-    usingLastValidPodcast: displayPodcast === lastValidPodcast.current && !podcast,
-    isGuaranteedRender: true
-  });
-
-  return (
-    <>
       <DashboardLayout>
         <div className="max-w-7xl mx-auto pb-20 sm:pb-24">
           <CoursePageHeader isReviewMode={isReviewMode} />
@@ -280,7 +207,46 @@ const DashboardCourse = () => {
           />
         </div>
       </DashboardLayout>
-    </>
+    );
+  }
+
+  // PRIORITY 2: Show error state only if we have an error AND no content
+  if (hasError && !shouldShowContent) {
+    console.log('❌ Showing error state:', { courseError, accessError, hasValidContent: false });
+    return (
+      <DashboardLayout>
+        <CourseErrorState
+          error={courseError || accessError || 'Ha ocurrido un error inesperado.'}
+          onRetry={handleRetry}
+          onGoBack={handleGoBack}
+        />
+      </DashboardLayout>
+    );
+  }
+
+  // PRIORITY 3: Show course not found only if we confirmed no data exists
+  if (!isActuallyLoading && !shouldShowContent) {
+    console.log('📭 Showing course not found state');
+    return (
+      <DashboardLayout>
+        <CourseNotFoundState
+          courseId={courseId}
+          onRetry={handleRetry}
+          onGoBack={handleGoBack}
+        />
+      </DashboardLayout>
+    );
+  }
+
+  // PRIORITY 4: Show loading only as last resort
+  console.log('🔄 Showing loading state (last resort):', { 
+    isActuallyLoading, 
+    reason: 'no valid data available and still loading'
+  });
+  return (
+    <DashboardLayout>
+      <CourseLoadingSkeleton loadingMessage="Cargando curso..." />
+    </DashboardLayout>
   );
 };
 
