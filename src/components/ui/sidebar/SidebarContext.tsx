@@ -28,3 +28,4 @@ export function useSidebar() {
 }
 
 export { SIDEBAR_COOKIE_NAME, SIDEBAR_COOKIE_MAX_AGE, SIDEBAR_KEYBOARD_SHORTCUT }
+export type { SidebarContext as SidebarContextType }

@@ -1,9 +1,20 @@
+
 import * as React from "react"
 import { cn } from "@/lib/utils"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { TooltipProvider } from "@/components/ui/tooltip"
-import { SidebarContext, useSidebar, SIDEBAR_COOKIE_NAME, SIDEBAR_COOKIE_MAX_AGE, SIDEBAR_KEYBOARD_SHORTCUT } from "./SidebarContext"
+import { SidebarContext, useSidebar as useSidebarContext, SIDEBAR_COOKIE_NAME, SIDEBAR_COOKIE_MAX_AGE, SIDEBAR_KEYBOARD_SHORTCUT } from "./SidebarContext"
 import { SIDEBAR_WIDTH, SIDEBAR_WIDTH_ICON } from "./SidebarConstants"
+
+type SidebarContextType = {
+  state: "expanded" | "collapsed"
+  open: boolean
+  setOpen: (open: boolean) => void
+  openMobile: boolean
+  setOpenMobile: (open: boolean) => void
+  isMobile: boolean
+  toggleSidebar: () => void
+}
 
 export const SidebarProvider = React.forwardRef<
   HTMLDivElement,
@@ -74,7 +85,7 @@ export const SidebarProvider = React.forwardRef<
     // This makes it easier to style the sidebar with Tailwind classes.
     const state = open ? "expanded" : "collapsed"
 
-    const contextValue = React.useMemo<SidebarContext>(
+    const contextValue = React.useMemo<SidebarContextType>(
       () => ({
         state,
         open,
@@ -114,4 +125,4 @@ export const SidebarProvider = React.forwardRef<
 )
 SidebarProvider.displayName = "SidebarProvider"
 
-export { useSidebar }
+export { useSidebarContext as useSidebar }
