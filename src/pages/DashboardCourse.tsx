@@ -2,11 +2,10 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import { useCourseData } from '@/hooks/useCourseData';
+import { useCourseDataOptimized } from '@/hooks/useCourseDataOptimized';
 import { useUserProgress } from '@/hooks/useUserProgress';
 import { useConsolidatedLessons } from '@/hooks/useConsolidatedLessons';
 import { useCourseRealtimeSync } from '@/hooks/course/useCourseRealtimeSync';
-import { useCourseAccess } from '@/hooks/course/useCourseAccess';
 import CoursePageHeader from '@/components/course/CoursePageHeader';
 import CourseMainContent from '@/components/course/CourseMainContent';
 import AudioPlayer from '@/components/AudioPlayer';
@@ -14,14 +13,21 @@ import CheckoutModal from '@/components/course/CheckoutModal';
 
 const DashboardCourse = () => {
   const { courseId } = useParams<{ courseId: string }>();
-  const { podcast, setPodcast, isLoading: courseLoading } = useCourseData(courseId);
+  
+  // Hook optimizado que maneja todo: curso + acceso + compras
+  const { 
+    podcast, 
+    setPodcast, 
+    isLoading, 
+    isPremium, 
+    hasAccess, 
+    refetchPurchases 
+  } = useCourseDataOptimized(courseId);
+  
   const { userProgress, toggleSaveCourse, startCourse, refetch } = useUserProgress();
   const [showCheckout, setShowCheckout] = useState(false);
   
-  // Course access and premium status
-  const { isPremium, hasAccess, isLoading: accessLoading, refetchPurchases } = useCourseAccess(podcast);
-  
-  // Use consolidated lessons hook
+  // Use consolidated lessons hook - pero solo después de tener el curso
   const { 
     currentLesson, 
     isPlaying, 
@@ -33,7 +39,7 @@ const DashboardCourse = () => {
     initializePodcastWithProgress
   } = useConsolidatedLessons(podcast, setPodcast);
   
-  // Set up realtime sync
+  // Set up realtime sync - solo si tenemos curso
   useCourseRealtimeSync({
     podcast,
     initializePodcastWithProgress,
@@ -47,24 +53,19 @@ const DashboardCourse = () => {
   const isCompleted = courseProgress?.is_completed || false;
   const isReviewMode = isCompleted && progressPercentage === 100;
 
-  // CRITICAL DEBUG: Log access state
-  console.log('🎭 DASHBOARD COURSE ACCESS STATE:', {
+  console.log('🎭 [DashboardCourse] RENDER STATE:', {
     courseId,
-    courseLoading,
-    accessLoading,
+    isLoading,
     isPremium,
     hasAccess,
     podcast: !!podcast,
     courseTitle: podcast?.title
   });
 
-  // Loading state: show loading while course or access is loading
-  const isLoading = courseLoading || accessLoading;
-
   const handleStartLearning = async () => {
     if (podcast) {
       if (isPremium && !hasAccess) {
-        console.log('🔒 Premium course without access - showing checkout');
+        console.log('🔒 [DashboardCourse] Premium course without access - showing checkout');
         setShowCheckout(true);
         return;
       }
@@ -77,7 +78,7 @@ const DashboardCourse = () => {
       if (learningPathElement) {
         learningPathElement.scrollIntoView({ behavior: 'smooth' });
       }
-      console.log('Started learning course:', podcast.title);
+      console.log('✅ [DashboardCourse] Started learning course:', podcast.title);
     }
   };
 
@@ -88,34 +89,33 @@ const DashboardCourse = () => {
   };
 
   const handlePurchaseComplete = () => {
-    console.log('🎉 Purchase completed, refetching purchases...');
+    console.log('🎉 [DashboardCourse] Purchase completed, refetching purchases...');
     refetchPurchases();
   };
 
   const handleLessonSelect = (lesson: any) => {
     // Check if user has access to this lesson
     if (isPremium && !hasAccess) {
-      console.log('🔒 Lesson access denied - showing checkout');
+      console.log('🔒 [DashboardCourse] Lesson access denied - showing checkout');
       setShowCheckout(true);
       return;
     }
     
-    // Use manual selection flag to prevent auto-play interference
     handleSelectLesson(lesson, true);
   };
 
+  // Loading state
   if (isLoading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center py-20">
-          <div className="text-lg text-gray-600">
-            {courseLoading ? 'Cargando curso...' : 'Verificando acceso...'}
-          </div>
+          <div className="text-lg text-gray-600">Cargando curso...</div>
         </div>
       </DashboardLayout>
     );
   }
 
+  // Not found state
   if (!podcast) {
     return (
       <DashboardLayout>
