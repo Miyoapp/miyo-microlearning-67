@@ -14,7 +14,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
@@ -25,6 +25,14 @@ const LoginPage = () => {
   useEffect(() => {
     setIsSignUp(searchParams.get('mode') === 'signup');
   }, [searchParams]);
+
+  // Redireccionar si ya está autenticado
+  useEffect(() => {
+    if (user) {
+      console.log('LoginPage: User already authenticated, redirecting to dashboard');
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,7 +51,7 @@ const LoginPage = () => {
           navigate('/registration-confirmation');
         } else {
           toast.success('¡Bienvenido de vuelta!');
-          navigate('/dashboard');
+          // No redirigir manualmente - AuthProvider se encarga
         }
       }
     } catch (error) {

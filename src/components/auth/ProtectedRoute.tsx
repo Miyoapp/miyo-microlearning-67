@@ -1,7 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { useAuth } from './AuthProvider';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -10,17 +10,21 @@ interface ProtectedRouteProps {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { user, loading, session } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
-    // Si no está cargando y no hay usuario autenticado, redirigir
+    // Solo redirigir si definitivamente no hay autenticación y no está cargando
     if (!loading && !user && !session) {
       console.log('ProtectedRoute: No authenticated user, redirecting to home...');
       navigate('/', { replace: true });
     }
   }, [loading, user, session, navigate]);
 
-  // Mostrar loading mientras se verifica la autenticación
+  // Si hay sesión válida, renderizar inmediatamente
+  if (session && user) {
+    return <>{children}</>;
+  }
+
+  // Mostrar loading mínimo solo si realmente está cargando
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -33,12 +37,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   // Si no hay usuario autenticado, no renderizar nada (la redirección ya se activó)
-  if (!user || !session) {
-    return null;
-  }
-
-  // Si hay usuario autenticado, renderizar el contenido protegido
-  return <>{children}</>;
+  return null;
 };
 
 export default ProtectedRoute;

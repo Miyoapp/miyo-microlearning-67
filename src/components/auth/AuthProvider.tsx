@@ -1,7 +1,9 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType {
   user: User | null;
@@ -36,6 +38,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setSession(null);
     setUser(null);
     setIsEmailVerified(false);
+    setLoading(false);
     // Limpiar localStorage manualmente como fallback
     localStorage.removeItem('sb-ubsextjrmofwzvhvatcl-auth-token');
     localStorage.removeItem('supabase.auth.token');
@@ -48,8 +51,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
-  // Función para verificar el estado de verificación del email
-  const checkEmailVerification = async (userId: string) => {
+  // Función para verificar el estado de verificación del email de forma asíncrona
+  const checkEmailVerificationAsync = async (userId: string) => {
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -62,9 +65,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return false;
       }
       
-      return data?.email_verified || false;
+      const verified = data?.email_verified || false;
+      setIsEmailVerified(verified);
+      return verified;
     } catch (error) {
       console.error('Error checking email verification:', error);
+      setIsEmailVerified(false);
       return false;
     }
   };
@@ -96,8 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (event === 'SIGNED_OUT' || !session) {
           clearAuthState();
-          setLoading(false);
-          // Redirección automática al logout
+          // Redirección automática al logout solo si estaba en dashboard
           if (event === 'SIGNED_OUT' && window.location.pathname.startsWith('/dashboard')) {
             console.log('Redirecting to home after signout...');
             window.location.href = '/';
@@ -107,14 +112,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           if (isValidSession(session)) {
+            // Actualizar estado síncronamente primero
             setSession(session);
             setUser(session.user);
+            setLoading(false);
             
-            // Verificar estado de verificación de email
-            const verified = await checkEmailVerification(session.user.id);
-            setIsEmailVerified(verified);
+            // Verificar email de forma asíncrona sin bloquear
+            setTimeout(() => {
+              checkEmailVerificationAsync(session.user.id);
+            }, 0);
+
+            // Redirección automática solo en SIGNED_IN y no en páginas de auth
+            if (event === 'SIGNED_IN') {
+              const currentPath = window.location.pathname;
+              if (currentPath === '/login' || currentPath === '/' || currentPath === '/registration-confirmation') {
+                console.log('Auto-redirecting to dashboard after successful login');
+                window.location.href = '/dashboard';
+              }
+            }
           }
-          setLoading(false);
           return;
         }
         
@@ -122,12 +138,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (isValidSession(session)) {
           setSession(session);
           setUser(session.user);
+          setLoading(false);
           
-          // Verificar estado de verificación de email
-          const verified = await checkEmailVerification(session.user.id);
-          setIsEmailVerified(verified);
+          // Verificar estado de verificación de email de forma asíncrona
+          setTimeout(() => {
+            checkEmailVerificationAsync(session.user.id);
+          }, 0);
         }
-        setLoading(false);
       }
     );
 
@@ -136,21 +153,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) {
         console.error('Error getting session:', error);
         clearAuthState();
-        setLoading(false);
         return;
       }
       
       if (isValidSession(session)) {
         setSession(session);
         setUser(session.user);
+        setLoading(false);
         
-        // Verificar estado de verificación de email
-        const verified = await checkEmailVerification(session.user.id);
-        setIsEmailVerified(verified);
+        // Verificar estado de verificación de email de forma asíncrona
+        setTimeout(() => {
+          checkEmailVerificationAsync(session.user.id);
+        }, 0);
       } else {
         clearAuthState();
       }
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -176,6 +193,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error };
       }
 
+      // No hacer redirección manual aquí - AuthProvider se encarga
       return { error: null };
     } catch (error) {
       console.error('Unexpected error during sign in:', error);
