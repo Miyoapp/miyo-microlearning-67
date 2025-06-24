@@ -12,12 +12,13 @@ import CourseMainContent from '@/components/course/CourseMainContent';
 import AudioPlayer from '@/components/AudioPlayer';
 import CheckoutModal from '@/components/course/CheckoutModal';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { RefreshCw, AlertCircle } from 'lucide-react';
 
 const DashboardCourse = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const { podcast, setPodcast, isLoading: courseLoading, error: courseError, retry: retryCourse } = useCourseData(courseId);
-  const { userProgress, toggleSaveCourse, startCourse, refetch } = useUserProgress();
+  const { userProgress, loading: progressLoading, refetch } = useUserProgress();
   const [showCheckout, setShowCheckout] = useState(false);
   
   // Course access and premium status
@@ -42,7 +43,8 @@ const DashboardCourse = () => {
     refetch
   });
   
-  const courseProgress = userProgress.find(p => p.course_id === courseId);
+  // CRITICAL FIX: Handle empty arrays properly - don't treat them as loading states
+  const courseProgress = userProgress.find(p => p.course_id === courseId) || null;
   const isSaved = courseProgress?.is_saved || false;
   const hasStarted = (courseProgress?.progress_percentage || 0) > 0;
   const progressPercentage = courseProgress?.progress_percentage || 0;
@@ -53,18 +55,24 @@ const DashboardCourse = () => {
   console.log('🎭 DASHBOARD COURSE ACCESS STATE:', {
     courseId,
     courseLoading,
+    progressLoading,
     accessLoading,
     isPremium,
     hasAccess,
     podcast: !!podcast,
     courseTitle: podcast?.title,
     courseError,
-    accessError
+    accessError,
+    userProgressLength: userProgress.length,
+    courseProgress: !!courseProgress
   });
 
   // Handle any errors that occurred
   const hasError = courseError || accessError;
-  const isLoading = courseLoading || accessLoading;
+  
+  // CRITICAL FIX: Only show loading when actually loading, not when data is empty
+  const isDataLoading = courseLoading || accessLoading;
+  const isProgressStillLoading = progressLoading && !userProgress; // Only loading if we don't have ANY progress data yet
 
   const handleStartLearning = async () => {
     if (podcast) {
@@ -117,15 +125,59 @@ const DashboardCourse = () => {
     }
   };
 
-  // Loading state: show loading while course or access is loading
-  if (isLoading) {
+  // CRITICAL FIX: Show skeleton loading only when data is actually loading
+  if (isDataLoading || isProgressStillLoading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center py-20">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5E17EA] mx-auto mb-4"></div>
-            <div className="text-lg text-gray-600">
-              {courseLoading ? 'Cargando curso...' : 'Verificando acceso...'}
+        <div className="max-w-7xl mx-auto pb-20 sm:pb-24">
+          <div className="p-4 sm:p-0">
+            <div className="space-y-6">
+              {/* Header skeleton */}
+              <div className="space-y-4">
+                <Skeleton className="h-8 w-64" />
+                <Skeleton className="h-4 w-96" />
+              </div>
+              
+              {/* Course info skeleton */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2 space-y-6">
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <Skeleton className="h-48 w-full sm:w-48 rounded-lg" />
+                    <div className="flex-1 space-y-4">
+                      <Skeleton className="h-6 w-3/4" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-5/6" />
+                      <div className="flex gap-2">
+                        <Skeleton className="h-10 w-32" />
+                        <Skeleton className="h-10 w-32" />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Learning path skeleton */}
+                  <div className="space-y-4">
+                    <Skeleton className="h-6 w-48" />
+                    <div className="space-y-2">
+                      {[1, 2, 3].map((i) => (
+                        <Skeleton key={i} className="h-16 w-full" />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <Skeleton className="h-32 w-full" />
+                  <Skeleton className="h-24 w-full" />
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="text-center mt-8">
+            <div className="text-sm text-gray-500">
+              {courseLoading ? 'Cargando curso...' : 
+               accessLoading ? 'Verificando acceso...' : 
+               'Cargando progreso...'}
             </div>
           </div>
         </div>
@@ -178,6 +230,16 @@ const DashboardCourse = () => {
       </DashboardLayout>
     );
   }
+
+  // CRITICAL FIX: Always render the course content even if userProgress is empty
+  // Empty userProgress array is normal for new users and should not prevent rendering
+  console.log('✅ Rendering course content:', {
+    courseTitle: podcast.title,
+    hasUserProgress: userProgress.length > 0,
+    courseProgress: !!courseProgress,
+    isPremium,
+    hasAccess
+  });
 
   return (
     <>

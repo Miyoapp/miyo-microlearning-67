@@ -18,26 +18,36 @@ export function useUserProgress() {
 
   const fetchUserProgress = useCallback(async () => {
     if (!user) {
+      console.log('📊 No user found, setting empty progress array');
+      setUserProgress([]); // CRITICAL FIX: Set empty array instead of keeping loading
       setLoading(false);
       return;
     }
 
     try {
+      console.log('📊 Fetching user progress for user:', user.id);
       const { data, error } = await supabase
         .from('user_course_progress')
         .select('*')
         .eq('user_id', user.id);
 
       if (error) {
-        console.error('Error fetching user progress:', error);
+        console.error('❌ Error fetching user progress:', error);
         throw error;
       }
       
-      console.log('Fetched user progress from DB:', data);
-      setUserProgress(data || []);
+      // CRITICAL FIX: Always set the progress array, even if empty
+      const progressData = data || [];
+      console.log('📊 Fetched user progress from DB:', {
+        totalRecords: progressData.length,
+        courses: progressData.map(p => ({ courseId: p.course_id, progress: p.progress_percentage }))
+      });
+      setUserProgress(progressData);
     } catch (error) {
-      console.error('Error fetching user progress:', error);
+      console.error('❌ Error fetching user progress:', error);
       toast.error('Error al cargar el progreso');
+      // CRITICAL FIX: Set empty array on error to prevent blank screen
+      setUserProgress([]);
     } finally {
       setLoading(false);
     }
@@ -129,7 +139,7 @@ export function useUserProgress() {
     const currentProgress = userProgress.find(p => p.course_id === courseId);
     const newSavedState = !currentProgress?.is_saved;
     
-    console.log('Toggling save for course:', courseId, 'from', currentProgress?.is_saved, 'to', newSavedState);
+    console.log('💾 Toggling save for course:', courseId, 'from', currentProgress?.is_saved, 'to', newSavedState);
     
     // Update local state immediately for better UX
     setUserProgress(prev => {
@@ -140,7 +150,7 @@ export function useUserProgress() {
             ? { ...p, is_saved: newSavedState }
             : p
         );
-        console.log('Updated local state for save toggle:', updated);
+        console.log('💾 Updated local state for save toggle:', updated);
         return updated;
       } else {
         const newEntry = {
@@ -150,7 +160,7 @@ export function useUserProgress() {
           is_saved: newSavedState,
           last_listened_at: new Date().toISOString()
         };
-        console.log('Created new entry for save toggle:', newEntry);
+        console.log('💾 Created new entry for save toggle:', newEntry);
         return [...prev, newEntry];
       }
     });
@@ -160,7 +170,7 @@ export function useUserProgress() {
   };
 
   const startCourse = async (courseId: string) => {
-    console.log('Starting course:', courseId);
+    console.log('🚀 Starting course:', courseId);
     // When a user starts a course, update their progress to show it in "Continue Learning"
     await updateCourseProgress(courseId, { 
       progress_percentage: 1, // Small progress to show it started
