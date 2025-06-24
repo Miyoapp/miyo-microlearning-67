@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { useLocation, useNavigationType } from 'react-router-dom';
 import { Podcast } from '@/types';
 import { obtenerCursoPorId } from '@/lib/api';
 import { useToast } from "@/components/ui/use-toast";
@@ -7,57 +8,161 @@ import { useToast } from "@/components/ui/use-toast";
 export function useCourseData(courseId: string | undefined) {
   const [podcast, setPodcast] = useState<Podcast | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   const { toast } = useToast();
+  const location = useLocation();
+  const navigationType = useNavigationType();
   
-  useEffect(() => {
-    const cargarCurso = async () => {
-      if (!courseId) {
-        console.log('❌ No courseId provided');
-        setIsLoading(false);
-        return;
-      }
+  // Debug function for comprehensive logging
+  const logDebugInfo = (action: string, details?: any) => {
+    console.log(`🔄 [useCourseData] ${action}:`, {
+      courseId,
+      pathname: location.pathname,
+      navigationType,
+      retryCount,
+      timestamp: new Date().toISOString(),
+      ...details
+    });
+  };
+
+  const cargarCurso = async (retryAttempt = 0) => {
+    if (!courseId) {
+      logDebugInfo('No courseId provided, skipping fetch');
+      setIsLoading(false);
+      setError(null);
+      return;
+    }
+    
+    try {
+      logDebugInfo('Starting course fetch', { retryAttempt });
+      setIsLoading(true);
+      setError(null);
       
-      try {
-        console.log('🔄 Loading course with ID:', courseId);
-        setIsLoading(true);
-        
-        const podcastData = await obtenerCursoPorId(courseId);
-        console.log('📚 Course data received:', podcastData ? 'Success' : 'No data');
-        
-        if (podcastData) {
-          // Generate modules if they don't exist
-          if (!podcastData.modules || podcastData.modules.length === 0) {
-            console.log('🔧 Generating default modules');
-            const defaultModules = createDefaultModules(podcastData);
-            podcastData.modules = defaultModules;
-          }
-          
-          // Asegurar que todas las lecciones tengan el estado correcto
-          const updatedLessons = initializeLessonsState(podcastData);
-          podcastData.lessons = updatedLessons;
-          
-          console.log('✅ Course loaded successfully:', podcastData.title);
-          setPodcast(podcastData);
-        } else {
-          console.log('❌ No course data found for ID:', courseId);
+      const podcastData = await obtenerCursoPorId(courseId);
+      logDebugInfo('Course fetch completed', { 
+        success: !!podcastData,
+        courseTitle: podcastData?.title 
+      });
+      
+      if (podcastData) {
+        // Generate modules if they don't exist
+        if (!podcastData.modules || podcastData.modules.length === 0) {
+          logDebugInfo('Generating default modules');
+          const defaultModules = createDefaultModules(podcastData);
+          podcastData.modules = defaultModules;
         }
         
-        setIsLoading(false);
-      } catch (error) {
-        console.error("❌ Error loading course:", error);
+        // Asegurar que todas las lecciones tengan el estado correcto
+        const updatedLessons = initializeLessonsState(podcastData);
+        podcastData.lessons = updatedLessons;
+        
+        logDebugInfo('Course loaded successfully', { courseTitle: podcastData.title });
+        setPodcast(podcastData);
+        setRetryCount(0);
+      } else {
+        const errorMsg = `No course data found for ID: ${courseId}`;
+        logDebugInfo('Course not found', { courseId });
+        setError(errorMsg);
+      }
+      
+      setIsLoading(false);
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error occurred';
+      logDebugInfo('Course fetch failed', { error: errorMsg, retryAttempt });
+      console.error("❌ Error loading course:", error);
+      
+      setError(errorMsg);
+      setIsLoading(false);
+      
+      if (retryAttempt === 0) {
         toast({
           title: "Error al cargar curso",
-          description: "No se pudo cargar el curso solicitado. Por favor, intenta de nuevo.",
+          description: "No se pudo cargar el curso. Puedes intentar de nuevo.",
           variant: "destructive"
         });
-        setIsLoading(false);
       }
-    };
+    }
+  };
+
+  const retry = () => {
+    const newRetryCount = retryCount + 1;
+    logDebugInfo('Manual retry triggered', { retryCount: newRetryCount });
+    setRetryCount(newRetryCount);
+    cargarCurso(newRetryCount);
+  };
+
+  useEffect(() => {
+    logDebugInfo('Effect triggered', {
+      trigger: 'courseId/location/navigationType change',
+      locationKey: location.key,
+      state: location.state
+    });
     
     cargarCurso();
-  }, [courseId, toast]);
+  }, [courseId, location.pathname, location.key, navigationType]);
 
-  return { podcast, setPodcast, isLoading };
+  // Add window focus listener for tab switching detection
+  useEffect(() => {
+    const handleFocus = () => {
+      logDebugInfo('Window focus detected - checking if refetch needed', {
+        hasPodcast: !!podcast,
+        hasError: !!error,
+        currentCourseId: courseId
+      });
+      
+      // Refetch if we have an error or no data
+      if ((error || !podcast) && courseId) {
+        logDebugInfo('Refetching due to window focus');
+        cargarCurso();
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        logDebugInfo('Page became visible - checking if refetch needed');
+        handleFocus();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [courseId, podcast, error]);
+
+  // Add popstate listener for back/forward navigation
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      logDebugInfo('PopState event detected', {
+        state: event.state,
+        currentPath: location.pathname
+      });
+      
+      // Small delay to ensure location is updated
+      setTimeout(() => {
+        if (location.pathname.includes('/dashboard/course/') && courseId) {
+          logDebugInfo('Refetching due to popstate navigation');
+          cargarCurso();
+        }
+      }, 50);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [courseId, location.pathname]);
+
+  return { 
+    podcast, 
+    setPodcast, 
+    isLoading, 
+    error,
+    retry,
+    retryCount
+  };
 }
 
 // Helper functions

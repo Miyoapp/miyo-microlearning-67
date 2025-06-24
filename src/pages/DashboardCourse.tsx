@@ -11,15 +11,17 @@ import CoursePageHeader from '@/components/course/CoursePageHeader';
 import CourseMainContent from '@/components/course/CourseMainContent';
 import AudioPlayer from '@/components/AudioPlayer';
 import CheckoutModal from '@/components/course/CheckoutModal';
+import { Button } from '@/components/ui/button';
+import { RefreshCw, AlertCircle } from 'lucide-react';
 
 const DashboardCourse = () => {
   const { courseId } = useParams<{ courseId: string }>();
-  const { podcast, setPodcast, isLoading: courseLoading } = useCourseData(courseId);
+  const { podcast, setPodcast, isLoading: courseLoading, error: courseError, retry: retryCourse } = useCourseData(courseId);
   const { userProgress, toggleSaveCourse, startCourse, refetch } = useUserProgress();
   const [showCheckout, setShowCheckout] = useState(false);
   
   // Course access and premium status
-  const { isPremium, hasAccess, isLoading: accessLoading, refetchPurchases } = useCourseAccess(podcast);
+  const { isPremium, hasAccess, isLoading: accessLoading, error: accessError, refetchPurchases } = useCourseAccess(podcast);
   
   // Use consolidated lessons hook
   const { 
@@ -55,10 +57,13 @@ const DashboardCourse = () => {
     isPremium,
     hasAccess,
     podcast: !!podcast,
-    courseTitle: podcast?.title
+    courseTitle: podcast?.title,
+    courseError,
+    accessError
   });
 
-  // Loading state: show loading while course or access is loading
+  // Handle any errors that occurred
+  const hasError = courseError || accessError;
   const isLoading = courseLoading || accessLoading;
 
   const handleStartLearning = async () => {
@@ -104,27 +109,71 @@ const DashboardCourse = () => {
     handleSelectLesson(lesson, true);
   };
 
+  const handleRetry = () => {
+    console.log('🔄 Manual retry triggered from UI');
+    retryCourse();
+    if (accessError) {
+      refetchPurchases();
+    }
+  };
+
+  // Loading state: show loading while course or access is loading
   if (isLoading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center py-20">
-          <div className="text-lg text-gray-600">
-            {courseLoading ? 'Cargando curso...' : 'Verificando acceso...'}
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5E17EA] mx-auto mb-4"></div>
+            <div className="text-lg text-gray-600">
+              {courseLoading ? 'Cargando curso...' : 'Verificando acceso...'}
+            </div>
           </div>
         </div>
       </DashboardLayout>
     );
   }
 
+  // Error state: show error with retry option
+  if (hasError) {
+    return (
+      <DashboardLayout>
+        <div className="text-center py-20 px-4">
+          <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
+            Error al cargar el curso
+          </h2>
+          <p className="text-sm sm:text-base text-gray-600 mb-6">
+            {courseError || accessError || 'Ha ocurrido un error inesperado.'}
+          </p>
+          <Button onClick={handleRetry} className="mr-4">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Intentar de nuevo
+          </Button>
+          <Button variant="outline" onClick={() => window.history.back()}>
+            Volver
+          </Button>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Course not found state
   if (!podcast) {
     return (
       <DashboardLayout>
         <div className="text-center py-20 px-4">
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">Curso no encontrado</h2>
-          <p className="text-sm sm:text-base text-gray-600">
+          <p className="text-sm sm:text-base text-gray-600 mb-6">
             El curso que buscas no existe o no está disponible.
           </p>
-          <p className="text-xs text-gray-500 mt-2">ID del curso: {courseId}</p>
+          <p className="text-xs text-gray-500 mb-6">ID del curso: {courseId}</p>
+          <Button onClick={handleRetry} className="mr-4">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Buscar de nuevo
+          </Button>
+          <Button variant="outline" onClick={() => window.history.back()}>
+            Volver
+          </Button>
         </div>
       </DashboardLayout>
     );

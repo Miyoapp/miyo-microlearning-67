@@ -57,7 +57,7 @@ export const obtenerCursos = async (): Promise<Podcast[]> => {
 // Función para obtener un curso por ID (independiente del estado show para permitir acceso directo)
 export const obtenerCursoPorId = async (id: string): Promise<Podcast | null> => {
   try {
-    console.log(`🔄 Fetching course with ID: ${id}`);
+    console.log(`🔄 [courseAPI] Fetching course with ID: ${id}`);
     const { data, error } = await supabase
       .from('cursos')
       .select('*')
@@ -67,32 +67,32 @@ export const obtenerCursoPorId = async (id: string): Promise<Podcast | null> => 
     if (error) {
       if (error.code === 'PGRST116') {
         // No se encontró el curso, intentar buscar en los datos de muestra
-        console.warn(`⚠️ Course not found in database, searching in sample data for ID: ${id}`);
+        console.warn(`⚠️ [courseAPI] Course not found in database, searching in sample data for ID: ${id}`);
         const podcastMuestra = podcasts.find(p => p.id === id);
         if (podcastMuestra) {
-          console.log(`✅ Found course in sample data: ${podcastMuestra.title}`);
+          console.log(`✅ [courseAPI] Found course in sample data: ${podcastMuestra.title}`);
           return podcastMuestra;
         }
-        console.log(`❌ Course not found in sample data either: ${id}`);
-        return null;
+        console.log(`❌ [courseAPI] Course not found in sample data either: ${id}`);
+        throw new Error(`Curso no encontrado: ${id}`);
       }
-      console.error("❌ Error fetching course:", error);
-      throw error;
+      console.error("❌ [courseAPI] Database error fetching course:", error);
+      throw new Error(`Error de base de datos: ${error.message}`);
     }
     
     if (!data) {
       // No se encontró el curso, intentar buscar en los datos de muestra
-      console.warn(`⚠️ Course not found in database, searching in sample data for ID: ${id}`);
+      console.warn(`⚠️ [courseAPI] Course not found in database, searching in sample data for ID: ${id}`);
       const podcastMuestra = podcasts.find(p => p.id === id);
       if (podcastMuestra) {
-        console.log(`✅ Found course in sample data: ${podcastMuestra.title}`);
+        console.log(`✅ [courseAPI] Found course in sample data: ${podcastMuestra.title}`);
         return podcastMuestra;
       }
-      console.log(`❌ Course not found in sample data either: ${id}`);
-      return null;
+      console.log(`❌ [courseAPI] Course not found anywhere: ${id}`);
+      throw new Error(`Curso no encontrado: ${id}`);
     }
     
-    console.log(`✅ Course found in database: ${data.titulo}`);
+    console.log(`✅ [courseAPI] Course found in database: ${data.titulo}`);
     
     // Cast the data to SupabaseCurso to handle type compatibility
     const supabaseCurso: SupabaseCurso = {
@@ -114,17 +114,19 @@ export const obtenerCursoPorId = async (id: string): Promise<Podcast | null> => 
     };
     
     const transformedCourse = await transformarCursoAModelo(supabaseCurso);
-    console.log(`✅ Course transformed successfully: ${transformedCourse.title}`);
+    console.log(`✅ [courseAPI] Course transformed successfully: ${transformedCourse.title}`);
     return transformedCourse;
   } catch (error) {
-    console.error(`❌ Error fetching course, searching in sample data for ID: ${id}:`, error);
-    // Intentar buscar en los datos de muestra
+    console.error(`❌ [courseAPI] Error fetching course ${id}:`, error);
+    
+    // Final fallback: try sample data
     const podcastMuestra = podcasts.find(p => p.id === id);
     if (podcastMuestra) {
-      console.log(`✅ Found course in sample data as fallback: ${podcastMuestra.title}`);
+      console.log(`✅ [courseAPI] Found course in sample data as final fallback: ${podcastMuestra.title}`);
       return podcastMuestra;
     }
-    console.log(`❌ Course not found anywhere: ${id}`);
-    return null;
+    
+    // If we get here, the course truly doesn't exist
+    throw error instanceof Error ? error : new Error(`Error desconocido al cargar curso: ${id}`);
   }
 };
