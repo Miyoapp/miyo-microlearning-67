@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
@@ -13,10 +12,10 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [allCourses, setAllCourses] = useState<Podcast[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const [userName, setUserName] = useState<string>('');
   const [isFirstTimeUser, setIsFirstTimeUser] = useState<boolean>(false);
-  const { userProgress, toggleSaveCourse, startCourse, refetch } = useUserProgress();
+  const { userProgress, toggleSaveCourse, refetch } = useUserProgress();
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -105,10 +104,8 @@ const Dashboard = () => {
       };
     });
 
-  const handlePlayCourse = async (courseId: string) => {
-    console.log('Dashboard: Starting course:', courseId);
-    await startCourse(courseId);
-    await refetch();
+  const handlePlayCourse = (courseId: string) => {
+    console.log('Dashboard: Navigating to course without modifying progress:', courseId);
     navigate(`/dashboard/course/${courseId}`);
   };
 
