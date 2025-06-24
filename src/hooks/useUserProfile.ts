@@ -45,8 +45,7 @@ export function useUserProfile() {
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .single()
-        .abortSignal(abortControllerRef.current.signal);
+        .single();
       
       if (error) {
         console.error('Error loading user profile:', error);
