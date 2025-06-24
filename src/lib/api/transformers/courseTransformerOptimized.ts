@@ -21,7 +21,7 @@ export const transformarCursoOptimizado = async (cursoId: string): Promise<Podca
       return cached.data;
     }
 
-    // Query única con todos los JOINs necesarios
+    // Query única con todos los JOINs necesarios - usar el nombre correcto de la foreign key
     const { data: cursoCompleto, error } = await supabase
       .from('cursos')
       .select(`
@@ -30,7 +30,7 @@ export const transformarCursoOptimizado = async (cursoId: string): Promise<Podca
           id,
           nombre
         ),
-        creadores!cursos_creador_id_fkey (
+        creadores!fk_curso_creador (
           id,
           nombre,
           imagen_url,
