@@ -13,16 +13,14 @@ const Header = () => {
   const handleLogout = async () => {
     try {
       console.log('Header: Starting logout process...');
+      toast.success('Cerrando sesión...');
       await signOut();
-      console.log('Header: Logout successful, navigating to home...');
-      toast.success('Sesión cerrada correctamente');
-      navigate('/');
+      // El AuthProvider se encarga de la redirección
     } catch (error) {
       console.error('Header: Error during logout:', error);
-      toast.error('Error al cerrar sesión');
+      toast.error('Error al cerrar sesión, forzando logout...');
       // En caso de error, usar forceLogout como fallback
       forceLogout();
-      navigate('/');
     }
   };
 

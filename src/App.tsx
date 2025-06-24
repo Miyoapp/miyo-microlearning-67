@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 
 import { AuthProvider } from './components/auth/AuthProvider';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 import Header from './components/Header';
 import Home from './pages/Home';
 import LoginPage from './pages/LoginPage';
@@ -32,10 +33,26 @@ function App() {
             <Route path="/registration-confirmation" element={<RegistrationConfirmation />} />
             
             {/* Dashboard routes - Protected */}
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/dashboard/discover" element={<DashboardDiscover />} />
-            <Route path="/dashboard/my-routes" element={<DashboardMyRoutes />} />
-            <Route path="/dashboard/course/:courseId" element={<DashboardCourse />} />
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard/discover" element={
+              <ProtectedRoute>
+                <DashboardDiscover />
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard/my-routes" element={
+              <ProtectedRoute>
+                <DashboardMyRoutes />
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard/course/:courseId" element={
+              <ProtectedRoute>
+                <DashboardCourse />
+              </ProtectedRoute>
+            } />
 
             {/* Payment result pages */}
             <Route path="/payment/success" element={<PaymentSuccess />} />

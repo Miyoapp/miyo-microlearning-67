@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -40,6 +39,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Limpiar localStorage manualmente como fallback
     localStorage.removeItem('sb-ubsextjrmofwzvhvatcl-auth-token');
     localStorage.removeItem('supabase.auth.token');
+    // Limpiar cualquier dato del localStorage relacionado con el usuario
+    const keys = Object.keys(localStorage);
+    keys.forEach(key => {
+      if (key.includes('user') || key.includes('auth') || key.includes('session')) {
+        localStorage.removeItem(key);
+      }
+    });
   };
 
   // Función para verificar el estado de verificación del email
@@ -91,6 +97,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (event === 'SIGNED_OUT' || !session) {
           clearAuthState();
           setLoading(false);
+          // Redirección automática al logout
+          if (event === 'SIGNED_OUT' && window.location.pathname.startsWith('/dashboard')) {
+            console.log('Redirecting to home after signout...');
+            window.location.href = '/';
+          }
           return;
         }
         
@@ -250,23 +261,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('Starting signOut process...');
       
-      // Hacer el signOut en Supabase primero
+      // Limpiar el estado local primero para feedback inmediato
+      clearAuthState();
+      
+      // Hacer el signOut en Supabase
       const { error } = await supabase.auth.signOut();
       
       if (error) {
         console.error('Error during signOut:', error);
-        throw error;
+        // Aún así continuar con la redirección
       }
       
-      // Limpiar el estado local después del signOut exitoso
-      clearAuthState();
+      console.log('SignOut completed, redirecting to home...');
       
-      console.log('SignOut completed successfully');
+      // Redirección forzada al home
+      window.location.href = '/';
+      
     } catch (error) {
       console.error('Exception during signOut:', error);
-      // En caso de excepción, forzar la limpieza
+      // En caso de excepción, forzar la limpieza y redirección
       clearAuthState();
-      throw error;
+      window.location.href = '/';
     }
   };
 
@@ -276,6 +291,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     clearAuthState();
     // Intentar signOut sin esperar resultado
     supabase.auth.signOut().catch(console.error);
+    // Redirección inmediata
+    window.location.href = '/';
   };
 
   const value = {
