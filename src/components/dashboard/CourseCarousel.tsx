@@ -1,6 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { EmblaOptionsType } from 'embla-carousel';
+import useEmblaCarousel from 'embla-carousel-react';
 import { Button } from '@/components/ui/button';
 import CourseCardWithProgress from './CourseCardWithProgress';
 import { Podcast } from '@/types';
@@ -28,20 +30,44 @@ const CourseCarousel: React.FC<CourseCarouselProps> = ({
   onToggleSave,
   onCourseClick
 }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
   const isMobile = useIsMobile();
-  
-  // Mobile: 1 card, Tablet: 2 cards, Desktop: 3 cards
-  const itemsPerPage = isMobile ? 1 : 3;
-  const maxIndex = Math.max(0, courses.length - itemsPerPage);
-  
-  const nextSlide = () => {
-    setCurrentIndex(prev => Math.min(prev + 1, maxIndex));
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(false);
+
+  const options: EmblaOptionsType = {
+    align: 'start',
+    slidesToScroll: 1,
+    containScroll: 'trimSnaps',
+    dragFree: true,
   };
-  
-  const prevSlide = () => {
-    setCurrentIndex(prev => Math.max(prev - 1, 0));
-  };
+
+  const [emblaRef, emblaApi] = useEmblaCarousel(options);
+
+  const scrollPrev = useCallback(() => {
+    if (emblaApi) emblaApi.scrollPrev();
+  }, [emblaApi]);
+
+  const scrollNext = useCallback(() => {
+    if (emblaApi) emblaApi.scrollNext();
+  }, [emblaApi]);
+
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setCanScrollPrev(emblaApi.canScrollPrev());
+    setCanScrollNext(emblaApi.canScrollNext());
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    onSelect();
+    emblaApi.on('select', onSelect);
+    emblaApi.on('reInit', onSelect);
+
+    return () => {
+      emblaApi.off('select', onSelect);
+      emblaApi.off('reInit', onSelect);
+    };
+  }, [emblaApi, onSelect]);
 
   if (courses.length === 0) {
     return (
@@ -59,38 +85,18 @@ const CourseCarousel: React.FC<CourseCarouselProps> = ({
       <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 px-4 sm:px-0">{title}</h2>
       
       <div className="relative px-4 sm:px-0">
-        {/* Mobile: Single column layout */}
-        {isMobile ? (
-          <div className="space-y-4">
-            {courses.slice(currentIndex, currentIndex + 1).map((course) => (
-              <CourseCardWithProgress
-                key={course.podcast.id}
-                podcast={course.podcast}
-                progress={course.progress}
-                isPlaying={course.isPlaying}
-                isSaved={course.isSaved}
-                showProgress={showProgress}
-                onPlay={() => onPlayCourse?.(course.podcast.id)}
-                onToggleSave={() => onToggleSave?.(course.podcast.id)}
-                onClick={() => onCourseClick?.(course.podcast.id)}
-              />
-            ))}
-          </div>
-        ) : (
-          /* Desktop: Carousel layout */
-          <div className="overflow-hidden">
-            <div 
-              className="flex transition-transform duration-300 ease-in-out gap-6"
-              style={{
-                transform: `translateX(-${currentIndex * (100 / itemsPerPage)}%)`,
-                width: `${courses.length / itemsPerPage * 100}%`
-              }}
-            >
-              {courses.map((course, index) => (
+        {/* Mobile and Desktop: Embla carousel */}
+        <div className="relative">
+          <div className="overflow-hidden" ref={emblaRef}>
+            <div className="flex">
+              {courses.map((course) => (
                 <div 
                   key={course.podcast.id} 
-                  className="flex-shrink-0"
-                  style={{ width: `${100 / courses.length}%` }}
+                  className={`flex-none ${
+                    isMobile 
+                      ? 'w-[85vw] max-w-[320px] mr-4 first:ml-0 last:mr-0' 
+                      : 'w-full sm:w-1/2 lg:w-1/3 xl:w-1/4 pr-6'
+                  }`}
                 >
                   <CourseCardWithProgress
                     podcast={course.podcast}
@@ -106,43 +112,43 @@ const CourseCarousel: React.FC<CourseCarouselProps> = ({
               ))}
             </div>
           </div>
-        )}
 
-        {/* Navigation arrows - only show when needed */}
-        {courses.length > itemsPerPage && (
-          <>
-            <Button
-              variant="outline"
-              size="icon"
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 sm:-translate-x-4 bg-white shadow-lg z-10 h-8 w-8 sm:h-10 sm:w-10"
-              onClick={prevSlide}
-              disabled={currentIndex === 0}
-            >
-              <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
-            </Button>
+          {/* Navigation arrows - show when needed */}
+          {((isMobile && courses.length > 1) || (!isMobile && courses.length > 4)) && (
+            <>
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 sm:-translate-x-4 bg-white shadow-lg z-10 h-8 w-8 sm:h-10 sm:w-10"
+                onClick={scrollPrev}
+                disabled={!canScrollPrev}
+              >
+                <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
+              </Button>
 
-            <Button
-              variant="outline"
-              size="icon"
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 sm:translate-x-4 bg-white shadow-lg z-10 h-8 w-8 sm:h-10 sm:w-10"
-              onClick={nextSlide}
-              disabled={currentIndex >= maxIndex}
-            >
-              <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
-            </Button>
-          </>
-        )}
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 sm:translate-x-4 bg-white shadow-lg z-10 h-8 w-8 sm:h-10 sm:w-10"
+                onClick={scrollNext}
+                disabled={!canScrollNext}
+              >
+                <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
+              </Button>
+            </>
+          )}
+        </div>
 
         {/* Mobile pagination dots */}
         {isMobile && courses.length > 1 && (
           <div className="flex justify-center mt-4 space-x-2">
-            {courses.map((_, index) => (
+            {Array.from({ length: courses.length }, (_, index) => (
               <button
                 key={index}
                 className={`w-2 h-2 rounded-full transition-colors ${
-                  index === currentIndex ? 'bg-miyo-800' : 'bg-gray-300'
+                  index === 0 ? 'bg-miyo-800' : 'bg-gray-300'
                 }`}
-                onClick={() => setCurrentIndex(index)}
+                onClick={() => emblaApi?.scrollTo(index)}
               />
             ))}
           </div>
