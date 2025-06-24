@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useRealtimeProgress } from '@/hooks/useRealtimeProgress';
 import { Podcast } from '@/types';
 
@@ -14,7 +14,10 @@ export function useCourseRealtimeSync({
   initializePodcastWithProgress,
   refetch
 }: UseCourseRealtimeSyncProps) {
-  // Set up realtime progress updates
+  // Track if we've already initialized to prevent duplicate calls
+  const hasInitializedRef = useRef(false);
+
+  // Set up realtime progress updates - ONLY ONCE
   useRealtimeProgress({
     onLessonProgressUpdate: () => {
       console.log('🔄 Realtime lesson progress update detected, refreshing podcast progress');
@@ -28,11 +31,17 @@ export function useCourseRealtimeSync({
     }
   });
 
-  // Initialize podcast and current lesson when data is loaded
+  // Initialize podcast and current lesson when data is loaded - ONLY ONCE
   useEffect(() => {
-    if (podcast) {
-      console.log('Podcast loaded, initializing...');
+    if (podcast && !hasInitializedRef.current) {
+      console.log('🎯 Podcast loaded for first time, initializing...');
       initializePodcastWithProgress();
+      hasInitializedRef.current = true;
     }
   }, [podcast?.id, initializePodcastWithProgress]);
+
+  // Reset initialization flag when course changes
+  useEffect(() => {
+    hasInitializedRef.current = false;
+  }, [podcast?.id]);
 }

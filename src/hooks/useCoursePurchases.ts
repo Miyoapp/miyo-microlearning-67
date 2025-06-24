@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/auth/AuthProvider';
 
@@ -15,6 +15,10 @@ export function useCoursePurchases() {
   const [purchases, setPurchases] = useState<CoursePurchase[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  
+  // Ref to track active channel and prevent duplicate subscriptions
+  const channelRef = useRef<any>(null);
+  const isSubscribedRef = useRef(false);
 
   const fetchPurchases = async () => {
     if (!user) {
@@ -93,14 +97,27 @@ export function useCoursePurchases() {
     fetchPurchases();
   }, [user]);
 
-  // Set up real-time subscription to purchases
+  // Set up real-time subscription to purchases - WITH PROPER CLEANUP
   useEffect(() => {
-    if (!user) return;
+    if (!user || isSubscribedRef.current) {
+      console.log('🛒 Skipping realtime setup - no user or already subscribed');
+      return;
+    }
 
     console.log('🔄 Setting up real-time subscription for purchases');
     
-    const channel = supabase
-      .channel('purchases-changes')
+    // Clean up any existing channel first
+    if (channelRef.current) {
+      console.log('🧹 Cleaning up existing purchases channel');
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+
+    // Create unique channel name to avoid conflicts
+    const channelName = `purchases-${user.id}-${Date.now()}`;
+    
+    channelRef.current = supabase
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -114,13 +131,27 @@ export function useCoursePurchases() {
           fetchPurchases(); // Refetch purchases when there's a change
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('🛒 Purchases channel status:', status);
+      });
+
+    isSubscribedRef.current = true;
 
     return () => {
       console.log('🔌 Cleaning up purchases subscription');
-      supabase.removeChannel(channel);
+      isSubscribedRef.current = false;
+      
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
   }, [user]);
+
+  // Reset subscription state when user changes
+  useEffect(() => {
+    isSubscribedRef.current = false;
+  }, [user?.id]);
 
   return {
     purchases,
