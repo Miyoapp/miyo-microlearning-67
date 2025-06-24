@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -47,8 +48,8 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({ open, onOpenChange }) 
       if (error) {
         toast.error('Error al crear la cuenta: ' + error.message);
       } else {
-        toast.success('¡Cuenta creada correctamente! Por favor, verifica tu correo electrónico.');
-        setMode('login');
+        // Redirigir a la página de confirmación de email
+        navigate('/email-confirmation');
       }
     }
 
