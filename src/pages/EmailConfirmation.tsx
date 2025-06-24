@@ -39,16 +39,10 @@ const EmailConfirmation = () => {
             </div>
           </div>
           
-          <div className="pt-4 space-y-3">
+          <div className="pt-4">
             <Link to="/login">
               <Button className="w-full bg-miyo-800 hover:bg-miyo-900">
                 Ir al inicio de sesión
-              </Button>
-            </Link>
-            
-            <Link to="/">
-              <Button variant="outline" className="w-full">
-                Volver al inicio
               </Button>
             </Link>
           </div>
