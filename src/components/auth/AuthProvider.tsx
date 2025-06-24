@@ -64,6 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('Auth state changed:', event, session ? 'has session' : 'no session');
         
         if (event === 'SIGNED_OUT' || !session) {
+          console.log('User signed out, clearing state');
           clearAuthState();
           setLoading(false);
           return;
@@ -71,6 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           if (isValidSession(session)) {
+            console.log('Valid session found, setting user');
             setSession(session);
             setUser(session.user);
           }
@@ -135,19 +137,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('Starting signOut process...');
       
-      // Primero limpiar el estado local
-      clearAuthState();
-      
-      // Luego hacer el signOut en Supabase
+      // Hacer el signOut en Supabase primero
       const { error } = await supabase.auth.signOut();
       
       if (error) {
         console.error('Error during signOut:', error);
-        // Incluso si hay error, mantener el estado limpio
-        clearAuthState();
       }
       
-      console.log('SignOut completed');
+      // Limpiar el estado local inmediatamente después
+      clearAuthState();
+      
+      console.log('SignOut completed successfully');
     } catch (error) {
       console.error('Exception during signOut:', error);
       // En caso de excepción, forzar la limpieza

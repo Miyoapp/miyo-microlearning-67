@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { 
   Sidebar, 
@@ -15,10 +15,12 @@ import {
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/components/auth/AuthProvider';
 import Logo from '@/components/common/Logo';
+import { toast } from 'sonner';
 
 const DashboardSidebar = () => {
   const location = useLocation();
-  const { signOut } = useAuth();
+  const navigate = useNavigate();
+  const { signOut, forceLogout } = useAuth();
 
   const menuItems = [
     {
@@ -37,6 +39,22 @@ const DashboardSidebar = () => {
       icon: '📚'
     }
   ];
+
+  const handleLogout = async () => {
+    try {
+      console.log('Sidebar: Starting logout process...');
+      await signOut();
+      console.log('Sidebar: Logout successful, navigating to home...');
+      toast.success('Sesión cerrada exitosamente');
+      navigate('/', { replace: true });
+    } catch (error) {
+      console.error('Sidebar: Error during logout:', error);
+      // En caso de error, usar forceLogout como fallback
+      forceLogout();
+      toast.success('Sesión cerrada exitosamente');
+      navigate('/', { replace: true });
+    }
+  };
 
   return (
     <Sidebar className="border-r border-gray-200 bg-white">
@@ -73,7 +91,7 @@ const DashboardSidebar = () => {
       <SidebarFooter className="p-4 bg-white">
         <Button 
           variant="outline" 
-          onClick={signOut}
+          onClick={handleLogout}
           className="w-full justify-start text-red-600 border-red-200 hover:bg-red-50 bg-white"
         >
           🚪 Cerrar sesión
