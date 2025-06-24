@@ -2,31 +2,47 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import { useCourseDataOptimized } from '@/hooks/useCourseDataOptimized';
+import { useCourseDataSimplified } from '@/hooks/useCourseDataSimplified';
 import { useUserProgress } from '@/hooks/useUserProgress';
 import { useConsolidatedLessons } from '@/hooks/useConsolidatedLessons';
 import { useCourseRealtimeSync } from '@/hooks/course/useCourseRealtimeSync';
 import CoursePageHeader from '@/components/course/CoursePageHeader';
 import CourseMainContent from '@/components/course/CourseMainContent';
+import CourseErrorBoundary from '@/components/course/CourseErrorBoundary';
+import CourseLoadingDetailed from '@/components/course/CourseLoadingDetailed';
 import AudioPlayer from '@/components/AudioPlayer';
 import CheckoutModal from '@/components/course/CheckoutModal';
 
 const DashboardCourse = () => {
   const { courseId } = useParams<{ courseId: string }>();
   
-  // Hook optimizado que maneja todo: curso + acceso + compras
+  console.log(`🎭 [DashboardCourse] RENDER - courseId: ${courseId}`);
+  
+  // Hook simplificado que maneja todo con mejor debugging
   const { 
     podcast, 
     setPodcast, 
     isLoading, 
     isPremium, 
     hasAccess, 
-    refetchPurchases 
-  } = useCourseDataOptimized(courseId);
+    refetchPurchases,
+    errorState,
+    loadingState
+  } = useCourseDataSimplified(courseId);
   
   const { userProgress, toggleSaveCourse, startCourse, refetch } = useUserProgress();
   const [showCheckout, setShowCheckout] = useState(false);
   
+  console.log(`🎭 [DashboardCourse] State:`, {
+    courseId,
+    isLoading,
+    hasErrors: !!(errorState.course || errorState.purchases),
+    podcast: !!podcast,
+    courseTitle: podcast?.title,
+    isPremium,
+    hasAccess
+  });
+
   // Use consolidated lessons hook - pero solo después de tener el curso
   const { 
     currentLesson, 
@@ -52,15 +68,6 @@ const DashboardCourse = () => {
   const progressPercentage = courseProgress?.progress_percentage || 0;
   const isCompleted = courseProgress?.is_completed || false;
   const isReviewMode = isCompleted && progressPercentage === 100;
-
-  console.log('🎭 [DashboardCourse] RENDER STATE:', {
-    courseId,
-    isLoading,
-    isPremium,
-    hasAccess,
-    podcast: !!podcast,
-    courseTitle: podcast?.title
-  });
 
   const handleStartLearning = async () => {
     if (podcast) {
@@ -104,13 +111,32 @@ const DashboardCourse = () => {
     handleSelectLesson(lesson, true);
   };
 
-  // Loading state
+  const handleRetry = () => {
+    console.log('🔄 [DashboardCourse] Retrying course load...');
+    window.location.reload();
+  };
+
+  // Error state
+  if (errorState.course && !isLoading) {
+    return (
+      <DashboardLayout>
+        <CourseErrorBoundary
+          error={errorState.course}
+          courseId={courseId}
+          onRetry={handleRetry}
+        />
+      </DashboardLayout>
+    );
+  }
+
+  // Loading state with detailed progress
   if (isLoading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center py-20">
-          <div className="text-lg text-gray-600">Cargando curso...</div>
-        </div>
+        <CourseLoadingDetailed
+          loadingState={loadingState}
+          courseId={courseId}
+        />
       </DashboardLayout>
     );
   }
@@ -119,17 +145,16 @@ const DashboardCourse = () => {
   if (!podcast) {
     return (
       <DashboardLayout>
-        <div className="text-center py-20 px-4">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">Curso no encontrado</h2>
-          <p className="text-sm sm:text-base text-gray-600">
-            El curso que buscas no existe o no está disponible.
-          </p>
-          <p className="text-xs text-gray-500 mt-2">ID del curso: {courseId}</p>
-        </div>
+        <CourseErrorBoundary
+          error="El curso que buscas no existe o no está disponible."
+          courseId={courseId}
+          onRetry={handleRetry}
+        />
       </DashboardLayout>
     );
   }
 
+  // Success state
   return (
     <>
       <DashboardLayout>
