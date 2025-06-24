@@ -24,10 +24,10 @@ const DashboardCourse = () => {
   const {
     currentLesson,
     lessons
-  } = useLessons(course);
+  } = useLessons(course, selectedLesson);
 
   useEffect(() => {
-    if (course && lessons.length > 0 && !selectedLesson) {
+    if (course && lessons && lessons.length > 0 && !selectedLesson) {
       const firstLesson = lessons[0];
       setSelectedLesson(firstLesson);
     }
@@ -62,14 +62,14 @@ const DashboardCourse = () => {
         </div>
 
         {/* Course Header */}
-        <CoursePageHeader course={course} />
+        <CoursePageHeader podcast={course} />
         
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content - Takes 2 columns on large screens */}
           <div className="lg:col-span-2">
             <CourseMainContent 
-              course={course}
+              podcast={course}
               currentLesson={selectedLesson || currentLesson}
               onSelectLesson={handleSelectLesson}
             />
@@ -78,7 +78,7 @@ const DashboardCourse = () => {
           {/* Learning Path Sidebar - Takes 1 column on large screens */}
           <div className="lg:col-span-1">
             <CourseLearningPathSection
-              course={course}
+              podcast={course}
               currentLessonId={selectedLesson?.id || currentLesson?.id}
               onSelectLesson={handleSelectLesson}
             />

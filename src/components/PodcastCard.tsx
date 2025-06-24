@@ -62,11 +62,11 @@ const PodcastCard: React.FC<PodcastCardProps> = ({ podcast }) => {
           <div className="flex items-center space-x-2 mb-3">
             <img
               src={podcast.creator.imageUrl || '/placeholder.svg'}
-              alt={podcast.creator.nombre}
+              alt={podcast.creator.name}
               className="w-6 h-6 rounded-full object-cover"
             />
             <span className="text-sm text-gray-700 font-medium">
-              {podcast.creator.nombre}
+              {podcast.creator.name}
             </span>
           </div>
           
