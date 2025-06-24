@@ -38,8 +38,7 @@ const CourseCarousel: React.FC<CourseCarouselProps> = ({
     align: 'start',
     slidesToScroll: 1,
     containScroll: 'trimSnaps',
-    dragFree: false, // Cambiado para mejor control
-    skipSnaps: false,
+    dragFree: true,
   };
 
   const [emblaRef, emblaApi] = useEmblaCarousel(options);
@@ -85,88 +84,65 @@ const CourseCarousel: React.FC<CourseCarouselProps> = ({
     <div className="mb-6 sm:mb-8">
       <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 px-4 sm:px-0">{title}</h2>
       
-      <div className="relative">
-        {isMobile ? (
-          /* Mobile: Touch scrollable carousel */
-          <div className="px-4">
-            <div className="overflow-hidden" ref={emblaRef}>
-              <div className="flex">
-                {courses.map((course) => (
-                  <div 
-                    key={course.podcast.id} 
-                    className="flex-none w-[280px] mr-4"
-                  >
-                    <CourseCardWithProgress
-                      podcast={course.podcast}
-                      progress={course.progress}
-                      isPlaying={course.isPlaying}
-                      isSaved={course.isSaved}
-                      showProgress={showProgress}
-                      onPlay={() => onPlayCourse?.(course.podcast.id)}
-                      onToggleSave={() => onToggleSave?.(course.podcast.id)}
-                      onClick={() => onCourseClick?.(course.podcast.id)}
-                    />
-                  </div>
-                ))}
-              </div>
+      <div className="relative px-4 sm:px-0">
+        {/* Mobile and Desktop: Embla carousel */}
+        <div className="relative">
+          <div className="overflow-hidden" ref={emblaRef}>
+            <div className="flex">
+              {courses.map((course) => (
+                <div 
+                  key={course.podcast.id} 
+                  className={`flex-none ${
+                    isMobile 
+                      ? 'w-[85vw] max-w-[320px] mr-4 first:ml-0 last:mr-0' 
+                      : 'w-full sm:w-1/2 lg:w-1/3 xl:w-1/4 pr-6'
+                  }`}
+                >
+                  <CourseCardWithProgress
+                    podcast={course.podcast}
+                    progress={course.progress}
+                    isPlaying={course.isPlaying}
+                    isSaved={course.isSaved}
+                    showProgress={showProgress}
+                    onPlay={() => onPlayCourse?.(course.podcast.id)}
+                    onToggleSave={() => onToggleSave?.(course.podcast.id)}
+                    onClick={() => onCourseClick?.(course.podcast.id)}
+                  />
+                </div>
+              ))}
             </div>
           </div>
-        ) : (
-          /* Desktop: Grid layout with navigation */
-          <div className="relative px-4 lg:px-0">
-            <div className="overflow-hidden" ref={emblaRef}>
-              <div className="flex">
-                {courses.map((course) => (
-                  <div 
-                    key={course.podcast.id} 
-                    className="flex-none w-full sm:w-1/2 lg:w-1/3 xl:w-1/4 pr-6"
-                  >
-                    <CourseCardWithProgress
-                      podcast={course.podcast}
-                      progress={course.progress}
-                      isPlaying={course.isPlaying}
-                      isSaved={course.isSaved}
-                      showProgress={showProgress}
-                      onPlay={() => onPlayCourse?.(course.podcast.id)}
-                      onToggleSave={() => onToggleSave?.(course.podcast.id)}
-                      onClick={() => onCourseClick?.(course.podcast.id)}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
 
-            {/* Desktop navigation arrows */}
-            {courses.length > 4 && (
-              <>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-white shadow-lg z-10 h-10 w-10"
-                  onClick={scrollPrev}
-                  disabled={!canScrollPrev}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
+          {/* Navigation arrows - show when needed */}
+          {((isMobile && courses.length > 1) || (!isMobile && courses.length > 4)) && (
+            <>
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 sm:-translate-x-4 bg-white shadow-lg z-10 h-8 w-8 sm:h-10 sm:w-10"
+                onClick={scrollPrev}
+                disabled={!canScrollPrev}
+              >
+                <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
+              </Button>
 
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-white shadow-lg z-10 h-10 w-10"
-                  onClick={scrollNext}
-                  disabled={!canScrollNext}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </>
-            )}
-          </div>
-        )}
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 sm:translate-x-4 bg-white shadow-lg z-10 h-8 w-8 sm:h-10 sm:w-10"
+                onClick={scrollNext}
+                disabled={!canScrollNext}
+              >
+                <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
+              </Button>
+            </>
+          )}
+        </div>
 
         {/* Mobile pagination dots */}
         {isMobile && courses.length > 1 && (
           <div className="flex justify-center mt-4 space-x-2">
-            {courses.map((_, index) => (
+            {Array.from({ length: courses.length }, (_, index) => (
               <button
                 key={index}
                 className={`w-2 h-2 rounded-full transition-colors ${
