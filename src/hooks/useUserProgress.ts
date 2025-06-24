@@ -40,7 +40,9 @@ export function useUserProgress() {
       const progressData = data || [];
       console.log('📊 Fetched user progress from DB:', {
         totalRecords: progressData.length,
-        courses: progressData.map(p => ({ courseId: p.course_id, progress: p.progress_percentage }))
+        courses: progressData.map(p => ({ courseId: p.course_id, progress: p.progress_percentage })),
+        isEmpty: progressData.length === 0,
+        isValidEmptyState: true
       });
       setUserProgress(progressData);
     } catch (error) {

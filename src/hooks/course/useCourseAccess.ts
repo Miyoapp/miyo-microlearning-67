@@ -32,7 +32,7 @@ export function useCourseAccess(podcast: Podcast | null) {
     
     // CRITICAL FIX: For free courses, ALWAYS grant access
     if (!isPremium) {
-      console.log('✅ FREE COURSE - ACCESS GRANTED');
+      console.log('✅ FREE COURSE - ACCESS GRANTED (empty purchases is valid)');
       return { 
         isPremium: false, 
         hasAccess: true, 
@@ -49,7 +49,8 @@ export function useCourseAccess(podcast: Podcast | null) {
       courseTitle: podcast.title,
       userHasPurchased: hasAccess,
       purchasesStillLoading: loading,
-      purchaseError: purchaseError
+      purchaseError: purchaseError,
+      emptyPurchasesIsValid: !loading
     });
     
     return { 
@@ -66,7 +67,8 @@ export function useCourseAccess(podcast: Podcast | null) {
     isPremium: accessInfo.isPremium,
     hasAccess: accessInfo.hasAccess,
     isLoading: accessInfo.isLoading,
-    error: accessInfo.error
+    error: accessInfo.error,
+    emptyDataHandled: true
   });
 
   return {

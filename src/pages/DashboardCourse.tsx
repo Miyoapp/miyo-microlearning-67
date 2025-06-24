@@ -41,7 +41,7 @@ const DashboardCourse = () => {
     refetch
   });
   
-  // CRITICAL FIX: Handle empty arrays properly - don't treat them as loading states
+  // CRITICAL FIX: Proper empty data handling
   const courseProgress = userProgress.find(p => p.course_id === courseId) || null;
   const isSaved = courseProgress?.is_saved || false;
   const hasStarted = (courseProgress?.progress_percentage || 0) > 0;
@@ -68,9 +68,8 @@ const DashboardCourse = () => {
   // Handle any errors that occurred
   const hasError = courseError || accessError;
   
-  // CRITICAL FIX: Only show loading when actually loading, not when data is empty
-  const isDataLoading = courseLoading || accessLoading;
-  const isProgressStillLoading = progressLoading && !userProgress; // Only loading if we don't have ANY progress data yet
+  // CRITICAL FIX: Only show loading when actually loading data, not when arrays are empty
+  const isActuallyLoading = courseLoading || accessLoading || (progressLoading && userProgress === undefined);
 
   const handleStartLearning = async () => {
     if (podcast) {
@@ -131,11 +130,12 @@ const DashboardCourse = () => {
   const getLoadingMessage = () => {
     if (courseLoading) return 'Cargando curso...';
     if (accessLoading) return 'Verificando acceso...';
-    return 'Cargando progreso...';
+    if (progressLoading) return 'Cargando progreso...';
+    return 'Cargando...';
   };
 
-  // CRITICAL FIX: Show skeleton loading only when data is actually loading
-  if (isDataLoading || isProgressStillLoading) {
+  // CRITICAL FIX: Only show skeleton loading when data is actually being fetched
+  if (isActuallyLoading) {
     return (
       <DashboardLayout>
         <CourseLoadingSkeleton loadingMessage={getLoadingMessage()} />
@@ -169,14 +169,15 @@ const DashboardCourse = () => {
     );
   }
 
-  // CRITICAL FIX: Always render the course content even if userProgress is empty
-  // Empty userProgress array is normal for new users and should not prevent rendering
+  // SUCCESS: Render course content even with empty user data
+  // Empty arrays are valid states for new users
   console.log('✅ Rendering course content:', {
     courseTitle: podcast.title,
     hasUserProgress: userProgress.length > 0,
     courseProgress: !!courseProgress,
     isPremium,
-    hasAccess
+    hasAccess,
+    emptyDataIsValid: true
   });
 
   return (
