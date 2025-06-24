@@ -5,47 +5,56 @@ import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import TouchCarousel from '@/components/dashboard/TouchCarousel';
 import { obtenerCursos } from '@/lib/api';
 import { useUserProgress } from '@/hooks/useUserProgress';
-import { useUserProfile } from '@/hooks/useUserProfile';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { supabase } from '@/integrations/supabase/client';
 import { Podcast } from '@/types';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [allCourses, setAllCourses] = useState<Podcast[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  
-  console.log('🔍 [Dashboard] Component render - User:', user?.id || 'none');
-  
-  // Usar hooks optimizados
-  const { profile, loading: profileLoading } = useUserProfile();
-  const { userProgress, toggleSaveCourse, isFetching: progressFetching } = useUserProgress();
-
-  // Calcular datos derivados
-  const userName = profile?.name || user?.email || 'Usuario';
-  const isFirstTimeUser = profile ? 
-    new Date(profile.created_at).toDateString() === new Date().toDateString() : 
-    false;
-
-  console.log('🔍 [Dashboard] Hooks state:', {
-    profileLoading,
-    progressFetching,
-    userProgressCount: userProgress.length,
-    coursesCount: allCourses.length,
-    loading
-  });
+  const [loading, setLoading] = useState(true);
+  const [userName, setUserName] = useState<string>('');
+  const [isFirstTimeUser, setIsFirstTimeUser] = useState<boolean>(false);
+  const { userProgress, toggleSaveCourse, startCourse, refetch } = useUserProgress();
 
   useEffect(() => {
-    console.log('🔄 [Dashboard] Loading courses effect triggered');
-    
+    const loadUserData = async () => {
+      if (user) {
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('name, created_at')
+            .eq('id', user.id)
+            .single();
+          
+          if (profile) {
+            setUserName(profile.name || user.email || 'Usuario');
+            
+            // Determinar si es primera vez basado en si se creó hoy
+            const createdDate = new Date(profile.created_at);
+            const today = new Date();
+            const isToday = createdDate.toDateString() === today.toDateString();
+            setIsFirstTimeUser(isToday);
+          }
+        } catch (error) {
+          console.error('Error loading user profile:', error);
+          setUserName(user.email || 'Usuario');
+        }
+      }
+    };
+
+    loadUserData();
+  }, [user]);
+
+  useEffect(() => {
     const loadCourses = async () => {
       try {
-        console.log('🔄 [Dashboard] Starting courses fetch');
         const courses = await obtenerCursos();
-        console.log('✅ [Dashboard] Loaded courses:', courses.length);
+        console.log('Dashboard: Loaded courses:', courses.length);
         setAllCourses(courses);
       } catch (error) {
-        console.error('❌ [Dashboard] Error loading courses:', error);
+        console.error('Error loading courses:', error);
       } finally {
         setLoading(false);
       }
@@ -96,23 +105,24 @@ const Dashboard = () => {
       };
     });
 
-  const handlePlayCourse = (courseId: string) => {
-    console.log('🔄 [Dashboard] Navigating to course without modifying progress:', courseId);
+  const handlePlayCourse = async (courseId: string) => {
+    console.log('Dashboard: Starting course:', courseId);
+    await startCourse(courseId);
+    await refetch();
     navigate(`/dashboard/course/${courseId}`);
   };
 
   const handleToggleSave = async (courseId: string) => {
-    console.log('🔄 [Dashboard] Toggling save for course:', courseId);
+    console.log('Dashboard: Toggling save for course:', courseId);
     await toggleSaveCourse(courseId);
-    // Removido refetch() innecesario - el estado local ya se actualiza
+    await refetch();
   };
 
   const handleCourseClick = (courseId: string) => {
     navigate(`/dashboard/course/${courseId}`);
   };
 
-  if (loading || profileLoading) {
-    console.log('🔄 [Dashboard] Showing loading state - loading:', loading, 'profileLoading:', profileLoading);
+  if (loading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center py-20">
@@ -125,13 +135,6 @@ const Dashboard = () => {
   const welcomeMessage = isFirstTimeUser 
     ? `¡Bienvenido(a), ${userName}!` 
     : `¡Bienvenido(a) de vuelta, ${userName}!`;
-
-  console.log('🔍 [Dashboard] Rendering dashboard with:', {
-    welcomeMessage,
-    continueLearningCount: continueLearningCourses.length,
-    recommendedCount: recommendedCourses.length,
-    premiumCount: premiumCourses.length
-  });
 
   return (
     <DashboardLayout>
@@ -173,13 +176,6 @@ const Dashboard = () => {
             onCourseClick={handleCourseClick}
           />
         </div>
-
-        {/* Loading indicator para operaciones en background */}
-        {progressFetching && (
-          <div className="fixed bottom-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg">
-            Actualizando progreso...
-          </div>
-        )}
       </div>
     </DashboardLayout>
   );

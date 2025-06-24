@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
@@ -42,7 +43,6 @@ const DashboardDiscover = () => {
   const newCourses = allCourses.slice(0, 6);
 
   const handlePlayCourse = (courseId: string) => {
-    console.log('DashboardDiscover: Navigating to course without modifying progress:', courseId);
     navigate(`/dashboard/course/${courseId}`);
   };
 

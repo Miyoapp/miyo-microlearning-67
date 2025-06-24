@@ -93,6 +93,35 @@ export function useCoursePurchases() {
     fetchPurchases();
   }, [user]);
 
+  // Set up real-time subscription to purchases
+  useEffect(() => {
+    if (!user) return;
+
+    console.log('🔄 Setting up real-time subscription for purchases');
+    
+    const channel = supabase
+      .channel('purchases-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'compras_cursos',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('🔄 Real-time purchase update:', payload);
+          fetchPurchases(); // Refetch purchases when there's a change
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('🔌 Cleaning up purchases subscription');
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
   return {
     purchases,
     loading,

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
@@ -11,7 +12,7 @@ const DashboardMyRoutes = () => {
   const navigate = useNavigate();
   const [allCourses, setAllCourses] = useState<Podcast[]>([]);
   const [loading, setLoading] = useState(true);
-  const { userProgress, toggleSaveCourse, refetch } = useUserProgress();
+  const { userProgress, toggleSaveCourse, startCourse, refetch } = useUserProgress();
 
   useEffect(() => {
     const loadCourses = async () => {
@@ -65,8 +66,11 @@ const DashboardMyRoutes = () => {
       return progress?.is_completed;
     });
 
-  const handlePlayCourse = (courseId: string) => {
-    console.log('DashboardMyRoutes: Navigating to course without modifying progress:', courseId);
+  const handlePlayCourse = async (courseId: string) => {
+    console.log('DashboardMyRoutes: Starting course:', courseId);
+    await startCourse(courseId);
+    await refetch();
+    // Redirect to the new dashboard course view instead of old course view
     navigate(`/dashboard/course/${courseId}`);
   };
 

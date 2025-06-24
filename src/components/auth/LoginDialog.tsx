@@ -42,7 +42,7 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({ open, onOpenChange }) 
       } else {
         toast.success('¡Sesión iniciada correctamente!');
         onOpenChange(false);
-        // No redirigir manualmente - AuthProvider se encarga
+        navigate('/dashboard');
       }
     } else {
       const { error } = await signUp(email, password, name);
