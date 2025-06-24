@@ -8,6 +8,7 @@ import { AuthProvider } from './components/auth/AuthProvider';
 import Header from './components/Header';
 import Home from './pages/Home';
 import LoginPage from './pages/LoginPage';
+import RegistrationConfirmation from './pages/RegistrationConfirmation';
 import Dashboard from './pages/Dashboard';
 import DashboardCourse from './pages/DashboardCourse';
 import DashboardDiscover from './pages/DashboardDiscover';
@@ -28,6 +29,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/registration-confirmation" element={<RegistrationConfirmation />} />
             
             {/* Dashboard routes - Protected */}
             <Route path="/dashboard" element={<Dashboard />} />

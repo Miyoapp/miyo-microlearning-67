@@ -117,7 +117,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signUp = async (email: string, password: string, name?: string) => {
-    const redirectUrl = `${window.location.origin}/`;
+    // Configurar la URL de redirección para que apunte al login del landing
+    const redirectUrl = `${window.location.origin}/login`;
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -135,23 +136,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('Starting signOut process...');
       
-      // Primero limpiar el estado local
-      clearAuthState();
-      
-      // Luego hacer el signOut en Supabase
+      // Hacer el signOut en Supabase primero
       const { error } = await supabase.auth.signOut();
       
       if (error) {
         console.error('Error during signOut:', error);
-        // Incluso si hay error, mantener el estado limpio
-        clearAuthState();
+        throw error;
       }
       
-      console.log('SignOut completed');
+      // Limpiar el estado local después del signOut exitoso
+      clearAuthState();
+      
+      console.log('SignOut completed successfully');
     } catch (error) {
       console.error('Exception during signOut:', error);
       // En caso de excepción, forzar la limpieza
       clearAuthState();
+      throw error;
     }
   };
 
