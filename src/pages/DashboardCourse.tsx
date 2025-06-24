@@ -5,7 +5,7 @@ import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { useCourseDataSimplified } from '@/hooks/useCourseDataSimplified';
 import { useUserProgress } from '@/hooks/useUserProgress';
 import { useConsolidatedLessons } from '@/hooks/useConsolidatedLessons';
-import { useCourseRealtimeSync } from '@/hooks/course/useCourseRealtimeSync';
+import { useRealtimeManager } from '@/hooks/useRealtimeManager';
 import CoursePageHeader from '@/components/course/CoursePageHeader';
 import CourseMainContent from '@/components/course/CourseMainContent';
 import CourseErrorBoundary from '@/components/course/CourseErrorBoundary';
@@ -30,7 +30,7 @@ const DashboardCourse = () => {
     loadingState
   } = useCourseDataSimplified(courseId);
   
-  const { userProgress, toggleSaveCourse, startCourse, refetch } = useUserProgress();
+  const { userProgress, toggleSaveCourse, startCourse, refetch: refetchUserProgress } = useUserProgress();
   const [showCheckout, setShowCheckout] = useState(false);
   
   console.log(`🎭 [DashboardCourse] State:`, {
@@ -55,11 +55,23 @@ const DashboardCourse = () => {
     initializePodcastWithProgress
   } = useConsolidatedLessons(podcast, setPodcast);
   
-  // Set up realtime sync - solo si tenemos curso
-  useCourseRealtimeSync({
-    podcast,
-    initializePodcastWithProgress,
-    refetch
+  // Centralizar TODAS las suscripciones realtime en un solo lugar
+  useRealtimeManager({
+    onLessonProgressUpdate: () => {
+      console.log('🔄 Realtime lesson progress update detected, refreshing podcast progress');
+      if (podcast) {
+        initializePodcastWithProgress();
+      }
+    },
+    onCourseProgressUpdate: () => {
+      console.log('🔄 Realtime course progress update detected, refreshing user progress');
+      refetchUserProgress();
+    },
+    onPurchaseUpdate: () => {
+      console.log('🔄 Realtime purchase update detected, refreshing purchases');
+      refetchPurchases();
+    },
+    enabled: !!podcast // Solo activar cuando tenemos un curso cargado
   });
   
   const courseProgress = userProgress.find(p => p.course_id === courseId);
@@ -78,7 +90,7 @@ const DashboardCourse = () => {
       }
 
       await startCourse(podcast.id);
-      await refetch();
+      await refetchUserProgress();
       
       // Scroll to the learning path section
       const learningPathElement = document.getElementById('learning-path-section');
