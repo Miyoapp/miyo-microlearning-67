@@ -38,7 +38,8 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
     align: 'start',
     slidesToScroll: 1,
     containScroll: 'trimSnaps',
-    dragFree: true,
+    dragFree: false, // Cambiado para mejor control
+    skipSnaps: false,
   };
 
   const [emblaRef, emblaApi] = useEmblaCarousel(options);
@@ -85,32 +86,34 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
       <h2 className="text-xl sm:text-2xl font-bold mb-6 px-4 sm:px-0">{title}</h2>
       
       <div className="relative">
-        {/* Mobile: Horizontal scroll carousel */}
         {isMobile ? (
-          <div className="overflow-hidden" ref={emblaRef}>
-            <div className="flex">
-              {courses.map((course, index) => (
-                <div 
-                  key={course.podcast.id} 
-                  className="flex-none w-[85vw] max-w-[320px] mr-4 first:ml-4 last:mr-4"
-                >
-                  <CourseCardWithProgress
-                    podcast={course.podcast}
-                    progress={course.progress}
-                    isPlaying={course.isPlaying}
-                    isSaved={course.isSaved}
-                    showProgress={showProgress}
-                    onPlay={() => onPlayCourse?.(course.podcast.id)}
-                    onToggleSave={() => onToggleSave?.(course.podcast.id)}
-                    onClick={() => onCourseClick?.(course.podcast.id)}
-                  />
-                </div>
-              ))}
+          /* Mobile: Touch scrollable carousel */
+          <div className="px-4">
+            <div className="overflow-hidden" ref={emblaRef}>
+              <div className="flex">
+                {courses.map((course, index) => (
+                  <div 
+                    key={course.podcast.id} 
+                    className="flex-none w-[280px] mr-4"
+                  >
+                    <CourseCardWithProgress
+                      podcast={course.podcast}
+                      progress={course.progress}
+                      isPlaying={course.isPlaying}
+                      isSaved={course.isSaved}
+                      showProgress={showProgress}
+                      onPlay={() => onPlayCourse?.(course.podcast.id)}
+                      onToggleSave={() => onToggleSave?.(course.podcast.id)}
+                      onClick={() => onCourseClick?.(course.podcast.id)}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         ) : (
-          /* Desktop: Carousel with arrows */
-          <div className="relative">
+          /* Desktop: Grid layout with navigation */
+          <div className="relative px-4 lg:px-0">
             <div className="overflow-hidden" ref={emblaRef}>
               <div className="flex">
                 {courses.map((course) => (
@@ -157,6 +160,21 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
                 </Button>
               </>
             )}
+          </div>
+        )}
+
+        {/* Mobile pagination dots */}
+        {isMobile && courses.length > 1 && (
+          <div className="flex justify-center mt-4 space-x-2">
+            {courses.map((_, index) => (
+              <button
+                key={index}
+                className={`w-2 h-2 rounded-full transition-colors ${
+                  index === 0 ? 'bg-miyo-800' : 'bg-gray-300'
+                }`}
+                onClick={() => emblaApi?.scrollTo(index)}
+              />
+            ))}
           </div>
         )}
       </div>
