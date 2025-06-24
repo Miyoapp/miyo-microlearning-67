@@ -14,27 +14,31 @@ export interface CoursePurchase {
 export function useCoursePurchases() {
   const [purchases, setPurchases] = useState<CoursePurchase[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
 
   const fetchPurchases = async () => {
     if (!user) {
       console.log('🛒 No user found, skipping purchases fetch');
       setLoading(false);
+      setError(null);
       return;
     }
 
     try {
       console.log('🛒 Fetching purchases for user:', user.id);
+      setError(null);
       
-      const { data, error } = await supabase
+      const { data, error: fetchError } = await supabase
         .from('compras_cursos')
         .select('*')
         .eq('user_id', user.id)
         .eq('estado_pago', 'completado');
 
-      if (error) {
-        console.error('❌ Error fetching purchases:', error);
-        throw error;
+      if (fetchError) {
+        console.error('❌ Error fetching purchases:', fetchError);
+        setError(fetchError.message);
+        throw fetchError;
       }
       
       console.log('🛒 Raw purchases data from DB:', data);
@@ -53,7 +57,9 @@ export function useCoursePurchases() {
       
       setPurchases(transformedData);
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       console.error('❌ Error fetching purchases:', error);
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -70,7 +76,8 @@ export function useCoursePurchases() {
     if (!user) return null;
 
     try {
-      const { data, error } = await supabase
+      setError(null);
+      const { data, error: createError } = await supabase
         .from('compras_cursos')
         .insert({
           user_id: user.id,
@@ -81,10 +88,15 @@ export function useCoursePurchases() {
         .select()
         .single();
 
-      if (error) throw error;
+      if (createError) {
+        setError(createError.message);
+        throw createError;
+      }
       return data;
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       console.error('Error creating purchase:', error);
+      setError(errorMessage);
       return null;
     }
   };
@@ -125,6 +137,7 @@ export function useCoursePurchases() {
   return {
     purchases,
     loading,
+    error,
     hasPurchased,
     createPurchase,
     refetch: fetchPurchases
