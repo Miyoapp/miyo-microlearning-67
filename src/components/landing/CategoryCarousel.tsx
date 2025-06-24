@@ -3,11 +3,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CategoryCard from './CategoryCard';
-import { obtenerCategorias } from '@/lib/api';
-import { CategoryModel } from '@/types';
+import { obtenerCategoriasLanding } from '@/lib/api/landingAPI';
+import { CategoriaLanding } from '@/types/landing';
 
 const CategoryCarousel = () => {
-  const [categories, setCategories] = useState<CategoryModel[]>([]);
+  const [categories, setCategories] = useState<CategoriaLanding[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isDesktop, setIsDesktop] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -18,7 +18,7 @@ const CategoryCarousel = () => {
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const data = await obtenerCategorias();
+        const data = await obtenerCategoriasLanding();
         setCategories(data);
       } catch (error) {
         console.error('Error loading categories:', error);
@@ -173,13 +173,13 @@ const CategoryCarousel = () => {
               WebkitOverflowScrolling: 'touch'
             }}
           >
-            {categories.map((category) => (
+            {categories.map((categoria) => (
               <div
-                key={category.id}
+                key={categoria.id}
                 className="flex-none w-full sm:w-1/2 lg:w-1/4"
                 style={{ scrollSnapAlign: 'start' }}
               >
-                <CategoryCard category={category} />
+                <CategoryCard categoria={categoria} />
               </div>
             ))}
           </div>

@@ -9,35 +9,32 @@ import CourseLoading from '../components/course/CourseLoading';
 import CourseNotFound from '../components/course/CourseNotFound';
 import BackButton from '../components/common/BackButton';
 import { useCourseData } from '../hooks/useCourseData';
-import { useConsolidatedLessons } from '../hooks/useConsolidatedLessons';
-import { Lesson } from '../types';
+import { useLessons } from '../hooks/useLessons';
+import { LessonModel } from '../types';
 
 const DashboardCourse = () => {
   const { courseId } = useParams<{ courseId: string }>();
-  const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
+  const [selectedLesson, setSelectedLesson] = useState<LessonModel | null>(null);
   
   const { 
     podcast: course, 
-    isLoading: courseLoading, 
-    error: courseError 
+    isLoading: courseLoading 
   } = useCourseData(courseId);
 
   const {
-    consolidatedLessons,
-    currentLessonId,
-    handleLessonSelect
-  } = useConsolidatedLessons(course, selectedLesson?.id);
+    currentLesson,
+    lessons
+  } = useLessons(course);
 
   useEffect(() => {
-    if (course && consolidatedLessons.length > 0 && !selectedLesson) {
-      const firstLesson = consolidatedLessons[0];
+    if (course && lessons.length > 0 && !selectedLesson) {
+      const firstLesson = lessons[0];
       setSelectedLesson(firstLesson);
     }
-  }, [course, consolidatedLessons, selectedLesson]);
+  }, [course, lessons, selectedLesson]);
 
-  const handleSelectLesson = (lesson: Lesson) => {
+  const handleSelectLesson = (lesson: LessonModel) => {
     setSelectedLesson(lesson);
-    handleLessonSelect(lesson);
   };
 
   if (courseLoading) {
@@ -48,7 +45,7 @@ const DashboardCourse = () => {
     );
   }
 
-  if (courseError || !course) {
+  if (!course) {
     return (
       <DashboardLayout>
         <CourseNotFound />
@@ -65,15 +62,15 @@ const DashboardCourse = () => {
         </div>
 
         {/* Course Header */}
-        <CoursePageHeader podcast={course} />
+        <CoursePageHeader course={course} />
         
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content - Takes 2 columns on large screens */}
           <div className="lg:col-span-2">
             <CourseMainContent 
-              podcast={course}
-              selectedLesson={selectedLesson}
+              course={course}
+              currentLesson={selectedLesson || currentLesson}
               onSelectLesson={handleSelectLesson}
             />
           </div>
@@ -81,8 +78,8 @@ const DashboardCourse = () => {
           {/* Learning Path Sidebar - Takes 1 column on large screens */}
           <div className="lg:col-span-1">
             <CourseLearningPathSection
-              podcast={course}
-              currentLessonId={currentLessonId}
+              course={course}
+              currentLessonId={selectedLesson?.id || currentLesson?.id}
               onSelectLesson={handleSelectLesson}
             />
           </div>

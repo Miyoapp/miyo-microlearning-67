@@ -12,7 +12,7 @@ interface PodcastCardProps {
 }
 
 const PodcastCard: React.FC<PodcastCardProps> = ({ podcast }) => {
-  const totalDuration = podcast.lessons.reduce((acc, lesson) => acc + lesson.duration, 0);
+  const totalDuration = podcast.lessons.reduce((acc, lesson) => acc + lesson.duracion, 0);
   const lessonsCount = podcast.lessons.length;
 
   return (
@@ -31,9 +31,9 @@ const PodcastCard: React.FC<PodcastCardProps> = ({ podcast }) => {
           />
           
           {/* Premium Badge */}
-          {podcast.isPremium && (
+          {podcast.tipo_curso === 'pago' && (
             <div className="absolute top-3 right-3">
-              <PremiumBadge size="sm" />
+              <PremiumBadge />
             </div>
           )}
           
@@ -55,18 +55,18 @@ const PodcastCard: React.FC<PodcastCardProps> = ({ podcast }) => {
           </h3>
           
           <p className="text-sm text-gray-600 mb-3 line-clamp-1">
-            {podcast.category.name}
+            {podcast.category.nombre}
           </p>
           
           {/* Creator Info */}
           <div className="flex items-center space-x-2 mb-3">
             <img
-              src={podcast.creator.avatar || '/placeholder.svg'}
-              alt={podcast.creator.name}
+              src={podcast.creator.imageUrl || '/placeholder.svg'}
+              alt={podcast.creator.nombre}
               className="w-6 h-6 rounded-full object-cover"
             />
             <span className="text-sm text-gray-700 font-medium">
-              {podcast.creator.name}
+              {podcast.creator.nombre}
             </span>
           </div>
           

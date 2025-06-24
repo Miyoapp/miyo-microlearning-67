@@ -12,13 +12,7 @@ const Header = () => {
   const handleLogout = async () => {
     try {
       console.log('Header: Starting logout process...');
-      const { error } = await signOut();
-      
-      if (error) {
-        console.error('Header: Error during logout:', error);
-        return;
-      }
-      
+      await signOut();
       console.log('Header: Logout successful, navigating to home...');
       navigate('/');
     } catch (error) {
