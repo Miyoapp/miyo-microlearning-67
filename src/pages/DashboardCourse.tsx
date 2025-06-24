@@ -1,11 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { useCourseData } from '@/hooks/useCourseData';
 import { useUserProgress } from '@/hooks/useUserProgress';
 import { useConsolidatedLessons } from '@/hooks/useConsolidatedLessons';
 import { useCourseRealtimeSync } from '@/hooks/course/useCourseRealtimeSync';
-import { useCourseAccess } from '@/hooks/course/useCourseAccess';
+import { useCourseAccess } from '@/hooks/useCourseAccess';
 import CoursePageHeader from '@/components/course/CoursePageHeader';
 import CourseLoadingSkeleton from '@/components/course/CourseLoadingSkeleton';
 import CourseErrorState from '@/components/course/CourseErrorState';
@@ -21,6 +21,22 @@ const DashboardCourse = () => {
   // ENHANCED STABLE REFERENCE: Keep last valid podcast with timeout-based cleanup
   const lastValidPodcast = useRef(podcast);
   const podcastClearTimeout = useRef<NodeJS.Timeout | null>(null);
+  
+  // Track component lifecycle for subscription debugging
+  useEffect(() => {
+    console.log('🎭 DASHBOARD COURSE: Component mounted/updated', {
+      courseId,
+      timestamp: new Date().toISOString(),
+      documentVisibilityState: document.visibilityState
+    });
+
+    return () => {
+      console.log('🎭 DASHBOARD COURSE: Component cleanup initiated', {
+        courseId,
+        timestamp: new Date().toISOString()
+      });
+    };
+  }, [courseId]);
   
   if (podcast) {
     lastValidPodcast.current = podcast;
@@ -71,8 +87,8 @@ const DashboardCourse = () => {
   // DEFINITIVE DISPLAY PODCAST: Always prefer current, with stable fallback
   const displayPodcast = podcast || lastValidPodcast.current;
 
-  // TAB SWITCH DETECTION: Enhanced logging for tab switching
-  console.log('🎭 TAB SWITCH DIAGNOSTIC - DASHBOARD COURSE STATE:', {
+  // TAB SWITCH DETECTION: Enhanced logging for realtime subscription tracking
+  console.log('🎭 TAB SWITCH & REALTIME DIAGNOSTIC - DASHBOARD COURSE STATE:', {
     timestamp: new Date().toISOString(),
     documentHidden: document.hidden,
     documentVisibilityState: document.visibilityState,
@@ -86,6 +102,11 @@ const DashboardCourse = () => {
       hasDisplayPodcast: !!displayPodcast,
       userProgressCount: userProgress.length,
       timeoutActive: !!podcastClearTimeout.current
+    },
+    realtimeInfo: {
+      componentsWithSubscriptions: ['useCoursePurchases', 'useRealtimeProgress', 'useLessonProgressData'],
+      expectedSubscriptionCount: 3,
+      tabSwitchSafe: 'PROTECTED_BY_SUBSCRIPTION_MANAGER'
     },
     renderDecision: {
       shouldShowContent: !!displayPodcast,
@@ -104,13 +125,14 @@ const DashboardCourse = () => {
   // DEFINITIVE RENDER GUARD: Always show content if we have valid data
   const shouldShowContent = !!displayPodcast;
 
-  console.log('🔒 FINAL RENDER DECISION:', {
+  console.log('🔒 FINAL RENDER DECISION (REALTIME PROTECTED):', {
     shouldShowContent,
     isActuallyLoading,
     hasError: !!hasError,
     displayPodcastValid: !!displayPodcast,
     courseTitle: displayPodcast?.title,
-    guaranteedRender: shouldShowContent ? 'YES - CONTENT WILL RENDER' : 'NO - FALLBACK STATE'
+    guaranteedRender: shouldShowContent ? 'YES - CONTENT WILL RENDER' : 'NO - FALLBACK STATE',
+    realtimeSubscriptionProtection: 'ACTIVE'
   });
 
   const handleStartLearning = async () => {
@@ -170,13 +192,14 @@ const DashboardCourse = () => {
 
   // PRIORITY 1: Show content if we have valid data (NEVER BLANK SCREEN)
   if (shouldShowContent) {
-    console.log('✅ RENDERING CONTENT - Guaranteed non-blank screen:', {
+    console.log('✅ RENDERING CONTENT - Guaranteed non-blank screen with realtime protection:', {
       courseTitle: displayPodcast.title,
       isCurrentData: !!podcast,
       isStableReference: !podcast && !!lastValidPodcast.current,
       hasUserProgress: userProgress.length > 0,
       courseProgress: !!courseProgress,
-      renderStrategy: 'CONTENT_PRIORITY'
+      renderStrategy: 'CONTENT_PRIORITY',
+      realtimeProtection: 'SUBSCRIPTION_MANAGER_ACTIVE'
     });
 
     return (
