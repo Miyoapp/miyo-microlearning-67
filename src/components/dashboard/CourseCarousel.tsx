@@ -34,31 +34,44 @@ const CourseCarousel: React.FC<CourseCarouselProps> = ({
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
 
+  // Unified Embla configuration matching TouchCarousel
   const options: EmblaOptionsType = {
     align: 'start',
     slidesToScroll: 1,
     containScroll: 'trimSnaps',
-    dragFree: true,
+    dragFree: false, // Changed for better touch control
+    skipSnaps: false, // Ensure proper stopping at cards
   };
 
   const [emblaRef, emblaApi] = useEmblaCarousel(options);
 
   const scrollPrev = useCallback(() => {
-    if (emblaApi) emblaApi.scrollPrev();
+    if (emblaApi) {
+      console.log('CourseCarousel: Scrolling to previous slide');
+      emblaApi.scrollPrev();
+    }
   }, [emblaApi]);
 
   const scrollNext = useCallback(() => {
-    if (emblaApi) emblaApi.scrollNext();
+    if (emblaApi) {
+      console.log('CourseCarousel: Scrolling to next slide');
+      emblaApi.scrollNext();
+    }
   }, [emblaApi]);
 
   const onSelect = useCallback(() => {
     if (!emblaApi) return;
     setCanScrollPrev(emblaApi.canScrollPrev());
     setCanScrollNext(emblaApi.canScrollNext());
+    console.log('CourseCarousel: Carousel state updated', {
+      canScrollPrev: emblaApi.canScrollPrev(),
+      canScrollNext: emblaApi.canScrollNext()
+    });
   }, [emblaApi]);
 
   useEffect(() => {
     if (!emblaApi) return;
+    console.log('CourseCarousel: Embla API initialized');
     onSelect();
     emblaApi.on('select', onSelect);
     emblaApi.on('reInit', onSelect);
@@ -80,14 +93,21 @@ const CourseCarousel: React.FC<CourseCarouselProps> = ({
     );
   }
 
+  // Unified navigation logic
+  const shouldShowNavigation = isMobile ? courses.length > 1 : courses.length > 4;
+
   return (
     <div className="mb-6 sm:mb-8">
       <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 px-4 sm:px-0">{title}</h2>
       
       <div className="relative px-4 sm:px-0">
-        {/* Mobile and Desktop: Embla carousel */}
+        {/* Unified carousel structure with touch optimization */}
         <div className="relative">
-          <div className="overflow-hidden" ref={emblaRef}>
+          <div 
+            className="overflow-hidden touch-pan-x" 
+            ref={emblaRef}
+            style={{ touchAction: 'pan-x' }}
+          >
             <div className="flex">
               {courses.map((course) => (
                 <div 
@@ -113,8 +133,8 @@ const CourseCarousel: React.FC<CourseCarouselProps> = ({
             </div>
           </div>
 
-          {/* Navigation arrows - show when needed */}
-          {((isMobile && courses.length > 1) || (!isMobile && courses.length > 4)) && (
+          {/* Navigation arrows - unified logic */}
+          {shouldShowNavigation && (
             <>
               <Button
                 variant="outline"
@@ -138,21 +158,8 @@ const CourseCarousel: React.FC<CourseCarouselProps> = ({
             </>
           )}
         </div>
-
-        {/* Mobile pagination dots */}
-        {isMobile && courses.length > 1 && (
-          <div className="flex justify-center mt-4 space-x-2">
-            {Array.from({ length: courses.length }, (_, index) => (
-              <button
-                key={index}
-                className={`w-2 h-2 rounded-full transition-colors ${
-                  index === 0 ? 'bg-miyo-800' : 'bg-gray-300'
-                }`}
-                onClick={() => emblaApi?.scrollTo(index)}
-              />
-            ))}
-          </div>
-        )}
+        
+        {/* Pagination dots removed - no longer needed */}
       </div>
     </div>
   );

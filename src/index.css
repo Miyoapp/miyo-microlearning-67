@@ -91,6 +91,13 @@
   .pulse {
     animation: pulse 2s infinite ease-in-out;
   }
+
+  /* Touch optimization for carousels */
+  .touch-pan-x {
+    touch-action: pan-x;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
   
   /* Mobile-first: hide scrollbar on mobile, show on desktop */
   @media (min-width: 768px) {
