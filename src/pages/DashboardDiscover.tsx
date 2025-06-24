@@ -42,7 +42,9 @@ const DashboardDiscover = () => {
   // Get new courses (simulate last 30 days)
   const newCourses = allCourses.slice(0, 6);
 
+  // CORREGIDO: Solo navegar al curso, no iniciar reproducción
   const handlePlayCourse = (courseId: string) => {
+    console.log('DashboardDiscover: Navigating to course (maintaining current progress):', courseId);
     navigate(`/dashboard/course/${courseId}`);
   };
 

@@ -37,8 +37,9 @@ const CourseCardWithProgress: React.FC<CourseCardWithProgressProps> = ({
 
   const handlePlayClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log('CourseCard: Playing course:', podcast.id);
-    onPlay?.();
+    console.log('CourseCard: Playing course - navigating to course page:', podcast.id);
+    // CORREGIDO: Solo navegar al curso, no iniciar reproducción automática
+    onClick?.();
   };
 
   console.log('CourseCard render - Course:', podcast.id, 'isSaved:', isSaved, 'progress:', progress, 'showProgress:', showProgress);
@@ -107,8 +108,8 @@ const CourseCardWithProgress: React.FC<CourseCardWithProgressProps> = ({
                 onClick={handlePlayClick}
                 className="flex items-center space-x-2 flex-1 text-sm h-10"
               >
-                {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                <span>{isPlaying ? 'Pausar' : 'Reproducir'}</span>
+                <Play className="w-4 h-4" />
+                <span>{progress > 0 ? 'Continuar' : 'Reproducir'}</span>
               </Button>
               
               <Button

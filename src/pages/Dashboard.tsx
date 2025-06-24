@@ -16,7 +16,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState<string>('');
   const [isFirstTimeUser, setIsFirstTimeUser] = useState<boolean>(false);
-  const { userProgress, toggleSaveCourse, startCourse, refetch } = useUserProgress();
+  const { userProgress, toggleSaveCourse, refetch } = useUserProgress();
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -105,10 +105,9 @@ const Dashboard = () => {
       };
     });
 
+  // CORREGIDO: Solo navegar al curso, no iniciar reproducción
   const handlePlayCourse = async (courseId: string) => {
-    console.log('Dashboard: Starting course:', courseId);
-    await startCourse(courseId);
-    await refetch();
+    console.log('Dashboard: Navigating to course (maintaining current progress):', courseId);
     navigate(`/dashboard/course/${courseId}`);
   };
 
