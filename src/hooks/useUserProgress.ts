@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { toast } from 'sonner';
@@ -14,7 +15,9 @@ export interface UserCourseProgress {
 export function useUserProgress() {
   const [userProgress, setUserProgress] = useState<UserCourseProgress[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
   const { user } = useAuth();
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const fetchUserProgress = useCallback(async () => {
     if (!user) {
@@ -22,26 +25,49 @@ export function useUserProgress() {
       return;
     }
 
+    // Evitar llamadas duplicadas
+    if (isFetching) {
+      console.log('🚫 Progress fetch already in progress, skipping...');
+      return;
+    }
+
+    // Cancelar petición anterior si existe
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    setIsFetching(true);
+    abortControllerRef.current = new AbortController();
+
     try {
+      console.log('🔄 Fetching user progress for user:', user.id);
+      
       const { data, error } = await supabase
         .from('user_course_progress')
         .select('*')
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .abortSignal(abortControllerRef.current.signal);
 
       if (error) {
         console.error('Error fetching user progress:', error);
         throw error;
       }
       
-      console.log('Fetched user progress from DB:', data);
+      console.log('✅ Fetched user progress from DB:', data?.length || 0, 'records');
       setUserProgress(data || []);
-    } catch (error) {
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        console.log('🔄 Progress fetch was cancelled');
+        return;
+      }
       console.error('Error fetching user progress:', error);
       toast.error('Error al cargar el progreso');
     } finally {
       setLoading(false);
+      setIsFetching(false);
+      abortControllerRef.current = null;
     }
-  }, [user]);
+  }, [user, isFetching]);
 
   const updateCourseProgress = async (courseId: string, updates: Partial<UserCourseProgress>) => {
     if (!user) {
@@ -170,11 +196,19 @@ export function useUserProgress() {
 
   useEffect(() => {
     fetchUserProgress();
+    
+    // Cleanup on unmount
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [fetchUserProgress]);
 
   return {
     userProgress,
     loading,
+    isFetching,
     updateCourseProgress,
     toggleSaveCourse,
     startCourse,

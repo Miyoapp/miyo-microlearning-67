@@ -1,11 +1,12 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import TouchCarousel from '@/components/dashboard/TouchCarousel';
 import { obtenerCursos } from '@/lib/api';
 import { useUserProgress } from '@/hooks/useUserProgress';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { supabase } from '@/integrations/supabase/client';
 import { Podcast } from '@/types';
 
 const Dashboard = () => {
@@ -13,38 +14,16 @@ const Dashboard = () => {
   const { user } = useAuth();
   const [allCourses, setAllCourses] = useState<Podcast[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [userName, setUserName] = useState<string>('');
-  const [isFirstTimeUser, setIsFirstTimeUser] = useState<boolean>(false);
-  const { userProgress, toggleSaveCourse, refetch } = useUserProgress();
+  
+  // Usar hooks optimizados
+  const { profile, loading: profileLoading } = useUserProfile();
+  const { userProgress, toggleSaveCourse, isFetching: progressFetching } = useUserProgress();
 
-  useEffect(() => {
-    const loadUserData = async () => {
-      if (user) {
-        try {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('name, created_at')
-            .eq('id', user.id)
-            .single();
-          
-          if (profile) {
-            setUserName(profile.name || user.email || 'Usuario');
-            
-            // Determinar si es primera vez basado en si se creó hoy
-            const createdDate = new Date(profile.created_at);
-            const today = new Date();
-            const isToday = createdDate.toDateString() === today.toDateString();
-            setIsFirstTimeUser(isToday);
-          }
-        } catch (error) {
-          console.error('Error loading user profile:', error);
-          setUserName(user.email || 'Usuario');
-        }
-      }
-    };
-
-    loadUserData();
-  }, [user]);
+  // Calcular datos derivados
+  const userName = profile?.name || user?.email || 'Usuario';
+  const isFirstTimeUser = profile ? 
+    new Date(profile.created_at).toDateString() === new Date().toDateString() : 
+    false;
 
   useEffect(() => {
     const loadCourses = async () => {
@@ -112,14 +91,14 @@ const Dashboard = () => {
   const handleToggleSave = async (courseId: string) => {
     console.log('Dashboard: Toggling save for course:', courseId);
     await toggleSaveCourse(courseId);
-    await refetch();
+    // Removido refetch() innecesario - el estado local ya se actualiza
   };
 
   const handleCourseClick = (courseId: string) => {
     navigate(`/dashboard/course/${courseId}`);
   };
 
-  if (loading) {
+  if (loading || profileLoading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center py-20">
@@ -173,6 +152,13 @@ const Dashboard = () => {
             onCourseClick={handleCourseClick}
           />
         </div>
+
+        {/* Loading indicator para operaciones en background */}
+        {progressFetching && (
+          <div className="fixed bottom-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg">
+            Actualizando progreso...
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );

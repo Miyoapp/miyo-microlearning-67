@@ -1,12 +1,12 @@
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { isValidSession, shouldRedirectToDashboard } from '../utils/authUtils';
 
 interface UseAuthListenerProps {
   updateAuthState: (session: any) => void;
   clearAuthState: () => void;
-  checkEmailVerificationAsync: (userId: string) => void;
+  checkEmailVerificationAsync: (userId: string) => Promise<boolean>;
 }
 
 export const useAuthListener = ({
@@ -14,6 +14,20 @@ export const useAuthListener = ({
   clearAuthState,
   checkEmailVerificationAsync
 }: UseAuthListenerProps) => {
+  const emailVerificationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const scheduleEmailVerification = (userId: string) => {
+    // Limpiar timeout anterior
+    if (emailVerificationTimeoutRef.current) {
+      clearTimeout(emailVerificationTimeoutRef.current);
+    }
+
+    // Programar verificación de email con delay para evitar llamadas inmediatas
+    emailVerificationTimeoutRef.current = setTimeout(() => {
+      checkEmailVerificationAsync(userId);
+    }, 1000); // 1 segundo de delay
+  };
+
   useEffect(() => {
     console.log('Setting up auth state listener...');
     
@@ -37,10 +51,8 @@ export const useAuthListener = ({
             // Actualizar estado síncronamente primero
             updateAuthState(session);
             
-            // Verificar email de forma asíncrona sin bloquear
-            setTimeout(() => {
-              checkEmailVerificationAsync(session.user.id);
-            }, 0);
+            // Verificar email de forma asíncrona con delay
+            scheduleEmailVerification(session.user.id);
 
             // Redirección automática solo en SIGNED_IN y DIRECTA al dashboard
             if (event === 'SIGNED_IN') {
@@ -58,10 +70,8 @@ export const useAuthListener = ({
         if (isValidSession(session)) {
           updateAuthState(session);
           
-          // Verificar estado de verificación de email de forma asíncrona
-          setTimeout(() => {
-            checkEmailVerificationAsync(session.user.id);
-          }, 0);
+          // Verificar estado de verificación de email de forma asíncrona con delay
+          scheduleEmailVerification(session.user.id);
         }
       }
     );
@@ -77,15 +87,18 @@ export const useAuthListener = ({
       if (isValidSession(session)) {
         updateAuthState(session);
         
-        // Verificar estado de verificación de email de forma asíncrona
-        setTimeout(() => {
-          checkEmailVerificationAsync(session.user.id);
-        }, 0);
+        // Verificar estado de verificación de email de forma asíncrona con delay
+        scheduleEmailVerification(session.user.id);
       } else {
         clearAuthState();
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      if (emailVerificationTimeoutRef.current) {
+        clearTimeout(emailVerificationTimeoutRef.current);
+      }
+    };
   }, [updateAuthState, clearAuthState, checkEmailVerificationAsync]);
 };
