@@ -1,3 +1,4 @@
+
 import { useCallback, useMemo } from 'react';
 import { Lesson, Module } from '../types';
 import React from 'react';
@@ -32,7 +33,7 @@ const LearningPath = React.memo(({ lessons, modules, onSelectLesson, currentLess
     lessons.map(l => l.id).join('|')
   ]);
 
-  // CORREGIDO: Handler de click que usa correctamente canPlay del status
+  // MEJORADO: Handler de click que diferencia entre reproducir y mostrar error
   const handleLessonClick = useCallback((lesson: Lesson) => {
     const status = lessonStatusMap.get(lesson.id);
     if (!status) {
@@ -47,14 +48,17 @@ const LearningPath = React.memo(({ lessons, modules, onSelectLesson, currentLess
       canPlay,
       isCompleted,
       isLocked,
-      isFirstInSequence
+      isFirstInSequence,
+      action: canPlay ? 'PLAY' : 'BLOCKED'
     });
     
     if (canPlay) {
-      console.log('✅ Lesson is playable - proceeding with selection:', lesson.title);
+      console.log('✅ Lesson is playable - starting immediate playback:', lesson.title);
+      // MEJORADO: Llamar con flag de selección manual para activar reproducción automática
       onSelectLesson(lesson);
     } else {
-      console.log('🚫 Lesson not playable:', lesson.title, 'isLocked:', isLocked, 'isFirst:', isFirstInSequence);
+      console.log('🚫 Lesson not playable:', lesson.title, 'isLocked:', isLocked, 'reason: previous lesson not completed');
+      // El componente LessonItem ya maneja la UI para lecciones bloqueadas
     }
   }, [
     // ESTABILIZADO: Solo incluir referencias estables

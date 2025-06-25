@@ -50,20 +50,14 @@ export function useLessonPlayback(
     
     manualSelectionActive.current = isManualSelection;
     
-    // CORREGIDO: Auto-advance logic para permitir secuencia desde lecciones completadas
+    // MEJORADO: Auto-start playback para selecciones manuales desde la ruta de aprendizaje
     if (isManualSelection) {
-      console.log('▶️ Manual selection - starting playback');
+      console.log('▶️ Manual selection from learning path - auto-starting playback');
       setIsPlaying(true);
-      
-      // NUEVO: Si es una lección completada, permitir auto-advance para continuar secuencia
-      if (lesson.isCompleted) {
-        console.log('🏆 Selected completed lesson - enable auto-advance for sequence continuation');
-        setIsAutoAdvanceAllowed(true);
-      } else {
-        console.log('▶️ Selected incomplete lesson - enable auto-advance');
-        setIsAutoAdvanceAllowed(true);
-      }
+      setIsAutoAdvanceAllowed(true);
     } else {
+      // Para selecciones automáticas (auto-positioning), no iniciar reproducción
+      console.log('🎯 Automatic positioning - not starting playback');
       setIsPlaying(false);
       setIsAutoAdvanceAllowed(false);
     }

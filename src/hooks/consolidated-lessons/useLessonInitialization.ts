@@ -71,10 +71,17 @@ export function useLessonInitialization(
     
     const courseProgress = userProgress.find(p => p.course_id === courseId);
     const isReviewMode = courseProgress?.is_completed && courseProgress?.progress_percentage === 100;
+    const hasStartedCourse = (courseProgress?.progress_percentage || 0) > 0;
     
     // CORREGIDO: Si el curso está 100% completo, NO auto-posicionar
     if (isReviewMode) {
       console.log('🏆 Course 100% complete - no auto-positioning in review mode');
+      return null;
+    }
+    
+    // MEJORADO: Solo auto-posicionar si el curso ya ha empezado
+    if (!hasStartedCourse) {
+      console.log('🆕 Course not started yet - no auto-positioning');
       return null;
     }
     
@@ -95,16 +102,6 @@ export function useLessonInitialization(
     if (allCompleted) {
       console.log('🏆 All lessons completed - no auto-positioning needed');
       return null;
-    }
-    
-    // ÚLTIMO RECURSO: Solo si es la primera vez y no hay progreso
-    const hasAnyProgress = lessonProgress.some(p => p.is_completed || (p.current_position && p.current_position > 5));
-    if (!hasAnyProgress) {
-      const firstLesson = getFirstLesson(lessons, podcast?.modules || []);
-      if (firstLesson && !firstLesson.isLocked) {
-        console.log('🎯 First time access - starting with first lesson:', firstLesson.title);
-        return firstLesson;
-      }
     }
     
     console.log('❌ No suitable resume point found');
