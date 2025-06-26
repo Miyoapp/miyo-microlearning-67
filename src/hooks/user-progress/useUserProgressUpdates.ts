@@ -4,7 +4,7 @@ import { UserCourseProgress } from './types';
 
 export function useUserProgressUpdates(
   userProgress: UserCourseProgress[],
-  setUserProgress: (progress: UserCourseProgress[]) => void
+  setUserProgress: React.Dispatch<React.SetStateAction<UserCourseProgress[]>>
 ) {
   const updateCourseProgress = useCallback(async (courseId: string, updates: Partial<UserCourseProgress>) => {
     console.log('Updating course progress:', courseId, updates);
