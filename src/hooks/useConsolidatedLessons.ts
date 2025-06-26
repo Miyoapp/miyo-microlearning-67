@@ -1,4 +1,3 @@
-
 import { useEffect, useCallback, useRef } from 'react';
 import { Podcast } from '@/types';
 import { useUserLessonProgress } from './useUserLessonProgress';
@@ -64,7 +63,7 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
 
   // MEJORADO: Selección de lección que diferencia entre auto-positioning y selección manual
   const handleSelectLesson = useCallback((lesson: any, isManualSelection = true) => {
-    console.log('🎯 handleSelectLesson called:', lesson.title, 'isCompleted:', lesson.isCompleted ? '🏆' : '❌', 'isLocked:', lesson.isLocked ? '🔒' : '🔓', 'isManual:', isManualSelection);
+    console.log('🎯 useConsolidatedLessons.handleSelectLesson called:', lesson.title, 'isCompleted:', lesson.isCompleted ? '🏆' : '❌', 'isLocked:', lesson.isLocked ? '🔒' : '🔓', 'isManual:', isManualSelection);
     
     // NUEVO: Marcar que el usuario ha hecho una selección manual
     if (isManualSelection) {
@@ -78,9 +77,15 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     // Establecer la lección actual primero
     setCurrentLesson(lesson);
     
-    // Manejar reproducción
+    // CORREGIDO: Asegurar que isManualSelection se pase correctamente
+    console.log('🔄 Calling handleSelectLessonFromPlayback with isManualSelection:', isManualSelection);
     handleSelectLessonFromPlayback(lesson, isManualSelection);
-  }, [setCurrentLesson, handleSelectLessonFromPlayback]);
+    
+    // AGREGADO: Log del estado después de la selección
+    setTimeout(() => {
+      console.log('⏰ Estado después de handleSelectLesson - isPlaying:', isPlaying);
+    }, 100);
+  }, [setCurrentLesson, handleSelectLessonFromPlayback, isPlaying]);
 
   // CRÍTICO: Inicializar podcast cuando todos los datos estén disponibles
   useEffect(() => {

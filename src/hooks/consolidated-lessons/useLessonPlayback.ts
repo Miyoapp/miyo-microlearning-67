@@ -25,7 +25,7 @@ export function useLessonPlayback(
   }, [podcast, userProgress]);
 
   const handleSelectLesson = useCallback((lesson: Lesson, isManualSelection = false) => {
-    console.log('🎵 handleSelectLesson:', lesson.title, 'manual:', isManualSelection, 'isCompleted:', lesson.isCompleted, 'reviewMode:', isInReviewMode());
+    console.log('🎵 handleSelectLesson called:', lesson.title, 'manual:', isManualSelection, 'isCompleted:', lesson.isCompleted, 'reviewMode:', isInReviewMode());
     
     if (isTransitioning.current) {
       console.log('🔄 Transition in progress, skipping selection');
@@ -50,9 +50,10 @@ export function useLessonPlayback(
     
     manualSelectionActive.current = isManualSelection;
     
-    // MEJORADO: Auto-start playback para selecciones manuales desde la ruta de aprendizaje
+    // CORREGIDO: Auto-start playback para selecciones manuales desde la ruta de aprendizaje
     if (isManualSelection) {
       console.log('▶️ Manual selection from learning path - auto-starting playback');
+      console.log('🔊 Setting isPlaying to TRUE for manual selection');
       setIsPlaying(true);
       setIsAutoAdvanceAllowed(true);
     } else {
@@ -73,7 +74,7 @@ export function useLessonPlayback(
   const handleTogglePlay = useCallback(() => {
     if (!currentLesson) return;
     
-    console.log('🎵 Toggle play - current state:', isPlaying);
+    console.log('🎵 Toggle play - current state:', isPlaying, '→ new state:', !isPlaying);
     setIsPlaying(!isPlaying);
     
     if (!isPlaying) {
