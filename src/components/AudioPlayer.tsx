@@ -16,6 +16,19 @@ interface AudioPlayerProps {
 }
 
 const AudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgressUpdate }: AudioPlayerProps) => {
+  // NUEVO: Log detallado de props recibidas
+  console.log('🎬🎬🎬 AUDIO PLAYER RENDER - Props received:', {
+    hasLesson: !!lesson,
+    lessonTitle: lesson?.title,
+    lessonId: lesson?.id,
+    isPlaying,
+    hasOnTogglePlay: typeof onTogglePlay === 'function',
+    hasOnComplete: typeof onComplete === 'function',
+    hasOnProgressUpdate: typeof onProgressUpdate === 'function',
+    lessonUrl: lesson?.urlAudio,
+    timestamp: new Date().toLocaleTimeString()
+  });
+
   const {
     audioRef,
     currentTime,
@@ -34,11 +47,11 @@ const AudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgressUp
   
   // If no lesson is selected, don't render the player
   if (!lesson) {
-    console.log('🚫 No lesson selected, not rendering audio player');
+    console.log('🚫 AUDIO PLAYER - No lesson selected, not rendering audio player');
     return null;
   }
   
-  console.log('🎵 Rendering AudioPlayer for lesson:', lesson.title, 'isPlaying:', isPlaying);
+  console.log('🎵 AUDIO PLAYER - Rendering AudioPlayer for lesson:', lesson.title, 'isPlaying:', isPlaying);
   
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white shadow-player z-40 transition-transform duration-150 animate-slide-up">

@@ -77,6 +77,23 @@ const CourseAccessHandler: React.FC<CourseAccessHandlerProps> = ({
     return null;
   }
 
+  // NUEVO: Log específico para AudioPlayer rendering decision
+  const shouldRenderAudioPlayer = currentLesson && hasAccess;
+  console.log('🎵🎵🎵 COURSE ACCESS HANDLER - AudioPlayer decision:', {
+    shouldRender: shouldRenderAudioPlayer,
+    hasCurrentLesson: !!currentLesson,
+    currentLessonTitle: currentLesson?.title,
+    hasAccess,
+    isPlaying,
+    willPassToAudioPlayer: {
+      lesson: currentLesson ? 'valid' : 'null',
+      isPlaying,
+      onTogglePlay: typeof onTogglePlay === 'function',
+      onLessonComplete: typeof onLessonComplete === 'function',
+      onProgressUpdate: typeof onProgressUpdate === 'function'
+    }
+  });
+
   return (
     <>
       <CourseMainContent
@@ -95,14 +112,23 @@ const CourseAccessHandler: React.FC<CourseAccessHandlerProps> = ({
       />
       
       {/* Audio player - only show when there's a current lesson and user has access */}
-      {currentLesson && hasAccess && (
-        <AudioPlayer 
-          lesson={currentLesson}
-          isPlaying={isPlaying}
-          onTogglePlay={onTogglePlay}
-          onComplete={onLessonComplete}
-          onProgressUpdate={onProgressUpdate}
-        />
+      {shouldRenderAudioPlayer && (
+        <>
+          <div>
+            {console.log('🎵🎵🎵 COURSE ACCESS HANDLER - Rendering AudioPlayer with props:', {
+              lessonTitle: currentLesson.title,
+              isPlaying,
+              timestamp: new Date().toLocaleTimeString()
+            })}
+          </div>
+          <AudioPlayer 
+            lesson={currentLesson}
+            isPlaying={isPlaying}
+            onTogglePlay={onTogglePlay}
+            onComplete={onLessonComplete}
+            onProgressUpdate={onProgressUpdate}
+          />
+        </>
       )}
 
       {/* Checkout Modal */}

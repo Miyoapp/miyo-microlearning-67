@@ -35,23 +35,45 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgres
     }
   }, [lesson?.id, volume, isMuted, playbackRate]);
   
-  // Handle play/pause when isPlaying state changes
+  // MEJORADO: Handle play/pause when isPlaying state changes with detailed logging
   useEffect(() => {
-    if (!audioRef.current || !lesson) return;
+    console.log('🎧🎧🎧 AUDIO PLAYER - isPlaying effect triggered:', {
+      hasAudioRef: !!audioRef.current,
+      hasLesson: !!lesson,
+      lessonTitle: lesson?.title,
+      isPlaying,
+      timestamp: new Date().toLocaleTimeString()
+    });
+
+    if (!audioRef.current || !lesson) {
+      console.log('❌ AUDIO PLAYER - Missing audioRef or lesson, cannot proceed');
+      return;
+    }
     
     const audio = audioRef.current;
     
     if (isPlaying) {
-      console.log("▶️ Playing audio for lesson:", lesson.title);
+      console.log("▶️▶️▶️ AUDIO PLAYER - Starting playback for lesson:", lesson.title);
+      console.log('🔊 AUDIO PLAYER - Calling audio.play()...');
+      
       const playPromise = audio.play();
+      
       if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          console.error("❌ Audio playback failed:", error);
+        playPromise.then(() => {
+          console.log('✅✅✅ AUDIO PLAYER - Audio playback started successfully:', lesson.title);
+        }).catch(error => {
+          console.error("❌❌❌ AUDIO PLAYER - Audio playback failed:", error);
+          console.error('🚫 AUDIO PLAYER - Error details:', {
+            lessonTitle: lesson.title,
+            audioSrc: audio.src,
+            audioReadyState: audio.readyState,
+            audioNetworkState: audio.networkState
+          });
           onTogglePlay();
         });
       }
     } else {
-      console.log("⏸️ Pausing audio");
+      console.log("⏸️⏸️⏸️ AUDIO PLAYER - Pausing audio for lesson:", lesson.title);
       audio.pause();
     }
   }, [isPlaying, lesson?.id, onTogglePlay]);
