@@ -33,32 +33,40 @@ const LearningPath = React.memo(({ lessons, modules, onSelectLesson, currentLess
     lessons.map(l => l.id).join('|')
   ]);
 
-  // MEJORADO: Handler de click que diferencia entre reproducir y mostrar error
+  // HANDLER DE CLICK CON LOGS ESPECÍFICOS
   const handleLessonClick = useCallback((lesson: Lesson) => {
+    console.log('🎯🎯🎯 LEARNING PATH - CLICK RECIBIDO:', {
+      lessonTitle: lesson.title,
+      timestamp: new Date().toLocaleTimeString()
+    });
+    
     const status = lessonStatusMap.get(lesson.id);
     if (!status) {
-      console.log('❌ No status found for lesson:', lesson.title);
+      console.log('🚫🚫🚫 LEARNING PATH - NO STATUS FOUND:', lesson.title);
       return;
     }
     
     const { canPlay, isCompleted, isLocked, isFirstInSequence } = status;
     
-    console.log('🎯 LearningPath click validation:', {
+    console.log('🎯🎯🎯 LEARNING PATH - VALIDACIÓN CLICK:', {
       lessonTitle: lesson.title,
       canPlay,
       isCompleted,
       isLocked,
       isFirstInSequence,
-      action: canPlay ? 'PLAY' : 'BLOCKED'
+      action: canPlay ? 'PERMITIR REPRODUCCIÓN' : 'BLOQUEAR'
     });
     
     if (canPlay) {
-      console.log('✅ Lesson is playable - starting immediate playback:', lesson.title);
-      // MEJORADO: Llamar con flag de selección manual para activar reproducción automática
+      console.log('✅✅✅ LEARNING PATH - ENVIANDO A onSelectLesson:', lesson.title);
       onSelectLesson(lesson);
+      console.log('✅✅✅ LEARNING PATH - onSelectLesson LLAMADO EXITOSAMENTE:', lesson.title);
     } else {
-      console.log('🚫 Lesson not playable:', lesson.title, 'isLocked:', isLocked, 'reason: previous lesson not completed');
-      // El componente LessonItem ya maneja la UI para lecciones bloqueadas
+      console.log('🚫🚫🚫 LEARNING PATH - LECCIÓN BLOQUEADA:', {
+        lessonTitle: lesson.title,
+        isLocked,
+        reason: 'lección anterior no completada'
+      });
     }
   }, [
     // ESTABILIZADO: Solo incluir referencias estables

@@ -1,3 +1,4 @@
+
 import { useEffect, useCallback, useRef } from 'react';
 import { Podcast } from '@/types';
 import { useUserLessonProgress } from './useUserLessonProgress';
@@ -6,7 +7,6 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { useLessonInitialization } from './consolidated-lessons/useLessonInitialization';
 import { useLessonPlayback } from './consolidated-lessons/useLessonPlayback';
 import { useLessonCompletion } from './consolidated-lessons/useLessonCompletion';
-import { isFirstLessonInSequence } from './consolidated-lessons/lessonOrderUtils';
 
 export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (podcast: Podcast) => void) {
   const { user } = useAuth();
@@ -61,29 +61,34 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     isAutoAdvanceAllowed
   );
 
-  // MEJORADO: Selección de lección que diferencia entre auto-positioning y selección manual
+  // MEJORADO: Selección de lección con logs específicos
   const handleSelectLesson = useCallback((lesson: any, isManualSelection = true) => {
-    console.log('🎯 useConsolidatedLessons.handleSelectLesson called:', lesson.title, 'isCompleted:', lesson.isCompleted ? '🏆' : '❌', 'isLocked:', lesson.isLocked ? '🔒' : '🔓', 'isManual:', isManualSelection);
+    console.log('🚀🚀🚀 useConsolidatedLessons - handleSelectLesson RECIBIDO:', {
+      lessonTitle: lesson.title,
+      isCompleted: lesson.isCompleted ? '🏆' : '❌',
+      isLocked: lesson.isLocked ? '🔒' : '🔓',
+      isManual: isManualSelection,
+      timestamp: new Date().toLocaleTimeString()
+    });
     
     // NUEVO: Marcar que el usuario ha hecho una selección manual
     if (isManualSelection) {
       hasUserMadeSelection.current = true;
-      console.log('👤 User made manual selection - preventing future auto-initialization');
+      console.log('👤👤👤 SELECCIÓN MANUAL DETECTADA - previniendo auto-inicialización futura');
     }
     
-    const lessonType = lesson.isCompleted ? 'COMPLETED/REPLAY (🏆)' : 'PROGRESS (▶)';
-    console.log('✅ Setting current lesson:', lesson.title, 'Type:', lessonType);
+    const lessonType = lesson.isCompleted ? 'COMPLETADA/REPLAY (🏆)' : 'EN PROGRESO (▶)';
+    console.log('✅✅✅ ESTABLECIENDO LECCIÓN ACTUAL:', lesson.title, 'Tipo:', lessonType);
     
     // Establecer la lección actual primero
     setCurrentLesson(lesson);
     
-    // CORREGIDO: Asegurar que isManualSelection se pase correctamente
-    console.log('🔄 Calling handleSelectLessonFromPlayback with isManualSelection:', isManualSelection);
+    console.log('🔄🔄🔄 LLAMANDO handleSelectLessonFromPlayback con isManualSelection:', isManualSelection);
     handleSelectLessonFromPlayback(lesson, isManualSelection);
     
-    // AGREGADO: Log del estado después de la selección
+    // Log del estado después de la selección
     setTimeout(() => {
-      console.log('⏰ Estado después de handleSelectLesson - isPlaying:', isPlaying);
+      console.log('⏰⏰⏰ ESTADO DESPUÉS DE handleSelectLesson - isPlaying:', isPlaying);
     }, 100);
   }, [setCurrentLesson, handleSelectLessonFromPlayback, isPlaying]);
 

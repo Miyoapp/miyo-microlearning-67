@@ -25,6 +25,20 @@ const LessonItem = React.memo(({ lesson, index, status, classes, onLessonClick }
   const { isCompleted, isCurrent, canPlay } = status;
   const { nodeClasses, textClasses } = classes;
   
+  // CLICK HANDLER CON LOG ESPECÍFICO
+  const handleClick = () => {
+    console.log('🔥🔥🔥 LESSON ITEM CLICK - INICIO:', {
+      lessonTitle: lesson.title,
+      canPlay,
+      isCompleted,
+      timestamp: new Date().toLocaleTimeString()
+    });
+    
+    onLessonClick(lesson);
+    
+    console.log('🔥🔥🔥 LESSON ITEM CLICK - ENVIADO A onLessonClick:', lesson.title);
+  };
+  
   // Efecto zigzag alternando posiciones
   const containerAlignment = index % 2 === 0 
     ? "justify-start" 
@@ -34,7 +48,7 @@ const LessonItem = React.memo(({ lesson, index, status, classes, onLessonClick }
     <div className={`flex ${containerAlignment} items-center`}>
       <div 
         className={nodeClasses}
-        onClick={() => onLessonClick(lesson)}
+        onClick={handleClick}
       >
         {/* CORREGIDO: Tamaño consistente de íconos (18px) */}
         {isCompleted ? (
@@ -56,7 +70,7 @@ const LessonItem = React.memo(({ lesson, index, status, classes, onLessonClick }
       {/* Título de la lección con ancho fijo para evitar afectar íconos */}
       <div 
         className={cn("ml-3 flex-1 max-w-[280px]", { "cursor-pointer": canPlay, "cursor-not-allowed": !canPlay })}
-        onClick={() => onLessonClick(lesson)}
+        onClick={handleClick}
       >
         <div className={cn(textClasses, "leading-snug")}>
           {lesson.title}
