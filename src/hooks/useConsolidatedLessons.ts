@@ -24,7 +24,13 @@ export function useConsolidatedLessons(
     handleProgressUpdate,
     isAutoAdvanceAllowed,
     manualSelectionActive
-  } = useLessonPlayback(podcast, currentLesson, userProgress, user, updateLessonPosition);
+  } = useLessonPlayback(
+    podcast, 
+    currentLesson, 
+    userProgress, 
+    user, 
+    updateLessonPosition
+  );
 
   const { initializeCurrentLesson, initializePodcastWithProgress } = useLessonInitialization(
     podcast,
