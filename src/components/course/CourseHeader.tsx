@@ -15,8 +15,12 @@ interface CourseHeaderProps {
   hasStarted: boolean;
   isSaved: boolean;
   progressPercentage?: number;
+  isCompleted: boolean;
+  isPremium: boolean;
+  hasAccess: boolean;
   onStartLearning: () => void;
   onToggleSave: () => void;
+  onShowCheckout: () => void;
 }
 
 const CourseHeader: React.FC<CourseHeaderProps> = ({
@@ -24,19 +28,19 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
   hasStarted,
   isSaved,
   progressPercentage = 0,
+  isCompleted,
+  isPremium,
+  hasAccess,
   onStartLearning,
-  onToggleSave
+  onToggleSave,
+  onShowCheckout
 }) => {
   const [showCheckout, setShowCheckout] = useState(false);
   const { hasPurchased, refetch } = useCoursePurchases();
-  
-  const isCompleted = progressPercentage >= 100;
-  const isPremium = podcast.tipo_curso === 'pago';
-  const hasAccess = !isPremium || hasPurchased(podcast.id);
 
   const handleStartLearning = () => {
     if (isPremium && !hasAccess) {
-      setShowCheckout(true);
+      onShowCheckout();
     } else {
       onStartLearning();
     }
