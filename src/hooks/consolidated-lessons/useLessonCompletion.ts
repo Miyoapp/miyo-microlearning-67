@@ -150,5 +150,16 @@ export function useLessonCompletion(
     isAutoAdvanceAllowed
   ]);
 
-  return { handleLessonComplete };
+  const advanceToNextLesson = useCallback(() => {
+    if (!currentLesson || !podcast) return;
+    
+    const nextLesson = getNextLesson(currentLesson, podcast.lessons, podcast.modules);
+    if (nextLesson) {
+      console.log('⏭️ Advancing to next lesson:', nextLesson.title);
+      setCurrentLesson(nextLesson);
+      setIsPlaying(true);
+    }
+  }, [currentLesson, podcast, setCurrentLesson, setIsPlaying]);
+
+  return { handleLessonComplete, advanceToNextLesson };
 }

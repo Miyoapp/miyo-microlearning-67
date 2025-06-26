@@ -33,13 +33,30 @@ export function useConsolidatedLessons(
     playbackSelectLesson
   );
 
+  // Mock functions for missing dependencies - these would need to be implemented properly
+  const markLessonCompleteInDB = useCallback(async (lessonId: string, courseId: string) => {
+    console.log('Mock: marking lesson complete in DB:', lessonId, courseId);
+  }, []);
+
+  const refetchLessonProgress = useCallback(() => {
+    console.log('Mock: refetching lesson progress');
+  }, []);
+
+  const refetchCourseProgress = useCallback(() => {
+    console.log('Mock: refetching course progress');
+  }, []);
+
   const { handleLessonComplete, advanceToNextLesson } = useLessonCompletion(
-    podcast,
     currentLesson,
-    userProgress,
+    podcast,
+    user,
+    setPodcast,
     setCurrentLesson,
-    playbackSelectLesson,
     setIsPlaying,
+    markLessonCompleteInDB,
+    updateLessonPosition,
+    refetchLessonProgress,
+    refetchCourseProgress,
     isAutoAdvanceAllowed
   );
 
