@@ -60,27 +60,8 @@ export function useLessonPlayback(
     if (isManualSelection) {
       console.log('▶️▶️▶️ SELECCIÓN MANUAL desde ruta de aprendizaje - iniciando reproducción automática');
       console.log('🔊🔊🔊 ESTABLECIENDO isPlaying = TRUE para selección manual');
-      
-      // NUEVO: Log timing crítico para sincronización
-      console.log('⏰⏰⏰ TIMING CHECK - About to call setIsPlaying(true):', {
-        currentIsPlaying: isPlaying,
-        aboutToSet: true,
-        lessonTitle: lesson.title,
-        timestamp: new Date().toLocaleTimeString()
-      });
-      
       setIsPlaying(true);
       setIsAutoAdvanceAllowed(true);
-      
-      // NUEVO: Verificar que el estado se actualizó (con timeout para async)
-      setTimeout(() => {
-        console.log('⏰⏰⏰ TIMING CHECK - After setIsPlaying(true) call:', {
-          currentIsPlaying: isPlaying,
-          lessonTitle: lesson.title,
-          expectedResult: 'isPlaying should be true in next render',
-          timestamp: new Date().toLocaleTimeString()
-        });
-      }, 50);
     } else {
       // Para selecciones automáticas (auto-positioning), no iniciar reproducción
       console.log('🎯 Auto-posicionamiento - NO iniciando reproducción');
@@ -93,7 +74,7 @@ export function useLessonPlayback(
       console.log('📊📊📊 TRACKING inicio de lección para:', lesson.isCompleted ? 'lección completada (replay/secuencia)' : 'lección incompleta');
       updateLessonPosition(lesson.id, podcast.id, 1);
     }
-  }, [podcast, updateLessonPosition, userProgress, isInReviewMode, isPlaying]);
+  }, [podcast, updateLessonPosition, userProgress, isInReviewMode]);
 
   const handleTogglePlay = useCallback(() => {
     if (!currentLesson) return;
