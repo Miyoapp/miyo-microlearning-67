@@ -7,14 +7,12 @@ interface CourseLearningPathSectionProps {
   podcast: Podcast;
   currentLessonId: string | null;
   onSelectLesson: (lesson: Lesson) => void;
-  onTogglePlay: () => void;
 }
 
 const CourseLearningPathSection: React.FC<CourseLearningPathSectionProps> = ({
   podcast,
   currentLessonId,
-  onSelectLesson,
-  onTogglePlay
+  onSelectLesson
 }) => {
   return (
     <div id="learning-path-section" className="bg-white rounded-2xl shadow-sm p-6">
@@ -22,7 +20,6 @@ const CourseLearningPathSection: React.FC<CourseLearningPathSectionProps> = ({
         lessons={podcast.lessons}
         modules={podcast.modules}
         onSelectLesson={onSelectLesson}
-        onTogglePlay={onTogglePlay}
         currentLessonId={currentLessonId}
       />
     </div>

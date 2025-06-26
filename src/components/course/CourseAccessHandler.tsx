@@ -77,12 +77,6 @@ const CourseAccessHandler: React.FC<CourseAccessHandlerProps> = ({
     return null;
   }
 
-  // SIMPLIFICADO: Wrapper para onSelectLesson que NO inicia reproducción automática
-  const handleSelectLesson = (lesson: Lesson) => {
-    console.log('🎯 CourseAccessHandler.handleSelectLesson - setting lesson without auto-play:', lesson.title);
-    onSelectLesson(lesson);
-  };
-
   return (
     <>
       <CourseMainContent
@@ -96,8 +90,7 @@ const CourseAccessHandler: React.FC<CourseAccessHandlerProps> = ({
         hasAccess={hasAccess}
         onStartLearning={onStartLearning}
         onToggleSave={onToggleSave}
-        onSelectLesson={handleSelectLesson}
-        onTogglePlay={onTogglePlay}
+        onSelectLesson={onSelectLesson}
         onShowCheckout={onShowCheckout}
       />
       

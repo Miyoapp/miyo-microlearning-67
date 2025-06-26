@@ -73,7 +73,6 @@ const CompanyCourse = () => {
         podcast={podcast}
         currentLessonId={currentLesson?.id || null}
         onSelectLesson={handleSelectLesson}
-        onTogglePlay={handleTogglePlay}
       />
       <AudioPlayer 
         lesson={currentLesson}

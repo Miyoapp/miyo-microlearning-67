@@ -7,10 +7,9 @@ interface CompanyCourseContentProps {
   podcast: Podcast;
   currentLessonId: string | null;
   onSelectLesson: (lesson: Lesson) => void;
-  onTogglePlay: () => void;
 }
 
-const CompanyCourseContent = ({ podcast, currentLessonId, onSelectLesson, onTogglePlay }: CompanyCourseContentProps) => {
+const CompanyCourseContent = ({ podcast, currentLessonId, onSelectLesson }: CompanyCourseContentProps) => {
   return (
     <section className="py-4 px-4 sm:px-6 lg:px-8" id="learning-path">
       <div className="miyo-container">
@@ -20,7 +19,6 @@ const CompanyCourseContent = ({ podcast, currentLessonId, onSelectLesson, onTogg
               lessons={podcast.lessons}
               modules={podcast.modules}
               onSelectLesson={onSelectLesson}
-              onTogglePlay={onTogglePlay}
               currentLessonId={currentLessonId}
             />
           </div>

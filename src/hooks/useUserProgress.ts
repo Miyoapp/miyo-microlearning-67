@@ -7,14 +7,13 @@ export type { UserCourseProgress } from './user-progress/types';
 
 export function useUserProgress() {
   const { userProgress, setUserProgress, loading, refetch } = useUserProgressData();
-  const { updateCourseProgress, updateLessonPosition } = useUserProgressUpdates(userProgress, setUserProgress);
+  const { updateCourseProgress } = useUserProgressUpdates(userProgress, setUserProgress);
   const { toggleSaveCourse, startCourse } = useUserProgressActions(userProgress, setUserProgress, updateCourseProgress);
 
   return {
     userProgress,
     loading,
     updateCourseProgress,
-    updateLessonPosition,
     toggleSaveCourse,
     startCourse,
     refetch

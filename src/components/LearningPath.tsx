@@ -10,11 +10,10 @@ interface LearningPathProps {
   lessons: Lesson[];
   modules: Module[];
   onSelectLesson: (lesson: Lesson) => void;
-  onTogglePlay: () => void;
   currentLessonId: string | null;
 }
 
-const LearningPath = React.memo(({ lessons, modules, onSelectLesson, onTogglePlay, currentLessonId }: LearningPathProps) => {
+const LearningPath = React.memo(({ lessons, modules, onSelectLesson, currentLessonId }: LearningPathProps) => {
   // Use custom hooks for status and classes
   const lessonStatusMap = useLessonStatus(lessons, modules, currentLessonId);
   const getLessonClasses = useLessonClasses(lessons, lessonStatusMap);
@@ -34,7 +33,7 @@ const LearningPath = React.memo(({ lessons, modules, onSelectLesson, onTogglePla
     lessons.map(l => l.id).join('|')
   ]);
 
-  // SIMPLIFICADO: Handler de click que establece la lección y inicia reproducción directamente
+  // MEJORADO: Handler de click que diferencia entre reproducir y mostrar error
   const handleLessonClick = useCallback((lesson: Lesson) => {
     const status = lessonStatusMap.get(lesson.id);
     if (!status) {
@@ -55,13 +54,8 @@ const LearningPath = React.memo(({ lessons, modules, onSelectLesson, onTogglePla
     
     if (canPlay) {
       console.log('✅ Lesson is playable - starting immediate playback:', lesson.title);
-      
-      // SIMPLIFICADO: Establecer lección sin auto-play
+      // MEJORADO: Llamar con flag de selección manual para activar reproducción automática
       onSelectLesson(lesson);
-      
-      // DIRECTO: Iniciar reproducción inmediatamente
-      console.log('🔊 Starting playback directly via handleTogglePlay');
-      onTogglePlay();
     } else {
       console.log('🚫 Lesson not playable:', lesson.title, 'isLocked:', isLocked, 'reason: previous lesson not completed');
       // El componente LessonItem ya maneja la UI para lecciones bloqueadas
@@ -69,8 +63,7 @@ const LearningPath = React.memo(({ lessons, modules, onSelectLesson, onTogglePla
   }, [
     // ESTABILIZADO: Solo incluir referencias estables
     Array.from(lessonStatusMap.entries()).map(([id, status]) => `${id}:${status._hash || 'no-hash'}`).join('|'),
-    onSelectLesson,
-    onTogglePlay
+    onSelectLesson
   ]);
 
   // OPTIMIZADO: Memoizar módulos ordenados

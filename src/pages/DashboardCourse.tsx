@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
@@ -174,8 +175,8 @@ const DashboardCourse = () => {
       return;
     }
     
-    // Use simple selection without manual flag
-    handleSelectLesson(lesson);
+    // Use manual selection flag to prevent auto-play interference
+    handleSelectLesson(lesson, true);
   };
 
   const handleRetry = () => {
