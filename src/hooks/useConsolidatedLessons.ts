@@ -1,3 +1,4 @@
+
 import { useEffect, useCallback, useRef } from 'react';
 import { Podcast } from '@/types';
 import { useUserLessonProgress } from './useUserLessonProgress';
@@ -61,31 +62,24 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     isAutoAdvanceAllowed
   );
 
-  // MEJORADO: Selección de lección que diferencia entre auto-positioning y selección manual
-  const handleSelectLesson = useCallback((lesson: any, isManualSelection = true) => {
-    console.log('🎯 useConsolidatedLessons.handleSelectLesson called:', lesson.title, 'isCompleted:', lesson.isCompleted ? '🏆' : '❌', 'isLocked:', lesson.isLocked ? '🔒' : '🔓', 'isManual:', isManualSelection);
+  // SIMPLIFICADO: Selección de lección que solo establece la lección actual sin auto-play
+  const handleSelectLesson = useCallback((lesson: any) => {
+    console.log('🎯 useConsolidatedLessons.handleSelectLesson called (NO AUTO-PLAY):', lesson.title, 'isCompleted:', lesson.isCompleted ? '🏆' : '❌', 'isLocked:', lesson.isLocked ? '🔒' : '🔓');
     
     // NUEVO: Marcar que el usuario ha hecho una selección manual
-    if (isManualSelection) {
-      hasUserMadeSelection.current = true;
-      console.log('👤 User made manual selection - preventing future auto-initialization');
-    }
+    hasUserMadeSelection.current = true;
+    console.log('👤 User made manual selection - preventing future auto-initialization');
     
     const lessonType = lesson.isCompleted ? 'COMPLETED/REPLAY (🏆)' : 'PROGRESS (▶)';
     console.log('✅ Setting current lesson:', lesson.title, 'Type:', lessonType);
     
-    // Establecer la lección actual primero
+    // SIMPLIFICADO: Solo establecer la lección actual, sin auto-play
     setCurrentLesson(lesson);
     
-    // CORREGIDO: Asegurar que isManualSelection se pase correctamente
-    console.log('🔄 Calling handleSelectLessonFromPlayback with isManualSelection:', isManualSelection);
-    handleSelectLessonFromPlayback(lesson, isManualSelection);
-    
-    // AGREGADO: Log del estado después de la selección
-    setTimeout(() => {
-      console.log('⏰ Estado después de handleSelectLesson - isPlaying:', isPlaying);
-    }, 100);
-  }, [setCurrentLesson, handleSelectLessonFromPlayback, isPlaying]);
+    // SIMPLIFICADO: Llamar al hook de playback con flag de selección manual pero SIN auto-play
+    console.log('🔄 Calling handleSelectLessonFromPlayback with isManualSelection: false (no auto-play)');
+    handleSelectLessonFromPlayback(lesson, false);
+  }, [setCurrentLesson, handleSelectLessonFromPlayback]);
 
   // CRÍTICO: Inicializar podcast cuando todos los datos estén disponibles
   useEffect(() => {
