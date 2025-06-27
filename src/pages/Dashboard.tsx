@@ -8,10 +8,13 @@ import { useUserProgress } from '@/hooks/useUserProgress';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { Podcast } from '@/types';
+import { SidebarTrigger } from '@/components/ui/sidebar/SidebarTrigger';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [allCourses, setAllCourses] = useState<Podcast[]>([]);
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState<string>('');
@@ -138,6 +141,13 @@ const Dashboard = () => {
   return (
     <DashboardLayout>
       <div className="max-w-7xl mx-auto pb-6">
+        {/* Mobile hamburger menu - positioned like CoursePageHeader */}
+        {isMobile && (
+          <div className="mb-4 px-4 flex justify-end">
+            <SidebarTrigger />
+          </div>
+        )}
+
         {/* Mobile-first header */}
         <div className="mb-6 sm:mb-8 px-4 sm:px-0">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{welcomeMessage}</h1>
