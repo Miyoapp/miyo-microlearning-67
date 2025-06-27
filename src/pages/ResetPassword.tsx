@@ -14,19 +14,34 @@ const ResetPassword = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [isValidSession, setIsValidSession] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    // Verificar si hay un token de recuperación válido
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setIsValidSession(true);
-      } else {
-        // Si no hay sesión válida, redirigir al login
-        toast.error('El enlace de recuperación no es válido o ha expirado');
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting session:', error);
+          toast.error('El enlace de recuperación no es válido o ha expirado');
+          navigate('/login');
+          return;
+        }
+
+        if (session) {
+          setIsValidSession(true);
+        } else {
+          toast.error('El enlace de recuperación no es válido o ha expirado');
+          navigate('/login');
+        }
+      } catch (error) {
+        console.error('Error checking session:', error);
+        toast.error('Error al validar el enlace de recuperación');
         navigate('/login');
+      } finally {
+        setCheckingSession(false);
       }
     };
     
@@ -66,12 +81,24 @@ const ResetPassword = () => {
     }
   };
 
-  if (!isValidSession) {
+  if (checkingSession) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <Card className="w-full max-w-md">
           <CardContent className="text-center py-8">
             <p className="text-gray-600">Verificando enlace de recuperación...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!isValidSession) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="text-center py-8">
+            <p className="text-gray-600">Redirigiendo...</p>
           </CardContent>
         </Card>
       </div>
