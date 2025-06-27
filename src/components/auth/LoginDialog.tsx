@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -11,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useAuth } from './AuthProvider';
 import { toast } from 'sonner';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 
 interface LoginDialogProps {
   open: boolean;
@@ -55,6 +56,11 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({ open, onOpenChange }) 
     setLoading(false);
   };
 
+  const handleForgotPassword = () => {
+    onOpenChange(false);
+    navigate('/forgot-password');
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -91,6 +97,15 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({ open, onOpenChange }) 
                 required
                 className="w-full"
               />
+              <div className="text-right mt-1">
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  className="text-sm text-miyo-800 hover:underline"
+                >
+                  ¿Olvidaste tu contraseña?
+                </button>
+              </div>
             </div>
             <Button
               type="submit"
