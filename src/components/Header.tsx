@@ -44,7 +44,7 @@ const Header = () => {
     <header className="bg-white shadow-sm border-b">
       <div className="miyo-container">
         <div className="flex items-center justify-between h-16">
-          {/* Mobile Layout: Logo left, auth buttons right (no hamburger here) */}
+          {/* Mobile Layout: Logo left, auth buttons right (no hamburger here for logged in users) */}
           {isMobile ? (
             <>
               <Logo onClick={handleLogoClick} />
