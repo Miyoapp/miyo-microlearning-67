@@ -2,6 +2,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
+import { SidebarTrigger } from '@/components/ui/sidebar/SidebarTrigger';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface CoursePageHeaderProps {
   isReviewMode?: boolean;
@@ -9,6 +11,7 @@ interface CoursePageHeaderProps {
 
 const CoursePageHeader: React.FC<CoursePageHeaderProps> = ({ isReviewMode }) => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   // DIAGNOSTIC: Monitor header state and props
   console.log('📋 COURSE PAGE HEADER RENDER:', {
@@ -22,16 +25,33 @@ const CoursePageHeader: React.FC<CoursePageHeaderProps> = ({ isReviewMode }) => 
 
   return (
     <div className="mb-6 sm:mb-8 px-4 sm:px-0">
-      {/* Back arrow button */}
-      <button 
-        onClick={() => navigate(-1)}
-        className="flex items-center text-gray-600 hover:text-[#5E17EA] mb-4 transition-colors group"
-      >
-        <ChevronLeft 
-          size={24} 
-          className="mr-1 text-[#5E17EA] group-hover:translate-x-[-2px] transition-transform" 
-        />
-      </button>
+      {/* Mobile Layout: Back button left, menu button right */}
+      {isMobile ? (
+        <div className="flex items-center justify-between mb-4">
+          <button 
+            onClick={() => navigate(-1)}
+            className="flex items-center text-gray-600 hover:text-[#5E17EA] transition-colors group"
+          >
+            <ChevronLeft 
+              size={24} 
+              className="mr-1 text-[#5E17EA] group-hover:translate-x-[-2px] transition-transform" 
+            />
+          </button>
+          
+          <SidebarTrigger />
+        </div>
+      ) : (
+        /* Desktop Layout: Current layout maintained */
+        <button 
+          onClick={() => navigate(-1)}
+          className="flex items-center text-gray-600 hover:text-[#5E17EA] mb-4 transition-colors group"
+        >
+          <ChevronLeft 
+            size={24} 
+            className="mr-1 text-[#5E17EA] group-hover:translate-x-[-2px] transition-transform" 
+          />
+        </button>
+      )}
 
       {isReviewMode && (
         <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
