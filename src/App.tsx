@@ -9,6 +9,7 @@ import Header from './components/Header';
 import Home from './pages/Home';
 import LoginPage from './pages/LoginPage';
 import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import EmailConfirmation from './pages/EmailConfirmation';
 import Dashboard from './pages/Dashboard';
 import DashboardCourse from './pages/DashboardCourse';
@@ -31,6 +32,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/email-confirmation" element={<EmailConfirmation />} />
             
             {/* Dashboard routes - Protected */}
