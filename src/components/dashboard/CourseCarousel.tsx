@@ -96,9 +96,6 @@ const CourseCarousel: React.FC<CourseCarouselProps> = ({
     );
   }
 
-  // Show navigation for mobile when more than 1 course, desktop when more than 4
-  const shouldShowNavigation = isMobile ? courses.length > 1 : courses.length > 4;
-
   return (
     <div className="mb-6 sm:mb-8">
       <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 px-4 sm:px-0">{title}</h2>
@@ -141,8 +138,35 @@ const CourseCarousel: React.FC<CourseCarouselProps> = ({
             </div>
           </div>
 
-          {/* Navigation arrows - only for desktop */}
-          {shouldShowNavigation && !isMobile && (
+          {/* Mobile navigation arrows - show only if more than 1 course */}
+          {isMobile && courses.length > 1 && (
+            <>
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute left-6 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-sm shadow-lg z-20 h-8 w-8 border-gray-200"
+                onClick={scrollPrev}
+                disabled={!canScrollPrev}
+                style={{ opacity: canScrollPrev ? 1 : 0.3 }}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute right-6 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-sm shadow-lg z-20 h-8 w-8 border-gray-200"
+                onClick={scrollNext}
+                disabled={!canScrollNext}
+                style={{ opacity: canScrollNext ? 1 : 0.3 }}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </>
+          )}
+
+          {/* Desktop navigation arrows - only show when more than 4 courses */}
+          {!isMobile && courses.length > 4 && (
             <>
               <Button
                 variant="outline"
