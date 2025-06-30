@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from './auth/AuthProvider';
 import Logo from './common/Logo';
@@ -11,6 +11,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 const Header = () => {
   const { user, signOut, forceLogout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const isMobile = useIsMobile();
 
   const handleLogout = async () => {
@@ -37,6 +38,10 @@ const Header = () => {
     }
   };
 
+  // Check if we're on homepage and user is logged in to show hamburger menu
+  const isHomepage = location.pathname === '/';
+  const shouldShowHamburger = user && (isHomepage || location.pathname.startsWith('/dashboard'));
+
   // Debug: mostrar el estado actual en consola
   console.log('Header render - User:', user?.email || 'No user', 'Path:', window.location.pathname);
 
@@ -60,7 +65,8 @@ const Header = () => {
                     >
                       Cerrar
                     </Button>
-                    <SidebarTrigger />
+                    {/* Show hamburger menu on homepage and dashboard for logged in users */}
+                    {shouldShowHamburger && <SidebarTrigger />}
                   </>
                 ) : (
                   <>
@@ -97,7 +103,7 @@ const Header = () => {
                     >
                       Cerrar Sesión
                     </Button>
-                    <SidebarTrigger />
+                    {shouldShowHamburger && <SidebarTrigger />}
                   </>
                 ) : (
                   <>

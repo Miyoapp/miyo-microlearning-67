@@ -33,15 +33,18 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
   const isMobile = useIsMobile();
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
-  // Optimized Embla configuration for mobile touch
+  // Optimized Embla configuration for mobile touch with snap
   const options: EmblaOptionsType = {
-    align: 'start',
+    align: 'center',
     slidesToScroll: 1,
     containScroll: 'trimSnaps',
-    dragFree: true, // Better for touch on mobile
+    dragFree: false, // Disable drag free for snap behavior
     skipSnaps: false,
     startIndex: 0,
+    // Add snap behavior
+    loop: false,
   };
 
   const [emblaRef, emblaApi] = useEmblaCarousel(options);
@@ -64,6 +67,7 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
     if (!emblaApi) return;
     setCanScrollPrev(emblaApi.canScrollPrev());
     setCanScrollNext(emblaApi.canScrollNext());
+    setSelectedIndex(emblaApi.selectedScrollSnap());
     console.log('TouchCarousel: Carousel state updated', {
       canScrollPrev: emblaApi.canScrollPrev(),
       canScrollNext: emblaApi.canScrollNext(),
@@ -104,7 +108,7 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
       <h2 className="text-xl sm:text-2xl font-bold mb-6 px-4 sm:px-0">{title}</h2>
       
       <div className="relative">
-        {/* Mobile-optimized carousel container */}
+        {/* Mobile-optimized carousel container with snap */}
         <div 
           className="overflow-hidden cursor-grab active:cursor-grabbing" 
           ref={emblaRef}
@@ -113,17 +117,18 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
             WebkitOverflowScrolling: 'touch'
           }}
         >
-          <div className="flex touch-pan-x">
+          <div className={`flex ${isMobile ? 'snap-x snap-mandatory' : ''}`}>
             {courses.map((course, index) => (
               <div 
                 key={course.podcast.id} 
                 className={`flex-none ${
                   isMobile 
-                    ? 'w-[280px] min-w-[280px] mr-4 first:ml-4 last:mr-4' 
+                    ? 'w-[90vw] max-w-[320px] px-4 snap-center snap-always' 
                     : 'w-full sm:w-1/2 lg:w-1/3 xl:w-1/4 pr-6'
                 }`}
                 style={{ 
-                  flex: isMobile ? '0 0 280px' : undefined
+                  flex: isMobile ? '0 0 90vw' : undefined,
+                  maxWidth: isMobile ? '320px' : undefined
                 }}
               >
                 <CourseCardWithProgress
@@ -166,16 +171,16 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
           </>
         )}
 
-        {/* Mobile scroll indicator dots */}
+        {/* Mobile scroll indicator dots - improved */}
         {isMobile && courses.length > 1 && (
-          <div className="flex justify-center mt-4 space-x-2">
+          <div className="flex justify-center mt-6 space-x-2">
             {courses.map((_, index) => (
               <button
                 key={index}
-                className={`w-2 h-2 rounded-full transition-colors ${
-                  index === (emblaApi?.selectedScrollSnap() || 0) 
-                    ? 'bg-miyo-800' 
-                    : 'bg-gray-300'
+                className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                  index === selectedIndex 
+                    ? 'bg-miyo-800 scale-125' 
+                    : 'bg-gray-300 hover:bg-gray-400'
                 }`}
                 onClick={() => emblaApi?.scrollTo(index)}
               />
