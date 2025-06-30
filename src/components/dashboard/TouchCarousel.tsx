@@ -34,13 +34,14 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
 
-  // Optimized Embla configuration for better touch handling
+  // Optimized Embla configuration for mobile touch
   const options: EmblaOptionsType = {
     align: 'start',
     slidesToScroll: 1,
     containScroll: 'trimSnaps',
-    dragFree: false, // Changed from true to false for better control
-    skipSnaps: false, // Ensure it stops at cards properly
+    dragFree: true, // Better for touch on mobile
+    skipSnaps: false,
+    startIndex: 0,
   };
 
   const [emblaRef, emblaApi] = useEmblaCarousel(options);
@@ -65,13 +66,15 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
     setCanScrollNext(emblaApi.canScrollNext());
     console.log('TouchCarousel: Carousel state updated', {
       canScrollPrev: emblaApi.canScrollPrev(),
-      canScrollNext: emblaApi.canScrollNext()
+      canScrollNext: emblaApi.canScrollNext(),
+      selectedIndex: emblaApi.selectedScrollSnap(),
+      totalSlides: emblaApi.scrollSnapList().length
     });
   }, [emblaApi]);
 
   useEffect(() => {
     if (!emblaApi) return;
-    console.log('TouchCarousel: Embla API initialized');
+    console.log('TouchCarousel: Embla API initialized with', courses.length, 'courses');
     onSelect();
     emblaApi.on('select', onSelect);
     emblaApi.on('reInit', onSelect);
@@ -80,7 +83,7 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
       emblaApi.off('select', onSelect);
       emblaApi.off('reInit', onSelect);
     };
-  }, [emblaApi, onSelect]);
+  }, [emblaApi, onSelect, courses.length]);
 
   if (courses.length === 0) {
     return (
@@ -93,7 +96,7 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
     );
   }
 
-  // Determine when to show navigation arrows
+  // Show navigation for mobile when more than 1 course, desktop when more than 4
   const shouldShowNavigation = isMobile ? courses.length > 1 : courses.length > 4;
 
   return (
@@ -101,21 +104,27 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
       <h2 className="text-xl sm:text-2xl font-bold mb-6 px-4 sm:px-0">{title}</h2>
       
       <div className="relative">
-        {/* Unified carousel structure with optimized touch CSS */}
+        {/* Mobile-optimized carousel container */}
         <div 
-          className="overflow-hidden touch-pan-x" 
+          className="overflow-hidden cursor-grab active:cursor-grabbing" 
           ref={emblaRef}
-          style={{ touchAction: 'pan-x' }}
+          style={{ 
+            touchAction: 'pan-x pinch-zoom',
+            WebkitOverflowScrolling: 'touch'
+          }}
         >
-          <div className="flex">
-            {courses.map((course) => (
+          <div className="flex touch-pan-x">
+            {courses.map((course, index) => (
               <div 
                 key={course.podcast.id} 
                 className={`flex-none ${
                   isMobile 
-                    ? 'w-[85vw] max-w-[320px] mr-4 first:ml-4 last:mr-4' 
+                    ? 'w-[280px] min-w-[280px] mr-4 first:ml-4 last:mr-4' 
                     : 'w-full sm:w-1/2 lg:w-1/3 xl:w-1/4 pr-6'
                 }`}
+                style={{ 
+                  flex: isMobile ? '0 0 280px' : undefined
+                }}
               >
                 <CourseCardWithProgress
                   podcast={course.podcast}
@@ -132,29 +141,46 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
           </div>
         </div>
 
-        {/* Navigation arrows - unified logic */}
-        {shouldShowNavigation && (
+        {/* Navigation arrows - only show on desktop or when really needed */}
+        {shouldShowNavigation && !isMobile && (
           <>
             <Button
               variant="outline"
               size="icon"
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 sm:-translate-x-4 bg-white shadow-lg z-10 h-8 w-8 sm:h-10 sm:w-10"
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-white shadow-lg z-10 h-10 w-10"
               onClick={scrollPrev}
               disabled={!canScrollPrev}
             >
-              <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
+              <ChevronLeft className="h-4 w-4" />
             </Button>
 
             <Button
               variant="outline"
               size="icon"
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 sm:translate-x-4 bg-white shadow-lg z-10 h-8 w-8 sm:h-10 sm:w-10"
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-white shadow-lg z-10 h-10 w-10"
               onClick={scrollNext}
               disabled={!canScrollNext}
             >
-              <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
+              <ChevronRight className="h-4 w-4" />
             </Button>
           </>
+        )}
+
+        {/* Mobile scroll indicator dots */}
+        {isMobile && courses.length > 1 && (
+          <div className="flex justify-center mt-4 space-x-2">
+            {courses.map((_, index) => (
+              <button
+                key={index}
+                className={`w-2 h-2 rounded-full transition-colors ${
+                  index === (emblaApi?.selectedScrollSnap() || 0) 
+                    ? 'bg-miyo-800' 
+                    : 'bg-gray-300'
+                }`}
+                onClick={() => emblaApi?.scrollTo(index)}
+              />
+            ))}
+          </div>
         )}
       </div>
     </div>

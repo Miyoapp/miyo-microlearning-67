@@ -92,11 +92,34 @@
     animation: pulse 2s infinite ease-in-out;
   }
 
-  /* Touch optimization for carousels */
+  /* IMPROVED: Enhanced touch optimization for carousels */
   .touch-pan-x {
     touch-action: pan-x;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
+    /* Better carousel dragging */
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+  }
+
+  /* IMPROVED: Cursor states for carousel interaction */
+  .cursor-grab {
+    cursor: grab;
+  }
+
+  .cursor-grab:active,
+  .active\:cursor-grabbing:active {
+    cursor: grabbing;
+  }
+
+  /* IMPROVED: Better mobile scroll behavior */
+  @supports (-webkit-overflow-scrolling: touch) {
+    .touch-pan-x {
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
+    }
   }
   
   /* Mobile-first: hide scrollbar on mobile, show on desktop */
@@ -114,7 +137,7 @@
     }
   }
 
-  /* Mobile-first optimizations */
+  /* IMPROVED: Mobile-first optimizations with better spacing */
   @media (max-width: 767px) {
     /* Prevent horizontal scrolling */
     html, body {
@@ -122,7 +145,7 @@
       max-width: 100vw;
     }
     
-    /* Improve touch targets - minimum 44px */
+    /* IMPROVED: Better touch targets - minimum 44px */
     button, [role="button"], .touchable {
       min-height: 44px;
       min-width: 44px;
@@ -133,23 +156,33 @@
       font-size: 16px;
     }
 
-    /* Mobile-specific spacing */
+    /* IMPROVED: Mobile-specific spacing with better margins */
     .mobile-padding {
       @apply px-4;
     }
 
-    /* Mobile-optimized typography */
+    /* IMPROVED: Mobile-optimized typography with better line heights */
     h1 {
-      @apply text-2xl;
+      @apply text-2xl leading-tight;
     }
 
     h2 {
-      @apply text-xl;
+      @apply text-xl leading-tight;
     }
 
-    /* Mobile card optimizations */
+    /* IMPROVED: Mobile card optimizations with consistent spacing */
     .card-mobile {
-      @apply rounded-xl shadow-sm;
+      @apply rounded-xl shadow-sm mx-4;
+    }
+
+    /* IMPROVED: Better mobile carousel spacing */
+    .miyo-container {
+      @apply px-0; /* Remove container padding for carousels */
+    }
+
+    /* Exception for non-carousel content */
+    .miyo-container:not(.carousel-container) {
+      @apply px-4;
     }
   }
 
@@ -167,6 +200,11 @@
 
     h2 {
       @apply text-2xl;
+    }
+
+    /* Restore container padding on desktop */
+    .miyo-container {
+      @apply px-6 lg:px-8;
     }
   }
 
@@ -215,6 +253,25 @@
   @media (min-width: 1280px) {
     .mobile-grid {
       @apply xl:grid-cols-4;
+    }
+  }
+
+  /* IMPROVED: Mobile carousel optimizations */
+  @media (max-width: 767px) {
+    /* Better card sizing in carousels */
+    .carousel-card {
+      min-width: 280px;
+      max-width: 320px;
+      flex: 0 0 280px;
+    }
+
+    /* Smooth scrolling for mobile carousels */
+    .carousel-container {
+      scroll-snap-type: x mandatory;
+    }
+
+    .carousel-item {
+      scroll-snap-align: start;
     }
   }
 }

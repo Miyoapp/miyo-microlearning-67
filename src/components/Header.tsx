@@ -44,21 +44,24 @@ const Header = () => {
     <header className="bg-white shadow-sm border-b">
       <div className="miyo-container">
         <div className="flex items-center justify-between h-16">
-          {/* Mobile Layout: Logo left, auth buttons right (no hamburger here for logged in users) */}
+          {/* Mobile Layout: Logo left, hamburger + auth buttons right */}
           {isMobile ? (
             <>
               <Logo onClick={handleLogoClick} />
               
-              <nav className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2">
                 {user ? (
-                  <Button 
-                    onClick={handleLogout}
-                    variant="outline" 
-                    size="sm"
-                    className="text-miyo-800 border-miyo-800 hover:bg-miyo-100 text-xs px-2"
-                  >
-                    Cerrar
-                  </Button>
+                  <>
+                    <Button 
+                      onClick={handleLogout}
+                      variant="outline" 
+                      size="sm"
+                      className="text-miyo-800 border-miyo-800 hover:bg-miyo-100 text-xs px-2"
+                    >
+                      Cerrar
+                    </Button>
+                    <SidebarTrigger />
+                  </>
                 ) : (
                   <>
                     <Link to="/login">
@@ -73,7 +76,7 @@ const Header = () => {
                     </Link>
                   </>
                 )}
-              </nav>
+              </div>
             </>
           ) : (
             /* Desktop Layout: Current layout maintained */
