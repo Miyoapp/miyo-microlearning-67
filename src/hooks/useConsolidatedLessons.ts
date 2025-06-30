@@ -1,4 +1,3 @@
-
 import { useEffect, useCallback, useRef } from 'react';
 import { Podcast } from '@/types';
 import { useUserLessonProgress } from './useUserLessonProgress';
@@ -61,21 +60,19 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     isAutoAdvanceAllowed
   );
 
-  // MEJORADO: Selección de lección con logs específicos
-  const handleSelectLesson = useCallback((lesson: any, isManualSelection = true) => {
+  // MEJORADO: Selección de lección con auto-play forzado
+  const handleSelectLesson = useCallback((lesson: any, shouldAutoPlay = false) => {
     console.log('🚀🚀🚀 useConsolidatedLessons - handleSelectLesson RECIBIDO:', {
       lessonTitle: lesson.title,
       isCompleted: lesson.isCompleted ? '🏆' : '❌',
       isLocked: lesson.isLocked ? '🔒' : '🔓',
-      isManual: isManualSelection,
+      shouldAutoPlay: shouldAutoPlay ? '▶️ AUTO-PLAY' : '⏸️ NO AUTO-PLAY',
       timestamp: new Date().toLocaleTimeString()
     });
     
     // NUEVO: Marcar que el usuario ha hecho una selección manual
-    if (isManualSelection) {
-      hasUserMadeSelection.current = true;
-      console.log('👤👤👤 SELECCIÓN MANUAL DETECTADA - previniendo auto-inicialización futura');
-    }
+    hasUserMadeSelection.current = true;
+    console.log('👤👤👤 SELECCIÓN MANUAL DETECTADA - previniendo auto-inicialización futura');
     
     const lessonType = lesson.isCompleted ? 'COMPLETADA/REPLAY (🏆)' : 'EN PROGRESO (▶)';
     console.log('✅✅✅ ESTABLECIENDO LECCIÓN ACTUAL:', lesson.title, 'Tipo:', lessonType);
@@ -83,14 +80,20 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     // Establecer la lección actual primero
     setCurrentLesson(lesson);
     
-    console.log('🔄🔄🔄 LLAMANDO handleSelectLessonFromPlayback con isManualSelection:', isManualSelection);
-    handleSelectLessonFromPlayback(lesson, isManualSelection);
+    // CRÍTICO: Si shouldAutoPlay es true, forzar reproducción inmediata
+    if (shouldAutoPlay) {
+      console.log('🎵🎵🎵 AUTO-PLAY FORZADO - Iniciando reproducción inmediata');
+      // Dar un pequeño delay para que la lección se establezca primero
+      setTimeout(() => {
+        setIsPlaying(true);
+        console.log('🎵🎵🎵 setIsPlaying(true) EJECUTADO - Audio debe comenzar');
+      }, 100);
+    }
     
-    // Log del estado después de la selección
-    setTimeout(() => {
-      console.log('⏰⏰⏰ ESTADO DESPUÉS DE handleSelectLesson - isPlaying:', isPlaying);
-    }, 100);
-  }, [setCurrentLesson, handleSelectLessonFromPlayback, isPlaying]);
+    console.log('🔄🔄🔄 LLAMANDO handleSelectLessonFromPlayback');
+    handleSelectLessonFromPlayback(lesson, true);
+    
+  }, [setCurrentLesson, handleSelectLessonFromPlayback, setIsPlaying]);
 
   // CRÍTICO: Inicializar podcast cuando todos los datos estén disponibles
   useEffect(() => {

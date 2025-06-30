@@ -18,14 +18,14 @@ interface LessonItemProps {
     nodeClasses: string;
     textClasses: string;
   };
-  onLessonClick: (lesson: Lesson) => void;
+  onLessonClick: (lesson: Lesson, shouldAutoPlay?: boolean) => void;
 }
 
 const LessonItem = React.memo(({ lesson, index, status, classes, onLessonClick }: LessonItemProps) => {
   const { isCompleted, isCurrent, canPlay } = status;
   const { nodeClasses, textClasses } = classes;
   
-  // CLICK HANDLER ESPECÍFICO PARA EL ÍCONO DE PLAY
+  // CLICK HANDLER ESPECÍFICO PARA EL ÍCONO DE PLAY - CON AUTO-PLAY
   const handlePlayClick = () => {
     console.log('🔥🔥🔥 PLAY ICON CLICK - INICIO:', {
       lessonTitle: lesson.title,
@@ -35,8 +35,9 @@ const LessonItem = React.memo(({ lesson, index, status, classes, onLessonClick }
     });
     
     if (canPlay) {
-      onLessonClick(lesson);
-      console.log('🔥🔥🔥 PLAY ICON CLICK - ENVIADO A onLessonClick:', lesson.title);
+      // CRÍTICO: Pasar shouldAutoPlay=true para forzar reproducción inmediata
+      onLessonClick(lesson, true);
+      console.log('🔥🔥🔥 PLAY ICON CLICK - ENVIADO A onLessonClick con AUTO-PLAY:', lesson.title);
     } else {
       console.log('🚫🚫🚫 PLAY ICON CLICK - LECCIÓN BLOQUEADA:', lesson.title);
     }
