@@ -38,9 +38,10 @@ const Header = () => {
     }
   };
 
-  // Check if we're on homepage and user is logged in to show hamburger menu
+  // FIXED: Show hamburger menu on homepage when user is logged in AND on all dashboard routes
   const isHomepage = location.pathname === '/';
-  const shouldShowHamburger = user && (isHomepage || location.pathname.startsWith('/dashboard'));
+  const isDashboardRoute = location.pathname.startsWith('/dashboard');
+  const shouldShowHamburger = user && (isHomepage || isDashboardRoute);
 
   // Debug: mostrar el estado actual en consola
   console.log('Header render - User:', user?.email || 'No user', 'Path:', window.location.pathname);
@@ -65,7 +66,7 @@ const Header = () => {
                     >
                       Cerrar
                     </Button>
-                    {/* Show hamburger menu on homepage and dashboard for logged in users */}
+                    {/* Show hamburger menu on homepage and all dashboard routes for logged in users */}
                     {shouldShowHamburger && <SidebarTrigger />}
                   </>
                 ) : (
