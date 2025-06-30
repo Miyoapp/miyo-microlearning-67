@@ -25,18 +25,21 @@ const LessonItem = React.memo(({ lesson, index, status, classes, onLessonClick }
   const { isCompleted, isCurrent, canPlay } = status;
   const { nodeClasses, textClasses } = classes;
   
-  // CLICK HANDLER CON LOG ESPECÍFICO
-  const handleClick = () => {
-    console.log('🔥🔥🔥 LESSON ITEM CLICK - INICIO:', {
+  // CLICK HANDLER ESPECÍFICO PARA EL ÍCONO DE PLAY
+  const handlePlayClick = () => {
+    console.log('🔥🔥🔥 PLAY ICON CLICK - INICIO:', {
       lessonTitle: lesson.title,
       canPlay,
       isCompleted,
       timestamp: new Date().toLocaleTimeString()
     });
     
-    onLessonClick(lesson);
-    
-    console.log('🔥🔥🔥 LESSON ITEM CLICK - ENVIADO A onLessonClick:', lesson.title);
+    if (canPlay) {
+      onLessonClick(lesson);
+      console.log('🔥🔥🔥 PLAY ICON CLICK - ENVIADO A onLessonClick:', lesson.title);
+    } else {
+      console.log('🚫🚫🚫 PLAY ICON CLICK - LECCIÓN BLOQUEADA:', lesson.title);
+    }
   };
   
   // Efecto zigzag alternando posiciones
@@ -47,8 +50,8 @@ const LessonItem = React.memo(({ lesson, index, status, classes, onLessonClick }
   return (
     <div className={`flex ${containerAlignment} items-center`}>
       <div 
-        className={nodeClasses}
-        onClick={handleClick}
+        className={cn(nodeClasses, { "cursor-pointer": canPlay, "cursor-not-allowed": !canPlay })}
+        onClick={handlePlayClick}
       >
         {/* CORREGIDO: Tamaño consistente de íconos (18px) */}
         {isCompleted ? (
@@ -67,11 +70,8 @@ const LessonItem = React.memo(({ lesson, index, status, classes, onLessonClick }
         </div>
       )}
       
-      {/* Título de la lección con ancho fijo para evitar afectar íconos */}
-      <div 
-        className={cn("ml-3 flex-1 max-w-[280px]", { "cursor-pointer": canPlay, "cursor-not-allowed": !canPlay })}
-        onClick={handleClick}
-      >
+      {/* Título de la lección SIN onClick - solo visual */}
+      <div className="ml-3 flex-1 max-w-[280px]">
         <div className={cn(textClasses, "leading-snug")}>
           {lesson.title}
           {isCurrent && (
