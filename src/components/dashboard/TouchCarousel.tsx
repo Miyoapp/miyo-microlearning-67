@@ -1,12 +1,10 @@
 
-import React, { useCallback, useEffect, useState } from 'react';
-import { EmblaOptionsType } from 'embla-carousel';
-import useEmblaCarousel from 'embla-carousel-react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React from 'react';
 import CourseCardWithProgress from './CourseCardWithProgress';
 import { Podcast } from '@/types';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useTouchCarousel } from './carousel/useTouchCarousel';
+import CarouselNavigationArrows from './carousel/CarouselNavigationArrows';
+import CarouselScrollIndicators from './carousel/CarouselScrollIndicators';
 
 interface TouchCarouselProps {
   title: string;
@@ -30,64 +28,16 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
   onToggleSave,
   onCourseClick
 }) => {
-  const isMobile = useIsMobile();
-  const [canScrollPrev, setCanScrollPrev] = useState(false);
-  const [canScrollNext, setCanScrollNext] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(0);
-
-  // Optimized Embla configuration for mobile touch with snap
-  const options: EmblaOptionsType = {
-    align: 'center',
-    slidesToScroll: 1,
-    containScroll: 'trimSnaps',
-    dragFree: false, // Disable drag free for snap behavior
-    skipSnaps: false,
-    startIndex: 0,
-    // Add snap behavior
-    loop: false,
-  };
-
-  const [emblaRef, emblaApi] = useEmblaCarousel(options);
-
-  const scrollPrev = useCallback(() => {
-    if (emblaApi) {
-      console.log('TouchCarousel: Scrolling to previous slide');
-      emblaApi.scrollPrev();
-    }
-  }, [emblaApi]);
-
-  const scrollNext = useCallback(() => {
-    if (emblaApi) {
-      console.log('TouchCarousel: Scrolling to next slide');
-      emblaApi.scrollNext();
-    }
-  }, [emblaApi]);
-
-  const onSelect = useCallback(() => {
-    if (!emblaApi) return;
-    setCanScrollPrev(emblaApi.canScrollPrev());
-    setCanScrollNext(emblaApi.canScrollNext());
-    setSelectedIndex(emblaApi.selectedScrollSnap());
-    console.log('TouchCarousel: Carousel state updated', {
-      canScrollPrev: emblaApi.canScrollPrev(),
-      canScrollNext: emblaApi.canScrollNext(),
-      selectedIndex: emblaApi.selectedScrollSnap(),
-      totalSlides: emblaApi.scrollSnapList().length
-    });
-  }, [emblaApi]);
-
-  useEffect(() => {
-    if (!emblaApi) return;
-    console.log('TouchCarousel: Embla API initialized with', courses.length, 'courses');
-    onSelect();
-    emblaApi.on('select', onSelect);
-    emblaApi.on('reInit', onSelect);
-
-    return () => {
-      emblaApi.off('select', onSelect);
-      emblaApi.off('reInit', onSelect);
-    };
-  }, [emblaApi, onSelect, courses.length]);
+  const {
+    emblaRef,
+    emblaApi,
+    canScrollPrev,
+    canScrollNext,
+    selectedIndex,
+    scrollPrev,
+    scrollNext,
+    isMobile
+  } = useTouchCarousel({ coursesLength: courses.length });
 
   if (courses.length === 0) {
     return (
@@ -115,7 +65,7 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
           }}
         >
           <div className={`flex ${isMobile ? 'snap-x snap-mandatory' : ''}`}>
-            {courses.map((course, index) => (
+            {courses.map((course) => (
               <div 
                 key={course.podcast.id} 
                 className={`flex-none ${
@@ -143,76 +93,21 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
           </div>
         </div>
 
-        {/* Mobile navigation arrows - always show both if more than 1 course */}
-        {isMobile && courses.length > 1 && (
-          <div className="absolute inset-0 pointer-events-none">
-            {/* Left arrow */}
-            <Button
-              variant="outline"
-              size="icon"
-              className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-sm shadow-lg z-20 h-8 w-8 border-gray-200 pointer-events-auto"
-              onClick={scrollPrev}
-              disabled={!canScrollPrev}
-              style={{ opacity: canScrollPrev ? 1 : 0.3 }}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
+        <CarouselNavigationArrows
+          isMobile={isMobile}
+          coursesLength={courses.length}
+          canScrollPrev={canScrollPrev}
+          canScrollNext={canScrollNext}
+          scrollPrev={scrollPrev}
+          scrollNext={scrollNext}
+        />
 
-            {/* Right arrow */}
-            <Button
-              variant="outline"
-              size="icon"
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-sm shadow-lg z-20 h-8 w-8 border-gray-200 pointer-events-auto"
-              onClick={scrollNext}
-              disabled={!canScrollNext}
-              style={{ opacity: canScrollNext ? 1 : 0.3 }}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
-
-        {/* Desktop navigation arrows - only show when more than 4 courses */}
-        {!isMobile && courses.length > 4 && (
-          <>
-            <Button
-              variant="outline"
-              size="icon"
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-white shadow-lg z-10 h-10 w-10"
-              onClick={scrollPrev}
-              disabled={!canScrollPrev}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-
-            <Button
-              variant="outline"
-              size="icon"
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-white shadow-lg z-10 h-10 w-10"
-              onClick={scrollNext}
-              disabled={!canScrollNext}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </>
-        )}
-
-        {/* Mobile scroll indicator dots - improved */}
-        {isMobile && courses.length > 1 && (
-          <div className="flex justify-center mt-6 space-x-2">
-            {courses.map((_, index) => (
-              <button
-                key={index}
-                className={`w-2 h-2 rounded-full transition-all duration-200 ${
-                  index === selectedIndex 
-                    ? 'bg-miyo-800 scale-125' 
-                    : 'bg-gray-300 hover:bg-gray-400'
-                }`}
-                onClick={() => emblaApi?.scrollTo(index)}
-              />
-            ))}
-          </div>
-        )}
+        <CarouselScrollIndicators
+          isMobile={isMobile}
+          coursesLength={courses.length}
+          selectedIndex={selectedIndex}
+          emblaApi={emblaApi}
+        />
       </div>
     </div>
   );
