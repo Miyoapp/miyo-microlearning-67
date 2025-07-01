@@ -92,51 +92,11 @@
     animation: pulse 2s infinite ease-in-out;
   }
 
-  /* IMPROVED: Enhanced touch optimization for carousels with snap scrolling */
+  /* Touch optimization for carousels */
   .touch-pan-x {
     touch-action: pan-x;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
-    /* Better carousel dragging */
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-  }
-
-  /* IMPROVED: Snap scrolling utilities */
-  .snap-x {
-    scroll-snap-type: x mandatory;
-  }
-
-  .snap-center {
-    scroll-snap-align: center;
-  }
-
-  .snap-always {
-    scroll-snap-stop: always;
-  }
-
-  .snap-mandatory {
-    scroll-snap-type: x mandatory;
-  }
-
-  /* IMPROVED: Cursor states for carousel interaction */
-  .cursor-grab {
-    cursor: grab;
-  }
-
-  .cursor-grab:active,
-  .active\:cursor-grabbing:active {
-    cursor: grabbing;
-  }
-
-  /* IMPROVED: Better mobile scroll behavior with snap */
-  @supports (-webkit-overflow-scrolling: touch) {
-    .touch-pan-x {
-      -webkit-overflow-scrolling: touch;
-      scroll-behavior: smooth;
-    }
   }
   
   /* Mobile-first: hide scrollbar on mobile, show on desktop */
@@ -154,7 +114,7 @@
     }
   }
 
-  /* IMPROVED: Mobile-first optimizations with better spacing and snap behavior */
+  /* Mobile-first optimizations */
   @media (max-width: 767px) {
     /* Prevent horizontal scrolling */
     html, body {
@@ -162,7 +122,7 @@
       max-width: 100vw;
     }
     
-    /* IMPROVED: Better touch targets - minimum 44px */
+    /* Improve touch targets - minimum 44px */
     button, [role="button"], .touchable {
       min-height: 44px;
       min-width: 44px;
@@ -173,44 +133,23 @@
       font-size: 16px;
     }
 
-    /* IMPROVED: Mobile-specific spacing with better margins */
+    /* Mobile-specific spacing */
     .mobile-padding {
       @apply px-4;
     }
 
-    /* IMPROVED: Mobile-optimized typography with better line heights */
+    /* Mobile-optimized typography */
     h1 {
-      @apply text-2xl leading-tight;
+      @apply text-2xl;
     }
 
     h2 {
-      @apply text-xl leading-tight;
+      @apply text-xl;
     }
 
-    /* IMPROVED: Mobile card optimizations with consistent spacing */
+    /* Mobile card optimizations */
     .card-mobile {
-      @apply rounded-xl shadow-sm mx-4;
-    }
-
-    /* IMPROVED: Better mobile carousel spacing with snap behavior */
-    .miyo-container {
-      @apply px-0; /* Remove container padding for carousels */
-    }
-
-    /* Exception for non-carousel content */
-    .miyo-container:not(.carousel-container) {
-      @apply px-4;
-    }
-
-    /* IMPROVED: Enhanced carousel snap behavior for mobile */
-    .embla__container {
-      scroll-snap-type: x mandatory;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    .embla__slide {
-      scroll-snap-align: center;
-      scroll-snap-stop: always;
+      @apply rounded-xl shadow-sm;
     }
   }
 
@@ -228,11 +167,6 @@
 
     h2 {
       @apply text-2xl;
-    }
-
-    /* Restore container padding on desktop */
-    .miyo-container {
-      @apply px-6 lg:px-8;
     }
   }
 
@@ -281,30 +215,6 @@
   @media (min-width: 1280px) {
     .mobile-grid {
       @apply xl:grid-cols-4;
-    }
-  }
-
-  /* IMPROVED: Mobile carousel optimizations with snap scrolling */
-  @media (max-width: 767px) {
-    /* Better card sizing in carousels with snap behavior */
-    .carousel-card {
-      min-width: 90vw;
-      max-width: 320px;
-      flex: 0 0 90vw;
-      scroll-snap-align: center;
-      scroll-snap-stop: always;
-    }
-
-    /* Smooth scrolling for mobile carousels with snap */
-    .carousel-container {
-      scroll-snap-type: x mandatory;
-      -webkit-overflow-scrolling: touch;
-      scroll-behavior: smooth;
-    }
-
-    .carousel-item {
-      scroll-snap-align: center;
-      scroll-snap-stop: always;
     }
   }
 }

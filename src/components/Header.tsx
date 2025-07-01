@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from './auth/AuthProvider';
 import Logo from './common/Logo';
@@ -11,7 +11,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 const Header = () => {
   const { user, signOut, forceLogout } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const isMobile = useIsMobile();
 
   const handleLogout = async () => {
@@ -38,11 +37,6 @@ const Header = () => {
     }
   };
 
-  // FIXED: Show hamburger menu on homepage when user is logged in AND on all dashboard routes
-  const isHomepage = location.pathname === '/';
-  const isDashboardRoute = location.pathname.startsWith('/dashboard');
-  const shouldShowHamburger = user && (isHomepage || isDashboardRoute);
-
   // Debug: mostrar el estado actual en consola
   console.log('Header render - User:', user?.email || 'No user', 'Path:', window.location.pathname);
 
@@ -50,25 +44,21 @@ const Header = () => {
     <header className="bg-white shadow-sm border-b">
       <div className="miyo-container">
         <div className="flex items-center justify-between h-16">
-          {/* Mobile Layout: Logo left, hamburger + auth buttons right */}
+          {/* Mobile Layout: Logo left, auth buttons right (no hamburger here for logged in users) */}
           {isMobile ? (
             <>
               <Logo onClick={handleLogoClick} />
               
-              <div className="flex items-center space-x-2">
+              <nav className="flex items-center space-x-2">
                 {user ? (
-                  <>
-                    <Button 
-                      onClick={handleLogout}
-                      variant="outline" 
-                      size="sm"
-                      className="text-miyo-800 border-miyo-800 hover:bg-miyo-100 text-xs px-2"
-                    >
-                      Cerrar
-                    </Button>
-                    {/* Show hamburger menu on homepage and all dashboard routes for logged in users */}
-                    {shouldShowHamburger && <SidebarTrigger />}
-                  </>
+                  <Button 
+                    onClick={handleLogout}
+                    variant="outline" 
+                    size="sm"
+                    className="text-miyo-800 border-miyo-800 hover:bg-miyo-100 text-xs px-2"
+                  >
+                    Cerrar
+                  </Button>
                 ) : (
                   <>
                     <Link to="/login">
@@ -83,7 +73,7 @@ const Header = () => {
                     </Link>
                   </>
                 )}
-              </div>
+              </nav>
             </>
           ) : (
             /* Desktop Layout: Current layout maintained */
@@ -104,7 +94,7 @@ const Header = () => {
                     >
                       Cerrar Sesión
                     </Button>
-                    {shouldShowHamburger && <SidebarTrigger />}
+                    <SidebarTrigger />
                   </>
                 ) : (
                   <>
