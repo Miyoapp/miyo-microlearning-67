@@ -140,22 +140,24 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
-      {/* Mobile Header */}
+      {/* Mobile Header - Solo para menú hamburguesa */}
       {isMobile && (
-        <div className="sticky top-0 z-40 bg-white border-b border-gray-200 px-4 py-3 mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <h1 className="text-xl font-bold text-gray-900 truncate">{welcomeMessage}</h1>
-              <p className="text-sm text-gray-600">Continúa tu aprendizaje donde lo dejaste</p>
-            </div>
-            <div className="flex-shrink-0 ml-4">
-              <SidebarTrigger />
-            </div>
+        <div className="sticky top-0 z-40 bg-white border-b border-gray-200 px-4 py-3">
+          <div className="flex items-center justify-end">
+            <SidebarTrigger />
           </div>
         </div>
       )}
       
       <div className="max-w-7xl mx-auto pb-6">
+        {/* Welcome Message - Mobile */}
+        {isMobile && (
+          <div className="px-4 py-6">
+            <h1 className="text-xl font-bold text-gray-900 mb-2">{welcomeMessage}</h1>
+            <p className="text-sm text-gray-600">Continúa tu aprendizaje donde lo dejaste</p>
+          </div>
+        )}
+
         {/* Desktop Header - hidden on mobile */}
         {!isMobile && (
           <div className="flex items-center justify-between mb-6 px-4 sm:px-0">
