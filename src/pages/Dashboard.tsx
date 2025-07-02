@@ -140,12 +140,10 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
-      {/* Mobile Header - Mismo estilo que CoursePageHeader */}
+      {/* Mobile hamburger menu - positioned like DashboardDiscover */}
       {isMobile && (
-        <div className="sticky top-0 z-40 bg-white border-b border-gray-200 px-4 py-3">
-          <div className="flex items-center justify-end">
-            <SidebarTrigger />
-          </div>
+        <div className="mb-4 px-4 flex justify-end">
+          <SidebarTrigger />
         </div>
       )}
       
