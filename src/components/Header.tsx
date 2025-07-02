@@ -51,14 +51,17 @@ const Header = () => {
               
               <nav className="flex items-center space-x-2">
                 {user ? (
-                  <Button 
-                    onClick={handleLogout}
-                    variant="outline" 
-                    size="sm"
-                    className="text-miyo-800 border-miyo-800 hover:bg-miyo-100 text-xs px-2"
-                  >
-                    Cerrar
-                  </Button>
+                  <>
+                    <SidebarTrigger />
+                    <Button 
+                      onClick={handleLogout}
+                      variant="outline" 
+                      size="sm"
+                      className="text-miyo-800 border-miyo-800 hover:bg-miyo-100 text-xs px-2"
+                    >
+                      Cerrar
+                    </Button>
+                  </>
                 ) : (
                   <>
                     <Link to="/login">
