@@ -37,6 +37,9 @@ const Header = () => {
     }
   };
 
+  // Only show sidebar trigger in dashboard routes
+  const isDashboardRoute = window.location.pathname.startsWith('/dashboard');
+
   // Debug: mostrar el estado actual en consola
   console.log('Header render - User:', user?.email || 'No user', 'Path:', window.location.pathname);
 
@@ -50,9 +53,9 @@ const Header = () => {
               <Logo onClick={handleLogoClick} />
               
               <nav className="flex items-center space-x-2">
-                {user ? (
+                 {user ? (
                   <>
-                    <SidebarTrigger />
+                    {isDashboardRoute && <SidebarTrigger />}
                     <Button 
                       onClick={handleLogout}
                       variant="outline" 
@@ -97,7 +100,7 @@ const Header = () => {
                     >
                       Cerrar Sesión
                     </Button>
-                    <SidebarTrigger />
+                     {isDashboardRoute && <SidebarTrigger />}
                   </>
                 ) : (
                   <>
