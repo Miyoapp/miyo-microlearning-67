@@ -55,7 +55,6 @@ const Header = () => {
               <nav className="flex items-center space-x-2">
                  {user ? (
                   <>
-                    {isDashboardRoute && <SidebarTrigger />}
                     <Button 
                       onClick={handleLogout}
                       variant="outline" 
@@ -100,7 +99,6 @@ const Header = () => {
                     >
                       Cerrar Sesión
                     </Button>
-                     {isDashboardRoute && <SidebarTrigger />}
                   </>
                 ) : (
                   <>
