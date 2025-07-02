@@ -141,17 +141,19 @@ const Dashboard = () => {
   return (
     <DashboardLayout>
       <div className="max-w-7xl mx-auto pb-6">
-        {/* Mobile hamburger menu - positioned like CoursePageHeader */}
-        {isMobile && (
-          <div className="mb-4 px-4 flex justify-end">
-            <SidebarTrigger />
+        {/* Mobile header with hamburger menu */}
+        <div className="flex items-center justify-between mb-6 px-4 sm:px-0">
+          <div className="flex-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{welcomeMessage}</h1>
+            <p className="text-sm sm:text-base text-gray-600">Continúa tu aprendizaje donde lo dejaste</p>
           </div>
-        )}
-
-        {/* Mobile-first header */}
-        <div className="mb-6 sm:mb-8 px-4 sm:px-0">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{welcomeMessage}</h1>
-          <p className="text-sm sm:text-base text-gray-600">Continúa tu aprendizaje donde lo dejaste</p>
+          
+          {/* Mobile hamburger menu - always visible on mobile */}
+          {isMobile && (
+            <div className="flex-shrink-0 ml-4">
+              <SidebarTrigger />
+            </div>
+          )}
         </div>
 
         {/* Mobile-first course sections */}
