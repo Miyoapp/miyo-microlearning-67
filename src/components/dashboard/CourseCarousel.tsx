@@ -34,13 +34,16 @@ const CourseCarousel: React.FC<CourseCarouselProps> = ({
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
 
-  // Unified Embla configuration matching TouchCarousel
+  // Optimized Embla configuration matching TouchCarousel
   const options: EmblaOptionsType = {
-    align: 'start',
+    align: 'center', // Center cards in view
     slidesToScroll: 1,
-    containScroll: 'trimSnaps',
-    dragFree: false, // Changed for better touch control
-    skipSnaps: false, // Ensure proper stopping at cards
+    containScroll: 'keepSnaps', // Keep all snaps
+    dragFree: false, // Ensure snapping behavior
+    skipSnaps: false,
+    loop: false, // Prevent infinite loop
+    watchDrag: true, // Better drag detection
+    inViewThreshold: 0.7, // Better visibility detection
   };
 
   const [emblaRef, emblaApi] = useEmblaCarousel(options);
@@ -101,12 +104,17 @@ const CourseCarousel: React.FC<CourseCarouselProps> = ({
       <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 px-4 sm:px-0">{title}</h2>
       
       <div className="relative px-4 sm:px-0">
-        {/* Unified carousel structure with touch optimization */}
+        {/* Enhanced carousel with scroll snap */}
         <div className="relative">
           <div 
-            className="overflow-hidden touch-pan-x" 
+            className="overflow-hidden" 
             ref={emblaRef}
-            style={{ touchAction: 'pan-x' }}
+            style={{ 
+              touchAction: 'pan-x',
+              overscrollBehaviorX: 'contain',
+              scrollSnapType: 'x mandatory',
+              scrollBehavior: 'smooth'
+            }}
           >
             <div className="flex">
               {courses.map((course) => (
@@ -114,9 +122,10 @@ const CourseCarousel: React.FC<CourseCarouselProps> = ({
                   key={course.podcast.id} 
                   className={`flex-none ${
                     isMobile 
-                      ? 'w-[85vw] max-w-[320px] mr-4 first:ml-0 last:mr-0' 
+                      ? 'w-[85vw] max-w-[320px] px-2' 
                       : 'w-full sm:w-1/2 lg:w-1/3 xl:w-1/4 pr-6'
                   }`}
+                  style={isMobile ? { scrollSnapAlign: 'center' } : {}}
                 >
                   <CourseCardWithProgress
                     podcast={course.podcast}
@@ -133,7 +142,7 @@ const CourseCarousel: React.FC<CourseCarouselProps> = ({
             </div>
           </div>
 
-          {/* Navigation arrows - unified logic */}
+          {/* Navigation arrows */}
           {shouldShowNavigation && (
             <>
               <Button
@@ -158,8 +167,6 @@ const CourseCarousel: React.FC<CourseCarouselProps> = ({
             </>
           )}
         </div>
-        
-        {/* Pagination dots removed - no longer needed */}
       </div>
     </div>
   );
