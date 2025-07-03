@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { EmblaOptionsType } from 'embla-carousel';
@@ -21,6 +22,11 @@ interface CourseCarouselProps {
   onToggleSave?: (courseId: string) => void;
   onCourseClick?: (courseId: string) => void;
 }
+
+// Type guard to check if an item is a placeholder
+const isPlaceholderItem = (item: any): item is { isPlaceholder: boolean; id: string } => {
+  return item && typeof item === 'object' && 'isPlaceholder' in item && item.isPlaceholder === true;
+};
 
 const CourseCarousel: React.FC<CourseCarouselProps> = ({
   title,
@@ -153,7 +159,7 @@ const CourseCarousel: React.FC<CourseCarouselProps> = ({
             <div className="flex">
               {displayCourses.map((item, index) => (
                 <div 
-                  key={item.isPlaceholder ? item.id : item.podcast.id}
+                  key={isPlaceholderItem(item) ? item.id : item.podcast.id}
                   className={`flex-none ${
                     isMobile 
                       ? `${getMobileCardWidth()} px-2` 
@@ -164,7 +170,7 @@ const CourseCarousel: React.FC<CourseCarouselProps> = ({
                     scrollSnapStop: 'always'
                   } : {}}
                 >
-                  {item.isPlaceholder ? (
+                  {isPlaceholderItem(item) ? (
                     <PlaceholderCourseCard />
                   ) : (
                     <CourseCardWithProgress

@@ -1,3 +1,4 @@
+
 import React, { useCallback, useEffect, useState } from 'react';
 import { EmblaOptionsType } from 'embla-carousel';
 import useEmblaCarousel from 'embla-carousel-react';
@@ -21,6 +22,11 @@ interface TouchCarouselProps {
   onToggleSave?: (courseId: string) => void;
   onCourseClick?: (courseId: string) => void;
 }
+
+// Type guard to check if an item is a placeholder
+const isPlaceholderItem = (item: any): item is { isPlaceholder: boolean; id: string } => {
+  return item && typeof item === 'object' && 'isPlaceholder' in item && item.isPlaceholder === true;
+};
 
 const TouchCarousel: React.FC<TouchCarouselProps> = ({
   title,
@@ -152,7 +158,7 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
           <div className="flex">
             {displayCourses.map((item, index) => (
               <div 
-                key={item.isPlaceholder ? item.id : item.podcast.id}
+                key={isPlaceholderItem(item) ? item.id : item.podcast.id}
                 className={`flex-none ${
                   isMobile 
                     ? `${getMobileCardWidth()} px-2` 
@@ -163,7 +169,7 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
                   scrollSnapStop: 'always'
                 } : {}}
               >
-                {item.isPlaceholder ? (
+                {isPlaceholderItem(item) ? (
                   <PlaceholderCourseCard />
                 ) : (
                   <CourseCardWithProgress
