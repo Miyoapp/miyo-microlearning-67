@@ -64,9 +64,9 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
-      {/* Mobile hamburger menu - exact same pattern as DashboardDiscover */}
+      {/* Mobile hamburger menu - CORREGIDO: z-index más alto y posición fija */}
       {isMobile && (
-        <div className="mb-4 px-4 flex justify-end">
+        <div className="fixed top-4 right-4 z-50 bg-white rounded-full shadow-lg">
           <SidebarTrigger />
         </div>
       )}

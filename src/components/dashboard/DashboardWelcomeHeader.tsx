@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -18,9 +19,9 @@ const DashboardWelcomeHeader: React.FC<DashboardWelcomeHeaderProps> = ({
 
   return (
     <>
-      {/* Welcome Message - Mobile */}
+      {/* Welcome Message - Mobile - CORREGIDO: reducido padding top para evitar conflicto con menú */}
       {isMobile && (
-        <div className="px-4 py-6">
+        <div className="px-4 pt-16 pb-6">
           <h1 className="text-xl font-bold text-gray-900 mb-2">{welcomeMessage}</h1>
           <p className="text-sm text-gray-600">Continúa tu aprendizaje donde lo dejaste</p>
         </div>
