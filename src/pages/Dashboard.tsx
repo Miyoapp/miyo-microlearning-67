@@ -140,7 +140,7 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
-      {/* Mobile hamburger menu - positioned like DashboardDiscover */}
+      {/* Mobile hamburger menu - exact same pattern as DashboardDiscover */}
       {isMobile && (
         <div className="mb-4 px-4 flex justify-end">
           <SidebarTrigger />
