@@ -1,4 +1,3 @@
-
 import React, { useCallback, useEffect, useState } from 'react';
 import { EmblaOptionsType } from 'embla-carousel';
 import useEmblaCarousel from 'embla-carousel-react';
@@ -136,8 +135,8 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
     return 'w-[85vw]'; // Ancho estándar para 4+ tarjetas
   };
 
-  // Determine when to show navigation arrows
-  const shouldShowNavigation = isMobile ? displayCourses.length > 1 : displayCourses.length > 4;
+  // Determine when to show navigation arrows - only on desktop
+  const shouldShowNavigation = !isMobile && displayCourses.length > 4;
 
   return (
     <div className="mb-8 sm:mb-12">
@@ -188,7 +187,7 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
           </div>
         </div>
 
-        {/* Navigation arrows */}
+        {/* Navigation arrows - only show on desktop */}
         {shouldShowNavigation && (
           <>
             <Button

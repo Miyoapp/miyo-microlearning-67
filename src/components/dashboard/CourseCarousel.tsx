@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { EmblaOptionsType } from 'embla-carousel';
@@ -137,7 +136,7 @@ const CourseCarousel: React.FC<CourseCarouselProps> = ({
   };
 
   // Unified navigation logic
-  const shouldShowNavigation = isMobile ? displayCourses.length > 1 : displayCourses.length > 4;
+  const shouldShowNavigation = !isMobile && displayCourses.length > 4;
 
   return (
     <div className="mb-6 sm:mb-8">
@@ -189,7 +188,7 @@ const CourseCarousel: React.FC<CourseCarouselProps> = ({
             </div>
           </div>
 
-          {/* Navigation arrows */}
+          {/* Navigation arrows - only show on desktop */}
           {shouldShowNavigation && (
             <>
               <Button
