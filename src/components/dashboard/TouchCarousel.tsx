@@ -1,4 +1,3 @@
-
 import React, { useCallback, useEffect, useState } from 'react';
 import { EmblaOptionsType } from 'embla-carousel';
 import useEmblaCarousel from 'embla-carousel-react';
@@ -7,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import CourseCardWithProgress from './CourseCardWithProgress';
 import { Podcast } from '@/types';
 import { useIsMobile } from '@/hooks/use-mobile';
+import PlaceholderCourseCard from './PlaceholderCourseCard';
 
 interface TouchCarouselProps {
   title: string;
@@ -33,6 +33,24 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
   const isMobile = useIsMobile();
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
+
+  // Add placeholder cards to ensure smooth scrolling on mobile
+  const getDisplayCourses = () => {
+    if (!isMobile || courses.length >= 4) {
+      return courses;
+    }
+    
+    // Add placeholder cards to reach at least 4 items for better scroll behavior
+    const placeholdersNeeded = Math.max(0, 4 - courses.length);
+    const placeholders = Array(placeholdersNeeded).fill(null).map((_, index) => ({
+      isPlaceholder: true,
+      id: `placeholder-${index}`
+    }));
+    
+    return [...courses, ...placeholders];
+  };
+
+  const displayCourses = getDisplayCourses();
 
   // Configuración dinámica basada en el número de tarjetas
   const getEmblaOptions = (): EmblaOptionsType => {
@@ -113,7 +131,7 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
   };
 
   // Determine when to show navigation arrows
-  const shouldShowNavigation = isMobile ? courses.length > 1 : courses.length > 4;
+  const shouldShowNavigation = isMobile ? displayCourses.length > 1 : displayCourses.length > 4;
 
   return (
     <div className="mb-8 sm:mb-12">
@@ -132,9 +150,9 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
           }}
         >
           <div className="flex">
-            {courses.map((course, index) => (
+            {displayCourses.map((item, index) => (
               <div 
-                key={course.podcast.id} 
+                key={item.isPlaceholder ? item.id : item.podcast.id}
                 className={`flex-none ${
                   isMobile 
                     ? `${getMobileCardWidth()} px-2` 
@@ -145,16 +163,20 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
                   scrollSnapStop: 'always'
                 } : {}}
               >
-                <CourseCardWithProgress
-                  podcast={course.podcast}
-                  progress={course.progress}
-                  isPlaying={course.isPlaying}
-                  isSaved={course.isSaved}
-                  showProgress={showProgress}
-                  onPlay={() => onPlayCourse?.(course.podcast.id)}
-                  onToggleSave={() => onToggleSave?.(course.podcast.id)}
-                  onClick={() => onCourseClick?.(course.podcast.id)}
-                />
+                {item.isPlaceholder ? (
+                  <PlaceholderCourseCard />
+                ) : (
+                  <CourseCardWithProgress
+                    podcast={item.podcast}
+                    progress={item.progress}
+                    isPlaying={item.isPlaying}
+                    isSaved={item.isSaved}
+                    showProgress={showProgress}
+                    onPlay={() => onPlayCourse?.(item.podcast.id)}
+                    onToggleSave={() => onToggleSave?.(item.podcast.id)}
+                    onClick={() => onCourseClick?.(item.podcast.id)}
+                  />
+                )}
               </div>
             ))}
           </div>
