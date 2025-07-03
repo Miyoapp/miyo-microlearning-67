@@ -1,112 +1,40 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import TouchCarousel from '@/components/dashboard/TouchCarousel';
-import { obtenerCursos } from '@/lib/api';
-import { useUserProgress } from '@/hooks/useUserProgress';
-import { useAuth } from '@/components/auth/AuthProvider';
-import { supabase } from '@/integrations/supabase/client';
-import { Podcast } from '@/types';
+import DashboardWelcomeHeader from '@/components/dashboard/DashboardWelcomeHeader';
+import DashboardCourseSection from '@/components/dashboard/DashboardCourseSection';
 import { SidebarTrigger } from '@/components/ui/sidebar/SidebarTrigger';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useDashboardData } from '@/hooks/dashboard/useDashboardData';
+import { 
+  getContinueLearningCourses, 
+  getRecommendedCourses, 
+  getPremiumCourses 
+} from '@/utils/dashboardUtils';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const isMobile = useIsMobile();
-  const [allCourses, setAllCourses] = useState<Podcast[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [userName, setUserName] = useState<string>('');
-  const [isFirstTimeUser, setIsFirstTimeUser] = useState<boolean>(false);
-  const { userProgress, toggleSaveCourse, refetch } = useUserProgress();
-
-  useEffect(() => {
-    const loadUserData = async () => {
-      if (user) {
-        try {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('name, created_at')
-            .eq('id', user.id)
-            .single();
-          
-          if (profile) {
-            setUserName(profile.name || user.email || 'Usuario');
-            
-            // Determinar si es primera vez basado en si se creó hoy
-            const createdDate = new Date(profile.created_at);
-            const today = new Date();
-            const isToday = createdDate.toDateString() === today.toDateString();
-            setIsFirstTimeUser(isToday);
-          }
-        } catch (error) {
-          console.error('Error loading user profile:', error);
-          setUserName(user.email || 'Usuario');
-        }
-      }
-    };
-
-    loadUserData();
-  }, [user]);
-
-  useEffect(() => {
-    const loadCourses = async () => {
-      try {
-        const courses = await obtenerCursos();
-        console.log('Dashboard: Loaded courses:', courses.length);
-        setAllCourses(courses);
-      } catch (error) {
-        console.error('Error loading courses:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadCourses();
-  }, []);
+  
+  const {
+    allCourses,
+    loading,
+    userName,
+    isFirstTimeUser,
+    userProgress,
+    toggleSaveCourse,
+    refetch,
+  } = useDashboardData();
 
   // Get courses in progress
-  const continueLearningCourses = allCourses
-    .map(course => {
-      const progress = userProgress.find(p => p.course_id === course.id);
-      const progressPercentage = progress?.progress_percentage || 0;
-      return {
-        podcast: course,
-        progress: progressPercentage,
-        isPlaying: false,
-        isSaved: progress?.is_saved || false
-      };
-    })
-    .filter(course => course.progress > 0 && course.progress < 100);
+  const continueLearningCourses = getContinueLearningCourses(allCourses, userProgress);
 
   // Get recommended courses (courses not started)
-  const recommendedCourses = allCourses
-    .filter(course => {
-      const progress = userProgress.find(p => p.course_id === course.id);
-      return !progress || progress.progress_percentage === 0;
-    })
-    .slice(0, 6)
-    .map(course => ({
-      podcast: course,
-      progress: 0,
-      isPlaying: false,
-      isSaved: userProgress.find(p => p.course_id === course.id)?.is_saved || false
-    }));
+  const recommendedCourses = getRecommendedCourses(allCourses, userProgress);
 
   // Get premium courses
-  const premiumCourses = allCourses
-    .filter(course => course.tipo_curso === 'pago')
-    .slice(0, 6)
-    .map(course => {
-      const progress = userProgress.find(p => p.course_id === course.id);
-      return {
-        podcast: course,
-        progress: progress?.progress_percentage || 0,
-        isPlaying: false,
-        isSaved: progress?.is_saved || false
-      };
-    });
+  const premiumCourses = getPremiumCourses(allCourses, userProgress);
 
   // CORREGIDO: Solo navegar al curso, no iniciar reproducción
   const handlePlayCourse = async (courseId: string) => {
@@ -134,10 +62,6 @@ const Dashboard = () => {
     );
   }
 
-  const welcomeMessage = isFirstTimeUser 
-    ? `¡Bienvenido(a), ${userName}!` 
-    : `¡Bienvenido(a) de vuelta, ${userName}!`;
-
   return (
     <DashboardLayout>
       {/* Mobile hamburger menu - exact same pattern as DashboardDiscover */}
@@ -148,38 +72,23 @@ const Dashboard = () => {
       )}
       
       <div className="max-w-7xl mx-auto pb-6">
-        {/* Welcome Message - Mobile */}
-        {isMobile && (
-          <div className="px-4 py-6">
-            <h1 className="text-xl font-bold text-gray-900 mb-2">{welcomeMessage}</h1>
-            <p className="text-sm text-gray-600">Continúa tu aprendizaje donde lo dejaste</p>
-          </div>
-        )}
-
-        {/* Desktop Header - hidden on mobile */}
-        {!isMobile && (
-          <div className="flex items-center justify-between mb-6 px-4 sm:px-0">
-            <div className="flex-1">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{welcomeMessage}</h1>
-              <p className="text-sm sm:text-base text-gray-600">Continúa tu aprendizaje donde lo dejaste</p>
-            </div>
-          </div>
-        )}
+        <DashboardWelcomeHeader 
+          userName={userName}
+          isFirstTimeUser={isFirstTimeUser}
+        />
 
         {/* Mobile-first course sections */}
         <div className="space-y-8 sm:space-y-12">
-          {continueLearningCourses.length > 0 && (
-            <TouchCarousel
-              title="Continúa escuchando"
-              courses={continueLearningCourses}
-              showProgress={true}
-              onPlayCourse={handlePlayCourse}
-              onToggleSave={handleToggleSave}
-              onCourseClick={handleCourseClick}
-            />
-          )}
+          <DashboardCourseSection
+            title="Continúa escuchando"
+            courses={continueLearningCourses}
+            showProgress={true}
+            onPlayCourse={handlePlayCourse}
+            onToggleSave={handleToggleSave}
+            onCourseClick={handleCourseClick}
+          />
 
-          <TouchCarousel
+          <DashboardCourseSection
             title="Para ti"
             courses={recommendedCourses}
             showProgress={false}
@@ -188,7 +97,7 @@ const Dashboard = () => {
             onCourseClick={handleCourseClick}
           />
 
-          <TouchCarousel
+          <DashboardCourseSection
             title="Cursos Premium"
             courses={premiumCourses}
             showProgress={false}
