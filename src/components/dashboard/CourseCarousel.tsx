@@ -34,19 +34,23 @@ const CourseCarousel: React.FC<CourseCarouselProps> = ({
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
 
-  // Optimized Embla configuration matching TouchCarousel
-  const options: EmblaOptionsType = {
-    align: 'center', // Center cards in view
-    slidesToScroll: 1,
-    containScroll: 'keepSnaps', // Keep all snaps
-    dragFree: false, // Ensure snapping behavior
-    skipSnaps: false,
-    loop: false, // Prevent infinite loop
-    watchDrag: true, // Better drag detection
-    inViewThreshold: 0.7, // Better visibility detection
+  // Configuración dinámica basada en el número de tarjetas
+  const getEmblaOptions = (): EmblaOptionsType => {
+    const hasFewerCards = courses.length <= 3;
+    
+    return {
+      align: hasFewerCards ? 'start' : 'center', // start para pocas tarjetas, center para muchas
+      slidesToScroll: 1,
+      containScroll: 'keepSnaps',
+      dragFree: false,
+      skipSnaps: false,
+      loop: false,
+      watchDrag: true,
+      inViewThreshold: 0.8, // Aumentamos el threshold para mejor detección
+    };
   };
 
-  const [emblaRef, emblaApi] = useEmblaCarousel(options);
+  const [emblaRef, emblaApi] = useEmblaCarousel(getEmblaOptions());
 
   const scrollPrev = useCallback(() => {
     if (emblaApi) {
@@ -68,13 +72,15 @@ const CourseCarousel: React.FC<CourseCarouselProps> = ({
     setCanScrollNext(emblaApi.canScrollNext());
     console.log('CourseCarousel: Carousel state updated', {
       canScrollPrev: emblaApi.canScrollPrev(),
-      canScrollNext: emblaApi.canScrollNext()
+      canScrollNext: emblaApi.canScrollNext(),
+      selectedIndex: emblaApi.selectedScrollSnap(),
+      totalSlides: courses.length
     });
-  }, [emblaApi]);
+  }, [emblaApi, courses.length]);
 
   useEffect(() => {
     if (!emblaApi) return;
-    console.log('CourseCarousel: Embla API initialized');
+    console.log('CourseCarousel: Embla API initialized with', courses.length, 'courses');
     onSelect();
     emblaApi.on('select', onSelect);
     emblaApi.on('reInit', onSelect);
@@ -96,6 +102,16 @@ const CourseCarousel: React.FC<CourseCarouselProps> = ({
     );
   }
 
+  // Lógica de ancho dinámico para móvil
+  const getMobileCardWidth = () => {
+    if (courses.length <= 2) {
+      return 'w-[92vw]'; // Más ancho para aprovechar el espacio con pocas tarjetas
+    } else if (courses.length === 3) {
+      return 'w-[88vw]'; // Ancho intermedio
+    }
+    return 'w-[85vw]'; // Ancho estándar para 4+ tarjetas
+  };
+
   // Unified navigation logic
   const shouldShowNavigation = isMobile ? courses.length > 1 : courses.length > 4;
 
@@ -104,7 +120,7 @@ const CourseCarousel: React.FC<CourseCarouselProps> = ({
       <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 px-4 sm:px-0">{title}</h2>
       
       <div className="relative px-4 sm:px-0">
-        {/* Enhanced carousel with scroll snap */}
+        {/* Enhanced carousel with optimized scroll snap */}
         <div className="relative">
           <div 
             className="overflow-hidden" 
@@ -117,15 +133,18 @@ const CourseCarousel: React.FC<CourseCarouselProps> = ({
             }}
           >
             <div className="flex">
-              {courses.map((course) => (
+              {courses.map((course, index) => (
                 <div 
                   key={course.podcast.id} 
                   className={`flex-none ${
                     isMobile 
-                      ? 'w-[85vw] max-w-[320px] px-2' 
+                      ? `${getMobileCardWidth()} px-2` 
                       : 'w-full sm:w-1/2 lg:w-1/3 xl:w-1/4 pr-6'
                   }`}
-                  style={isMobile ? { scrollSnapAlign: 'center' } : {}}
+                  style={isMobile ? { 
+                    scrollSnapAlign: courses.length <= 3 ? 'start' : 'center',
+                    scrollSnapStop: 'always'
+                  } : {}}
                 >
                   <CourseCardWithProgress
                     podcast={course.podcast}
