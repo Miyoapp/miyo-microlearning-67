@@ -7,12 +7,15 @@ import CourseCardWithProgress from '@/components/dashboard/CourseCardWithProgres
 import { obtenerCursos } from '@/lib/api';
 import { useUserProgress } from '@/hooks/useUserProgress';
 import { Podcast } from '@/types';
+import { SidebarTrigger } from '@/components/ui/sidebar/SidebarTrigger';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const DashboardMyRoutes = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [allCourses, setAllCourses] = useState<Podcast[]>([]);
   const [loading, setLoading] = useState(true);
-  const { userProgress, toggleSaveCourse, startCourse, refetch } = useUserProgress();
+  const { userProgress, toggleSaveCourse, refetch } = useUserProgress();
 
   useEffect(() => {
     const loadCourses = async () => {
@@ -66,11 +69,9 @@ const DashboardMyRoutes = () => {
       return progress?.is_completed;
     });
 
+  // CORREGIDO: Solo navegar al curso, no iniciar reproducción
   const handlePlayCourse = async (courseId: string) => {
-    console.log('DashboardMyRoutes: Starting course:', courseId);
-    await startCourse(courseId);
-    await refetch();
-    // Redirect to the new dashboard course view instead of old course view
+    console.log('DashboardMyRoutes: Navigating to course (maintaining current progress):', courseId);
     navigate(`/dashboard/course/${courseId}`);
   };
 
@@ -100,6 +101,13 @@ const DashboardMyRoutes = () => {
   return (
     <DashboardLayout>
       <div className="max-w-7xl mx-auto">
+        {/* Mobile hamburger menu - positioned like CoursePageHeader */}
+        {isMobile && (
+          <div className="mb-4 px-4 flex justify-end">
+            <SidebarTrigger />
+          </div>
+        )}
+
         {/* Mobile-first header */}
         <div className="mb-8 px-4 sm:px-0">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Mis Rutas</h1>

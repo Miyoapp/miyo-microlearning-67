@@ -1,23 +1,82 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ChevronLeft } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { SidebarTrigger } from '@/components/ui/sidebar/SidebarTrigger';
 
 interface CoursePageHeaderProps {
-  isReviewMode: boolean;
+  isReviewMode?: boolean;
 }
 
 const CoursePageHeader: React.FC<CoursePageHeaderProps> = ({ isReviewMode }) => {
-  if (!isReviewMode) return null;
+  const navigate = useNavigate();
+  const isMobile = useIsMobile();
+
+  // DIAGNOSTIC: Monitor header state and props
+  console.log('📋 COURSE PAGE HEADER RENDER:', {
+    timestamp: new Date().toISOString(),
+    isReviewMode,
+    isReviewModeValid: typeof isReviewMode === 'boolean' || isReviewMode === undefined,
+    propsReceived: {
+      isReviewMode: isReviewMode !== undefined ? (isReviewMode ? 'true' : 'false') : 'undefined'
+    }
+  });
+
+  const handleBackClick = () => {
+    console.log('Back button clicked, navigating to dashboard');
+    navigate('/dashboard');
+  };
 
   return (
-    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-      <div className="flex items-center">
-        <div className="text-yellow-800">
-          <svg className="w-5 h-5 mr-2 inline" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-          </svg>
-          <strong>Modo Repaso:</strong> Este curso está completado al 100%. Puedes escuchar las lecciones sin afectar tu progreso.
+    <div className="mb-6 sm:mb-8 px-4 sm:px-0">
+      {/* Mobile Layout: Back button on left, hamburger menu on right, aligned horizontally */}
+      {isMobile ? (
+        <div className="flex items-center justify-between mb-4">
+          <button 
+            onClick={handleBackClick}
+            className="flex items-center text-gray-600 hover:text-[#5E17EA] transition-colors group"
+          >
+            <ChevronLeft 
+              size={24} 
+              className="mr-1 text-[#5E17EA] group-hover:translate-x-[-2px] transition-transform" 
+            />
+          </button>
+          
+          <SidebarTrigger />
         </div>
-      </div>
+      ) : (
+        /* Desktop Layout: Current layout maintained */
+        <button 
+          onClick={handleBackClick}
+          className="flex items-center text-gray-600 hover:text-[#5E17EA] mb-4 transition-colors group"
+        >
+          <ChevronLeft 
+            size={24} 
+            className="mr-1 text-[#5E17EA] group-hover:translate-x-[-2px] transition-transform" 
+          />
+        </button>
+      )}
+
+      {isReviewMode && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                <span className="text-green-600 font-semibold text-sm">✓</span>
+              </div>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-green-800">
+                ¡Curso Completado!
+              </h3>
+              <p className="text-sm text-green-700 mt-1">
+                Has terminado este curso. Puedes repasar las lecciones cuando quieras.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -6,7 +6,6 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { useLessonInitialization } from './consolidated-lessons/useLessonInitialization';
 import { useLessonPlayback } from './consolidated-lessons/useLessonPlayback';
 import { useLessonCompletion } from './consolidated-lessons/useLessonCompletion';
-import { isFirstLessonInSequence } from './consolidated-lessons/lessonOrderUtils';
 
 export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (podcast: Podcast) => void) {
   const { user } = useAuth();
@@ -23,9 +22,10 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     refetch: refetchCourseProgress 
   } = useUserProgress();
 
-  // NUEVO: Flag para controlar la inicialización automática
+  // MEJORADO: Control más granular de la inicialización
   const hasAutoInitialized = useRef(false);
   const hasUserMadeSelection = useRef(false);
+  const hasAutoPositioned = useRef(false);
 
   // Usar hooks especializados
   const {
@@ -60,28 +60,40 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     isAutoAdvanceAllowed
   );
 
-  // CORREGIDO: Selección de lección simplificada que confía en la lógica de useLessonStatus
-  const handleSelectLesson = useCallback((lesson: any, isManualSelection = true) => {
-    console.log('🎯 handleSelectLesson called:', lesson.title, 'isCompleted:', lesson.isCompleted ? '🏆' : '❌', 'isLocked:', lesson.isLocked ? '🔒' : '🔓', 'isManual:', isManualSelection);
-    
-    // CORREGIDO: Eliminar validación redundante - confiar en que LearningPath solo pasa lecciones válidas
-    // La validación canPlay se hace en useLessonStatus.ts y se valida en LearningPath.tsx
+  // MEJORADO: Selección de lección con auto-play forzado
+  const handleSelectLesson = useCallback((lesson: any, shouldAutoPlay = false) => {
+    console.log('🚀🚀🚀 useConsolidatedLessons - handleSelectLesson RECIBIDO:', {
+      lessonTitle: lesson.title,
+      isCompleted: lesson.isCompleted ? '🏆' : '❌',
+      isLocked: lesson.isLocked ? '🔒' : '🔓',
+      shouldAutoPlay: shouldAutoPlay ? '▶️ AUTO-PLAY' : '⏸️ NO AUTO-PLAY',
+      timestamp: new Date().toLocaleTimeString()
+    });
     
     // NUEVO: Marcar que el usuario ha hecho una selección manual
-    if (isManualSelection) {
-      hasUserMadeSelection.current = true;
-      console.log('👤 User made manual selection - preventing future auto-initialization');
-    }
+    hasUserMadeSelection.current = true;
+    console.log('👤👤👤 SELECCIÓN MANUAL DETECTADA - previniendo auto-inicialización futura');
     
-    const lessonType = lesson.isCompleted ? 'COMPLETED/REPLAY (🏆)' : 'PROGRESS (▶)';
-    console.log('✅ Setting current lesson:', lesson.title, 'Type:', lessonType);
+    const lessonType = lesson.isCompleted ? 'COMPLETADA/REPLAY (🏆)' : 'EN PROGRESO (▶)';
+    console.log('✅✅✅ ESTABLECIENDO LECCIÓN ACTUAL:', lesson.title, 'Tipo:', lessonType);
     
     // Establecer la lección actual primero
     setCurrentLesson(lesson);
     
-    // Manejar reproducción
-    handleSelectLessonFromPlayback(lesson, isManualSelection);
-  }, [setCurrentLesson, handleSelectLessonFromPlayback]);
+    // CRÍTICO: Si shouldAutoPlay es true, forzar reproducción inmediata
+    if (shouldAutoPlay) {
+      console.log('🎵🎵🎵 AUTO-PLAY FORZADO - Iniciando reproducción inmediata');
+      // Dar un pequeño delay para que la lección se establezca primero
+      setTimeout(() => {
+        setIsPlaying(true);
+        console.log('🎵🎵🎵 setIsPlaying(true) EJECUTADO - Audio debe comenzar');
+      }, 100);
+    }
+    
+    console.log('🔄🔄🔄 LLAMANDO handleSelectLessonFromPlayback');
+    handleSelectLessonFromPlayback(lesson, true);
+    
+  }, [setCurrentLesson, handleSelectLessonFromPlayback, setIsPlaying]);
 
   // CRÍTICO: Inicializar podcast cuando todos los datos estén disponibles
   useEffect(() => {
@@ -101,23 +113,25 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     }
   }, [podcast?.id, user?.id, lessonProgress, userProgress, initializePodcastWithProgress]);
 
-  // CRÍTICO: Auto-inicialización inteligente de lección actual (solo una vez y si no hay selección manual)
+  // MEJORADO: Auto-inicialización inteligente que respeta el progreso del curso
   useEffect(() => {
-    console.log('🎯 CURRENT LESSON AUTO-INITIALIZATION EFFECT');
+    console.log('🎯 CURRENT LESSON AUTO-POSITIONING EFFECT');
     console.log('🔍 Conditions:', {
       hasPodcast: !!podcast,
       hasLessons: podcast?.lessons?.length > 0,
       hasUser: !!user,
       currentLessonExists: !!currentLesson,
       hasAutoInitialized: hasAutoInitialized.current,
-      hasUserMadeSelection: hasUserMadeSelection.current
+      hasUserMadeSelection: hasUserMadeSelection.current,
+      hasAutoPositioned: hasAutoPositioned.current
     });
 
-    // CORREGIDO: Solo auto-inicializar si:
+    // MEJORADO: Solo auto-posicionar si:
     // 1. Tenemos podcast y lecciones
     // 2. No hay lección actual seleccionada
     // 3. El usuario no ha hecho una selección manual
     // 4. Ya se inicializó el podcast con progreso
+    // 5. No hemos auto-posicionado antes
     if (
       podcast && 
       podcast.lessons && 
@@ -125,15 +139,16 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
       user && 
       !currentLesson && 
       hasAutoInitialized.current && 
-      !hasUserMadeSelection.current
+      !hasUserMadeSelection.current &&
+      !hasAutoPositioned.current
     ) {
       console.log('🎯 AUTO-POSITIONING on next lesson to continue (▶)...');
       initializeCurrentLesson();
+      hasAutoPositioned.current = true;
     } else if (hasUserMadeSelection.current) {
       console.log('👤 User has made manual selection - skipping auto-initialization');
     }
   }, [
-    // ESTABILIZADO: Dependencias más específicas para evitar re-ejecuciones
     podcast?.id,
     podcast?.lessons?.length,
     user?.id,

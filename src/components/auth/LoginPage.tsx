@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -39,7 +39,8 @@ const LoginPage = () => {
         toast.error(error.message);
       } else {
         if (isSignUp) {
-          toast.success('¡Cuenta creada! Revisa tu email para confirmar.');
+          // Redirigir a la página de confirmación de email
+          navigate('/email-confirmation');
         } else {
           toast.success('¡Bienvenido de vuelta!');
           navigate('/dashboard');
@@ -107,6 +108,16 @@ const LoginPage = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
+              {!isSignUp && (
+                <div className="text-right">
+                  <Link
+                    to="/forgot-password"
+                    className="text-sm text-miyo-800 hover:underline"
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </Link>
+                </div>
+              )}
             </div>
             
             <Button 

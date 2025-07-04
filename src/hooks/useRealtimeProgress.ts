@@ -1,7 +1,7 @@
 
-import { useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { useRealtimeSubscriptionManager } from './realtime/useRealtimeSubscriptionManager';
 
 interface UseRealtimeProgressProps {
   onLessonProgressUpdate?: () => void;
@@ -13,58 +13,69 @@ export function useRealtimeProgress({
   onCourseProgressUpdate 
 }: UseRealtimeProgressProps = {}) {
   const { user } = useAuth();
+  const { createSubscription } = useRealtimeSubscriptionManager();
+  
+  // Stable references to prevent re-subscriptions
+  const userIdRef = useRef<string | null>(null);
+  const cleanupFunctionsRef = useRef<(() => void)[]>([]);
+
+  // Stable callbacks to prevent subscription recreation
+  const stableLessonCallback = useCallback(() => {
+    console.log('📈 Lesson progress updated via realtime');
+    onLessonProgressUpdate?.();
+  }, [onLessonProgressUpdate]);
+
+  const stableCourseCallback = useCallback(() => {
+    console.log('📊 Course progress updated via realtime');
+    onCourseProgressUpdate?.();
+  }, [onCourseProgressUpdate]);
 
   const setupRealtimeSubscriptions = useCallback(() => {
-    if (!user) return;
+    if (!user) {
+      console.log('👤 No user found, skipping realtime subscriptions');
+      return;
+    }
 
-    console.log('🔄 Setting up realtime subscriptions for user:', user.id);
+    // Only create new subscriptions if user changed
+    if (userIdRef.current === user.id && cleanupFunctionsRef.current.length > 0) {
+      console.log('🔒 REALTIME PROGRESS: User unchanged, keeping existing subscriptions');
+      return;
+    }
 
-    // Subscribe to lesson progress changes
-    const lessonProgressChannel = supabase
-      .channel('lesson-progress-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'user_lesson_progress',
-          filter: `user_id=eq.${user.id}`
-        },
-        (payload) => {
-          console.log('📈 Lesson progress updated via realtime:', payload);
-          onLessonProgressUpdate?.();
-        }
-      )
-      .subscribe();
+    // Clean up previous subscriptions
+    cleanupFunctionsRef.current.forEach(cleanup => cleanup());
+    cleanupFunctionsRef.current = [];
 
-    // Subscribe to course progress changes
-    const courseProgressChannel = supabase
-      .channel('course-progress-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'user_course_progress',
-          filter: `user_id=eq.${user.id}`
-        },
-        (payload) => {
-          console.log('📊 Course progress updated via realtime:', payload);
-          onCourseProgressUpdate?.();
-        }
-      )
-      .subscribe();
+    console.log('🔄 REALTIME PROGRESS: Setting up subscriptions for user:', user.id);
+    userIdRef.current = user.id;
 
-    return () => {
-      console.log('🔌 Cleaning up realtime subscriptions');
-      supabase.removeChannel(lessonProgressChannel);
-      supabase.removeChannel(courseProgressChannel);
-    };
-  }, [user?.id, onLessonProgressUpdate, onCourseProgressUpdate]);
+    // Create lesson progress subscription
+    const lessonCleanup = createSubscription({
+      channelName: `lesson-progress-${user.id}`,
+      table: 'user_lesson_progress',
+      filter: `user_id=eq.${user.id}`,
+      callback: stableLessonCallback
+    });
+
+    // Create course progress subscription
+    const courseCleanup = createSubscription({
+      channelName: `course-progress-${user.id}`,
+      table: 'user_course_progress',
+      filter: `user_id=eq.${user.id}`,
+      callback: stableCourseCallback
+    });
+
+    cleanupFunctionsRef.current = [lessonCleanup, courseCleanup];
+  }, [user?.id, createSubscription, stableLessonCallback, stableCourseCallback]);
 
   useEffect(() => {
-    const cleanup = setupRealtimeSubscriptions();
-    return cleanup;
+    setupRealtimeSubscriptions();
+
+    return () => {
+      console.log('🔌 REALTIME PROGRESS: Component cleanup - removing all subscriptions');
+      cleanupFunctionsRef.current.forEach(cleanup => cleanup());
+      cleanupFunctionsRef.current = [];
+    };
   }, [setupRealtimeSubscriptions]);
 
   return {

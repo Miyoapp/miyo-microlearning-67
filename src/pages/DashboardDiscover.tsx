@@ -7,9 +7,12 @@ import { Button } from '@/components/ui/button';
 import { obtenerCursos, obtenerCategorias } from '@/lib/api';
 import { useUserProgress } from '@/hooks/useUserProgress';
 import { Podcast, CategoryModel } from '@/types';
+import { SidebarTrigger } from '@/components/ui/sidebar/SidebarTrigger';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const DashboardDiscover = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [allCourses, setAllCourses] = useState<Podcast[]>([]);
   const [categories, setCategories] = useState<CategoryModel[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -42,7 +45,9 @@ const DashboardDiscover = () => {
   // Get new courses (simulate last 30 days)
   const newCourses = allCourses.slice(0, 6);
 
+  // CORREGIDO: Solo navegar al curso, no iniciar reproducción
   const handlePlayCourse = (courseId: string) => {
+    console.log('DashboardDiscover: Navigating to course (maintaining current progress):', courseId);
     navigate(`/dashboard/course/${courseId}`);
   };
 
@@ -63,6 +68,13 @@ const DashboardDiscover = () => {
   return (
     <DashboardLayout>
       <div className="max-w-7xl mx-auto">
+        {/* Mobile hamburger menu - positioned like CoursePageHeader */}
+        {isMobile && (
+          <div className="mb-4 px-4 flex justify-end">
+            <SidebarTrigger />
+          </div>
+        )}
+
         {/* Mobile-first header */}
         <div className="mb-6 sm:mb-8 px-4 sm:px-0">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Descubrir</h1>

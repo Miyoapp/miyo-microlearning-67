@@ -25,10 +25,16 @@ export function useLessonPlayback(
   }, [podcast, userProgress]);
 
   const handleSelectLesson = useCallback((lesson: Lesson, isManualSelection = false) => {
-    console.log('🎵 handleSelectLesson:', lesson.title, 'manual:', isManualSelection, 'isCompleted:', lesson.isCompleted, 'reviewMode:', isInReviewMode());
+    console.log('🎵🎵🎵 useLessonPlayback - handleSelectLesson RECIBIDO:', {
+      lessonTitle: lesson.title,
+      manual: isManualSelection,
+      isCompleted: lesson.isCompleted,
+      reviewMode: isInReviewMode(),
+      timestamp: new Date().toLocaleTimeString()
+    });
     
     if (isTransitioning.current) {
-      console.log('🔄 Transition in progress, skipping selection');
+      console.log('🔄 Transición en progreso, saltando selección');
       return;
     }
     
@@ -37,7 +43,7 @@ export function useLessonPlayback(
     const canSelectLesson = lesson.isCompleted || !lesson.isLocked || reviewMode;
     
     if (!canSelectLesson) {
-      console.log('🚫 Lesson cannot be selected - locked and not completed');
+      console.log('🚫 Lección no se puede seleccionar - bloqueada y no completada');
       return;
     }
     
@@ -50,28 +56,22 @@ export function useLessonPlayback(
     
     manualSelectionActive.current = isManualSelection;
     
-    // CORREGIDO: Auto-advance logic para permitir secuencia desde lecciones completadas
+    // CORREGIDO: Auto-start playback para selecciones manuales desde la ruta de aprendizaje
     if (isManualSelection) {
-      console.log('▶️ Manual selection - starting playback');
+      console.log('▶️▶️▶️ SELECCIÓN MANUAL desde ruta de aprendizaje - iniciando reproducción automática');
+      console.log('🔊🔊🔊 ESTABLECIENDO isPlaying = TRUE para selección manual');
       setIsPlaying(true);
-      
-      // NUEVO: Si es una lección completada, permitir auto-advance para continuar secuencia
-      if (lesson.isCompleted) {
-        console.log('🏆 Selected completed lesson - enable auto-advance for sequence continuation');
-        setIsAutoAdvanceAllowed(true);
-      } else {
-        console.log('▶️ Selected incomplete lesson - enable auto-advance');
-        setIsAutoAdvanceAllowed(true);
-      }
+      setIsAutoAdvanceAllowed(true);
     } else {
+      // Para selecciones automáticas (auto-positioning), no iniciar reproducción
+      console.log('🎯 Auto-posicionamiento - NO iniciando reproducción');
       setIsPlaying(false);
       setIsAutoAdvanceAllowed(false);
     }
     
     // OPTIMIZADO: Tracking de inicio para todas las lecciones en review mode o incompletas
     if (podcast && isManualSelection) {
-      console.log('📊 Tracking lesson start for:', lesson.isCompleted ? 'completed lesson (replay/sequence)' : 'incomplete lesson');
-      // En modo review o replay, track position sin afectar completion
+      console.log('📊📊📊 TRACKING inicio de lección para:', lesson.isCompleted ? 'lección completada (replay/secuencia)' : 'lección incompleta');
       updateLessonPosition(lesson.id, podcast.id, 1);
     }
   }, [podcast, updateLessonPosition, userProgress, isInReviewMode]);
@@ -79,7 +79,7 @@ export function useLessonPlayback(
   const handleTogglePlay = useCallback(() => {
     if (!currentLesson) return;
     
-    console.log('🎵 Toggle play - current state:', isPlaying);
+    console.log('🎵🎵🎵 Toggle play - estado actual:', isPlaying, '→ nuevo estado:', !isPlaying);
     setIsPlaying(!isPlaying);
     
     if (!isPlaying) {

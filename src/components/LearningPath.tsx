@@ -1,3 +1,4 @@
+
 import { useCallback, useMemo } from 'react';
 import { Lesson, Module } from '../types';
 import React from 'react';
@@ -32,29 +33,40 @@ const LearningPath = React.memo(({ lessons, modules, onSelectLesson, currentLess
     lessons.map(l => l.id).join('|')
   ]);
 
-  // CORREGIDO: Handler de click que usa correctamente canPlay del status
+  // HANDLER DE CLICK CON LOGS ESPECÍFICOS
   const handleLessonClick = useCallback((lesson: Lesson) => {
+    console.log('🎯🎯🎯 LEARNING PATH - CLICK RECIBIDO:', {
+      lessonTitle: lesson.title,
+      timestamp: new Date().toLocaleTimeString()
+    });
+    
     const status = lessonStatusMap.get(lesson.id);
     if (!status) {
-      console.log('❌ No status found for lesson:', lesson.title);
+      console.log('🚫🚫🚫 LEARNING PATH - NO STATUS FOUND:', lesson.title);
       return;
     }
     
     const { canPlay, isCompleted, isLocked, isFirstInSequence } = status;
     
-    console.log('🎯 LearningPath click validation:', {
+    console.log('🎯🎯🎯 LEARNING PATH - VALIDACIÓN CLICK:', {
       lessonTitle: lesson.title,
       canPlay,
       isCompleted,
       isLocked,
-      isFirstInSequence
+      isFirstInSequence,
+      action: canPlay ? 'PERMITIR REPRODUCCIÓN' : 'BLOQUEAR'
     });
     
     if (canPlay) {
-      console.log('✅ Lesson is playable - proceeding with selection:', lesson.title);
+      console.log('✅✅✅ LEARNING PATH - ENVIANDO A onSelectLesson:', lesson.title);
       onSelectLesson(lesson);
+      console.log('✅✅✅ LEARNING PATH - onSelectLesson LLAMADO EXITOSAMENTE:', lesson.title);
     } else {
-      console.log('🚫 Lesson not playable:', lesson.title, 'isLocked:', isLocked, 'isFirst:', isFirstInSequence);
+      console.log('🚫🚫🚫 LEARNING PATH - LECCIÓN BLOQUEADA:', {
+        lessonTitle: lesson.title,
+        isLocked,
+        reason: 'lección anterior no completada'
+      });
     }
   }, [
     // ESTABILIZADO: Solo incluir referencias estables

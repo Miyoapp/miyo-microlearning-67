@@ -18,12 +18,30 @@ interface LessonItemProps {
     nodeClasses: string;
     textClasses: string;
   };
-  onLessonClick: (lesson: Lesson) => void;
+  onLessonClick: (lesson: Lesson, shouldAutoPlay?: boolean) => void;
 }
 
 const LessonItem = React.memo(({ lesson, index, status, classes, onLessonClick }: LessonItemProps) => {
   const { isCompleted, isCurrent, canPlay } = status;
   const { nodeClasses, textClasses } = classes;
+  
+  // CLICK HANDLER ESPECÍFICO PARA EL ÍCONO DE PLAY - CON AUTO-PLAY
+  const handlePlayClick = () => {
+    console.log('🔥🔥🔥 PLAY ICON CLICK - INICIO:', {
+      lessonTitle: lesson.title,
+      canPlay,
+      isCompleted,
+      timestamp: new Date().toLocaleTimeString()
+    });
+    
+    if (canPlay) {
+      // CRÍTICO: Pasar shouldAutoPlay=true para forzar reproducción inmediata
+      onLessonClick(lesson, true);
+      console.log('🔥🔥🔥 PLAY ICON CLICK - ENVIADO A onLessonClick con AUTO-PLAY:', lesson.title);
+    } else {
+      console.log('🚫🚫🚫 PLAY ICON CLICK - LECCIÓN BLOQUEADA:', lesson.title);
+    }
+  };
   
   // Efecto zigzag alternando posiciones
   const containerAlignment = index % 2 === 0 
@@ -33,8 +51,8 @@ const LessonItem = React.memo(({ lesson, index, status, classes, onLessonClick }
   return (
     <div className={`flex ${containerAlignment} items-center`}>
       <div 
-        className={nodeClasses}
-        onClick={() => onLessonClick(lesson)}
+        className={cn(nodeClasses, { "cursor-pointer": canPlay, "cursor-not-allowed": !canPlay })}
+        onClick={handlePlayClick}
       >
         {/* CORREGIDO: Tamaño consistente de íconos (18px) */}
         {isCompleted ? (
@@ -53,11 +71,8 @@ const LessonItem = React.memo(({ lesson, index, status, classes, onLessonClick }
         </div>
       )}
       
-      {/* Título de la lección con ancho fijo para evitar afectar íconos */}
-      <div 
-        className={cn("ml-3 flex-1 max-w-[280px]", { "cursor-pointer": canPlay, "cursor-not-allowed": !canPlay })}
-        onClick={() => onLessonClick(lesson)}
-      >
+      {/* Título de la lección SIN onClick - solo visual */}
+      <div className="ml-3 flex-1 max-w-[280px]">
         <div className={cn(textClasses, "leading-snug")}>
           {lesson.title}
           {isCurrent && (

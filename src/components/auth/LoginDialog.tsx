@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -11,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useAuth } from './AuthProvider';
 import { toast } from 'sonner';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 
 interface LoginDialogProps {
   open: boolean;
@@ -47,12 +48,17 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({ open, onOpenChange }) 
       if (error) {
         toast.error('Error al crear la cuenta: ' + error.message);
       } else {
-        toast.success('¡Cuenta creada correctamente! Por favor, verifica tu correo electrónico.');
-        setMode('login');
+        // Redirigir a la página de confirmación de email
+        navigate('/email-confirmation');
       }
     }
 
     setLoading(false);
+  };
+
+  const handleForgotPassword = () => {
+    onOpenChange(false);
+    navigate('/forgot-password');
   };
 
   return (
@@ -91,6 +97,15 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({ open, onOpenChange }) 
                 required
                 className="w-full"
               />
+              <div className="text-right mt-1">
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  className="text-sm text-miyo-800 hover:underline"
+                >
+                  ¿Olvidaste tu contraseña?
+                </button>
+              </div>
             </div>
             <Button
               type="submit"
