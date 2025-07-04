@@ -71,12 +71,12 @@ const ScrollVelocityCarousel: React.FC = () => {
 
           {/* Carrusel con ScrollVelocity - 2 filas */}
           <div className="space-y-8 mb-16">
-            {/* Primera fila - velocidad +3 (izquierda a derecha) */}
+            {/* Primera fila - velocidad +2 (izquierda a derecha) */}
             <div className="relative">
               <div className="absolute left-0 top-0 w-20 h-full bg-gradient-to-r from-white via-white to-transparent z-10 pointer-events-none" />
               <div className="absolute right-0 top-0 w-20 h-full bg-gradient-to-l from-white via-white to-transparent z-10 pointer-events-none" />
               
-              <ScrollVelocity velocity={3} className="py-4">
+              <ScrollVelocity velocity={2} className="py-4">
                 {duplicatedCategories.map((categoria, index) => (
                   <CategoryScrollCard
                     key={`row1-${categoria.id}-${index}`}
@@ -87,12 +87,12 @@ const ScrollVelocityCarousel: React.FC = () => {
               </ScrollVelocity>
             </div>
 
-            {/* Segunda fila - velocidad -2 (derecha a izquierda) */}
+            {/* Segunda fila - velocidad -1 (derecha a izquierda) */}
             <div className="relative">
               <div className="absolute left-0 top-0 w-20 h-full bg-gradient-to-r from-white via-white to-transparent z-10 pointer-events-none" />
               <div className="absolute right-0 top-0 w-20 h-full bg-gradient-to-l from-white via-white to-transparent z-10 pointer-events-none" />
               
-              <ScrollVelocity velocity={-2} className="py-4">
+              <ScrollVelocity velocity={-1} className="py-4">
                 {duplicatedCategories.map((categoria, index) => (
                   <CategoryScrollCard
                     key={`row2-${categoria.id}-${index}`}
