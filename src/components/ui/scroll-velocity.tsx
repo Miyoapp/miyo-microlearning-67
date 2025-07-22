@@ -10,10 +10,11 @@ interface ScrollVelocityProps extends React.HTMLAttributes<HTMLDivElement> {
   velocity: number
   movable?: boolean
   clamp?: boolean
+  constantVelocity?: boolean
 }
 
 const ScrollVelocity = React.forwardRef<HTMLDivElement, ScrollVelocityProps>(
-  ({ children, velocity = 5, movable = true, clamp = false, className, ...props }, ref) => {
+  ({ children, velocity = 5, movable = true, clamp = false, constantVelocity = false, className, ...props }, ref) => {
     const baseX = useMotionValue(0)
     const { scrollY } = useScroll()
     const scrollVelocity = useVelocity(scrollY)
@@ -31,14 +32,26 @@ const ScrollVelocity = React.forwardRef<HTMLDivElement, ScrollVelocityProps>(
     const scrollThreshold = React.useRef<number>(5)
 
     useAnimationFrame((t, delta) => {
-      if (movable) {
-        move(delta)
+      if (constantVelocity) {
+        // Use constant velocity mode - ignore scroll effects
+        moveConstant(delta)
       } else {
-        if (Math.abs(scrollVelocity.get()) >= scrollThreshold.current) {
+        // Use original logic with scroll effects
+        if (movable) {
           move(delta)
+        } else {
+          if (Math.abs(scrollVelocity.get()) >= scrollThreshold.current) {
+            move(delta)
+          }
         }
       }
     })
+
+    function moveConstant(delta: number) {
+      // Simple constant velocity movement without scroll influence
+      const moveBy = velocity * (delta / 1000)
+      baseX.set(baseX.get() + moveBy)
+    }
 
     function move(delta: number) {
       let moveBy = directionFactor.current * velocity * (delta / 1000)
