@@ -8,15 +8,34 @@ interface CategoryScrollCardProps {
 }
 
 const CategoryScrollCard = ({ categoria, onClick }: CategoryScrollCardProps) => {
-  // Imagen por defecto para "Antes de dormir"
-  const getImageForCategory = (nombre: string, imagenUrl: string) => {
-    if (nombre.toLowerCase().includes('antes de dormir') && !imagenUrl) {
-      return 'https://images.unsplash.com/photo-1721322800607-8c38375eef04?auto=format&fit=crop&w=400&q=80';
+  // Mapeo de imágenes de Cloudinary para cada categoría
+  const getImageForCategory = (nombre: string) => {
+    const nombreLower = nombre.toLowerCase();
+    
+    if (nombreLower.includes('productividad')) {
+      return 'https://res.cloudinary.com/dyjx9cjat/image/upload/v1753193121/productividad_djlbni.jpg';
     }
-    return imagenUrl;
+    if (nombreLower.includes('bienestar')) {
+      return 'https://res.cloudinary.com/dyjx9cjat/image/upload/v1753193108/bienestar_hoklc1.jpg';
+    }
+    if (nombreLower.includes('relaciones') || nombreLower.includes('humanas')) {
+      return 'https://res.cloudinary.com/dyjx9cjat/image/upload/v1753193119/relaciones_humanas_b91shk.jpg';
+    }
+    if (nombreLower.includes('espiritualidad')) {
+      return 'https://res.cloudinary.com/dyjx9cjat/image/upload/v1753193121/espiritualidad_qyd5m1.jpg';
+    }
+    if (nombreLower.includes('autoconocimiento')) {
+      return 'https://res.cloudinary.com/dyjx9cjat/image/upload/v1753193118/autoconocimiento_gecxqp.jpg';
+    }
+    if (nombreLower.includes('habilidades') || nombreLower.includes('personales') || nombreLower.includes('desarrollo')) {
+      return 'https://res.cloudinary.com/dyjx9cjat/image/upload/v1753193108/habilidadespersonales_n8bijl.jpg';
+    }
+    
+    // Fallback a la imagen original o una imagen por defecto
+    return categoria.imagen_url || 'https://images.unsplash.com/photo-1721322800607-8c38375eef04?auto=format&fit=crop&w=400&q=80';
   };
 
-  const imageUrl = getImageForCategory(categoria.nombre, categoria.imagen_url);
+  const imageUrl = getImageForCategory(categoria.nombre);
 
   return (
     <div 
@@ -24,22 +43,14 @@ const CategoryScrollCard = ({ categoria, onClick }: CategoryScrollCardProps) => 
       onClick={onClick}
     >
       {/* Imagen de fondo */}
-      {imageUrl ? (
-        <img
-          src={imageUrl}
-          alt={categoria.nombre}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-          onError={(e) => {
-            e.currentTarget.style.display = 'none';
-          }}
-        />
-      ) : (
-        <div className="w-full h-full bg-gradient-to-br from-miyo-100 to-miyo-200 flex items-center justify-center">
-          <div className="text-miyo-600 text-4xl font-bold opacity-20">
-            {categoria.nombre.charAt(0).toUpperCase()}
-          </div>
-        </div>
-      )}
+      <img
+        src={imageUrl}
+        alt={categoria.nombre}
+        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+        onError={(e) => {
+          e.currentTarget.style.display = 'none';
+        }}
+      />
       
       {/* Overlay con nombre de categoría */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end">
