@@ -10,7 +10,7 @@ const HowItWorks = () => {
       description: "Explora nuestra colección de microcursos en audio"
     },
     {
-      number: "02",
+      number: "02", 
       icon: <Clock className="h-12 w-12 text-miyo-600" />,
       title: "Escucha en cualquier momento",
       description: "Los cursos están diseñados en cápsulas de 15 a 60 minutos"
@@ -19,7 +19,7 @@ const HowItWorks = () => {
       number: "03",
       icon: <TrendingUp className="h-12 w-12 text-miyo-600" />,
       title: "Aprende",
-      description: "Contenido que transforma y te impulsa hacia tu mejor versión"
+      description: "Contenido práctico y accionable para tu desarrollo personal"
     },
   ];
 
