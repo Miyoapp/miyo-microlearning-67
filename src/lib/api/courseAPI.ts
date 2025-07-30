@@ -42,7 +42,7 @@ export const obtenerCursos = async (): Promise<Podcast[]> => {
         tipo_curso: (curso.tipo_curso as 'libre' | 'pago') || 'libre',
         precio: curso.precio,
         moneda: curso.moneda || 'USD',
-        nivel: curso.nivel,
+        nivel: (curso as any).nivel, // Type assertion since nivel exists in DB but not in generated types
         likes: curso.likes,
         dislikes: curso.dislikes
       };
@@ -110,7 +110,7 @@ export const obtenerCursoPorId = async (id: string): Promise<Podcast | null> => 
       tipo_curso: (data.tipo_curso as 'libre' | 'pago') || 'libre',
       precio: data.precio,
       moneda: data.moneda || 'USD',
-      nivel: data.nivel,
+      nivel: (data as any).nivel, // Type assertion since nivel exists in DB but not in generated types
       likes: data.likes,
       dislikes: data.dislikes
     };
