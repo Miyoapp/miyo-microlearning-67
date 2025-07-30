@@ -1,4 +1,5 @@
 
+
 import { Podcast, SupabaseCurso } from "@/types";
 import { obtenerCategoria } from "./categoryTransformer";
 import { obtenerCreador } from "./creatorTransformer";
@@ -35,10 +36,11 @@ export const transformarCursoAModelo = async (curso: SupabaseCurso): Promise<Pod
       lessonCount: curso.numero_lecciones,
       lessons: lecciones,
       modules: modulos,
-      // Add the new fields including currency
+      // Add the new fields including currency and nivel
       tipo_curso: curso.tipo_curso as 'libre' | 'pago' | undefined,
       precio: curso.precio,
       moneda: curso.moneda || 'USD',
+      nivel: curso.nivel,
       likes: curso.likes,
       dislikes: curso.dislikes
     };
@@ -77,6 +79,7 @@ export const transformarCursoAModelo = async (curso: SupabaseCurso): Promise<Pod
       tipo_curso: 'libre',
       precio: 0,
       moneda: 'USD',
+      nivel: curso.nivel,
       likes: 0,
       dislikes: 0
     };
