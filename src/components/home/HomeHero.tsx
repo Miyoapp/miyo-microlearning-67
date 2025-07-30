@@ -18,7 +18,7 @@ const HomeHero = () => {
             Microcursos de desarrollo personal en{' '}
             <span className="text-miyo-800">audio</span>
           </h1>
-          <p className="text-xl md:text-2xl text-gray-600 mb-12 animate-slide-up max-w-3xl mx-auto">
+          <p className="text-lg md:text-xl text-gray-600 mb-12 animate-slide-up max-w-3xl mx-auto">
             Descubre nuevas perspectivas y herramientas para crecer y avanzar a través de cápsulas que inspiran, transforman y empoderan.
           </p>
           <div className="flex justify-center">
