@@ -19,7 +19,7 @@ const HowItWorks = () => {
       number: "03",
       icon: <TrendingUp className="h-12 w-12 text-miyo-600" />,
       title: "Aprende",
-      description: "Contenido práctico y accionable para tu desarrollo personal"
+      description: "Contenido práctico y accionable para tu crecimiento"
     },
   ];
 
