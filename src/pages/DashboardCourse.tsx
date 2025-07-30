@@ -12,6 +12,7 @@ import CourseLoadingSkeleton from '@/components/course/CourseLoadingSkeleton';
 import CourseErrorState from '@/components/course/CourseErrorState';
 import CourseNotFoundState from '@/components/course/CourseNotFoundState';
 import CourseAccessHandler from '@/components/course/CourseAccessHandler';
+import MetaTags from '@/components/MetaTags';
 
 const DashboardCourse = () => {
   const { courseId } = useParams<{ courseId: string }>();
@@ -205,6 +206,14 @@ const DashboardCourse = () => {
 
     return (
       <DashboardLayout>
+        {/* Dynamic Meta Tags for Course */}
+        <MetaTags
+          title={`${displayPodcast.title} - Miyo`}
+          description={displayPodcast.description}
+          image={displayPodcast.imageUrl}
+          url={`${window.location.origin}/dashboard/course/${courseId}`}
+        />
+        
         <div className="max-w-7xl mx-auto pb-20 sm:pb-24">
           <CoursePageHeader isReviewMode={isReviewMode} />
           
