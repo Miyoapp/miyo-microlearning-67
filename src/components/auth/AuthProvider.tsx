@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,6 +22,19 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
+};
+
+// Función para obtener la URL correcta del dashboard según el ambiente
+const getDashboardUrl = () => {
+  const origin = window.location.origin;
+  if (origin.includes('preview--miyo-microlearning-67.lovable.app')) {
+    return 'https://preview--miyo-microlearning-67.lovable.app/dashboard';
+  } else if (origin.includes('miyoapp.com')) {
+    return 'https://miyoapp.com/dashboard';
+  } else {
+    // Para desarrollo local
+    return `${origin}/dashboard`;
+  }
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -77,15 +89,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.log('Valid session found, setting user');
             setSession(session);
             setUser(session.user);
-            
-            // NUEVO: Redireccionar automáticamente al dashboard cuando se complete el login con Google
-            if (event === 'SIGNED_IN' && window.location.pathname === '/') {
-              console.log('Google OAuth login detected, redirecting to dashboard');
-              // Usar setTimeout para evitar problemas de race condition con React
-              setTimeout(() => {
-                window.location.href = '/dashboard';
-              }, 100);
-            }
           }
           setLoading(false);
           return;
@@ -145,8 +148,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signInWithGoogle = async () => {
-    // CORREGIDO: Usar la URL actual para la redirección, no específicamente dashboard
-    const redirectUrl = `${window.location.origin}/`;
+    // Redirigir directamente al dashboard según el ambiente
+    const redirectUrl = getDashboardUrl();
+    console.log('Google OAuth redirect URL:', redirectUrl);
+    
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
