@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType {
   user: User | null;
@@ -9,7 +8,6 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, name?: string) => Promise<{ error: any }>;
-  signInWithGoogle: () => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   forceLogout: () => void;
 }
@@ -22,19 +20,6 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-};
-
-// Función para obtener la URL correcta del dashboard según el ambiente
-const getDashboardUrl = () => {
-  const origin = window.location.origin;
-  if (origin.includes('preview--miyo-microlearning-67.lovable.app')) {
-    return 'https://preview--miyo-microlearning-67.lovable.app/dashboard';
-  } else if (origin.includes('miyoapp.com')) {
-    return 'https://miyoapp.com/dashboard';
-  } else {
-    // Para desarrollo local
-    return `${origin}/dashboard`;
-  }
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -147,20 +132,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { error };
   };
 
-  const signInWithGoogle = async () => {
-    // Redirigir directamente al dashboard según el ambiente
-    const redirectUrl = getDashboardUrl();
-    console.log('Google OAuth redirect URL:', redirectUrl);
-    
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: redirectUrl
-      }
-    });
-    return { error };
-  };
-
   const signOut = async () => {
     try {
       console.log('Starting signOut process...');
@@ -197,7 +168,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loading,
     signIn,
     signUp,
-    signInWithGoogle,
     signOut,
     forceLogout,
   };

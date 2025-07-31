@@ -10,9 +10,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { useAuth } from './AuthProvider';
-import { GoogleAuthButton } from './GoogleAuthButton';
 import { toast } from 'sonner';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 
@@ -75,127 +73,110 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({ open, onOpenChange }) 
           </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-4">
-          {/* Google Auth Button */}
-          <GoogleAuthButton text={mode} />
-          
-          {/* Separator */}
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <Separator className="w-full" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                o continúa con email
-              </span>
-            </div>
-          </div>
-
-          {/* Login form */}
-          {mode === 'login' && (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="email">Correo electrónico</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full"
-                />
-              </div>
-              <div>
-                <Label htmlFor="password">Contraseña</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="w-full"
-                />
-                <div className="text-right mt-1">
-                  <button
-                    type="button"
-                    onClick={handleForgotPassword}
-                    className="text-sm text-miyo-800 hover:underline"
-                  >
-                    ¿Olvidaste tu contraseña?
-                  </button>
-                </div>
-              </div>
-              <Button
-                type="submit"
-                className="w-full bg-miyo-800 hover:bg-miyo-700"
-                disabled={loading}
-              >
-                {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
-              </Button>
-              <Button
-                type="button"
-                variant="link"
-                onClick={() => setMode('signup')}
+        {/* Login form */}
+        {mode === 'login' && (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="email">Correo electrónico</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
                 className="w-full"
-              >
-                ¿No tienes una cuenta? Crear cuenta
-              </Button>
-            </form>
-          )}
-
-          {/* Signup form */}
-          {mode === 'signup' && (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="name">Nombre</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full"
-                />
-              </div>
-              <div>
-                <Label htmlFor="email">Correo electrónico</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full"
-                />
-              </div>
-              <div>
-                <Label htmlFor="password">Contraseña</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="w-full"
-                />
-              </div>
-              <Button
-                type="submit"
-                className="w-full bg-miyo-800 hover:bg-miyo-700"
-                disabled={loading}
-              >
-                {loading ? 'Creando cuenta...' : 'Crear cuenta'}
-              </Button>
-              <Button
-                type="button"
-                variant="link"
-                onClick={() => setMode('login')}
+              />
+            </div>
+            <div>
+              <Label htmlFor="password">Contraseña</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
                 className="w-full"
-              >
-                ¿Ya tienes una cuenta? Iniciar sesión
-              </Button>
-            </form>
-          )}
-        </div>
+              />
+              <div className="text-right mt-1">
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  className="text-sm text-miyo-800 hover:underline"
+                >
+                  ¿Olvidaste tu contraseña?
+                </button>
+              </div>
+            </div>
+            <Button
+              type="submit"
+              className="w-full bg-miyo-800 hover:bg-miyo-700"
+              disabled={loading}
+            >
+              {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
+            </Button>
+            <Button
+              type="button"
+              variant="link"
+              onClick={() => setMode('signup')}
+              className="w-full"
+            >
+              ¿No tienes una cuenta? Crear cuenta
+            </Button>
+          </form>
+        )}
+
+        {/* Signup form */}
+        {mode === 'signup' && (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="name">Nombre</Label>
+              <Input
+                id="name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            <div>
+              <Label htmlFor="email">Correo electrónico</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full"
+              />
+            </div>
+            <div>
+              <Label htmlFor="password">Contraseña</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full"
+              />
+            </div>
+            <Button
+              type="submit"
+              className="w-full bg-miyo-800 hover:bg-miyo-700"
+              disabled={loading}
+            >
+              {loading ? 'Creando cuenta...' : 'Crear cuenta'}
+            </Button>
+            <Button
+              type="button"
+              variant="link"
+              onClick={() => setMode('login')}
+              className="w-full"
+            >
+              ¿Ya tienes una cuenta? Iniciar sesión
+            </Button>
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   );
