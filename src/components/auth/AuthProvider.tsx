@@ -1,6 +1,8 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType {
   user: User | null;
@@ -75,6 +77,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.log('Valid session found, setting user');
             setSession(session);
             setUser(session.user);
+            
+            // NUEVO: Redireccionar automáticamente al dashboard cuando se complete el login con Google
+            if (event === 'SIGNED_IN' && window.location.pathname === '/') {
+              console.log('Google OAuth login detected, redirecting to dashboard');
+              // Usar setTimeout para evitar problemas de race condition con React
+              setTimeout(() => {
+                window.location.href = '/dashboard';
+              }, 100);
+            }
           }
           setLoading(false);
           return;
@@ -134,7 +145,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signInWithGoogle = async () => {
-    const redirectUrl = `${window.location.origin}/dashboard`;
+    // CORREGIDO: Usar la URL actual para la redirección, no específicamente dashboard
+    const redirectUrl = `${window.location.origin}/`;
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
