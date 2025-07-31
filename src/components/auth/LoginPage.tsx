@@ -5,8 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { useAuth } from './AuthProvider';
+import { GoogleAuthButton } from './GoogleAuthButton';
 import Logo from '@/components/common/Logo';
 
 const LoginPage = () => {
@@ -74,73 +76,90 @@ const LoginPage = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {isSignUp && (
+          <div className="space-y-4">
+            {/* Google Auth Button */}
+            <GoogleAuthButton text={isSignUp ? 'signup' : 'login'} />
+            
+            {/* Separator */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <Separator className="w-full" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  o continúa con email
+                </span>
+              </div>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {isSignUp && (
+                <div className="space-y-2">
+                  <Label htmlFor="name">Nombre</Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                  />
+                </div>
+              )}
+              
               <div className="space-y-2">
-                <Label htmlFor="name">Nombre</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
-                  id="name"
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </div>
-            )}
-            
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="password">Contraseña</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-              {!isSignUp && (
-                <div className="text-right">
-                  <Link
-                    to="/forgot-password"
-                    className="text-sm text-miyo-800 hover:underline"
-                  >
-                    ¿Olvidaste tu contraseña?
-                  </Link>
-                </div>
-              )}
-            </div>
-            
-            <Button 
-              type="submit" 
-              className="w-full bg-miyo-800 hover:bg-miyo-900"
-              disabled={loading}
-            >
-              {loading ? 'Cargando...' : (isSignUp ? 'Crear cuenta' : 'Iniciar sesión')}
-            </Button>
-            
-            <div className="text-center">
-              <button
-                type="button"
-                onClick={toggleMode}
-                className="text-miyo-800 hover:underline"
+              
+              <div className="space-y-2">
+                <Label htmlFor="password">Contraseña</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                {!isSignUp && (
+                  <div className="text-right">
+                    <Link
+                      to="/forgot-password"
+                      className="text-sm text-miyo-800 hover:underline"
+                    >
+                      ¿Olvidaste tu contraseña?
+                    </Link>
+                  </div>
+                )}
+              </div>
+              
+              <Button 
+                type="submit" 
+                className="w-full bg-miyo-800 hover:bg-miyo-900"
+                disabled={loading}
               >
-                {isSignUp 
-                  ? '¿Ya tienes cuenta? Inicia sesión' 
-                  : '¿No tienes cuenta? Regístrate'
-                }
-              </button>
-            </div>
-          </form>
+                {loading ? 'Cargando...' : (isSignUp ? 'Crear cuenta' : 'Iniciar sesión')}
+              </Button>
+              
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={toggleMode}
+                  className="text-miyo-800 hover:underline"
+                >
+                  {isSignUp 
+                    ? '¿Ya tienes cuenta? Inicia sesión' 
+                    : '¿No tienes cuenta? Regístrate'
+                  }
+                </button>
+              </div>
+            </form>
+          </div>
         </CardContent>
       </Card>
     </div>
