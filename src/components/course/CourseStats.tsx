@@ -1,4 +1,5 @@
 
+
 import { Podcast } from '../../types';
 import { Star, Trophy, Target } from 'lucide-react';
 import { Progress } from "@/components/ui/progress";
@@ -74,6 +75,12 @@ const CourseStats = ({ podcast, progressPercentage = 0, isCompleted = false }: C
             <span>Duración total</span>
             <span className="font-medium text-gray-800">{formatMinutesToHumanReadable(podcast.duration)}</span>
           </div>
+          {podcast.nivel && (
+            <div className="flex justify-between py-1">
+              <span>Nivel</span>
+              <span className="font-medium text-gray-800">{podcast.nivel}</span>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

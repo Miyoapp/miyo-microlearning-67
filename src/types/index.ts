@@ -1,3 +1,4 @@
+
 export interface CategoryModel {
   id: string;
   nombre: string;
@@ -54,6 +55,7 @@ export interface Podcast {
   tipo_curso: 'libre' | 'pago';
   precio?: number | null;
   moneda?: string | null;
+  nivel?: string | null;
   likes: number;
   dislikes: number;
 }
@@ -81,6 +83,7 @@ export interface SupabaseCurso {
   tipo_curso: 'libre' | 'pago';
   precio?: number | null;
   moneda?: string | null;
+  nivel?: string | null;
   likes: number;
   dislikes: number;
   show?: boolean;

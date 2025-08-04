@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Heart, Play, Crown, ExternalLink, Clock, Headphones } from 'lucide-react';
+import { Heart, Play, Crown, ExternalLink, Clock, Headphones, GraduationCap } from 'lucide-react';
 import { Podcast } from '@/types';
 import CourseVoting from './CourseVoting';
 import CheckoutModal from './CheckoutModal';
@@ -165,6 +165,12 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
               <Headphones className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
               <span>{podcast.lessonCount} lecciones</span>
             </div>
+            {podcast.nivel && (
+              <div className="flex items-center text-xs sm:text-sm text-gray-500">
+                <GraduationCap className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                <span>{podcast.nivel}</span>
+              </div>
+            )}
             <div className="w-full sm:w-auto">
               <CourseVoting courseId={podcast.id} />
             </div>
@@ -179,6 +185,12 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
               <Headphones className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
               <span>{podcast.lessonCount} lecciones</span>
             </div>
+            {podcast.nivel && (
+              <div className="flex items-center text-xs sm:text-sm text-gray-500">
+                <GraduationCap className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                <span>{podcast.nivel}</span>
+              </div>
+            )}
             <div className="w-full sm:w-auto">
               <CourseVoting courseId={podcast.id} />
             </div>

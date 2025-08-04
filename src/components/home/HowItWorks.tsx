@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Search, Clock, TrendingUp } from 'lucide-react';
 
@@ -11,16 +10,16 @@ const HowItWorks = () => {
       description: "Explora nuestra colección de microcursos en audio"
     },
     {
-      number: "02",
+      number: "02", 
       icon: <Clock className="h-12 w-12 text-miyo-600" />,
       title: "Escucha en cualquier momento",
-      description: "Los cursos están diseñados en cápsulas de 5 a 15 minutos"
+      description: "Los cursos están diseñados en cápsulas de 15 a 60 minutos"
     },
     {
       number: "03",
       icon: <TrendingUp className="h-12 w-12 text-miyo-600" />,
       title: "Aprende",
-      description: "Contenido que transforma y te impulsa hacia tu mejor versión"
+      description: "Contenido práctico y accionable para tu crecimiento"
     },
   ];
 

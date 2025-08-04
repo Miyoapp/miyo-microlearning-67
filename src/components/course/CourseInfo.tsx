@@ -1,6 +1,7 @@
 
+
 import { Button } from '@/components/ui/button';
-import { Play, Clock, Headphones } from 'lucide-react';
+import { Play, Clock, Headphones, GraduationCap } from 'lucide-react';
 import { Podcast } from '../../types';
 import SoundEqualizer from './SoundEqualizer';
 import { formatMinutesToHumanReadable } from '@/lib/formatters';
@@ -65,6 +66,13 @@ const CourseInfo = ({ podcast }: CourseInfoProps) => {
               icon={<Headphones size={16} className="mr-1" />} 
               text={`${podcast.lessonCount} lecciones`} 
             />
+            
+            {podcast.nivel && (
+              <SoundEqualizer 
+                icon={<GraduationCap size={16} className="mr-1" />} 
+                text={podcast.nivel} 
+              />
+            )}
           </div>
           
           {/* Course description */}

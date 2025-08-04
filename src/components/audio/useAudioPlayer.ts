@@ -18,7 +18,7 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgres
   const [playbackRate, setPlaybackRate] = useState(1);
   const audioRef = useRef<HTMLAudioElement>(null);
   
-  // Reset player when lesson changes
+  // Reset player when lesson changes (WITHOUT playbackRate dependency)
   useEffect(() => {
     if (lesson && audioRef.current) {
       console.log("🎵 Lesson changed to:", lesson.title, "isCompleted:", lesson.isCompleted);
@@ -29,11 +29,26 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgres
       audio.currentTime = 0;
       audio.load();
       
-      // Set initial properties
+      // Set initial properties (volume and existing playback rate)
       audio.volume = isMuted ? 0 : volume;
-      audio.playbackRate = playbackRate;
+      audio.playbackRate = playbackRate; // Use current playbackRate, don't reset it
     }
-  }, [lesson?.id, volume, isMuted, playbackRate]);
+  }, [lesson?.id, volume, isMuted]); // REMOVED playbackRate from dependencies
+  
+  // Handle playback rate changes separately (WITHOUT restarting audio)
+  useEffect(() => {
+    if (audioRef.current) {
+      console.log("🏃‍♂️ Updating playback rate to:", playbackRate + "x");
+      audioRef.current.playbackRate = playbackRate;
+    }
+  }, [playbackRate]);
+  
+  // Handle volume and mute changes separately
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = isMuted ? 0 : volume;
+    }
+  }, [volume, isMuted]);
   
   // Handle play/pause when isPlaying state changes
   useEffect(() => {
@@ -55,14 +70,6 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgres
       audio.pause();
     }
   }, [isPlaying, lesson?.id, onTogglePlay]);
-  
-  // Update audio properties when they change
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = isMuted ? 0 : volume;
-      audioRef.current.playbackRate = playbackRate;
-    }
-  }, [volume, isMuted, playbackRate]);
   
   // Update time display and progress
   const updateTime = useCallback(() => {
@@ -125,8 +132,9 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgres
   
   // Handle playback rate change
   const handlePlaybackRateChange = useCallback((rate: number) => {
+    console.log("🎛️ Speed control: Changing playback rate from", playbackRate + "x", "to", rate + "x");
     setPlaybackRate(rate);
-  }, []);
+  }, [playbackRate]);
 
   return {
     audioRef,

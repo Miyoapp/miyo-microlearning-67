@@ -11,12 +11,31 @@ const CategoryCard = ({ categoria }: CategoryCardProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioRef] = useState<HTMLAudioElement | null>(null);
 
-  // Imagen por defecto para "Antes de dormir"
-  const getImageForCategory = (nombre: string, imagenUrl: string) => {
-    if (nombre.toLowerCase().includes('antes de dormir') && !imagenUrl) {
-      return 'https://images.unsplash.com/photo-1721322800607-8c38375eef04?auto=format&fit=crop&w=400&q=80';
+  // Mapeo de imágenes de Cloudinary para cada categoría
+  const getImageForCategory = (nombre: string) => {
+    const nombreLower = nombre.toLowerCase();
+    
+    if (nombreLower.includes('productividad')) {
+      return 'https://res.cloudinary.com/dyjx9cjat/image/upload/v1753193121/productividad_djlbni.jpg';
     }
-    return imagenUrl;
+    if (nombreLower.includes('bienestar')) {
+      return 'https://res.cloudinary.com/dyjx9cjat/image/upload/v1753193108/bienestar_hoklc1.jpg';
+    }
+    if (nombreLower.includes('relaciones') || nombreLower.includes('humanas')) {
+      return 'https://res.cloudinary.com/dyjx9cjat/image/upload/v1753193119/relaciones_humanas_b91shk.jpg';
+    }
+    if (nombreLower.includes('espiritualidad')) {
+      return 'https://res.cloudinary.com/dyjx9cjat/image/upload/v1753193121/espiritualidad_qyd5m1.jpg';
+    }
+    if (nombreLower.includes('autoconocimiento')) {
+      return 'https://res.cloudinary.com/dyjx9cjat/image/upload/v1753193118/autoconocimiento_gecxqp.jpg';
+    }
+    if (nombreLower.includes('habilidades') || nombreLower.includes('personales') || nombreLower.includes('desarrollo')) {
+      return 'https://res.cloudinary.com/dyjx9cjat/image/upload/v1753193108/habilidadespersonales_n8bijl.jpg';
+    }
+    
+    // Fallback a la imagen original o una imagen por defecto
+    return categoria.imagen_url || 'https://images.unsplash.com/photo-1721322800607-8c38375eef04?auto=format&fit=crop&w=400&q=80';
   };
 
   const handlePlayPause = (e: React.MouseEvent) => {
@@ -34,7 +53,7 @@ const CategoryCard = ({ categoria }: CategoryCardProps) => {
     }
   };
 
-  const imageUrl = getImageForCategory(categoria.nombre, categoria.imagen_url);
+  const imageUrl = getImageForCategory(categoria.nombre);
 
   return (
     <div className="group relative bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer">
@@ -54,23 +73,15 @@ const CategoryCard = ({ categoria }: CategoryCardProps) => {
       
       {/* Image container */}
       <div className="relative h-48 bg-gradient-to-br from-miyo-100 to-miyo-200 overflow-hidden">
-        {imageUrl ? (
-          <img
-            src={imageUrl}
-            alt={categoria.nombre}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            onError={(e) => {
-              // Fallback en caso de error de imagen
-              e.currentTarget.style.display = 'none';
-            }}
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <div className="text-miyo-600 text-4xl font-bold opacity-20">
-              {categoria.nombre.charAt(0).toUpperCase()}
-            </div>
-          </div>
-        )}
+        <img
+          src={imageUrl}
+          alt={categoria.nombre}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          onError={(e) => {
+            // Fallback en caso de error de imagen
+            e.currentTarget.style.display = 'none';
+          }}
+        />
         
         {/* Play button overlay */}
         {categoria.audio_preview_url && (
