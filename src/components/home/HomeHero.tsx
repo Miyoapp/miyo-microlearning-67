@@ -19,7 +19,7 @@ const HomeHero = () => {
             <span className="text-miyo-800">audio</span>
           </h1>
           <p className="text-xl md:text-2xl text-gray-600 mb-12 animate-slide-up max-w-3xl mx-auto">
-            Descubre nuevas herramientas y perspectivas para crecer a través de cápsulas que inspiran y empoderan.
+            Descubre nuevas herramientas para crecer a través de cápsulas que inspiran y empoderan.
           </p>
           <div className="flex justify-center">
             <Button
