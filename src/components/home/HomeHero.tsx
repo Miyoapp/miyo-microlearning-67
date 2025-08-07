@@ -20,7 +20,7 @@ const HomeHero = () => {
             {' '}para tu crecimiento personal
           </h1>
           <p className="text-xl md:text-2xl text-gray-600 mb-12 animate-slide-up max-w-3xl mx-auto">
-            Descubre nuevas herramientas para crecer a través de cápsulas que inspiran y empoderan.
+            Aprende sobre autoconocimiento, bienestar, relaciones, productividad y más, de forma práctica y flexible.
           </p>
           <div className="flex justify-center">
             <Button
