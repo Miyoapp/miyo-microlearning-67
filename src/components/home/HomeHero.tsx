@@ -15,8 +15,9 @@ const HomeHero = () => {
       <div className="miyo-container">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 animate-slide-down">
-            Microcursos de desarrollo personal en{' '}
+            Cursos en{' '}
             <span className="text-miyo-800">audio</span>
+            {' '}para tu crecimiento personal
           </h1>
           <p className="text-xl md:text-2xl text-gray-600 mb-12 animate-slide-up max-w-3xl mx-auto">
             Descubre nuevas herramientas para crecer a través de cápsulas que inspiran y empoderan.
