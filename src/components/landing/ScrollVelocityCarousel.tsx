@@ -111,7 +111,7 @@ const ScrollVelocityCarousel: React.FC = () => {
               className="bg-miyo-800 hover:bg-miyo-700 text-white px-8 py-4 h-auto text-lg font-medium"
               onClick={handleEmpiezaAhora}
             >
-              Empieza Ahora
+              🎧 Explorar cursos
             </Button>
           </div>
         </div>
