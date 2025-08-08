@@ -49,7 +49,7 @@ const HomeHero = () => {
             {cardImages.map((image, index) => (
               <div 
                 key={index}
-                className="bg-gray-900 rounded-lg p-4 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                className="bg-gray-900 rounded-lg p-1 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
               >
                 <img
                   src={image}
