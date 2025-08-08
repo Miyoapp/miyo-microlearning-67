@@ -17,7 +17,7 @@ const HomeHero = () => {
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 animate-slide-down">
             Cursos en{' '}
             <span className="text-miyo-800">audio</span>
-            {' '}para tu crecimiento personal
+            {' '}para conocerte, crecer y avanzar a tu ritmo
           </h1>
           <p className="text-xl md:text-2xl text-gray-600 mb-12 animate-slide-up max-w-3xl mx-auto">
             Aprende con expertos sobre autoconocimiento, bienestar, relaciones, productividad y más, de forma práctica y flexible.
