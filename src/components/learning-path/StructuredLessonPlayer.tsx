@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Pause, StickyNote, Plus, ChevronDown, ChevronUp, Trophy, Lock } from 'lucide-react';
+import { Play, Pause, StickyNote, Plus, Trophy, Lock } from 'lucide-react';
 import { Lesson } from '@/types';
 import { cn } from '@/lib/utils';
 import { useAudioNotes } from '@/hooks/useAudioNotes';
@@ -61,7 +61,9 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
     };
 
     const handleEnded = () => {
+      console.log('🏁 Audio ended for lesson:', lesson.title);
       setIsPlaying(false);
+      // CRITICAL: Call the completion handler which contains all the auto-advance logic
       onComplete(lesson);
     };
 
@@ -76,18 +78,25 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
     };
   }, [lesson, onComplete, onProgressUpdate, playbackRate]);
 
-  // Control playback state
+  // Control playback state based on external isActive prop
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
     if (isActive && isPlaying) {
-      audio.play();
+      console.log('▶️ Starting playback for:', lesson.title);
+      audio.play().catch(error => {
+        console.error('Error playing audio:', error);
+        setIsPlaying(false);
+      });
     } else {
+      console.log('⏸️ Pausing playback for:', lesson.title);
       audio.pause();
-      setIsPlaying(false);
+      if (!isActive) {
+        setIsPlaying(false);
+      }
     }
-  }, [isActive, isPlaying]);
+  }, [isActive, isPlaying, lesson.title]);
 
   const handlePlayPause = () => {
     if (!canPlay) return;
@@ -135,12 +144,35 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
 
   const handleJumpToTime = (time: number) => {
     handleSeek(time);
+    // If not currently playing, start playback
+    if (!isPlaying && canPlay) {
+      setIsPlaying(true);
+      onPlay(lesson);
+    }
   };
 
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  // Determine button appearance based on completion status
+  const getButtonClasses = () => {
+    if (isCompleted) {
+      return "bg-yellow-500 text-white hover:bg-yellow-600";
+    }
+    if (!canPlay) {
+      return "bg-gray-300 text-gray-500 cursor-not-allowed";
+    }
+    return "bg-indigo-600 text-white hover:bg-indigo-700";
+  };
+
+  const getButtonIcon = () => {
+    if (isCompleted) return <Trophy size={18} />;
+    if (isLocked) return <Lock size={16} />;
+    if (isPlaying) return <Pause size={16} />;
+    return <Play size={16} className="ml-0.5" />;
   };
 
   return (
@@ -167,26 +199,22 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
             disabled={!canPlay}
             className={cn(
               "w-10 h-10 rounded-full flex items-center justify-center transition-colors flex-shrink-0",
-              {
-                "bg-yellow-500 text-white hover:bg-yellow-600": isCompleted,
-                "bg-indigo-600 text-white hover:bg-indigo-700": !isCompleted && canPlay,
-                "bg-gray-300 text-gray-500 cursor-not-allowed": !canPlay
-              }
+              getButtonClasses()
             )}
           >
-            {isCompleted ? (
-              <Trophy size={18} />
-            ) : isLocked ? (
-              <Lock size={16} />
-            ) : isPlaying ? (
-              <Pause size={16} />
-            ) : (
-              <Play size={16} className="ml-0.5" />
-            )}
+            {getButtonIcon()}
           </button>
 
           <div className="min-w-0 flex-1">
-            <h4 className="font-medium text-gray-900 truncate">{lesson.title}</h4>
+            <h4 className={cn(
+              "font-medium truncate",
+              {
+                "text-yellow-600": isCompleted,
+                "text-gray-900": !isCompleted
+              }
+            )}>
+              {lesson.title}
+            </h4>
             <div className="flex items-center space-x-2 text-sm text-gray-500">
               <span>{formatTime(currentTime)} / {formatTime(duration)}</span>
               {isActive && (

@@ -1,8 +1,8 @@
 
 import React, { useCallback, useMemo } from 'react';
-import { Lesson, Module } from '@/types';
+import { Lesson, Module, Podcast } from '@/types';
 import { useLessonStatus } from '@/hooks/learning-path/useLessonStatus';
-import { useStructuredLessons } from '@/hooks/useStructuredLessons';
+import { useConsolidatedLessons } from '@/hooks/useConsolidatedLessons';
 import StructuredModuleSection from './learning-path/StructuredModuleSection';
 
 interface StructuredLearningPathProps {
@@ -22,18 +22,19 @@ const StructuredLearningPath: React.FC<StructuredLearningPathProps> = ({
     id: courseId,
     lessons,
     modules
-  } as any), [courseId, lessons, modules]);
+  } as Podcast), [courseId, lessons, modules]);
 
-  const lessonStatusMap = useLessonStatus(lessons, modules, currentLessonId || null);
-  
+  // Use the consolidated lessons system with all the original logic
   const {
-    currentLessonId: activeLessonId,
-    handlePlay,
-    handlePause,
-    handleComplete,
+    currentLesson,
+    isPlaying,
+    handleSelectLesson,
+    handleLessonComplete,
     handleProgressUpdate
-  } = useStructuredLessons(podcast);
+  } = useConsolidatedLessons(podcast, () => {});
 
+  const lessonStatusMap = useLessonStatus(lessons, modules, currentLesson?.id || null);
+  
   const getLessonsForModule = useCallback((moduleId: string) => {
     const module = modules.find(m => m.id === moduleId);
     if (!module) return [];
@@ -49,6 +50,16 @@ const StructuredLearningPath: React.FC<StructuredLearningPathProps> = ({
       return moduleLessons.length > 0;
     });
   }, [modules, getLessonsForModule]);
+
+  const handlePlay = useCallback((lesson: Lesson) => {
+    console.log('🎵 StructuredLearningPath: Play lesson:', lesson.title);
+    handleSelectLesson(lesson, true); // Force auto-play
+  }, [handleSelectLesson]);
+
+  const handlePause = useCallback(() => {
+    console.log('⏸️ StructuredLearningPath: Pause lesson');
+    // The pause logic is handled internally by useConsolidatedLessons
+  }, []);
 
   return (
     <div className="py-6">
@@ -66,11 +77,11 @@ const StructuredLearningPath: React.FC<StructuredLearningPathProps> = ({
               module={module}
               moduleLessons={moduleLessons}
               courseId={courseId}
-              currentLessonId={activeLessonId}
+              currentLessonId={currentLesson?.id || null}
               lessonStatusMap={lessonStatusMap}
               onPlay={handlePlay}
               onPause={handlePause}
-              onComplete={handleComplete}
+              onComplete={handleLessonComplete}
               onProgressUpdate={handleProgressUpdate}
             />
           );
