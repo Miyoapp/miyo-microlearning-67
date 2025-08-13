@@ -63,8 +63,8 @@ const StructuredLearningPath: React.FC<StructuredLearningPathProps> = ({
 
   // FIXED: Create wrapper function that matches the expected signature
   const handleProgressUpdate = useCallback((lesson: Lesson, progress: number) => {
-    // Call the original function with just the progress value
-    originalHandleProgressUpdate(lesson, progress);
+    // Call the original function with just the progress value (it expects only 1 argument)
+    originalHandleProgressUpdate(progress);
   }, [originalHandleProgressUpdate]);
 
   return (
