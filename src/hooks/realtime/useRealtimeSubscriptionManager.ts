@@ -12,32 +12,43 @@ interface SubscriptionConfig {
 
 export function useRealtimeSubscriptionManager() {
   const activeChannels = useRef<Map<string, RealtimeChannel>>(new Map());
+  const subscriptionCallbacks = useRef<Map<string, (payload: any) => void>>(new Map());
 
   const createSubscription = useCallback((config: SubscriptionConfig): (() => void) => {
     const { channelName, table, filter, callback } = config;
     const subscriptionKey = `${channelName}-${table}-${filter || 'all'}`;
 
-    // Check if already subscribed to prevent duplicates
+    // If subscription already exists, just update the callback
     if (activeChannels.current.has(subscriptionKey)) {
-      console.log('🔒 REALTIME: Subscription already exists for:', subscriptionKey);
+      console.log('🔄 REALTIME: Updating existing subscription callback for:', subscriptionKey);
+      subscriptionCallbacks.current.set(subscriptionKey, callback);
       
-      // Return cleanup function for existing subscription
       return () => {
-        console.log('🔌 REALTIME: Cleaning up existing subscription:', subscriptionKey);
-        const existingChannel = activeChannels.current.get(subscriptionKey);
-        if (existingChannel) {
-          supabase.removeChannel(existingChannel);
-          activeChannels.current.delete(subscriptionKey);
+        console.log('🔌 REALTIME: Cleaning up callback for:', subscriptionKey);
+        subscriptionCallbacks.current.delete(subscriptionKey);
+        
+        // Only remove channel if no more callbacks exist
+        if (!subscriptionCallbacks.current.has(subscriptionKey)) {
+          const channel = activeChannels.current.get(subscriptionKey);
+          if (channel) {
+            console.log('🔌 REALTIME: Removing channel:', subscriptionKey);
+            supabase.removeChannel(channel);
+            activeChannels.current.delete(subscriptionKey);
+          }
         }
       };
     }
 
     console.log('🔄 REALTIME: Creating new subscription for:', subscriptionKey);
 
-    // Create a unique channel name with timestamp to avoid conflicts
-    const uniqueChannelName = `${channelName}-${Date.now()}`;
+    // Create a truly unique channel name to avoid any conflicts
+    const uniqueChannelName = `${subscriptionKey}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const channel = supabase.channel(uniqueChannelName);
     
+    // Store callback for this subscription
+    subscriptionCallbacks.current.set(subscriptionKey, callback);
+    
+    // Set up the subscription with a wrapper callback
     const subscription = channel.on(
       'postgres_changes',
       {
@@ -48,21 +59,38 @@ export function useRealtimeSubscriptionManager() {
       },
       (payload) => {
         console.log(`📡 REALTIME UPDATE [${subscriptionKey}]:`, payload);
-        callback(payload);
+        
+        // Call the current callback for this subscription
+        const currentCallback = subscriptionCallbacks.current.get(subscriptionKey);
+        if (currentCallback) {
+          currentCallback(payload);
+        }
       }
     );
 
+    // Subscribe to the channel
     subscription.subscribe((status) => {
       console.log(`📡 REALTIME STATUS [${subscriptionKey}]:`, status);
+      
+      if (status === 'SUBSCRIPTION_ERROR') {
+        console.error('🚨 REALTIME ERROR for:', subscriptionKey);
+        // Clean up on error
+        activeChannels.current.delete(subscriptionKey);
+        subscriptionCallbacks.current.delete(subscriptionKey);
+      }
     });
 
-    // Store the channel with the subscription key (not the unique channel name)
+    // Store the channel
     activeChannels.current.set(subscriptionKey, channel);
 
     // Return cleanup function
     return () => {
       console.log('🔌 REALTIME: Cleaning up subscription:', subscriptionKey);
       
+      // Remove callback
+      subscriptionCallbacks.current.delete(subscriptionKey);
+      
+      // Remove channel
       const activeChannel = activeChannels.current.get(subscriptionKey);
       if (activeChannel) {
         supabase.removeChannel(activeChannel);
@@ -74,6 +102,10 @@ export function useRealtimeSubscriptionManager() {
   const cleanupAllSubscriptions = useCallback(() => {
     console.log('🔌 REALTIME: Cleaning up ALL subscriptions');
     
+    // Clear all callbacks
+    subscriptionCallbacks.current.clear();
+    
+    // Remove all channels
     activeChannels.current.forEach((channel, key) => {
       console.log('🔌 REALTIME: Removing channel:', key);
       supabase.removeChannel(channel);
