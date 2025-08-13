@@ -92,12 +92,14 @@ export function useLessonCompletion(
       } else {
         console.log('✅ FIRST COMPLETION: Update progress and auto-advance');
         
-        // CRÍTICO: Actualización síncrona de estados ANTES del auto-advance
+        // CRÍTICO: Actualización INMEDIATA y SÍNCRONA del podcast
         const updatedLessons = podcast.lessons.map(lesson => {
           if (lesson.id === currentLesson.id) {
+            console.log('🏆 Marcando lección como completada:', lesson.title);
             return { ...lesson, isCompleted: true };
           }
           if (nextLesson && lesson.id === nextLesson.id) {
+            console.log('🔓 Desbloqueando siguiente lección:', lesson.title);
             return { ...lesson, isLocked: false };
           }
           return lesson;
@@ -105,24 +107,31 @@ export function useLessonCompletion(
         
         const updatedPodcast = { ...podcast, lessons: updatedLessons };
         
-        // FORZAR actualización inmediata del podcast para re-render visual
-        console.log('🔄 UPDATING PODCAST STATE - Current becomes 🏆, Next becomes ▶️ morado');
+        // CRÍTICO: Actualización INMEDIATA del podcast para forzar re-render
+        console.log('🔄🔄🔄 ACTUALIZANDO PODCAST INMEDIATAMENTE - Íconos deben cambiar AHORA');
         setPodcast(updatedPodcast);
         
-        // DELAY mínimo para permitir re-render antes del auto-advance
-        setTimeout(() => {
+        // CRÍTICO: Usar requestAnimationFrame para asegurar que el re-render visual ocurra ANTES del auto-advance
+        requestAnimationFrame(() => {
+          console.log('🎨 Re-render visual completado - procediendo con auto-advance');
+          
           if (isAutoAdvanceAllowed && nextLesson) {
-            console.log('⏭️ AUTO-ADVANCE to newly unlocked:', nextLesson.title);
+            console.log('⏭️⏭️⏭️ AUTO-ADVANCE to newly unlocked:', nextLesson.title);
             const unlockedNextLesson = { ...nextLesson, isLocked: false };
             setCurrentLesson(unlockedNextLesson);
-            setIsPlaying(true);
+            
+            // DELAY adicional para permitir que el componente se actualice completamente
+            setTimeout(() => {
+              console.log('▶️▶️▶️ Iniciando reproducción automática de siguiente lección');
+              setIsPlaying(true);
+            }, 200);
           } else {
             console.log('⏹️ No auto-advance: reached end');
             setIsPlaying(false);
           }
-        }, 100);
+        });
         
-        // Background DB updates
+        // Background DB updates (sin bloquear UI)
         Promise.all([
           markLessonCompleteInDB(currentLesson.id, podcast.id),
           updateLessonPosition(currentLesson.id, podcast.id, 100)
@@ -138,7 +147,7 @@ export function useLessonCompletion(
     } finally {
       setTimeout(() => {
         isCompletingRef.current = false;
-      }, 300);
+      }, 500); // Increased timeout to allow for visual updates
     }
   }, [
     currentLesson,

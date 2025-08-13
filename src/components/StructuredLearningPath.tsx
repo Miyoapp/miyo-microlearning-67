@@ -1,5 +1,5 @@
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import { Lesson, Module, Podcast } from '@/types';
 import { useLessonStatus } from '@/hooks/learning-path/useLessonStatus';
 import { useConsolidatedLessons } from '@/hooks/useConsolidatedLessons';
@@ -18,35 +18,46 @@ const StructuredLearningPath: React.FC<StructuredLearningPathProps> = ({
   courseId,
   currentLessonId
 }) => {
-  const podcast = useMemo(() => ({
+  // CORREGIDO: Estado local para el podcast que se puede actualizar
+  const [podcast, setPodcast] = useState<Podcast>(() => ({
     id: courseId,
     lessons,
     modules
-  } as Podcast), [courseId, lessons, modules]);
+  } as Podcast));
 
-  // Use the consolidated lessons system with all the original logic
+  // CRÍTICO: Sincronizar podcast local con props actualizados
+  useEffect(() => {
+    setPodcast({
+      id: courseId,
+      lessons,
+      modules
+    } as Podcast);
+  }, [courseId, lessons, modules]);
+
+  // CORREGIDO: Usar setPodcast real en lugar de función vacía
   const {
     currentLesson,
     isPlaying,
     handleSelectLesson,
     handleLessonComplete,
     handleProgressUpdate: originalHandleProgressUpdate,
-    updatedPodcast // NUEVO: Usar el podcast actualizado
-  } = useConsolidatedLessons(podcast, () => {});
+    handleTogglePlay,
+    updatedPodcast
+  } = useConsolidatedLessons(podcast, setPodcast);
 
-  // CRÍTICO: Usar las lecciones actualizadas del sistema consolidado en lugar de las props
-  const currentLessons = updatedPodcast?.lessons || lessons;
-  const currentModules = updatedPodcast?.modules || modules;
+  // CRÍTICO: Usar el podcast actualizado del sistema consolidado
+  const currentPodcast = updatedPodcast || podcast;
+  const currentLessons = currentPodcast.lessons;
+  const currentModules = currentPodcast.modules;
 
-  console.log('🔄 StructuredLearningPath - Using updated lessons:', {
+  console.log('🔄 StructuredLearningPath - Estado actualizado:', {
     originalLessonsCount: lessons.length,
     updatedLessonsCount: currentLessons.length,
     hasUpdatedPodcast: !!updatedPodcast,
-    updatedLessonsPreview: currentLessons.slice(0, 2).map(l => ({
-      title: l.title,
-      isCompleted: l.isCompleted ? '🏆' : '❌',
-      isLocked: l.isLocked ? '🔒' : '🔓'
-    }))
+    currentLessonTitle: currentLesson?.title,
+    isPlaying,
+    completedLessons: currentLessons.filter(l => l.isCompleted).length,
+    unlockedLessons: currentLessons.filter(l => !l.isLocked).length
   });
 
   // ACTUALIZADO: Usar las lecciones actualizadas para el cálculo de estado
@@ -73,10 +84,11 @@ const StructuredLearningPath: React.FC<StructuredLearningPathProps> = ({
     handleSelectLesson(lesson, true); // Force auto-play
   }, [handleSelectLesson]);
 
+  // CORREGIDO: Conectar pause con handleTogglePlay
   const handlePause = useCallback(() => {
     console.log('⏸️ StructuredLearningPath: Pause lesson');
-    // The pause logic is handled internally by useConsolidatedLessons
-  }, []);
+    handleTogglePlay(); // Usar la función real de toggle play
+  }, [handleTogglePlay]);
 
   // Create wrapper function that matches the expected signature
   const handleProgressUpdate = useCallback((lesson: Lesson, progress: number) => {

@@ -165,7 +165,7 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     setIsPlaying,
     initializeCurrentLesson,
     handleSelectLesson,
-    handleTogglePlay,
+    handleTogglePlay, // CRÍTICO: Exponer handleTogglePlay
     handleLessonComplete,
     handleProgressUpdate,
     initializePodcastWithProgress,
