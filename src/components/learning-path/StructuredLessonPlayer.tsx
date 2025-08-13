@@ -1,6 +1,5 @@
-
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Pause, StickyNote, Plus, Trophy, Lock } from 'lucide-react';
+import { Play, Pause, StickyNote, Plus, Lock } from 'lucide-react';
 import { Lesson } from '@/types';
 import { cn } from '@/lib/utils';
 import { useAudioNotes } from '@/hooks/useAudioNotes';
@@ -85,7 +84,7 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
     };
   }, [lesson, onComplete, onProgressUpdate, playbackRate, duration]);
 
-  // CRÍTICO: Control de reproducción mejorado
+  // CRÍTICO: Control de reproducción - SIEMPRE resetear al inicio cuando se activa
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -93,12 +92,10 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
     if (isActive) {
       console.log('▶️ Starting playback for:', lesson.title);
       
-      // NUEVO: Para lecciones completadas (replay), resetear desde el inicio
-      if (isCompleted) {
-        console.log('🔄 REPLAY MODE: Resetting to start for completed lesson');
-        audio.currentTime = 0;
-        setCurrentTime(0);
-      }
+      // CORREGIDO: SIEMPRE resetear desde el inicio para cualquier lección
+      console.log('🔄 Resetting to start for lesson playback');
+      audio.currentTime = 0;
+      setCurrentTime(0);
       
       audio.play().catch(error => {
         console.error('Error playing audio:', error);
@@ -107,9 +104,9 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
       console.log('⏸️ Pausing playback for:', lesson.title);
       audio.pause();
     }
-  }, [isActive, lesson.title, isCompleted]);
+  }, [isActive, lesson.title]);
 
-  // MEJORADO: Reset para cambios de lección
+  // Reset para cambios de lección
   useEffect(() => {
     setCurrentTime(0);
     if (audioRef.current) {
@@ -172,14 +169,11 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  // CORREGIDO: Progress display logic
+  // CORREGIDO: Progress display logic - usar tiempo actual real
   const displayProgress = (currentTime / duration) * 100;
 
-  // MEJORADO: Button appearance logic
+  // CORREGIDO: Button appearance logic - todas las lecciones reproducibles iguales
   const getButtonClasses = () => {
-    if (isCompleted) {
-      return "bg-yellow-500 text-white hover:bg-yellow-600";
-    }
     if (!canPlay) {
       return "bg-gray-300 text-gray-500 cursor-not-allowed";
     }
@@ -187,7 +181,6 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
   };
 
   const getButtonIcon = () => {
-    if (isCompleted) return <Trophy size={18} />;
     if (isLocked) return <Lock size={16} />;
     if (isActive) return <Pause size={16} />;
     return <Play size={16} className="ml-0.5" />;
@@ -197,10 +190,9 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
     <div className={cn(
       "bg-white rounded-xl border-2 p-4 transition-all duration-200",
       {
-        "border-[#5e16ea] shadow-lg": isActive && !isCompleted,
-        "border-yellow-300 shadow-lg": isActive && isCompleted,
+        "border-[#5e16ea] shadow-lg": isActive,
         "border-gray-200 hover:border-gray-300": !isActive,
-        "opacity-60": isLocked && !isCompleted
+        "opacity-60": isLocked && !canPlay
       }
     )}>
       <audio
@@ -226,9 +218,8 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
             <h4 className={cn(
               "font-medium truncate",
               {
-                "text-yellow-600": isCompleted,
-                "text-[#5e16ea]": !isCompleted && canPlay,
-                "text-gray-900": !isCompleted && !canPlay
+                "text-[#5e16ea]": canPlay,
+                "text-gray-900": !canPlay
               }
             )}>
               {lesson.title}
@@ -236,16 +227,10 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
             <div className="flex items-center space-x-2 text-sm text-gray-500">
               <span>{formatTime(currentTime)} / {formatTime(duration)}</span>
               {isActive && (
-                <span className={cn(
-                  "font-medium",
-                  {
-                    "text-[#5e16ea]": !isCompleted,
-                    "text-yellow-600": isCompleted
-                  }
-                )}>● Reproduciendo</span>
+                <span className="text-[#5e16ea] font-medium">● Reproduciendo</span>
               )}
               {isCompleted && !isActive && (
-                <span className="text-yellow-600 font-medium">✓ Completada</span>
+                <span className="text-green-600 font-medium">✓ Completada</span>
               )}
             </div>
           </div>
@@ -269,7 +254,7 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
         )}
       </div>
 
-      {/* MEJORADO: Progress bar con colores correctos */}
+      {/* Progress bar con comportamiento normal */}
       <LessonProgressBar
         currentTime={currentTime}
         duration={duration}

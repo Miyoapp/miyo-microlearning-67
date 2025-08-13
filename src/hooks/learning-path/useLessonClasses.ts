@@ -18,20 +18,18 @@ export function useLessonClasses(lessons: Lesson[], lessonStatusMap: Map<string,
       
       const { isCompleted, isLocked, isCurrent, canPlay } = status;
       
-      // CORREGIDO: Colores según especificación
+      // CORREGIDO: Todas las lecciones reproducibles tienen el mismo estilo (play morado)
+      // No diferenciamos visualmente entre completadas y no completadas
       const nodeClasses = cn(
         "flex items-center justify-center w-12 h-12 rounded-full shadow-md transition-all duration-200 relative",
         {
-          // Lecciones completadas: Trofeo amarillo (🏆)
-          "bg-yellow-500 text-white hover:bg-yellow-600": isCompleted,
-          // Lecciones desbloqueadas: Play morado (▶️) - INCLUYE lecciones actuales
-          "bg-[#5e16ea] text-white hover:bg-[#4a11ba]": !isCompleted && canPlay,
-          // Lecciones bloqueadas: Candado gris (🔒) - SOLO si realmente están bloqueadas
-          "bg-gray-300 text-gray-500": isLocked && !canPlay,
+          // TODAS las lecciones reproducibles: Play morado (▶️) - incluye completadas
+          "bg-[#5e16ea] text-white hover:bg-[#4a11ba]": canPlay,
+          // Lecciones bloqueadas: Candado gris (🔒)
+          "bg-gray-300 text-gray-500": !canPlay && isLocked,
           "hover:scale-110": canPlay,
-          // Ring colors para lecciones activas
-          "ring-2 ring-yellow-300": isCurrent && isCompleted,
-          "ring-2 ring-[#5e16ea]": isCurrent && !isCompleted && canPlay,
+          // Ring colors para lecciones activas - siempre morado
+          "ring-2 ring-[#5e16ea]": isCurrent && canPlay,
           "cursor-pointer": canPlay,
           "cursor-not-allowed": !canPlay
         }
@@ -40,12 +38,10 @@ export function useLessonClasses(lessons: Lesson[], lessonStatusMap: Map<string,
       const textClasses = cn(
         "text-sm transition-colors duration-200",
         {
-          // Texto para lecciones completadas
-          "text-yellow-600 font-semibold": isCompleted,
-          // Texto para lecciones actuales activas - DEBE ser morado si está desbloqueada
-          "text-[#5e16ea] font-semibold": isCurrent && canPlay && !isCompleted,
-          // Texto para lecciones disponibles
-          "text-gray-800": canPlay && !isCurrent && !isCompleted,
+          // TODAS las lecciones reproducibles tienen texto morado cuando son actuales
+          "text-[#5e16ea] font-semibold": isCurrent && canPlay,
+          // Texto para lecciones disponibles (incluyendo completadas)
+          "text-gray-800": canPlay && !isCurrent,
           // Texto para lecciones bloqueadas
           "text-gray-400": !canPlay && isLocked
         }
