@@ -30,7 +30,7 @@ const LessonItem = React.memo(({ lesson, index, status, classes, onLessonClick }
     console.log('🔥🔥🔥 PLAY ICON CLICK - START:', {
       lessonTitle: lesson.title,
       canPlay,
-      isCompleted,
+      isCompleted: isCompleted ? 'SÍ (mantiene play)' : 'NO',
       timestamp: new Date().toLocaleTimeString()
     });
     
@@ -54,7 +54,8 @@ const LessonItem = React.memo(({ lesson, index, status, classes, onLessonClick }
         className={cn(nodeClasses, { "cursor-pointer": canPlay, "cursor-not-allowed": !canPlay })}
         onClick={handlePlayClick}
       >
-        {/* FIXED: All playable lessons show play icon (including completed) */}
+        {/* CRÍTICO: Todas las lecciones reproducibles muestran play (incluyendo completadas) */}
+        {/* NO cambiar a check - mantener play para permitir replay */}
         {canPlay ? (
           <Play size={18} fill="white" />
         ) : (
@@ -75,6 +76,10 @@ const LessonItem = React.memo(({ lesson, index, status, classes, onLessonClick }
           {lesson.title}
           {isCurrent && (
             <span className="ml-2 text-xs text-green-600">● Reproduciendo</span>
+          )}
+          {/* NUEVO: Mostrar check de completado como texto adicional, no en el botón */}
+          {isCompleted && !isCurrent && (
+            <span className="ml-2 text-xs text-green-600">✓ Completada</span>
           )}
         </div>
       </div>
