@@ -109,6 +109,39 @@ export type Database = {
           },
         ]
       }
+      course_summaries: {
+        Row: {
+          course_id: string
+          created_at: string
+          id: string
+          summary_content: string
+          summary_type: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          id?: string
+          summary_content: string
+          summary_type?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          id?: string
+          summary_content?: string
+          summary_type?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       creador_social_media: {
         Row: {
           creador_id: string
@@ -219,6 +252,7 @@ export type Database = {
           imagen_portada: string
           likes: number
           moneda: string | null
+          nivel: string | null
           numero_lecciones: number
           precio: number | null
           show: boolean
@@ -237,6 +271,7 @@ export type Database = {
           imagen_portada: string
           likes?: number
           moneda?: string | null
+          nivel?: string | null
           numero_lecciones?: number
           precio?: number | null
           show?: boolean
@@ -255,6 +290,7 @@ export type Database = {
           imagen_portada?: string
           likes?: number
           moneda?: string | null
+          nivel?: string | null
           numero_lecciones?: number
           precio?: number | null
           show?: boolean
@@ -324,6 +360,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      lesson_notes: {
+        Row: {
+          course_id: string
+          created_at: string
+          id: string
+          lesson_id: string
+          note_text: string
+          timestamp_seconds: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          id?: string
+          lesson_id: string
+          note_text: string
+          timestamp_seconds?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          id?: string
+          lesson_id?: string
+          note_text?: string
+          timestamp_seconds?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       mercadopago_transactions: {
         Row: {
