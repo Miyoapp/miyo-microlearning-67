@@ -18,7 +18,7 @@ const StructuredLearningPath: React.FC<StructuredLearningPathProps> = ({
   courseId,
   currentLessonId
 }) => {
-  // CORREGIDO: Estado local para el podcast que se puede actualizar
+  // Estado local para el podcast que se puede actualizar
   const [podcast, setPodcast] = useState<Podcast>(() => ({
     id: courseId,
     lessons,
@@ -27,6 +27,7 @@ const StructuredLearningPath: React.FC<StructuredLearningPathProps> = ({
 
   // CRÍTICO: Sincronizar podcast local con props actualizados
   useEffect(() => {
+    console.log('🔄 StructuredLearningPath: Syncing with external lesson updates');
     setPodcast({
       id: courseId,
       lessons,
@@ -34,7 +35,6 @@ const StructuredLearningPath: React.FC<StructuredLearningPathProps> = ({
     } as Podcast);
   }, [courseId, lessons, modules]);
 
-  // CORREGIDO: Usar setPodcast real en lugar de función vacía
   const {
     currentLesson,
     isPlaying,
@@ -45,8 +45,17 @@ const StructuredLearningPath: React.FC<StructuredLearningPathProps> = ({
     updatedPodcast
   } = useConsolidatedLessons(podcast, setPodcast);
 
-  // CRÍTICO: Usar el podcast actualizado del sistema consolidado
-  const currentPodcast = updatedPodcast || podcast;
+  // MEJORADO: Lógica de sincronización más robusta
+  const currentPodcast = useMemo(() => {
+    // Priorizar updatedPodcast si existe, pero mantener sincronización con props
+    if (updatedPodcast) {
+      console.log('📦 Using updatedPodcast from consolidated lessons');
+      return updatedPodcast;
+    }
+    console.log('📦 Using local podcast state');
+    return podcast;
+  }, [updatedPodcast, podcast]);
+
   const currentLessons = currentPodcast.lessons;
   const currentModules = currentPodcast.modules;
 
@@ -57,11 +66,28 @@ const StructuredLearningPath: React.FC<StructuredLearningPathProps> = ({
     currentLessonTitle: currentLesson?.title,
     isPlaying,
     completedLessons: currentLessons.filter(l => l.isCompleted).length,
-    unlockedLessons: currentLessons.filter(l => !l.isLocked).length
+    unlockedLessons: currentLessons.filter(l => !l.isLocked).length,
+    visualState: 'MAINTAINING_COMPLETED_LESSONS_AS_PLAYABLE'
   });
 
   // ACTUALIZADO: Usar las lecciones actualizadas para el cálculo de estado
   const lessonStatusMap = useLessonStatus(currentLessons, currentModules, currentLesson?.id || null);
+  
+  // DEBUG: Validar que lecciones completadas no están bloqueadas
+  useEffect(() => {
+    const completedLessons = currentLessons.filter(l => l.isCompleted);
+    completedLessons.forEach(lesson => {
+      const status = lessonStatusMap.get(lesson.id);
+      if (status?.isLocked) {
+        console.error('🚨 VISUAL LOCK BUG DETECTED:', {
+          lessonTitle: lesson.title,
+          isCompleted: lesson.isCompleted,
+          statusIsLocked: status.isLocked,
+          statusCanPlay: status.canPlay
+        });
+      }
+    });
+  }, [currentLessons, lessonStatusMap]);
   
   const getLessonsForModule = useCallback((moduleId: string) => {
     const module = currentModules.find(m => m.id === moduleId);
@@ -84,10 +110,9 @@ const StructuredLearningPath: React.FC<StructuredLearningPathProps> = ({
     handleSelectLesson(lesson, true); // Force auto-play
   }, [handleSelectLesson]);
 
-  // CORREGIDO: Conectar pause con handleTogglePlay
   const handlePause = useCallback(() => {
     console.log('⏸️ StructuredLearningPath: Pause lesson');
-    handleTogglePlay(); // Usar la función real de toggle play
+    handleTogglePlay();
   }, [handleTogglePlay]);
 
   // Create wrapper function that matches the expected signature

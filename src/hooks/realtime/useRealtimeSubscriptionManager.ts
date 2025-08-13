@@ -12,31 +12,17 @@ interface SubscriptionConfig {
 
 export function useRealtimeSubscriptionManager() {
   const activeChannels = useRef<Map<string, RealtimeChannel>>(new Map());
-  const subscriptionCallbacks = useRef<Map<string, (payload: any) => void>>(new Map());
 
   const createSubscription = useCallback((config: SubscriptionConfig): (() => void) => {
     const { channelName, table, filter, callback } = config;
     const subscriptionKey = `${channelName}-${table}-${filter || 'all'}`;
 
-    // If subscription already exists, just update the callback
-    if (activeChannels.current.has(subscriptionKey)) {
-      console.log('🔄 REALTIME: Updating existing subscription callback for:', subscriptionKey);
-      subscriptionCallbacks.current.set(subscriptionKey, callback);
-      
-      return () => {
-        console.log('🔌 REALTIME: Cleaning up callback for:', subscriptionKey);
-        subscriptionCallbacks.current.delete(subscriptionKey);
-        
-        // Only remove channel if no more callbacks exist
-        if (!subscriptionCallbacks.current.has(subscriptionKey)) {
-          const channel = activeChannels.current.get(subscriptionKey);
-          if (channel) {
-            console.log('🔌 REALTIME: Removing channel:', subscriptionKey);
-            supabase.removeChannel(channel);
-            activeChannels.current.delete(subscriptionKey);
-          }
-        }
-      };
+    // Clean up any existing subscription for this key
+    const existingChannel = activeChannels.current.get(subscriptionKey);
+    if (existingChannel) {
+      console.log('🔌 REALTIME: Cleaning up existing subscription for:', subscriptionKey);
+      supabase.removeChannel(existingChannel);
+      activeChannels.current.delete(subscriptionKey);
     }
 
     console.log('🔄 REALTIME: Creating new subscription for:', subscriptionKey);
@@ -45,10 +31,7 @@ export function useRealtimeSubscriptionManager() {
     const uniqueChannelName = `${subscriptionKey}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const channel = supabase.channel(uniqueChannelName);
     
-    // Store callback for this subscription
-    subscriptionCallbacks.current.set(subscriptionKey, callback);
-    
-    // Set up the subscription with a wrapper callback
+    // Set up the subscription
     const subscription = channel.on(
       'postgres_changes',
       {
@@ -59,12 +42,7 @@ export function useRealtimeSubscriptionManager() {
       },
       (payload) => {
         console.log(`📡 REALTIME UPDATE [${subscriptionKey}]:`, payload);
-        
-        // Call the current callback for this subscription
-        const currentCallback = subscriptionCallbacks.current.get(subscriptionKey);
-        if (currentCallback) {
-          currentCallback(payload);
-        }
+        callback(payload);
       }
     );
 
@@ -72,11 +50,11 @@ export function useRealtimeSubscriptionManager() {
     subscription.subscribe((status) => {
       console.log(`📡 REALTIME STATUS [${subscriptionKey}]:`, status);
       
+      // FIXED: Use string comparison instead of enum
       if (status === 'SUBSCRIPTION_ERROR') {
         console.error('🚨 REALTIME ERROR for:', subscriptionKey);
         // Clean up on error
         activeChannels.current.delete(subscriptionKey);
-        subscriptionCallbacks.current.delete(subscriptionKey);
       }
     });
 
@@ -86,9 +64,6 @@ export function useRealtimeSubscriptionManager() {
     // Return cleanup function
     return () => {
       console.log('🔌 REALTIME: Cleaning up subscription:', subscriptionKey);
-      
-      // Remove callback
-      subscriptionCallbacks.current.delete(subscriptionKey);
       
       // Remove channel
       const activeChannel = activeChannels.current.get(subscriptionKey);
@@ -101,9 +76,6 @@ export function useRealtimeSubscriptionManager() {
 
   const cleanupAllSubscriptions = useCallback(() => {
     console.log('🔌 REALTIME: Cleaning up ALL subscriptions');
-    
-    // Clear all callbacks
-    subscriptionCallbacks.current.clear();
     
     // Remove all channels
     activeChannels.current.forEach((channel, key) => {

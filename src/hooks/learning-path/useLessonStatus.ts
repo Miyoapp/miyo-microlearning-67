@@ -17,32 +17,45 @@ export function useLessonStatus(lessons: Lesson[], modules: Module[], currentLes
       const isFirstInSequence = isFirstLessonInSequence(lesson, lessons, modules);
       
       // CRÍTICO: Lecciones completadas NUNCA se bloquean visualmente y SIEMPRE son reproducibles
-      // - Completadas: Mantienen apariencia de play (▶️) - SIN cambio visual
-      // - No completadas desbloqueadas: Play (▶️)  
-      // - Bloqueadas: Lock (🔒)
-      // - Primera lección: Siempre reproducible
-      // - Lección actual: Siempre reproducible
+      // NUEVA LÓGICA: Más robusta para prevenir bloqueos visuales
       const canPlay = isCompleted || !isLocked || isFirstInSequence || isCurrent;
+      
+      // REFORZADO: Lecciones completadas NUNCA pueden estar bloqueadas visualmente
+      const visuallyLocked = isCompleted ? false : (isLocked && !isCurrent && !isFirstInSequence);
       
       const status = {
         isCompleted,
-        // CRÍTICO: Lecciones completadas NUNCA están bloqueadas visualmente
-        isLocked: isCompleted ? false : (isLocked && !isCurrent),
+        // CRÍTICO: Usar visuallyLocked en lugar de cálculo directo
+        isLocked: visuallyLocked,
         isCurrent,
         canPlay,
         isFirstInSequence,
-        // Hash optimizado
-        _hash: `${isCompleted ? '1' : '0'}-${isCompleted ? '0' : (isLocked && !isCurrent ? '1' : '0')}-${isCurrent ? '1' : '0'}-${canPlay ? '1' : '0'}-${isFirstInSequence ? '1' : '0'}`
+        // Hash mejorado para debugging
+        _hash: `completed:${isCompleted ? '1' : '0'}-locked:${visuallyLocked ? '1' : '0'}-current:${isCurrent ? '1' : '0'}-canPlay:${canPlay ? '1' : '0'}-first:${isFirstInSequence ? '1' : '0'}`
       };
       
-      console.log(`📚 Lesson "${lesson.title}":`, {
-        isCompleted: isCompleted ? '🏆 COMPLETADA (mantiene play)' : '❌',
-        isLocked: status.isLocked ? '🔒' : '🔓',
-        canPlay: canPlay ? '▶️ REPRODUCIBLE' : '❌',
-        isFirstInSequence,
-        isCurrent: isCurrent ? '🎵 ACTUAL' : '⏸️',
-        visualChange: isCompleted ? 'SIN CAMBIO VISUAL' : 'normal'
-      });
+      // Logs detallados para debugging
+      if (isCompleted) {
+        console.log(`🏆 COMPLETED LESSON "${lesson.title}":`, {
+          isCompleted: '✅ SÍ',
+          visuallyLocked: visuallyLocked ? '🔒 BLOQUEADA (ERROR!)' : '🔓 DESBLOQUEADA (CORRECTO)',
+          canPlay: canPlay ? '▶️ REPRODUCIBLE (CORRECTO)' : '❌ NO REPRODUCIBLE (ERROR!)',
+          isCurrent: isCurrent ? '🎵 ACTUAL' : '⏸️ NO ACTUAL',
+          shouldMaintainPlayIcon: 'SÍ - SIN CAMBIO VISUAL'
+        });
+        
+        // ALERTA si una lección completada está bloqueada
+        if (visuallyLocked) {
+          console.error('🚨🚨🚨 ERROR: Completed lesson is visually locked!', lesson.title);
+        }
+      } else {
+        console.log(`📚 NON-COMPLETED LESSON "${lesson.title}":`, {
+          isCompleted: '❌ NO',
+          visuallyLocked: visuallyLocked ? '🔒 BLOQUEADA' : '🔓 DESBLOQUEADA',
+          canPlay: canPlay ? '▶️ REPRODUCIBLE' : '🔒 BLOQUEADA',
+          isCurrent: isCurrent ? '🎵 ACTUAL' : '⏸️ NO ACTUAL'
+        });
+      }
       
       lessonStatusMap.set(lesson.id, status);
     });

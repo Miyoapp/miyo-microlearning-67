@@ -39,7 +39,7 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
   const [showNotes, setShowNotes] = useState(false);
   const [showAddNote, setShowAddNote] = useState(false);
   const [newNoteText, setNewNoteText] = useState('');
-  const [justCompleted, setJustCompleted] = useState(false);
+  const [showImmediateCompletion, setShowImmediateCompletion] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const { notes, addNote, updateNote, deleteNote, loading: notesLoading } = useAudioNotes(lesson.id, courseId);
@@ -47,6 +47,18 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
 
   // Obtener progreso guardado para esta lección
   const savedProgress = lessonProgress.find(p => p.lesson_id === lesson.id);
+
+  // CRÍTICO: Debug del estado visual
+  useEffect(() => {
+    console.log(`🎨 StructuredLessonPlayer Visual State for "${lesson.title}":`, {
+      isCompleted: isCompleted ? '🏆 COMPLETADA' : '❌ NO COMPLETADA',
+      canPlay: canPlay ? '▶️ PUEDE REPRODUCIR' : '🔒 BLOQUEADA',
+      isLocked: isLocked ? '🔒 LOCKED' : '🔓 UNLOCKED',
+      isActive: isActive ? '🎵 ACTIVA' : '⏸️ INACTIVA',
+      expectedButtonIcon: canPlay ? 'PLAY (▶️)' : 'LOCK (🔒)',
+      visualError: isCompleted && isLocked ? '🚨 ERROR: COMPLETED BUT LOCKED!' : '✅ OK'
+    });
+  }, [lesson.title, isCompleted, canPlay, isLocked, isActive]);
 
   // Audio event handlers
   useEffect(() => {
@@ -57,16 +69,14 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
       setDuration(audio.duration);
       audio.playbackRate = playbackRate;
       
-      // NUEVO: Lógica de inicialización basada en estado de completado
+      // CORREGIDO: Lógica de inicialización mejorada
       if (isCompleted) {
-        // Lecciones COMPLETADAS: Mostrar al 100% y permitir reproducción desde cualquier punto
-        console.log('🏆 Lección completada - mostrando progreso al 100%:', lesson.title);
+        console.log('🏆 Completed lesson - showing 100% progress:', lesson.title);
         const finalTime = audio.duration;
         setCurrentTime(finalTime);
         audio.currentTime = finalTime;
       } else {
-        // Lecciones NO COMPLETADAS: SIEMPRE empezar desde 0
-        console.log('🆕 Lección no completada - empezando desde 0:', lesson.title);
+        console.log('🆕 Non-completed lesson - starting from 0:', lesson.title);
         setCurrentTime(0);
         audio.currentTime = 0;
       }
@@ -89,9 +99,16 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
       setCurrentTime(duration);
       onProgressUpdate(lesson, 100);
       
-      // NUEVO: Mostrar check inmediatamente
-      setJustCompleted(true);
-      console.log('✅ Showing immediate completion check for:', lesson.title);
+      // NUEVO: Mostrar completion inmediato solo si no estaba completada
+      if (!isCompleted) {
+        setShowImmediateCompletion(true);
+        console.log('✅ Showing immediate completion for newly completed lesson:', lesson.title);
+        
+        // Ocultar después de 3 segundos
+        setTimeout(() => {
+          setShowImmediateCompletion(false);
+        }, 3000);
+      }
       
       console.log('🎯 Calling onComplete for auto-advance logic');
       onComplete(lesson);
@@ -116,7 +133,6 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
     if (isActive) {
       console.log('▶️ Starting playback for:', lesson.title);
       
-      // MODIFICADO: Solo resetear para lecciones no completadas
       if (!isCompleted) {
         console.log('🔄 Resetting to start for non-completed lesson');
         audio.currentTime = 0;
@@ -134,7 +150,7 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
     }
   }, [isActive, lesson.title, isCompleted]);
 
-  // Reset para cambios de lección (solo para no completadas)
+  // Reset para cambios de lección
   useEffect(() => {
     if (!isCompleted) {
       setCurrentTime(0);
@@ -143,11 +159,14 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
       }
     }
     // Reset del estado de completion inmediata al cambiar de lección
-    setJustCompleted(false);
+    setShowImmediateCompletion(false);
   }, [lesson.id, isCompleted]);
 
   const handlePlayPause = () => {
-    if (!canPlay) return;
+    if (!canPlay) {
+      console.log('🚫 Cannot play - lesson is locked:', lesson.title);
+      return;
+    }
 
     if (isActive) {
       onPause();
@@ -201,25 +220,31 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  // NUEVO: Lógica para mostrar estado de completado
-  const showCompletedStatus = () => {
-    // Mostrar inmediatamente si just completed, o si ya estaba completado
-    return justCompleted || (isCompleted && !isActive);
+  // MEJORADO: Estado de completado más preciso
+  const shouldShowCompletedStatus = () => {
+    return showImmediateCompletion || (isCompleted && !isActive);
   };
 
-  // Button appearance logic - mantener consistente para todas las lecciones reproducibles
+  // REFORZADO: Estilos de botón consistentes para lecciones reproducibles
   const getButtonClasses = () => {
     if (!canPlay) {
       return "bg-gray-300 text-gray-500 cursor-not-allowed";
     }
-    // TODAS las lecciones reproducibles (incluyendo completadas) tienen el mismo estilo
+    // TODAS las lecciones reproducibles (incluyendo completadas) usan el mismo estilo purple
     return "bg-[#5e16ea] text-white hover:bg-[#4a11ba]";
   };
 
   const getButtonIcon = () => {
-    if (isLocked) return <Lock size={16} />;
-    if (isActive) return <Pause size={16} />;
+    if (isLocked) {
+      console.log('🔒 Showing lock icon for locked lesson:', lesson.title);
+      return <Lock size={16} />;
+    }
+    if (isActive) {
+      console.log('⏸️ Showing pause icon for active lesson:', lesson.title);
+      return <Pause size={16} />;
+    }
     // TODAS las lecciones reproducibles muestran play (incluyendo completadas)
+    console.log('▶️ Showing play icon for playable lesson:', lesson.title, 'isCompleted:', isCompleted);
     return <Play size={16} className="ml-0.5" />;
   };
 
@@ -266,8 +291,8 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
               {isActive && (
                 <span className="text-[#5e16ea] font-medium">● Reproduciendo</span>
               )}
-              {/* NUEVO: Mostrar check inmediato cuando corresponde */}
-              {showCompletedStatus() && (
+              {/* MEJORADO: Check de completado más preciso */}
+              {shouldShowCompletedStatus() && (
                 <span className="text-green-600 font-medium">✓ Completada</span>
               )}
             </div>
@@ -292,7 +317,6 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
         )}
       </div>
 
-      {/* Progress bar - para completadas muestra 100%, para otras usa currentTime */}
       <LessonProgressBar
         currentTime={currentTime}
         duration={duration}
