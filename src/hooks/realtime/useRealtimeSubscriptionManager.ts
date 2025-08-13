@@ -12,22 +12,31 @@ interface SubscriptionConfig {
 
 export function useRealtimeSubscriptionManager() {
   const activeChannels = useRef<Map<string, RealtimeChannel>>(new Map());
-  const subscriptionStates = useRef<Map<string, boolean>>(new Map());
 
   const createSubscription = useCallback((config: SubscriptionConfig): (() => void) => {
     const { channelName, table, filter, callback } = config;
     const subscriptionKey = `${channelName}-${table}-${filter || 'all'}`;
 
     // Check if already subscribed to prevent duplicates
-    if (subscriptionStates.current.get(subscriptionKey)) {
+    if (activeChannels.current.has(subscriptionKey)) {
       console.log('🔒 REALTIME: Subscription already exists for:', subscriptionKey);
-      return () => {}; // Return empty cleanup function
+      
+      // Return cleanup function for existing subscription
+      return () => {
+        console.log('🔌 REALTIME: Cleaning up existing subscription:', subscriptionKey);
+        const existingChannel = activeChannels.current.get(subscriptionKey);
+        if (existingChannel) {
+          supabase.removeChannel(existingChannel);
+          activeChannels.current.delete(subscriptionKey);
+        }
+      };
     }
 
     console.log('🔄 REALTIME: Creating new subscription for:', subscriptionKey);
-    subscriptionStates.current.set(subscriptionKey, true);
 
-    const channel = supabase.channel(channelName);
+    // Create a unique channel name with timestamp to avoid conflicts
+    const uniqueChannelName = `${channelName}-${Date.now()}`;
+    const channel = supabase.channel(uniqueChannelName);
     
     const subscription = channel.on(
       'postgres_changes',
@@ -47,6 +56,7 @@ export function useRealtimeSubscriptionManager() {
       console.log(`📡 REALTIME STATUS [${subscriptionKey}]:`, status);
     });
 
+    // Store the channel with the subscription key (not the unique channel name)
     activeChannels.current.set(subscriptionKey, channel);
 
     // Return cleanup function
@@ -58,8 +68,6 @@ export function useRealtimeSubscriptionManager() {
         supabase.removeChannel(activeChannel);
         activeChannels.current.delete(subscriptionKey);
       }
-      
-      subscriptionStates.current.set(subscriptionKey, false);
     };
   }, []);
 
@@ -67,8 +75,8 @@ export function useRealtimeSubscriptionManager() {
     console.log('🔌 REALTIME: Cleaning up ALL subscriptions');
     
     activeChannels.current.forEach((channel, key) => {
+      console.log('🔌 REALTIME: Removing channel:', key);
       supabase.removeChannel(channel);
-      subscriptionStates.current.set(key, false);
     });
     
     activeChannels.current.clear();
