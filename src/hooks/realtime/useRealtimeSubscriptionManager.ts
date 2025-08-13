@@ -1,7 +1,7 @@
 
 import { useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import type { RealtimeChannel } from '@supabase/supabase-js';
+import type { RealtimeChannel, REALTIME_SUBSCRIBE_STATES } from '@supabase/supabase-js';
 
 interface SubscriptionConfig {
   channelName: string;
@@ -47,11 +47,11 @@ export function useRealtimeSubscriptionManager() {
     );
 
     // Subscribe to the channel
-    subscription.subscribe((status) => {
+    subscription.subscribe((status: REALTIME_SUBSCRIBE_STATES) => {
       console.log(`📡 REALTIME STATUS [${subscriptionKey}]:`, status);
       
-      // FIXED: Use string comparison instead of enum
-      if (status === 'SUBSCRIPTION_ERROR') {
+      // Check for subscription error using the correct enum value
+      if (status === REALTIME_SUBSCRIBE_STATES.SUBSCRIPTION_ERROR) {
         console.error('🚨 REALTIME ERROR for:', subscriptionKey);
         // Clean up on error
         activeChannels.current.delete(subscriptionKey);
