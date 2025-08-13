@@ -55,15 +55,28 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
     };
 
     const handleTimeUpdate = () => {
-      setCurrentTime(audio.currentTime);
-      const progress = (audio.currentTime / audio.duration) * 100;
-      onProgressUpdate(lesson, progress);
+      const newCurrentTime = audio.currentTime;
+      setCurrentTime(newCurrentTime);
+      
+      // Calculate progress percentage
+      const progress = (newCurrentTime / audio.duration) * 100;
+      
+      // Only call onProgressUpdate if we have valid progress and are not completed yet
+      if (!isNaN(progress) && progress > 0) {
+        onProgressUpdate(lesson, progress);
+      }
     };
 
     const handleEnded = () => {
       console.log('🏁 Audio ended for lesson:', lesson.title);
       setIsPlaying(false);
+      
+      // Set progress to 100% when audio ends
+      setCurrentTime(duration);
+      onProgressUpdate(lesson, 100);
+      
       // CRITICAL: Call the completion handler which contains all the auto-advance logic
+      console.log('🎯 Calling onComplete for auto-advance logic');
       onComplete(lesson);
     };
 
@@ -76,7 +89,7 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('ended', handleEnded);
     };
-  }, [lesson, onComplete, onProgressUpdate, playbackRate]);
+  }, [lesson, onComplete, onProgressUpdate, playbackRate, duration]);
 
   // Control playback state based on external isActive prop
   useEffect(() => {
@@ -97,6 +110,17 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
       }
     }
   }, [isActive, isPlaying, lesson.title]);
+
+  // NUEVO: Reset currentTime when lesson changes but preserve completion state
+  useEffect(() => {
+    if (isCompleted) {
+      // For completed lessons, show full progress
+      setCurrentTime(duration);
+    } else {
+      // For incomplete lessons, start from beginning
+      setCurrentTime(0);
+    }
+  }, [lesson.id, isCompleted, duration]);
 
   const handlePlayPause = () => {
     if (!canPlay) return;
@@ -157,6 +181,10 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  // MEJORADO: Determinar tiempo actual para mostrar
+  const displayCurrentTime = isCompleted ? duration : currentTime;
+  const displayProgress = isCompleted ? 100 : (currentTime / duration) * 100;
+
   // Determine button appearance based on completion status
   const getButtonClasses = () => {
     if (isCompleted) {
@@ -216,9 +244,12 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
               {lesson.title}
             </h4>
             <div className="flex items-center space-x-2 text-sm text-gray-500">
-              <span>{formatTime(currentTime)} / {formatTime(duration)}</span>
+              <span>{formatTime(displayCurrentTime)} / {formatTime(duration)}</span>
               {isActive && (
                 <span className="text-indigo-600 font-medium">● Reproduciendo</span>
+              )}
+              {isCompleted && (
+                <span className="text-yellow-600 font-medium">✓ Completada</span>
               )}
             </div>
           </div>
@@ -245,7 +276,7 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
 
       {/* Progress bar */}
       <LessonProgressBar
-        currentTime={currentTime}
+        currentTime={displayCurrentTime}
         duration={duration}
         onSeek={handleSeek}
         disabled={!canPlay}
