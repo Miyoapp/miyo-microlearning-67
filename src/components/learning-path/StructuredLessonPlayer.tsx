@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Play, Pause, SkipBack, SkipForward, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -34,14 +33,14 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
   const hasCompletedRef = useRef(false);
   const lastProgressRef = useRef(0);
 
-  // Use audio notes hook
+  // Use audio notes hook - FIXED: pass both lessonId and courseId, use 'loading' not 'isLoading'
   const {
     notes,
-    isLoading: notesLoading,
+    loading: notesLoading,
     addNote,
     updateNote,
     deleteNote
-  } = useAudioNotes(lesson.id);
+  } = useAudioNotes(lesson.id, courseId);
 
   // CORREGIDO: Inicializar progreso basado en el estado de la lección
   useEffect(() => {
