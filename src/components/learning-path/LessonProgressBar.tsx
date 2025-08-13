@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Slider } from '@/components/ui/slider';
 
 interface LessonProgressBarProps {
   currentTime: number;
@@ -14,33 +15,29 @@ const LessonProgressBar: React.FC<LessonProgressBarProps> = ({
   onSeek,
   disabled = false
 }) => {
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  const handleSliderChange = (values: number[]) => {
     if (disabled) return;
-    const value = parseFloat(e.target.value);
-    onSeek(value);
+    const newTime = (values[0] / 100) * duration;
+    onSeek(newTime);
   };
 
-  const validDuration = duration || 1;
-  const validCurrentTime = Math.min(currentTime, validDuration);
-  const progressPercentage = (validCurrentTime / validDuration) * 100;
-
   return (
-    <div className="w-full">
-      <input
-        type="range"
-        min={0}
-        max={validDuration}
-        value={validCurrentTime}
-        onChange={handleSeek}
+    <div className="mb-3">
+      <Slider
+        value={[progress]}
+        onValueChange={handleSliderChange}
+        max={100}
+        step={0.1}
         disabled={disabled}
-        className={`w-full h-2 bg-gray-200 rounded-full appearance-none cursor-pointer ${
-          disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-300'
-        }`}
+        className="w-full"
+        // MEJORADO: Estilos para barra de progreso morada
         style={{
-          background: disabled 
-            ? '#e5e7eb'
-            : `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${progressPercentage}%, #e5e7eb ${progressPercentage}%, #e5e7eb 100%)`
-        }}
+          '--slider-track': '#5e16ea',
+          '--slider-range': '#5e16ea',
+          '--slider-thumb': '#5e16ea'
+        } as React.CSSProperties}
       />
     </div>
   );
