@@ -17,21 +17,22 @@ export function useLessonStatus(lessons: Lesson[], modules: Module[], currentLes
       const isFirstInSequence = isFirstLessonInSequence(lesson, lessons, modules);
       
       // CORREGIDO: Lógica de reproducción mejorada
-      // - Lecciones completadas (🏆) SIEMPRE reproducibles (para replay) y NUNCA bloqueadas
-      // - Lecciones desbloqueadas (▶️) reproducibles  
+      // - Lecciones completadas SIEMPRE reproducibles y NUNCA bloqueadas
+      // - Lecciones desbloqueadas reproducibles  
       // - Primera lección siempre reproducible
-      // - CRÍTICO: Lección actual SIEMPRE debe ser reproducible
+      // - Lección actual SIEMPRE debe ser reproducible
       const canPlay = isCompleted || !isLocked || isFirstInSequence || isCurrent;
       
       const status = {
         isCompleted,
         // CRÍTICO: Las lecciones completadas NUNCA deben estar bloqueadas visualmente
-        isLocked: isCompleted ? false : (isLocked && !isCurrent),
+        // Solo las lecciones no completadas pueden estar bloqueadas
+        isLocked: isCompleted ? false : isLocked,
         isCurrent,
         canPlay,
         isFirstInSequence,
         // Hash mejorado para optimización
-        _hash: `${isCompleted ? '1' : '0'}-${isCompleted ? '0' : (isLocked && !isCurrent ? '1' : '0')}-${isCurrent ? '1' : '0'}-${canPlay ? '1' : '0'}-${isFirstInSequence ? '1' : '0'}`
+        _hash: `${isCompleted ? '1' : '0'}-${isCompleted ? '0' : (isLocked ? '1' : '0')}-${isCurrent ? '1' : '0'}-${canPlay ? '1' : '0'}-${isFirstInSequence ? '1' : '0'}`
       };
       
       console.log(`📚 Lesson "${lesson.title}":`, {
@@ -39,7 +40,9 @@ export function useLessonStatus(lessons: Lesson[], modules: Module[], currentLes
         isLocked: status.isLocked ? '🔒' : '🔓',
         canPlay: canPlay ? '✅' : '❌',
         isFirstInSequence,
-        isCurrent: isCurrent ? '🎵 ACTUAL' : '⏸️'
+        isCurrent: isCurrent ? '🎵 ACTUAL' : '⏸️',
+        rawLocked: isLocked,
+        finalLocked: status.isLocked
       });
       
       lessonStatusMap.set(lesson.id, status);

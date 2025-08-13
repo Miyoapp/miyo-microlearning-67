@@ -18,8 +18,9 @@ export function updateLessonsWithProgress(
     return {
       ...lesson,
       isCompleted,
-      // FIXED: First lesson is always unlocked, completed lessons are always unlocked
-      isLocked: !isCompleted && lesson.id !== firstLessonId
+      // CORREGIDO: Las lecciones completadas NUNCA están bloqueadas
+      // Primera lección siempre desbloqueada
+      isLocked: isCompleted ? false : (lesson.id !== firstLessonId)
     };
   });
 }
@@ -56,7 +57,7 @@ export function unlockLessonsSequentially(
       const globalLessonIndex = updatedLessons.findIndex(l => l.id === lesson.id);
       
       if (lesson.isCompleted) {
-        // PROTECTION: Completed lessons are always unlocked
+        // CRÍTICO: Lecciones completadas NUNCA están bloqueadas
         console.log('✅ Keeping completed lesson unlocked:', lesson.title);
         updatedLessons[globalLessonIndex] = { ...updatedLessons[globalLessonIndex], isLocked: false };
         
