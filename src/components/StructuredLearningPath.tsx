@@ -61,9 +61,9 @@ const StructuredLearningPath: React.FC<StructuredLearningPathProps> = ({
     // The pause logic is handled internally by useConsolidatedLessons
   }, []);
 
-  // FIXED: Create wrapper function that matches the expected signature
+  // Create wrapper function that matches the expected signature
   const handleProgressUpdate = useCallback((lesson: Lesson, progress: number) => {
-    // Call the original function with just the progress value (it expects only 1 argument)
+    // Call the original function with just the progress value
     originalHandleProgressUpdate(progress);
   }, [originalHandleProgressUpdate]);
 
@@ -84,6 +84,7 @@ const StructuredLearningPath: React.FC<StructuredLearningPathProps> = ({
               moduleLessons={moduleLessons}
               courseId={courseId}
               currentLessonId={currentLesson?.id || null}
+              isPlaying={isPlaying}
               lessonStatusMap={lessonStatusMap}
               onPlay={handlePlay}
               onPause={handlePause}

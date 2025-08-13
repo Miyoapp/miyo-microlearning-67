@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Play, Pause, StickyNote, Plus, Trophy, Lock } from 'lucide-react';
 import { Lesson } from '@/types';
@@ -33,7 +32,6 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
   onComplete,
   onProgressUpdate
 }) => {
-  const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [playbackRate, setPlaybackRate] = useState(1);
@@ -69,7 +67,6 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
 
     const handleEnded = () => {
       console.log('🏁 Audio ended for lesson:', lesson.title);
-      setIsPlaying(false);
       
       // Set progress to 100% when audio ends
       setCurrentTime(duration);
@@ -91,27 +88,23 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
     };
   }, [lesson, onComplete, onProgressUpdate, playbackRate, duration]);
 
-  // Control playback state based on external isActive prop
+  // CRITICAL: Control playback based on isActive prop from consolidated system
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    if (isActive && isPlaying) {
+    if (isActive) {
       console.log('▶️ Starting playback for:', lesson.title);
       audio.play().catch(error => {
         console.error('Error playing audio:', error);
-        setIsPlaying(false);
       });
     } else {
       console.log('⏸️ Pausing playback for:', lesson.title);
       audio.pause();
-      if (!isActive) {
-        setIsPlaying(false);
-      }
     }
-  }, [isActive, isPlaying, lesson.title]);
+  }, [isActive, lesson.title]);
 
-  // NUEVO: Reset currentTime when lesson changes but preserve completion state
+  // Reset currentTime when lesson changes but preserve completion state
   useEffect(() => {
     if (isCompleted) {
       // For completed lessons, show full progress
@@ -125,11 +118,9 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
   const handlePlayPause = () => {
     if (!canPlay) return;
 
-    if (isPlaying) {
-      setIsPlaying(false);
+    if (isActive) {
       onPause();
     } else {
-      setIsPlaying(true);
       onPlay(lesson);
     }
   };
@@ -169,8 +160,7 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
   const handleJumpToTime = (time: number) => {
     handleSeek(time);
     // If not currently playing, start playback
-    if (!isPlaying && canPlay) {
-      setIsPlaying(true);
+    if (!isActive && canPlay) {
       onPlay(lesson);
     }
   };
@@ -181,7 +171,7 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  // MEJORADO: Determinar tiempo actual para mostrar
+  // Determine time and progress to display
   const displayCurrentTime = isCompleted ? duration : currentTime;
   const displayProgress = isCompleted ? 100 : (currentTime / duration) * 100;
 
@@ -199,7 +189,7 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
   const getButtonIcon = () => {
     if (isCompleted) return <Trophy size={18} />;
     if (isLocked) return <Lock size={16} />;
-    if (isPlaying) return <Pause size={16} />;
+    if (isActive) return <Pause size={16} />;
     return <Play size={16} className="ml-0.5" />;
   };
 

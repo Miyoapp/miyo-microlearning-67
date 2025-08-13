@@ -8,6 +8,7 @@ interface StructuredModuleSectionProps {
   moduleLessons: Lesson[];
   courseId: string;
   currentLessonId: string | null;
+  isPlaying: boolean;
   lessonStatusMap: Map<string, any>;
   onPlay: (lesson: Lesson) => void;
   onPause: () => void;
@@ -20,6 +21,7 @@ const StructuredModuleSection: React.FC<StructuredModuleSectionProps> = ({
   moduleLessons,
   courseId,
   currentLessonId,
+  isPlaying,
   lessonStatusMap,
   onPlay,
   onPause,
@@ -44,13 +46,14 @@ const StructuredModuleSection: React.FC<StructuredModuleSectionProps> = ({
           if (!status) return null;
           
           const { isCompleted, isLocked, canPlay } = status;
+          const isActive = currentLessonId === lesson.id && isPlaying;
           
           return (
             <StructuredLessonPlayer
               key={lesson.id}
               lesson={lesson}
               courseId={courseId}
-              isActive={currentLessonId === lesson.id}
+              isActive={isActive}
               canPlay={canPlay}
               isCompleted={isCompleted}
               isLocked={isLocked}
