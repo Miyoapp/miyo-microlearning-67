@@ -2,8 +2,6 @@
 import React, { useState } from 'react';
 import { Play, Edit2, Trash2, Save, X } from 'lucide-react';
 import { AudioNote } from '@/hooks/useAudioNotes';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 
 interface LessonNotesSectionProps {
   notes: AudioNote[];
@@ -47,75 +45,80 @@ const LessonNotesSection: React.FC<LessonNotesSectionProps> = ({
     setEditText('');
   };
 
+  if (notes.length === 0) {
+    return (
+      <div className="text-center py-4 text-gray-500 text-sm">
+        Aún no tienes notas para esta lección.
+      </div>
+    );
+  }
+
   return (
-    <div className="mt-4 pt-4 border-t border-gray-200">
-      <h5 className="text-sm font-medium text-gray-700 mb-3">
-        Mis Notas ({notes.length})
-      </h5>
-      
-      <div className="space-y-3 max-h-60 overflow-y-auto">
-        {notes.map((note) => (
-          <div key={note.id} className="bg-gray-50 rounded-lg p-3">
-            <div className="flex items-center justify-between mb-2">
+    <div className="space-y-3 max-h-60 overflow-y-auto">
+      {notes.map((note) => (
+        <div key={note.id} className="border-l-4 border-indigo-300 bg-gray-50 rounded-r-lg p-3">
+          <div className="flex items-center justify-between mb-2">
+            <button
+              onClick={() => onJumpToTime(note.timestamp_seconds)}
+              className="flex items-center space-x-2 text-indigo-600 hover:text-indigo-700 text-sm font-medium group"
+            >
+              <Play size={12} className="group-hover:scale-110 transition-transform" />
+              <span>En {formatTime(note.timestamp_seconds)} - Saltar a este momento</span>
+            </button>
+            
+            <div className="flex items-center space-x-1">
               <button
-                onClick={() => onJumpToTime(note.timestamp_seconds)}
-                className="flex items-center space-x-2 text-indigo-600 hover:text-indigo-700 text-sm font-medium"
+                onClick={() => handleStartEdit(note)}
+                disabled={editingNoteId !== null}
+                className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50 rounded"
+                title="Editar nota"
               >
-                <Play size={12} />
-                <span>{formatTime(note.timestamp_seconds)}</span>
+                <Edit2 size={12} />
               </button>
-              
-              <div className="flex items-center space-x-1">
+              <button
+                onClick={() => onDeleteNote(note.id)}
+                disabled={editingNoteId !== null}
+                className="p-1 text-gray-400 hover:text-red-600 disabled:opacity-50 rounded"
+                title="Eliminar nota"
+              >
+                <Trash2 size={12} />
+              </button>
+            </div>
+          </div>
+          
+          {editingNoteId === note.id ? (
+            <div className="space-y-2">
+              <textarea
+                value={editText}
+                onChange={(e) => setEditText(e.target.value)}
+                className="w-full p-2 text-sm border border-gray-300 rounded-md resize-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                rows={3}
+              />
+              <div className="flex justify-end space-x-2">
                 <button
-                  onClick={() => handleStartEdit(note)}
-                  disabled={editingNoteId !== null}
-                  className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                  onClick={handleCancelEdit}
+                  className="flex items-center space-x-1 px-2 py-1 text-xs text-gray-600 hover:text-gray-800 rounded"
                 >
-                  <Edit2 size={12} />
+                  <X size={10} />
+                  <span>Cancelar</span>
                 </button>
                 <button
-                  onClick={() => onDeleteNote(note.id)}
-                  disabled={editingNoteId !== null}
-                  className="p-1 text-gray-400 hover:text-red-600 disabled:opacity-50"
+                  onClick={handleSaveEdit}
+                  disabled={!editText.trim()}
+                  className="flex items-center space-x-1 px-2 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50"
                 >
-                  <Trash2 size={12} />
+                  <Save size={10} />
+                  <span>Guardar</span>
                 </button>
               </div>
             </div>
-            
-            {editingNoteId === note.id ? (
-              <div className="space-y-2">
-                <Textarea
-                  value={editText}
-                  onChange={(e) => setEditText(e.target.value)}
-                  className="text-sm min-h-[60px] resize-none"
-                />
-                <div className="flex justify-end space-x-2">
-                  <button
-                    onClick={handleCancelEdit}
-                    className="flex items-center space-x-1 px-2 py-1 text-xs text-gray-600 hover:text-gray-800"
-                  >
-                    <X size={12} />
-                    <span>Cancelar</span>
-                  </button>
-                  <button
-                    onClick={handleSaveEdit}
-                    disabled={!editText.trim()}
-                    className="flex items-center space-x-1 px-2 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50"
-                  >
-                    <Save size={12} />
-                    <span>Guardar</span>
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <p className="text-sm text-gray-700 leading-relaxed">
-                {note.note_text}
-              </p>
-            )}
-          </div>
-        ))}
-      </div>
+          ) : (
+            <p className="text-sm text-gray-700 leading-relaxed">
+              {note.note_text}
+            </p>
+          )}
+        </div>
+      ))}
     </div>
   );
 };

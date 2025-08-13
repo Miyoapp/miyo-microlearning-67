@@ -1,12 +1,11 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Pause, Plus, ChevronDown, ChevronUp, Trophy, Lock } from 'lucide-react';
+import { Play, Pause, StickyNote, Plus, ChevronDown, ChevronUp, Trophy, Lock } from 'lucide-react';
 import { Lesson } from '@/types';
 import { cn } from '@/lib/utils';
 import { useAudioNotes } from '@/hooks/useAudioNotes';
-import AddNoteModal from '@/components/audio/AddNoteModal';
-import NotesList from '@/components/audio/NotesList';
 import LessonProgressBar from './LessonProgressBar';
+import LessonAudioControls from './LessonAudioControls';
 import LessonNotesSection from './LessonNotesSection';
 
 interface StructuredLessonPlayerProps {
@@ -37,8 +36,10 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [showAddNote, setShowAddNote] = useState(false);
+  const [playbackRate, setPlaybackRate] = useState(1);
   const [showNotes, setShowNotes] = useState(false);
+  const [showAddNote, setShowAddNote] = useState(false);
+  const [newNoteText, setNewNoteText] = useState('');
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const { notes, addNote, updateNote, deleteNote, loading: notesLoading } = useAudioNotes(lesson.id, courseId);
@@ -50,6 +51,7 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
 
     const handleLoadedMetadata = () => {
       setDuration(audio.duration);
+      audio.playbackRate = playbackRate;
     };
 
     const handleTimeUpdate = () => {
@@ -72,7 +74,7 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('ended', handleEnded);
     };
-  }, [lesson, onComplete, onProgressUpdate]);
+  }, [lesson, onComplete, onProgressUpdate, playbackRate]);
 
   // Control playback state
   useEffect(() => {
@@ -106,8 +108,29 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
     }
   };
 
-  const handleAddNote = (noteText: string) => {
-    addNote(noteText, currentTime);
+  const handleSeekBackward = () => {
+    const newTime = Math.max(0, currentTime - 15);
+    handleSeek(newTime);
+  };
+
+  const handleSeekForward = () => {
+    const newTime = Math.min(duration, currentTime + 15);
+    handleSeek(newTime);
+  };
+
+  const handlePlaybackRateChange = (rate: number) => {
+    setPlaybackRate(rate);
+    if (audioRef.current) {
+      audioRef.current.playbackRate = rate;
+    }
+  };
+
+  const handleAddNote = async () => {
+    if (newNoteText.trim()) {
+      await addNote(newNoteText.trim(), currentTime);
+      setNewNoteText('');
+      setShowAddNote(false);
+    }
   };
 
   const handleJumpToTime = (time: number) => {
@@ -136,14 +159,14 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
         preload="metadata"
       />
 
-      {/* Header with title and status */}
+      {/* Header with title and controls */}
       <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-3 flex-1">
           <button
             onClick={handlePlayPause}
             disabled={!canPlay}
             className={cn(
-              "w-10 h-10 rounded-full flex items-center justify-center transition-colors",
+              "w-10 h-10 rounded-full flex items-center justify-center transition-colors flex-shrink-0",
               {
                 "bg-yellow-500 text-white hover:bg-yellow-600": isCompleted,
                 "bg-indigo-600 text-white hover:bg-indigo-700": !isCompleted && canPlay,
@@ -162,8 +185,8 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
             )}
           </button>
 
-          <div>
-            <h4 className="font-medium text-gray-900">{lesson.title}</h4>
+          <div className="min-w-0 flex-1">
+            <h4 className="font-medium text-gray-900 truncate">{lesson.title}</h4>
             <div className="flex items-center space-x-2 text-sm text-gray-500">
               <span>{formatTime(currentTime)} / {formatTime(duration)}</span>
               {isActive && (
@@ -173,36 +196,23 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
           </div>
         </div>
 
-        {/* Notes counter and controls */}
-        <div className="flex items-center space-x-2">
-          {notes.length > 0 && (
-            <div className="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded-full font-medium">
-              {notes.length}
-            </div>
-          )}
-          
-          {canPlay && (
-            <>
-              <button
-                onClick={() => setShowAddNote(true)}
-                className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                title="Agregar nota"
-              >
-                <Plus size={16} />
-              </button>
-              
+        {/* Notes icon with counter */}
+        {canPlay && (
+          <div className="relative">
+            <button
+              onClick={() => setShowNotes(!showNotes)}
+              className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors relative"
+              title={showNotes ? "Ocultar notas" : "Ver notas"}
+            >
+              <StickyNote size={20} />
               {notes.length > 0 && (
-                <button
-                  onClick={() => setShowNotes(!showNotes)}
-                  className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                  title={showNotes ? "Ocultar notas" : "Ver notas"}
-                >
-                  {showNotes ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                </button>
+                <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
+                  {notes.length}
+                </div>
               )}
-            </>
-          )}
-        </div>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Progress bar */}
@@ -213,25 +223,77 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
         disabled={!canPlay}
       />
 
-      {/* Notes section */}
-      {showNotes && notes.length > 0 && (
-        <LessonNotesSection
-          notes={notes}
-          onJumpToTime={handleJumpToTime}
-          onUpdateNote={updateNote}
-          onDeleteNote={deleteNote}
-          isLoading={notesLoading}
+      {/* Audio controls */}
+      {canPlay && (
+        <LessonAudioControls
+          playbackRate={playbackRate}
+          onPlaybackRateChange={handlePlaybackRateChange}
+          onSeekBackward={handleSeekBackward}
+          onSeekForward={handleSeekForward}
+          disabled={!canPlay}
         />
       )}
 
-      {/* Add note modal */}
-      <AddNoteModal
-        isOpen={showAddNote}
-        onClose={() => setShowAddNote(false)}
-        onSave={handleAddNote}
-        currentTime={currentTime}
-        isLoading={notesLoading}
-      />
+      {/* Notes section */}
+      {showNotes && canPlay && (
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="flex items-center justify-between mb-3">
+            <h5 className="text-sm font-medium text-gray-700">
+              Mis notas ({notes.length})
+            </h5>
+            <button
+              onClick={() => setShowAddNote(!showAddNote)}
+              className="flex items-center space-x-1 px-2 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors"
+            >
+              <Plus size={12} />
+              <span>Agregar nota</span>
+            </button>
+          </div>
+
+          {/* Add note section */}
+          {showAddNote && (
+            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+              <div className="text-xs text-gray-500 mb-2">
+                En {formatTime(currentTime)}
+              </div>
+              <textarea
+                value={newNoteText}
+                onChange={(e) => setNewNoteText(e.target.value)}
+                placeholder="Escribe tu nota aquí..."
+                className="w-full p-2 text-sm border border-gray-300 rounded-md resize-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                rows={3}
+              />
+              <div className="flex justify-end space-x-2 mt-2">
+                <button
+                  onClick={() => {
+                    setShowAddNote(false);
+                    setNewNoteText('');
+                  }}
+                  className="px-3 py-1 text-xs text-gray-600 hover:text-gray-800"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleAddNote}
+                  disabled={!newNoteText.trim() || notesLoading}
+                  className="px-3 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50"
+                >
+                  Guardar
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Notes list */}
+          <LessonNotesSection
+            notes={notes}
+            onJumpToTime={handleJumpToTime}
+            onUpdateNote={updateNote}
+            onDeleteNote={deleteNote}
+            isLoading={notesLoading}
+          />
+        </div>
+      )}
     </div>
   );
 };
