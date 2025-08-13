@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Lesson } from '@/types';
 import LessonProgressBar from './LessonProgressBar';
 import LessonNotesSection from './LessonNotesSection';
+import { useAudioNotes } from '@/hooks/useAudioNotes';
 
 interface StructuredLessonPlayerProps {
   lesson: Lesson;
@@ -32,6 +33,15 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
   const [playbackRate, setPlaybackRate] = useState(1);
   const hasCompletedRef = useRef(false);
   const lastProgressRef = useRef(0);
+
+  // Use audio notes hook
+  const {
+    notes,
+    isLoading: notesLoading,
+    addNote,
+    updateNote,
+    deleteNote
+  } = useAudioNotes(lesson.id);
 
   // CORREGIDO: Inicializar progreso basado en el estado de la lección
   useEffect(() => {
@@ -102,6 +112,13 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
       setCurrentTime(time);
     }
   }, []);
+
+  const handleJumpToTime = useCallback((seconds: number) => {
+    handleSeek(seconds);
+    if (!isPlaying) {
+      onPlay();
+    }
+  }, [handleSeek, isPlaying, onPlay]);
 
   const handlePlaybackRateChange = useCallback((rate: number) => {
     setPlaybackRate(rate);
@@ -241,7 +258,13 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
         </CardContent>
       </Card>
 
-      <LessonNotesSection lessonId={lesson.id} />
+      <LessonNotesSection
+        notes={notes}
+        onJumpToTime={handleJumpToTime}
+        onUpdateNote={updateNote}
+        onDeleteNote={deleteNote}
+        isLoading={notesLoading}
+      />
     </div>
   );
 };
