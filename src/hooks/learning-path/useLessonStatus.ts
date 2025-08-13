@@ -17,25 +17,26 @@ export function useLessonStatus(lessons: Lesson[], modules: Module[], currentLes
       const isFirstInSequence = isFirstLessonInSequence(lesson, lessons, modules);
       
       // CORREGIDO: Lógica de reproducción mejorada
-      // - Lecciones completadas (🏆) SIEMPRE reproducibles (para replay)
+      // - Lecciones completadas (🏆) SIEMPRE reproducibles (para replay) y NUNCA bloqueadas
       // - Lecciones desbloqueadas (▶️) reproducibles  
       // - Primera lección siempre reproducible
-      // - CRÍTICO: Lección actual SIEMPRE debe ser reproducible (si se está reproduciendo, obviamente puede reproducirse)
+      // - CRÍTICO: Lección actual SIEMPRE debe ser reproducible
       const canPlay = isCompleted || !isLocked || isFirstInSequence || isCurrent;
       
       const status = {
         isCompleted,
-        isLocked: isLocked && !isCurrent, // CRÍTICO: Si es la lección actual, no puede estar bloqueada visualmente
+        // CRÍTICO: Las lecciones completadas NUNCA deben estar bloqueadas visualmente
+        isLocked: isCompleted ? false : (isLocked && !isCurrent),
         isCurrent,
         canPlay,
         isFirstInSequence,
         // Hash mejorado para optimización
-        _hash: `${isCompleted ? '1' : '0'}-${isLocked && !isCurrent ? '1' : '0'}-${isCurrent ? '1' : '0'}-${canPlay ? '1' : '0'}-${isFirstInSequence ? '1' : '0'}`
+        _hash: `${isCompleted ? '1' : '0'}-${isCompleted ? '0' : (isLocked && !isCurrent ? '1' : '0')}-${isCurrent ? '1' : '0'}-${canPlay ? '1' : '0'}-${isFirstInSequence ? '1' : '0'}`
       };
       
       console.log(`📚 Lesson "${lesson.title}":`, {
         isCompleted: isCompleted ? '🏆' : '❌',
-        isLocked: (isLocked && !isCurrent) ? '🔒' : '🔓',
+        isLocked: status.isLocked ? '🔒' : '🔓',
         canPlay: canPlay ? '✅' : '❌',
         isFirstInSequence,
         isCurrent: isCurrent ? '🎵 ACTUAL' : '⏸️'
