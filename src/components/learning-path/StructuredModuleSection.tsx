@@ -53,13 +53,10 @@ const StructuredModuleSection: React.FC<StructuredModuleSectionProps> = ({
               key={lesson.id}
               lesson={lesson}
               courseId={courseId}
-              isActive={isActive}
-              canPlay={canPlay}
-              isCompleted={isCompleted}
-              isLocked={isLocked}
-              onPlay={onPlay}
+              isPlaying={isActive}
+              onPlay={() => onPlay(lesson)}
               onPause={onPause}
-              onComplete={onComplete}
+              onComplete={() => onComplete(lesson)}
               onProgressUpdate={onProgressUpdate}
             />
           );

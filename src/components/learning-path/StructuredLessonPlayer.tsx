@@ -130,7 +130,7 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  if (!lesson.audioUrl) {
+  if (!lesson.urlAudio) {
     return (
       <Card className="w-full">
         <CardContent className="p-6">
@@ -222,7 +222,7 @@ const StructuredLessonPlayer: React.FC<StructuredLessonPlayerProps> = ({
 
           <audio
             ref={audioRef}
-            src={lesson.audioUrl}
+            src={lesson.urlAudio}
             onTimeUpdate={handleTimeUpdate}
             onLoadedMetadata={() => {
               if (audioRef.current) {
