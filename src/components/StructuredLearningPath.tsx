@@ -30,26 +30,43 @@ const StructuredLearningPath: React.FC<StructuredLearningPathProps> = ({
     isPlaying,
     handleSelectLesson,
     handleLessonComplete,
-    handleProgressUpdate: originalHandleProgressUpdate
+    handleProgressUpdate: originalHandleProgressUpdate,
+    updatedPodcast // NUEVO: Usar el podcast actualizado
   } = useConsolidatedLessons(podcast, () => {});
 
-  const lessonStatusMap = useLessonStatus(lessons, modules, currentLesson?.id || null);
+  // CRÍTICO: Usar las lecciones actualizadas del sistema consolidado en lugar de las props
+  const currentLessons = updatedPodcast?.lessons || lessons;
+  const currentModules = updatedPodcast?.modules || modules;
+
+  console.log('🔄 StructuredLearningPath - Using updated lessons:', {
+    originalLessonsCount: lessons.length,
+    updatedLessonsCount: currentLessons.length,
+    hasUpdatedPodcast: !!updatedPodcast,
+    updatedLessonsPreview: currentLessons.slice(0, 2).map(l => ({
+      title: l.title,
+      isCompleted: l.isCompleted ? '🏆' : '❌',
+      isLocked: l.isLocked ? '🔒' : '🔓'
+    }))
+  });
+
+  // ACTUALIZADO: Usar las lecciones actualizadas para el cálculo de estado
+  const lessonStatusMap = useLessonStatus(currentLessons, currentModules, currentLesson?.id || null);
   
   const getLessonsForModule = useCallback((moduleId: string) => {
-    const module = modules.find(m => m.id === moduleId);
+    const module = currentModules.find(m => m.id === moduleId);
     if (!module) return [];
     
     return module.lessonIds
-      .map(id => lessons.find(lesson => lesson.id === id))
+      .map(id => currentLessons.find(lesson => lesson.id === id))
       .filter((lesson): lesson is Lesson => lesson !== undefined);
-  }, [modules, lessons]);
+  }, [currentModules, currentLessons]);
 
   const orderedModules = useMemo(() => {
-    return modules.filter(module => {
+    return currentModules.filter(module => {
       const moduleLessons = getLessonsForModule(module.id);
       return moduleLessons.length > 0;
     });
-  }, [modules, getLessonsForModule]);
+  }, [currentModules, getLessonsForModule]);
 
   const handlePlay = useCallback((lesson: Lesson) => {
     console.log('🎵 StructuredLearningPath: Play lesson:', lesson.title);

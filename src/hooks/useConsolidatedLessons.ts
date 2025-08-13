@@ -1,3 +1,4 @@
+
 import { useEffect, useCallback, useRef } from 'react';
 import { Podcast } from '@/types';
 import { useUserLessonProgress } from './useUserLessonProgress';
@@ -167,6 +168,8 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     handleTogglePlay,
     handleLessonComplete,
     handleProgressUpdate,
-    initializePodcastWithProgress
+    initializePodcastWithProgress,
+    // NUEVO: Exponer el podcast actualizado para que StructuredLearningPath pueda usar las lecciones actualizadas
+    updatedPodcast: podcast
   };
 }
