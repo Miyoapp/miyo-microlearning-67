@@ -30,7 +30,7 @@ const StructuredLearningPath: React.FC<StructuredLearningPathProps> = ({
     isPlaying,
     handleSelectLesson,
     handleLessonComplete,
-    handleProgressUpdate
+    handleProgressUpdate: originalHandleProgressUpdate
   } = useConsolidatedLessons(podcast, () => {});
 
   const lessonStatusMap = useLessonStatus(lessons, modules, currentLesson?.id || null);
@@ -60,6 +60,12 @@ const StructuredLearningPath: React.FC<StructuredLearningPathProps> = ({
     console.log('⏸️ StructuredLearningPath: Pause lesson');
     // The pause logic is handled internally by useConsolidatedLessons
   }, []);
+
+  // FIXED: Create wrapper function that matches the expected signature
+  const handleProgressUpdate = useCallback((lesson: Lesson, progress: number) => {
+    // Call the original function with just the progress value
+    originalHandleProgressUpdate(lesson, progress);
+  }, [originalHandleProgressUpdate]);
 
   return (
     <div className="py-6">
