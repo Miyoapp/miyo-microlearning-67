@@ -24,10 +24,10 @@ export function useLessonClasses(lessons: Lesson[], lessonStatusMap: Map<string,
         {
           // Lecciones completadas: Trofeo amarillo (🏆)
           "bg-yellow-500 text-white hover:bg-yellow-600": isCompleted,
-          // Lecciones desbloqueadas: Play morado (▶️)
+          // Lecciones desbloqueadas: Play morado (▶️) - INCLUYE lecciones actuales
           "bg-[#5e16ea] text-white hover:bg-[#4a11ba]": !isCompleted && canPlay,
-          // Lecciones bloqueadas: Candado gris (🔒)
-          "bg-gray-300 text-gray-500": isLocked && !isCompleted && !canPlay,
+          // Lecciones bloqueadas: Candado gris (🔒) - SOLO si realmente están bloqueadas
+          "bg-gray-300 text-gray-500": isLocked && !canPlay,
           "hover:scale-110": canPlay,
           // Ring colors para lecciones activas
           "ring-2 ring-yellow-300": isCurrent && isCompleted,
@@ -42,12 +42,12 @@ export function useLessonClasses(lessons: Lesson[], lessonStatusMap: Map<string,
         {
           // Texto para lecciones completadas
           "text-yellow-600 font-semibold": isCompleted,
-          // Texto para lecciones actuales activas
-          "text-[#5e16ea] font-semibold": isCurrent && !isCompleted && canPlay,
+          // Texto para lecciones actuales activas - DEBE ser morado si está desbloqueada
+          "text-[#5e16ea] font-semibold": isCurrent && canPlay && !isCompleted,
           // Texto para lecciones disponibles
           "text-gray-800": canPlay && !isCurrent && !isCompleted,
           // Texto para lecciones bloqueadas
-          "text-gray-400": !canPlay
+          "text-gray-400": !canPlay && isLocked
         }
       );
 

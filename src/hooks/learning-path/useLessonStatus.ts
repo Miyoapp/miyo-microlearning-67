@@ -20,24 +20,25 @@ export function useLessonStatus(lessons: Lesson[], modules: Module[], currentLes
       // - Lecciones completadas (🏆) SIEMPRE reproducibles (para replay)
       // - Lecciones desbloqueadas (▶️) reproducibles  
       // - Primera lección siempre reproducible
-      const canPlay = isCompleted || !isLocked || isFirstInSequence;
+      // - CRÍTICO: Lección actual SIEMPRE debe ser reproducible (si se está reproduciendo, obviamente puede reproducirse)
+      const canPlay = isCompleted || !isLocked || isFirstInSequence || isCurrent;
       
       const status = {
         isCompleted,
-        isLocked,
+        isLocked: isLocked && !isCurrent, // CRÍTICO: Si es la lección actual, no puede estar bloqueada visualmente
         isCurrent,
         canPlay,
         isFirstInSequence,
         // Hash mejorado para optimización
-        _hash: `${isCompleted ? '1' : '0'}-${isLocked ? '1' : '0'}-${isCurrent ? '1' : '0'}-${canPlay ? '1' : '0'}-${isFirstInSequence ? '1' : '0'}`
+        _hash: `${isCompleted ? '1' : '0'}-${isLocked && !isCurrent ? '1' : '0'}-${isCurrent ? '1' : '0'}-${canPlay ? '1' : '0'}-${isFirstInSequence ? '1' : '0'}`
       };
       
       console.log(`📚 Lesson "${lesson.title}":`, {
         isCompleted: isCompleted ? '🏆' : '❌',
-        isLocked: isLocked ? '🔒' : '🔓',
+        isLocked: (isLocked && !isCurrent) ? '🔒' : '🔓',
         canPlay: canPlay ? '✅' : '❌',
         isFirstInSequence,
-        isCurrent: isCurrent ? '🎵' : '⏸️'
+        isCurrent: isCurrent ? '🎵 ACTUAL' : '⏸️'
       });
       
       lessonStatusMap.set(lesson.id, status);
