@@ -7,7 +7,7 @@ export function useLessonClasses(lessons: Lesson[], lessonStatusMap: Map<string,
   const getLessonClasses = useMemo(() => {
     const classCache = new Map();
     
-    // Hash para optimización
+    // Hash for optimization
     const statusMapHash = Array.from(lessonStatusMap.entries())
       .map(([id, status]) => `${id}:${status._hash || 'no-hash'}`)
       .join('|');
@@ -18,17 +18,17 @@ export function useLessonClasses(lessons: Lesson[], lessonStatusMap: Map<string,
       
       const { isCompleted, isLocked, isCurrent, canPlay } = status;
       
-      // CORREGIDO: Todas las lecciones reproducibles tienen el mismo estilo (play morado)
-      // No diferenciamos visualmente entre completadas y no completadas
+      // FIXED: All playable lessons have the same purple play style
+      // Completed lessons maintain play button appearance (no visual difference)
       const nodeClasses = cn(
         "flex items-center justify-center w-12 h-12 rounded-full shadow-md transition-all duration-200 relative",
         {
-          // TODAS las lecciones reproducibles: Play morado (▶️) - incluye completadas
+          // ALL playable lessons: Purple play button (▶️) - including completed ones
           "bg-[#5e16ea] text-white hover:bg-[#4a11ba]": canPlay,
-          // Lecciones bloqueadas: Candado gris (🔒)
+          // Locked lessons: Gray lock (🔒)
           "bg-gray-300 text-gray-500": !canPlay && isLocked,
           "hover:scale-110": canPlay,
-          // Ring colors para lecciones activas - siempre morado
+          // Ring colors for active lessons - always purple
           "ring-2 ring-[#5e16ea]": isCurrent && canPlay,
           "cursor-pointer": canPlay,
           "cursor-not-allowed": !canPlay
@@ -38,11 +38,11 @@ export function useLessonClasses(lessons: Lesson[], lessonStatusMap: Map<string,
       const textClasses = cn(
         "text-sm transition-colors duration-200",
         {
-          // TODAS las lecciones reproducibles tienen texto morado cuando son actuales
+          // ALL playable lessons have purple text when current
           "text-[#5e16ea] font-semibold": isCurrent && canPlay,
-          // Texto para lecciones disponibles (incluyendo completadas)
+          // Text for available lessons (including completed)
           "text-gray-800": canPlay && !isCurrent,
-          // Texto para lecciones bloqueadas
+          // Text for locked lessons
           "text-gray-400": !canPlay && isLocked
         }
       );
@@ -53,7 +53,7 @@ export function useLessonClasses(lessons: Lesson[], lessonStatusMap: Map<string,
     console.log('🎨 useLessonClasses: Recalculated with statusMapHash:', statusMapHash.slice(0, 50));
     return classCache;
   }, [
-    // OPTIMIZADO: Dependencies estables
+    // OPTIMIZED: Stable dependencies
     lessons.map(l => l.id).join('|'),
     Array.from(lessonStatusMap.entries()).map(([id, status]) => `${id}:${status._hash || 'no-hash'}`).join('|')
   ]);

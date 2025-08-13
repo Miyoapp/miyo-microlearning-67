@@ -16,21 +16,21 @@ export function useLessonStatus(lessons: Lesson[], modules: Module[], currentLes
       const isCurrent = lesson.id === currentLessonId;
       const isFirstInSequence = isFirstLessonInSequence(lesson, lessons, modules);
       
-      // CORREGIDO: Lógica de reproducción mejorada
-      // - Lecciones completadas (🏆) SIEMPRE reproducibles (para replay) y NUNCA bloqueadas
-      // - Lecciones desbloqueadas (▶️) reproducibles  
-      // - Primera lección siempre reproducible
-      // - CRÍTICO: Lección actual SIEMPRE debe ser reproducible
+      // FIXED: Completed lessons are NEVER locked visually and ALWAYS playable
+      // - Completed lessons (🎵) ALWAYS playable (for replay) and NEVER locked
+      // - Unlocked lessons (▶️) playable  
+      // - First lesson always playable
+      // - CRITICAL: Current lesson ALWAYS must be playable
       const canPlay = isCompleted || !isLocked || isFirstInSequence || isCurrent;
       
       const status = {
         isCompleted,
-        // CRÍTICO: Las lecciones completadas NUNCA deben estar bloqueadas visualmente
+        // CRITICAL: Completed lessons are NEVER locked visually
         isLocked: isCompleted ? false : (isLocked && !isCurrent),
         isCurrent,
         canPlay,
         isFirstInSequence,
-        // Hash mejorado para optimización
+        // Improved hash for optimization
         _hash: `${isCompleted ? '1' : '0'}-${isCompleted ? '0' : (isLocked && !isCurrent ? '1' : '0')}-${isCurrent ? '1' : '0'}-${canPlay ? '1' : '0'}-${isFirstInSequence ? '1' : '0'}`
       };
       
@@ -47,7 +47,7 @@ export function useLessonStatus(lessons: Lesson[], modules: Module[], currentLes
     
     return lessonStatusMap;
   }, [
-    // OPTIMIZADO: Dependencias más específicas
+    // OPTIMIZED: More specific dependencies
     lessons.map(l => `${l.id}:${l.isCompleted ? '1' : '0'}:${l.isLocked ? '1' : '0'}`).join('|'),
     modules.map(m => `${m.id}:${m.lessonIds.join(',')}`).join('|'),
     currentLessonId
