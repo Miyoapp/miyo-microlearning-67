@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Lesson } from '@/types';
-import { Play, Lock } from 'lucide-react';
+import { Play, Lock, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface LessonItemProps {
@@ -25,25 +25,25 @@ const LessonItem = React.memo(({ lesson, index, status, classes, onLessonClick }
   const { isCompleted, isCurrent, canPlay } = status;
   const { nodeClasses, textClasses } = classes;
   
-  // CLICK HANDLER for play icon - WITH AUTO-PLAY
+  // CLICK HANDLER ESPECÍFICO PARA EL ÍCONO DE PLAY - CON AUTO-PLAY
   const handlePlayClick = () => {
-    console.log('🔥🔥🔥 PLAY ICON CLICK - START:', {
+    console.log('🔥🔥🔥 PLAY ICON CLICK - INICIO:', {
       lessonTitle: lesson.title,
       canPlay,
-      isCompleted: isCompleted ? 'SÍ (mantiene play)' : 'NO',
+      isCompleted,
       timestamp: new Date().toLocaleTimeString()
     });
     
     if (canPlay) {
-      // CRITICAL: Pass shouldAutoPlay=true to force immediate playback
+      // CRÍTICO: Pasar shouldAutoPlay=true para forzar reproducción inmediata
       onLessonClick(lesson, true);
-      console.log('🔥🔥🔥 PLAY ICON CLICK - SENT TO onLessonClick with AUTO-PLAY:', lesson.title);
+      console.log('🔥🔥🔥 PLAY ICON CLICK - ENVIADO A onLessonClick con AUTO-PLAY:', lesson.title);
     } else {
-      console.log('🚫🚫🚫 PLAY ICON CLICK - LESSON LOCKED:', lesson.title);
+      console.log('🚫🚫🚫 PLAY ICON CLICK - LECCIÓN BLOQUEADA:', lesson.title);
     }
   };
   
-  // Zigzag effect alternating positions
+  // Efecto zigzag alternando posiciones
   const containerAlignment = index % 2 === 0 
     ? "justify-start" 
     : "justify-start ml-[45px]";
@@ -54,32 +54,29 @@ const LessonItem = React.memo(({ lesson, index, status, classes, onLessonClick }
         className={cn(nodeClasses, { "cursor-pointer": canPlay, "cursor-not-allowed": !canPlay })}
         onClick={handlePlayClick}
       >
-        {/* CRÍTICO: Todas las lecciones reproducibles muestran play (incluyendo completadas) */}
-        {/* NO cambiar a check - mantener play para permitir replay */}
-        {canPlay ? (
+        {/* CORREGIDO: Tamaño consistente de íconos (18px) */}
+        {isCompleted ? (
+          <Trophy size={18} />
+        ) : canPlay ? (
           <Play size={18} fill="white" />
         ) : (
           <Lock size={18} />
         )}
       </div>
       
-      {/* Progress indicator for current lesson */}
+      {/* Indicador de progreso para lección actual */}
       {isCurrent && (
         <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
           <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
         </div>
       )}
       
-      {/* Lesson title WITHOUT onClick - only visual */}
+      {/* Título de la lección SIN onClick - solo visual */}
       <div className="ml-3 flex-1 max-w-[280px]">
         <div className={cn(textClasses, "leading-snug")}>
           {lesson.title}
           {isCurrent && (
             <span className="ml-2 text-xs text-green-600">● Reproduciendo</span>
-          )}
-          {/* NUEVO: Mostrar check de completado como texto adicional, no en el botón */}
-          {isCompleted && !isCurrent && (
-            <span className="ml-2 text-xs text-green-600">✓ Completada</span>
           )}
         </div>
       </div>

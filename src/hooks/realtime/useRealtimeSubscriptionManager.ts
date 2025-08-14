@@ -1,7 +1,7 @@
 
 import { useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import type { RealtimeChannel, REALTIME_SUBSCRIBE_STATES } from '@supabase/supabase-js';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 interface SubscriptionConfig {
   channelName: string;
@@ -12,26 +12,23 @@ interface SubscriptionConfig {
 
 export function useRealtimeSubscriptionManager() {
   const activeChannels = useRef<Map<string, RealtimeChannel>>(new Map());
+  const subscriptionStates = useRef<Map<string, boolean>>(new Map());
 
   const createSubscription = useCallback((config: SubscriptionConfig): (() => void) => {
     const { channelName, table, filter, callback } = config;
     const subscriptionKey = `${channelName}-${table}-${filter || 'all'}`;
 
-    // Clean up any existing subscription for this key
-    const existingChannel = activeChannels.current.get(subscriptionKey);
-    if (existingChannel) {
-      console.log('🔌 REALTIME: Cleaning up existing subscription for:', subscriptionKey);
-      supabase.removeChannel(existingChannel);
-      activeChannels.current.delete(subscriptionKey);
+    // Check if already subscribed to prevent duplicates
+    if (subscriptionStates.current.get(subscriptionKey)) {
+      console.log('🔒 REALTIME: Subscription already exists for:', subscriptionKey);
+      return () => {}; // Return empty cleanup function
     }
 
     console.log('🔄 REALTIME: Creating new subscription for:', subscriptionKey);
+    subscriptionStates.current.set(subscriptionKey, true);
 
-    // Create a truly unique channel name to avoid any conflicts
-    const uniqueChannelName = `${subscriptionKey}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    const channel = supabase.channel(uniqueChannelName);
+    const channel = supabase.channel(channelName);
     
-    // Set up the subscription
     const subscription = channel.on(
       'postgres_changes',
       {
@@ -46,42 +43,32 @@ export function useRealtimeSubscriptionManager() {
       }
     );
 
-    // Subscribe to the channel
-    subscription.subscribe((status: REALTIME_SUBSCRIBE_STATES) => {
+    subscription.subscribe((status) => {
       console.log(`📡 REALTIME STATUS [${subscriptionKey}]:`, status);
-      
-      // Check for subscription error using safe string comparison
-      const statusString = String(status);
-      if (statusString === 'SUBSCRIPTION_ERROR' || statusString === 'CLOSED') {
-        console.error('🚨 REALTIME ERROR for:', subscriptionKey);
-        // Clean up on error
-        activeChannels.current.delete(subscriptionKey);
-      }
     });
 
-    // Store the channel
     activeChannels.current.set(subscriptionKey, channel);
 
     // Return cleanup function
     return () => {
       console.log('🔌 REALTIME: Cleaning up subscription:', subscriptionKey);
       
-      // Remove channel
       const activeChannel = activeChannels.current.get(subscriptionKey);
       if (activeChannel) {
         supabase.removeChannel(activeChannel);
         activeChannels.current.delete(subscriptionKey);
       }
+      
+      subscriptionStates.current.set(subscriptionKey, false);
     };
   }, []);
 
   const cleanupAllSubscriptions = useCallback(() => {
     console.log('🔌 REALTIME: Cleaning up ALL subscriptions');
     
-    // Remove all channels
     activeChannels.current.forEach((channel, key) => {
-      console.log('🔌 REALTIME: Removing channel:', key);
       supabase.removeChannel(channel);
+      subscriptionStates.current.set(key, false);
     });
     
     activeChannels.current.clear();

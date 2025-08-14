@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { Podcast, Lesson } from '@/types';
-import CourseStructuredContent from './CourseStructuredContent';
+import CourseMainContent from './CourseMainContent';
+import AudioPlayer from '@/components/AudioPlayer';
 import CheckoutModal from './CheckoutModal';
 
 interface CourseAccessHandlerProps {
@@ -78,7 +79,7 @@ const CourseAccessHandler: React.FC<CourseAccessHandlerProps> = ({
 
   return (
     <>
-      <CourseStructuredContent
+      <CourseMainContent
         podcast={podcast}
         currentLesson={currentLesson}
         hasStarted={hasStarted}
@@ -92,6 +93,17 @@ const CourseAccessHandler: React.FC<CourseAccessHandlerProps> = ({
         onSelectLesson={onSelectLesson}
         onShowCheckout={onShowCheckout}
       />
+      
+      {/* Audio player - only show when there's a current lesson and user has access */}
+      {currentLesson && hasAccess && (
+        <AudioPlayer 
+          lesson={currentLesson}
+          isPlaying={isPlaying}
+          onTogglePlay={onTogglePlay}
+          onComplete={onLessonComplete}
+          onProgressUpdate={onProgressUpdate}
+        />
+      )}
 
       {/* Checkout Modal */}
       {isPremium && (
