@@ -11,6 +11,12 @@ interface ModuleSectionProps {
   currentLessonId: string | null;
   isGloballyPlaying: boolean;
   onLessonClick: (lesson: Lesson, shouldAutoPlay?: boolean) => void;
+  globalCurrentTime?: number;
+  globalDuration?: number;
+  onSeek?: (value: number) => void;
+  onSkipBackward?: () => void;
+  onSkipForward?: () => void;
+  onPlaybackRateChange?: (rate: number) => void;
 }
 
 const ModuleSection = React.memo(({ 
@@ -20,7 +26,13 @@ const ModuleSection = React.memo(({
   getLessonClasses, 
   currentLessonId,
   isGloballyPlaying,
-  onLessonClick 
+  onLessonClick,
+  globalCurrentTime = 0,
+  globalDuration = 0,
+  onSeek,
+  onSkipBackward,
+  onSkipForward,
+  onPlaybackRateChange
 }: ModuleSectionProps) => {
   if (moduleLessons.length === 0) return null;
   
@@ -28,7 +40,9 @@ const ModuleSection = React.memo(({
     moduleTitle: module.title,
     currentLessonId,
     isGloballyPlaying,
-    lessonCount: moduleLessons.length
+    lessonCount: moduleLessons.length,
+    globalCurrentTime,
+    globalDuration
   });
   
   return (
@@ -60,6 +74,12 @@ const ModuleSection = React.memo(({
               status={enhancedStatus}
               isGloballyPlaying={isGloballyPlaying}
               onLessonClick={onLessonClick}
+              globalCurrentTime={globalCurrentTime}
+              globalDuration={globalDuration}
+              onSeek={onSeek}
+              onSkipBackward={onSkipBackward}
+              onSkipForward={onSkipForward}
+              onPlaybackRateChange={onPlaybackRateChange}
             />
           );
         })}

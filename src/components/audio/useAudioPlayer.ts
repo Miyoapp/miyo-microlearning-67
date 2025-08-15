@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Lesson } from '../../types';
 
@@ -17,6 +16,14 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgres
   const [volume, setVolume] = useState(0.7);
   const [playbackRate, setPlaybackRate] = useState(1);
   const audioRef = useRef<HTMLAudioElement>(null);
+  
+  console.log('🎵 useAudioPlayer - GLOBAL AUDIO CONTROLLER:', {
+    lessonTitle: lesson?.title || 'None',
+    isPlaying,
+    currentTime,
+    duration,
+    playbackRate
+  });
   
   // Reset player when lesson changes (WITHOUT playbackRate dependency)
   useEffect(() => {
@@ -57,7 +64,7 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgres
     const audio = audioRef.current;
     
     if (isPlaying) {
-      console.log("▶️ Playing audio for lesson:", lesson.title);
+      console.log("▶️ GLOBAL AUDIO: Playing audio for lesson:", lesson.title);
       const playPromise = audio.play();
       if (playPromise !== undefined) {
         playPromise.catch(error => {
@@ -66,7 +73,7 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgres
         });
       }
     } else {
-      console.log("⏸️ Pausing audio");
+      console.log("⏸️ GLOBAL AUDIO: Pausing audio");
       audio.pause();
     }
   }, [isPlaying, lesson?.id, onTogglePlay]);
@@ -103,6 +110,48 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgres
       onComplete();
     }
   }, [lesson, onComplete]);
+  
+  // Handle seek from lesson cards
+  const handleSeekFromCard = useCallback((value: number) => {
+    if (audioRef.current) {
+      console.log('🎯 GLOBAL AUDIO: Seek from card to position:', value);
+      setCurrentTime(value);
+      audioRef.current.currentTime = value;
+      
+      // Update progress when seeking for incomplete lessons
+      if (onProgressUpdate && duration > 0 && lesson && !lesson.isCompleted) {
+        const progressPercent = (value / duration) * 100;
+        console.log('🎯 Seek: Updating progress for incomplete lesson:', lesson.title, 'progress:', progressPercent.toFixed(1) + '%');
+        onProgressUpdate(progressPercent);
+      }
+    }
+  }, [duration, lesson, onProgressUpdate]);
+  
+  // Handle skip backward from lesson cards
+  const handleSkipBackwardFromCard = useCallback(() => {
+    if (audioRef.current) {
+      console.log('⏪ GLOBAL AUDIO: Skip backward from card');
+      const newTime = Math.max(0, audioRef.current.currentTime - 15);
+      audioRef.current.currentTime = newTime;
+      setCurrentTime(newTime);
+    }
+  }, []);
+  
+  // Handle skip forward from lesson cards
+  const handleSkipForwardFromCard = useCallback(() => {
+    if (audioRef.current) {
+      console.log('⏩ GLOBAL AUDIO: Skip forward from card');
+      const newTime = Math.min(duration, audioRef.current.currentTime + 15);
+      audioRef.current.currentTime = newTime;
+      setCurrentTime(newTime);
+    }
+  }, [duration]);
+  
+  // Handle playback rate change from lesson cards
+  const handlePlaybackRateChangeFromCard = useCallback((rate: number) => {
+    console.log("🎛️ GLOBAL AUDIO: Speed control from card - Changing playback rate to", rate + "x");
+    setPlaybackRate(rate);
+  }, []);
   
   // Handle seek
   const handleSeek = useCallback((value: number) => {
@@ -149,7 +198,12 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgres
     handlePlaybackRateChange,
     handleMetadata,
     updateTime,
-    handleAudioEnded
+    handleAudioEnded,
+    // NEW: Callbacks for lesson card controls
+    handleSeekFromCard,
+    handleSkipBackwardFromCard,
+    handleSkipForwardFromCard,
+    handlePlaybackRateChangeFromCard
   };
 };
 

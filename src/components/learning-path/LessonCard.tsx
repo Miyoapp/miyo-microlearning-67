@@ -17,17 +17,37 @@ interface LessonCardProps {
   };
   isGloballyPlaying: boolean;
   onLessonClick: (lesson: Lesson, shouldAutoPlay?: boolean) => void;
+  globalCurrentTime?: number;
+  globalDuration?: number;
+  onSeek?: (value: number) => void;
+  onSkipBackward?: () => void;
+  onSkipForward?: () => void;
+  onPlaybackRateChange?: (rate: number) => void;
 }
 
-const LessonCard = React.memo(({ lesson, index, status, isGloballyPlaying, onLessonClick }: LessonCardProps) => {
+const LessonCard = React.memo(({ 
+  lesson, 
+  index, 
+  status, 
+  isGloballyPlaying, 
+  onLessonClick,
+  globalCurrentTime = 0,
+  globalDuration = 0,
+  onSeek,
+  onSkipBackward,
+  onSkipForward,
+  onPlaybackRateChange
+}: LessonCardProps) => {
   const { isCompleted, isLocked, isCurrent, canPlay } = status;
   
-  console.log('🎯 LessonCard render:', {
+  console.log('🎯 LessonCard render (UI ONLY):', {
     lessonTitle: lesson.title,
     isCurrent,
     isGloballyPlaying,
     canPlay,
-    isCompleted
+    isCompleted,
+    globalCurrentTime,
+    globalDuration
   });
   
   const {
@@ -36,9 +56,6 @@ const LessonCard = React.memo(({ lesson, index, status, isGloballyPlaying, onLes
     duration,
     playbackRate,
     handlePlayPause,
-    handleSeek,
-    handleSkipBackward,
-    handleSkipForward,
     handlePlaybackRateChange,
     formatTime
   } = useLessonCard({
@@ -46,7 +63,9 @@ const LessonCard = React.memo(({ lesson, index, status, isGloballyPlaying, onLes
     canPlay,
     isCurrent,
     isGloballyPlaying,
-    onLessonClick
+    onLessonClick,
+    globalCurrentTime,
+    globalDuration
   });
 
   // Speed options for dropdown
@@ -55,6 +74,34 @@ const LessonCard = React.memo(({ lesson, index, status, isGloballyPlaying, onLes
 
   const validDuration = duration || (lesson.duracion * 60);
   const validCurrentTime = Math.min(currentTime, validDuration);
+
+  // Handle seek - delegate to global handler
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!isCurrent || !onSeek) return;
+    const value = parseFloat(e.target.value);
+    onSeek(value);
+  };
+
+  // Handle skip backward - delegate to global handler
+  const handleSkipBackwardClick = () => {
+    if (!isCurrent || !onSkipBackward) return;
+    onSkipBackward();
+  };
+
+  // Handle skip forward - delegate to global handler
+  const handleSkipForwardClick = () => {
+    if (!isCurrent || !onSkipForward) return;
+    onSkipForward();
+  };
+
+  // Handle playback rate change - delegate to global handler
+  const handleRateChange = (rate: number) => {
+    handlePlaybackRateChange(rate);
+    if (isCurrent && onPlaybackRateChange) {
+      onPlaybackRateChange(rate);
+    }
+    setShowSpeedDropdown(false);
+  };
 
   // Determine which icon to show in the status button
   const getStatusIcon = () => {
@@ -168,7 +215,7 @@ const LessonCard = React.memo(({ lesson, index, status, isGloballyPlaying, onLes
             <div className="flex items-center space-x-4">
               {/* Skip Backward */}
               <button
-                onClick={handleSkipBackward}
+                onClick={handleSkipBackwardClick}
                 className="p-1 text-gray-600 hover:text-[#5e16ea] transition-colors"
                 aria-label="Retroceder 15 segundos"
               >
@@ -177,7 +224,7 @@ const LessonCard = React.memo(({ lesson, index, status, isGloballyPlaying, onLes
 
               {/* Skip Forward */}
               <button
-                onClick={handleSkipForward}
+                onClick={handleSkipForwardClick}
                 className="p-1 text-gray-600 hover:text-[#5e16ea] transition-colors"
                 aria-label="Avanzar 15 segundos"
               >
@@ -200,10 +247,7 @@ const LessonCard = React.memo(({ lesson, index, status, isGloballyPlaying, onLes
                   {speeds.map(speed => (
                     <button
                       key={speed}
-                      onClick={() => {
-                        handlePlaybackRateChange(speed);
-                        setShowSpeedDropdown(false);
-                      }}
+                      onClick={() => handleRateChange(speed)}
                       className={cn(
                         "block w-full text-left px-3 py-1 text-xs",
                         speed === playbackRate 

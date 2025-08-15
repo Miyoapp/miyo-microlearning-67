@@ -1,4 +1,3 @@
-
 import { Lesson } from '../types';
 import LessonInfo from './audio/LessonInfo';
 import AudioControls from './audio/AudioControls';
@@ -13,9 +12,25 @@ interface AudioPlayerProps {
   onTogglePlay: () => void;
   onComplete: () => void;
   onProgressUpdate?: (position: number) => void;
+  onAudioDataUpdate?: (currentTime: number, duration: number) => void;
+  onSeekRequest?: (handler: (value: number) => void) => void;
+  onSkipBackwardRequest?: (handler: () => void) => void;
+  onSkipForwardRequest?: (handler: () => void) => void;
+  onPlaybackRateRequest?: (handler: (rate: number) => void) => void;
 }
 
-const AudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgressUpdate }: AudioPlayerProps) => {
+const AudioPlayer = ({ 
+  lesson, 
+  isPlaying, 
+  onTogglePlay, 
+  onComplete, 
+  onProgressUpdate,
+  onAudioDataUpdate,
+  onSeekRequest,
+  onSkipBackwardRequest,
+  onSkipForwardRequest,
+  onPlaybackRateRequest
+}: AudioPlayerProps) => {
   const {
     audioRef,
     currentTime,
@@ -29,8 +44,44 @@ const AudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgressUp
     handlePlaybackRateChange,
     handleMetadata,
     updateTime,
-    handleAudioEnded
+    handleAudioEnded,
+    handleSeekFromCard,
+    handleSkipBackwardFromCard,
+    handleSkipForwardFromCard,
+    handlePlaybackRateChangeFromCard
   } = useAudioPlayer({ lesson, isPlaying, onTogglePlay, onComplete, onProgressUpdate });
+  
+  // Expose audio data to parent components
+  React.useEffect(() => {
+    if (onAudioDataUpdate) {
+      onAudioDataUpdate(currentTime, duration);
+    }
+  }, [currentTime, duration, onAudioDataUpdate]);
+  
+  // Expose control handlers to parent components
+  React.useEffect(() => {
+    if (onSeekRequest) {
+      onSeekRequest(handleSeekFromCard);
+    }
+  }, [onSeekRequest, handleSeekFromCard]);
+  
+  React.useEffect(() => {
+    if (onSkipBackwardRequest) {
+      onSkipBackwardRequest(handleSkipBackwardFromCard);
+    }
+  }, [onSkipBackwardRequest, handleSkipBackwardFromCard]);
+  
+  React.useEffect(() => {
+    if (onSkipForwardRequest) {
+      onSkipForwardRequest(handleSkipForwardFromCard);
+    }
+  }, [onSkipForwardRequest, handleSkipForwardFromCard]);
+  
+  React.useEffect(() => {
+    if (onPlaybackRateRequest) {
+      onPlaybackRateRequest(handlePlaybackRateChangeFromCard);
+    }
+  }, [onPlaybackRateRequest, handlePlaybackRateChangeFromCard]);
   
   // If no lesson is selected, don't render the player
   if (!lesson) {
@@ -38,7 +89,7 @@ const AudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgressUp
     return null;
   }
   
-  console.log('🎵 Rendering AudioPlayer for lesson:', lesson.title, 'isPlaying:', isPlaying);
+  console.log('🎵 GLOBAL AudioPlayer render for lesson:', lesson.title, 'isPlaying:', isPlaying, 'currentTime:', currentTime, 'duration:', duration);
   
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white shadow-player z-40 transition-transform duration-150 animate-slide-up">
