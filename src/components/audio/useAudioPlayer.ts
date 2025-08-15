@@ -18,6 +18,13 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgres
   const [playbackRate, setPlaybackRate] = useState(1);
   const audioRef = useRef<HTMLAudioElement>(null);
   
+  console.log('🎵 useAudioPlayer props received:', {
+    hasLesson: !!lesson,
+    lessonTitle: lesson?.title,
+    isPlaying,
+    timestamp: new Date().toLocaleTimeString()
+  });
+  
   // Reset player when lesson changes (WITHOUT playbackRate dependency)
   useEffect(() => {
     if (lesson && audioRef.current) {
@@ -56,17 +63,29 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgres
     
     const audio = audioRef.current;
     
+    console.log('🎵 isPlaying state changed:', {
+      lessonTitle: lesson.title,
+      isPlaying,
+      audioSrc: audio.src,
+      audioPaused: audio.paused,
+      timestamp: new Date().toLocaleTimeString()
+    });
+    
     if (isPlaying) {
-      console.log("▶️ Playing audio for lesson:", lesson.title);
+      console.log("▶️ STARTING PLAYBACK for lesson:", lesson.title);
       const playPromise = audio.play();
       if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          console.error("❌ Audio playback failed:", error);
-          onTogglePlay();
-        });
+        playPromise
+          .then(() => {
+            console.log("✅ Audio playback started successfully");
+          })
+          .catch(error => {
+            console.error("❌ Audio playback failed:", error);
+            onTogglePlay();
+          });
       }
     } else {
-      console.log("⏸️ Pausing audio");
+      console.log("⏸️ PAUSING AUDIO");
       audio.pause();
     }
   }, [isPlaying, lesson?.id, onTogglePlay]);
@@ -107,6 +126,7 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgres
   // Handle seek
   const handleSeek = useCallback((value: number) => {
     if (audioRef.current) {
+      console.log("🎯 Seek to:", value, "for lesson:", lesson?.title);
       setCurrentTime(value);
       audioRef.current.currentTime = value;
       

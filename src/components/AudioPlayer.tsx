@@ -16,6 +16,13 @@ interface AudioPlayerProps {
 }
 
 const AudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgressUpdate }: AudioPlayerProps) => {
+  console.log('🎵 AudioPlayer render with props:', {
+    hasLesson: !!lesson,
+    lessonTitle: lesson?.title,
+    isPlaying,
+    timestamp: new Date().toLocaleTimeString()
+  });
+
   const {
     audioRef,
     currentTime,
