@@ -18,10 +18,20 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgres
   const [playbackRate, setPlaybackRate] = useState(1);
   const audioRef = useRef<HTMLAudioElement>(null);
   
+  // DEBUGGING: Log when props change
+  useEffect(() => {
+    console.log('🎵🎵🎵 useAudioPlayer - Props changed:', {
+      lessonTitle: lesson?.title || 'NO LESSON',
+      isPlaying,
+      hasAudioRef: !!audioRef.current,
+      timestamp: new Date().toLocaleTimeString()
+    });
+  }, [lesson?.id, isPlaying]);
+  
   // Reset player when lesson changes (WITHOUT playbackRate dependency)
   useEffect(() => {
     if (lesson && audioRef.current) {
-      console.log("🎵 Lesson changed to:", lesson.title, "isCompleted:", lesson.isCompleted);
+      console.log("🎵 AUDIO RESET - Lesson changed to:", lesson.title, "isCompleted:", lesson.isCompleted);
       setCurrentTime(0);
       setDuration(0);
       
@@ -29,6 +39,7 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgres
       audio.currentTime = 0;
       audio.load();
       
+      console.log("🎵 AUDIO RESET - Setting initial properties");
       // Set initial properties (volume and existing playback rate)
       audio.volume = isMuted ? 0 : volume;
       audio.playbackRate = playbackRate; // Use current playbackRate, don't reset it
@@ -38,7 +49,7 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgres
   // Handle playback rate changes separately (WITHOUT restarting audio)
   useEffect(() => {
     if (audioRef.current) {
-      console.log("🏃‍♂️ Updating playback rate to:", playbackRate + "x");
+      console.log("🏃‍♂️ PLAYBACK RATE - Updating to:", playbackRate + "x");
       audioRef.current.playbackRate = playbackRate;
     }
   }, [playbackRate]);
@@ -46,28 +57,53 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgres
   // Handle volume and mute changes separately
   useEffect(() => {
     if (audioRef.current) {
+      console.log("🔊 VOLUME - Updating to:", isMuted ? 'MUTED' : volume);
       audioRef.current.volume = isMuted ? 0 : volume;
     }
   }, [volume, isMuted]);
   
-  // Handle play/pause when isPlaying state changes
+  // CRITICAL: Handle play/pause when isPlaying state changes
   useEffect(() => {
-    if (!audioRef.current || !lesson) return;
+    if (!audioRef.current || !lesson) {
+      console.log("❌ PLAY/PAUSE - Missing audio ref or lesson:", { hasAudio: !!audioRef.current, hasLesson: !!lesson });
+      return;
+    }
     
     const audio = audioRef.current;
     
+    console.log("🎮🎮🎮 PLAY/PAUSE EFFECT - isPlaying changed to:", isPlaying, "for lesson:", lesson.title);
+    
     if (isPlaying) {
-      console.log("▶️ Playing audio for lesson:", lesson.title);
+      console.log("▶️▶️▶️ ATTEMPTING TO PLAY audio for lesson:", lesson.title);
+      console.log("🎵 Audio element state:", {
+        src: audio.src,
+        readyState: audio.readyState,
+        paused: audio.paused,
+        currentTime: audio.currentTime,
+        duration: audio.duration
+      });
+      
       const playPromise = audio.play();
       if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          console.error("❌ Audio playback failed:", error);
-          onTogglePlay();
-        });
+        playPromise
+          .then(() => {
+            console.log("✅✅✅ AUDIO PLAYBACK STARTED successfully for:", lesson.title);
+          })
+          .catch(error => {
+            console.error("❌❌❌ AUDIO PLAYBACK FAILED:", error);
+            console.error("❌ Audio element details:", {
+              src: audio.src,
+              readyState: audio.readyState,
+              networkState: audio.networkState,
+              error: audio.error
+            });
+            onTogglePlay(); // Reset the playing state
+          });
       }
     } else {
-      console.log("⏸️ Pausing audio");
+      console.log("⏸️⏸️⏸️ PAUSING audio for lesson:", lesson.title);
       audio.pause();
+      console.log("✅ Audio paused successfully");
     }
   }, [isPlaying, lesson?.id, onTogglePlay]);
   
@@ -80,7 +116,7 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgres
       // Only update progress for incomplete lessons
       if (onProgressUpdate && lesson && !lesson.isCompleted) {
         const progressPercent = (newCurrentTime / duration) * 100;
-        console.log('📊 Updating progress for incomplete lesson:', lesson.title, 'progress:', progressPercent.toFixed(1) + '%');
+        console.log('📊 Progress update for incomplete lesson:', lesson.title, 'progress:', progressPercent.toFixed(1) + '%');
         onProgressUpdate(progressPercent);
       }
     }
@@ -90,15 +126,15 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgres
   const handleMetadata = useCallback(() => {
     if (audioRef.current) {
       const newDuration = audioRef.current.duration;
-      console.log("📋 Audio metadata loaded, duration:", newDuration);
+      console.log("📋📋📋 METADATA LOADED - duration:", newDuration, "for lesson:", lesson?.title);
       setDuration(newDuration);
     }
-  }, []);
+  }, [lesson?.title]);
   
   // Handle audio ended
   const handleAudioEnded = useCallback(() => {
     if (lesson) {
-      console.log("🏁 Audio ended for lesson:", lesson.title);
+      console.log("🏁🏁🏁 AUDIO ENDED for lesson:", lesson.title);
       setCurrentTime(0);
       onComplete();
     }
@@ -107,13 +143,14 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgres
   // Handle seek
   const handleSeek = useCallback((value: number) => {
     if (audioRef.current) {
+      console.log("🎯 SEEK to:", value, "seconds");
       setCurrentTime(value);
       audioRef.current.currentTime = value;
       
       // Update progress when seeking for incomplete lessons
       if (onProgressUpdate && duration > 0 && lesson && !lesson.isCompleted) {
         const progressPercent = (value / duration) * 100;
-        console.log('🎯 Seek: Updating progress for incomplete lesson:', lesson.title, 'progress:', progressPercent.toFixed(1) + '%');
+        console.log('🎯 Seek progress update for incomplete lesson:', lesson.title, 'progress:', progressPercent.toFixed(1) + '%');
         onProgressUpdate(progressPercent);
       }
     }
@@ -122,13 +159,15 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgres
   // Handle volume change
   const handleVolumeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseFloat(e.target.value);
+    console.log("🔊 Volume change to:", value);
     setVolume(value);
     setIsMuted(value === 0);
   }, []);
   
   const toggleMute = useCallback(() => {
+    console.log("🔇 Toggle mute - current:", isMuted);
     setIsMuted(prev => !prev);
-  }, []);
+  }, [isMuted]);
   
   // Handle playback rate change
   const handlePlaybackRateChange = useCallback((rate: number) => {

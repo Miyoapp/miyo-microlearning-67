@@ -1,5 +1,5 @@
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
 import { Lesson } from '@/types';
 
 interface UseLessonCardProps {
@@ -17,122 +17,45 @@ export function useLessonCard({
   isGloballyPlaying,
   onLessonClick 
 }: UseLessonCardProps) {
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [playbackRate, setPlaybackRate] = useState(1);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  console.log('🎵 useLessonCard:', {
+  
+  console.log('🎯🎯🎯 useLessonCard hook:', {
     lessonTitle: lesson.title,
     canPlay,
     isCurrent,
     isGloballyPlaying,
-    hasAudio: !!audioRef.current
+    timestamp: new Date().toLocaleTimeString()
   });
 
-  // Create audio element for this lesson
-  useEffect(() => {
-    if (canPlay && lesson.urlAudio) {
-      console.log('🎵 Creating audio element for:', lesson.title);
-      const audio = new Audio(lesson.urlAudio);
-      audio.preload = 'metadata';
-      audio.playbackRate = playbackRate;
-      
-      // Set up event listeners
-      audio.addEventListener('loadedmetadata', () => {
-        console.log('🎵 Audio metadata loaded for:', lesson.title, 'duration:', audio.duration);
-        setDuration(audio.duration);
-      });
-
-      audio.addEventListener('timeupdate', () => {
-        setCurrentTime(audio.currentTime);
-      });
-
-      audio.addEventListener('ended', () => {
-        console.log('🎵 Audio ended for:', lesson.title);
-        setCurrentTime(0);
-        // Trigger lesson completion through global handler
-        onLessonClick(lesson, false);
-      });
-
-      audioRef.current = audio;
-
-      return () => {
-        console.log('🎵 Cleaning up audio for:', lesson.title);
-        audio.pause();
-        audio.removeEventListener('loadedmetadata', () => {});
-        audio.removeEventListener('timeupdate', () => {});
-        audio.removeEventListener('ended', () => {});
-        audioRef.current = null;
-      };
-    }
-  }, [lesson.urlAudio, canPlay, playbackRate, onLessonClick, lesson]);
-
-  // Handle play/pause when this lesson becomes current and global state changes
-  useEffect(() => {
-    if (audioRef.current && isCurrent) {
-      console.log('🎵 Global playback state changed for current lesson:', lesson.title, 'playing:', isGloballyPlaying);
-      if (isGloballyPlaying) {
-        audioRef.current.play().catch(console.error);
-      } else {
-        audioRef.current.pause();
-      }
-    } else if (audioRef.current && !isCurrent) {
-      // Ensure non-current lessons are paused
-      audioRef.current.pause();
-    }
-  }, [isCurrent, isGloballyPlaying, lesson.title]);
-
+  // SIMPLIFIED: Only handle the play/pause button logic
   const handlePlayPause = useCallback(() => {
-    console.log('🎵 handlePlayPause clicked for:', lesson.title, { canPlay, isCurrent, isGloballyPlaying });
+    console.log('🎵🎵🎵 LessonCard PLAY/PAUSE clicked:', {
+      lessonTitle: lesson.title,
+      canPlay,
+      isCurrent,
+      isGloballyPlaying,
+      action: !canPlay ? 'BLOCKED' : !isCurrent ? 'SELECT_AND_PLAY' : isGloballyPlaying ? 'PAUSE' : 'PLAY'
+    });
     
     if (!canPlay) {
-      console.log('🚫 Cannot play lesson:', lesson.title);
+      console.log('🚫 Cannot play lesson (locked):', lesson.title);
       return;
     }
 
     if (!isCurrent) {
       // If this lesson is not current, select it first (with auto-play)
-      console.log('🎯 Selecting non-current lesson:', lesson.title);
+      console.log('🎯🎯🎯 SELECTING non-current lesson with AUTO-PLAY:', lesson.title);
       onLessonClick(lesson, true);
       return;
     }
 
     // If this is the current lesson, toggle play/pause through global handler
-    console.log('🎵 Toggling current lesson:', lesson.title);
+    console.log('🎵🎵🎵 TOGGLING current lesson play state:', lesson.title, 'from', isGloballyPlaying, 'to', !isGloballyPlaying);
     onLessonClick(lesson, !isGloballyPlaying);
   }, [canPlay, isCurrent, isGloballyPlaying, onLessonClick, lesson]);
 
-  const handleSeek = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!audioRef.current) return;
-    
-    const value = parseFloat(e.target.value);
-    setCurrentTime(value);
-    audioRef.current.currentTime = value;
-  }, []);
-
-  const handleSkipBackward = useCallback(() => {
-    if (!audioRef.current) return;
-    
-    const newTime = Math.max(0, audioRef.current.currentTime - 15);
-    audioRef.current.currentTime = newTime;
-    setCurrentTime(newTime);
-  }, []);
-
-  const handleSkipForward = useCallback(() => {
-    if (!audioRef.current) return;
-    
-    const newTime = Math.min(duration, audioRef.current.currentTime + 15);
-    audioRef.current.currentTime = newTime;
-    setCurrentTime(newTime);
-  }, [duration]);
-
-  const handlePlaybackRateChange = useCallback((rate: number) => {
-    setPlaybackRate(rate);
-    if (audioRef.current) {
-      audioRef.current.playbackRate = rate;
-    }
-  }, []);
+  // REMOVED: All local audio handling - we only use global state now
+  // No local audio element, no seek handling, no skip functions
+  // All audio control is handled by the global AudioPlayer
 
   const formatTime = useCallback((seconds: number) => {
     if (!seconds || isNaN(seconds)) return '0:00';
@@ -142,17 +65,18 @@ export function useLessonCard({
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   }, []);
 
+  // Calculate duration from lesson data
+  const duration = lesson.duracion * 60; // Convert minutes to seconds
+  
   return {
     // Use global state for playing status
     isPlaying: isCurrent && isGloballyPlaying,
-    currentTime,
+    currentTime: 0, // We don't track individual progress in cards anymore
     duration,
-    playbackRate,
+    playbackRate: 1, // Default rate, actual rate controlled by global player
     handlePlayPause,
-    handleSeek,
-    handleSkipBackward,
-    handleSkipForward,
-    handlePlaybackRateChange,
+    // REMOVED: handleSeek, handleSkipBackward, handleSkipForward, handlePlaybackRateChange
+    // These are now only available in the global AudioPlayer
     formatTime
   };
 }
