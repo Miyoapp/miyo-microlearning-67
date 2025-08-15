@@ -71,20 +71,6 @@ const LessonCard = React.memo(({ lesson, index, status, isGloballyPlaying, onLes
     return <Play size={16} fill="white" />;
   };
 
-  // Click handler with detailed logging
-  const handleClick = () => {
-    console.log('🔘 LessonCard CLICK for:', lesson.title, {
-      canPlay,
-      isCompleted,
-      isLocked,
-      isCurrent,
-      isGloballyPlaying,
-      willAutoPlay: !isCurrent || !isGloballyPlaying
-    });
-    
-    handlePlayPause();
-  };
-
   return (
     <div className={cn(
       "bg-white rounded-lg border shadow-sm p-4 transition-all duration-200",
@@ -102,7 +88,7 @@ const LessonCard = React.memo(({ lesson, index, status, isGloballyPlaying, onLes
         <div className="flex items-center space-x-3">
           {/* Functional Status/Play Button */}
           <button
-            onClick={handleClick}
+            onClick={handlePlayPause}
             disabled={!canPlay}
             className={cn(
               "flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200",
