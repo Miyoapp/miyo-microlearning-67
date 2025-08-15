@@ -46,6 +46,21 @@ const LessonCard = React.memo(({ lesson, index, status, onLessonClick }: LessonC
   const validDuration = duration || (lesson.duracion * 60);
   const validCurrentTime = Math.min(currentTime, validDuration);
 
+  // Determine which icon to show in the status button
+  const getStatusIcon = () => {
+    if (isCompleted) {
+      return <Trophy size={16} />;
+    }
+    if (!canPlay) {
+      return <Lock size={16} />;
+    }
+    // For playable lessons, show play/pause based on current state
+    if (isCurrent && isPlaying) {
+      return <Pause size={16} />;
+    }
+    return <Play size={16} fill="white" />;
+  };
+
   return (
     <div className={cn(
       "bg-white rounded-lg border shadow-sm p-4 transition-all duration-200",
@@ -61,23 +76,31 @@ const LessonCard = React.memo(({ lesson, index, status, onLessonClick }: LessonC
       {/* Header with title and status */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-3">
-          {/* Status Icon */}
-          <div className={cn(
-            "flex items-center justify-center w-8 h-8 rounded-full",
-            {
-              "bg-yellow-500 text-white": isCompleted,
-              "bg-[#5e16ea] text-white": !isCompleted && canPlay,
-              "bg-gray-300 text-gray-500": !canPlay
-            }
-          )}>
-            {isCompleted ? (
-              <Trophy size={16} />
-            ) : canPlay ? (
-              <Play size={16} fill="white" />
-            ) : (
-              <Lock size={16} />
+          {/* Functional Status/Play Button */}
+          <button
+            onClick={handlePlayPause}
+            disabled={!canPlay}
+            className={cn(
+              "flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200",
+              {
+                "bg-yellow-500 text-white hover:bg-yellow-600": isCompleted,
+                "bg-[#5e16ea] text-white hover:bg-[#4a11ba]": !isCompleted && canPlay,
+                "bg-gray-300 text-gray-500 cursor-not-allowed": !canPlay,
+                "hover:scale-105": canPlay
+              }
             )}
-          </div>
+            aria-label={
+              isCompleted 
+                ? "Reproducir lección completada" 
+                : !canPlay 
+                  ? "Lección bloqueada" 
+                  : isPlaying 
+                    ? "Pausar" 
+                    : "Reproducir"
+            }
+          >
+            {getStatusIcon()}
+          </button>
           
           {/* Title */}
           <div>
@@ -130,9 +153,9 @@ const LessonCard = React.memo(({ lesson, index, status, onLessonClick }: LessonC
             />
           </div>
 
-          {/* Control Buttons */}
+          {/* Control Buttons - Only skip and speed controls */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-4">
               {/* Skip Backward */}
               <button
                 onClick={handleSkipBackward}
@@ -140,15 +163,6 @@ const LessonCard = React.memo(({ lesson, index, status, onLessonClick }: LessonC
                 aria-label="Retroceder 15 segundos"
               >
                 <SkipBack size={16} />
-              </button>
-
-              {/* Play/Pause */}
-              <button
-                onClick={handlePlayPause}
-                className="w-8 h-8 bg-[#5e16ea] rounded-full flex items-center justify-center text-white hover:bg-[#4a11ba] transition-colors"
-                aria-label={isPlaying ? "Pausar" : "Reproducir"}
-              >
-                {isPlaying ? <Pause size={14} /> : <Play size={14} className="ml-0.5" />}
               </button>
 
               {/* Skip Forward */}
