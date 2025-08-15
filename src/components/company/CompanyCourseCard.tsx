@@ -12,7 +12,7 @@ interface CompanyCourseCardProps {
 
 const CompanyCourseCard = ({ podcast }: CompanyCourseCardProps) => {
   return (
-    <Link to={`/company/course/${podcast.id}`} className="block h-full">
+    <Link to={`/dashboard/course/${podcast.id}`} className="block h-full">
       <Card className="overflow-hidden transition-all duration-300 w-full h-full hover:shadow-lg hover:-translate-y-1 flex flex-col group">
         <div className="aspect-[4/3] relative overflow-hidden flex-shrink-0">
           <img 
