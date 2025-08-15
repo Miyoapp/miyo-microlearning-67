@@ -1,7 +1,6 @@
 
 import { Lesson, SupabaseLeccion } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
-import { podcasts } from "@/data/podcasts";
 
 /**
  * Obtiene las lecciones para un curso específico
@@ -17,14 +16,7 @@ export const obtenerLecciones = async (cursoId: string): Promise<Lesson[]> => {
       .eq('curso_id', cursoId);
       
     if (errorModulos || !modulosData || modulosData.length === 0) {
-      console.warn(`No se encontraron módulos para obtener lecciones del curso ${cursoId}, usando datos de muestra.`);
-      
-      // Usar datos de muestra como fallback
-      const podcastMuestra = podcasts.find(p => p.id === cursoId);
-      if (podcastMuestra) {
-        return podcastMuestra.lessons;
-      }
-      
+      console.warn(`No se encontraron módulos para obtener lecciones del curso ${cursoId}`);
       return [];
     }
     
@@ -43,14 +35,7 @@ export const obtenerLecciones = async (cursoId: string): Promise<Lesson[]> => {
     }
     
     if (!leccionesData || leccionesData.length === 0) {
-      console.warn(`No se encontraron lecciones para el curso ${cursoId}, usando datos de muestra.`);
-      
-      // Usar datos de muestra como fallback
-      const podcastMuestra = podcasts.find(p => p.id === cursoId);
-      if (podcastMuestra) {
-        return podcastMuestra.lessons;
-      }
-      
+      console.warn(`No se encontraron lecciones para el curso ${cursoId}`);
       return [];
     }
     
@@ -76,13 +61,6 @@ export const obtenerLecciones = async (cursoId: string): Promise<Lesson[]> => {
     return lecciones;
   } catch (error) {
     console.error(`Error al obtener lecciones para curso ${cursoId}:`, error);
-    
-    // Usar datos de muestra como fallback
-    const podcastMuestra = podcasts.find(p => p.id === cursoId);
-    if (podcastMuestra) {
-      return podcastMuestra.lessons;
-    }
-    
     return [];
   }
 };

@@ -1,7 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Creator } from "@/types";
-import { podcasts } from "@/data/podcasts";
 
 /**
  * Obtiene el creador para un curso específico
@@ -13,7 +12,7 @@ export const obtenerCreador = async (creadorId: string, cursoId?: string): Promi
     // Verificar si el ID del creador es válido
     if (!creadorId || creadorId === 'unknown') {
       console.warn("ID de creador no válido:", creadorId);
-      return buscarCreadorEnDatosDeMuestra(cursoId) || crearCreadorPorDefecto(creadorId);
+      return crearCreadorPorDefecto(creadorId);
     }
     
     const { data: creadorData, error: creadorError } = await supabase
@@ -24,12 +23,12 @@ export const obtenerCreador = async (creadorId: string, cursoId?: string): Promi
       
     if (creadorError) {
       console.error("Error al obtener creador de Supabase:", creadorError);
-      return buscarCreadorEnDatosDeMuestra(cursoId) || crearCreadorPorDefecto(creadorId);
+      return crearCreadorPorDefecto(creadorId);
     }
     
     if (!creadorData) {
       console.warn(`No se encontró el creador con ID: ${creadorId} en la base de datos`);
-      return buscarCreadorEnDatosDeMuestra(cursoId) || crearCreadorPorDefecto(creadorId);
+      return crearCreadorPorDefecto(creadorId);
     }
     
     console.log("Datos de creador obtenidos correctamente:", creadorData.nombre);
@@ -59,23 +58,8 @@ export const obtenerCreador = async (creadorId: string, cursoId?: string): Promi
     };
   } catch (error) {
     console.error("Error al procesar creador:", error);
-    return buscarCreadorEnDatosDeMuestra(cursoId) || crearCreadorPorDefecto(creadorId);
+    return crearCreadorPorDefecto(creadorId);
   }
-};
-
-/**
- * Busca un creador en los datos de muestra para un curso específico
- */
-const buscarCreadorEnDatosDeMuestra = (cursoId?: string): Creator | null => {
-  if (!cursoId) return null;
-  
-  const sampleCourse = podcasts.find(p => p.id === cursoId);
-  if (sampleCourse) {
-    console.log("Usando datos de creador de la muestra para curso ID:", cursoId);
-    return sampleCourse.creator;
-  }
-  
-  return null;
 };
 
 /**

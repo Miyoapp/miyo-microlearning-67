@@ -1,11 +1,9 @@
 
-
 import { Podcast, SupabaseCurso } from "@/types";
 import { obtenerCategoria } from "./categoryTransformer";
 import { obtenerCreador } from "./creatorTransformer";
 import { obtenerModulos } from "./moduleTransformer";
 import { obtenerLecciones } from "./lessonTransformer";
-import { podcasts } from "@/data/podcasts";
 
 /**
  * Transforma un curso de Supabase al modelo de la aplicación
@@ -46,13 +44,6 @@ export const transformarCursoAModelo = async (curso: SupabaseCurso): Promise<Pod
     };
   } catch (error) {
     console.error(`Error al transformar curso ${curso.id}:`, error);
-    
-    // Intentar encontrar un podcast de muestra con el mismo ID
-    const podcastMuestra = podcasts.find(p => p.id === curso.id);
-    if (podcastMuestra) {
-      console.log(`Usando datos de muestra para curso ${curso.id}`);
-      return podcastMuestra;
-    }
     
     // Si no se encuentra, crear un objeto con los datos disponibles
     console.log(`Creando objeto Podcast mínimo para curso ${curso.id}`);

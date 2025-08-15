@@ -1,7 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { CategoryModel, SupabaseCategoria } from "@/types";
-import { podcasts } from "@/data/podcasts"; // Import sample data as fallback
 
 // Función para obtener todas las categorías
 export const obtenerCategorias = async (): Promise<CategoryModel[]> => {
@@ -13,19 +12,12 @@ export const obtenerCategorias = async (): Promise<CategoryModel[]> => {
       
     if (error) {
       console.error("Error al obtener categorías:", error);
-      console.log("Utilizando datos de muestra para categorías");
-      // Return categories from sample data
-      return podcasts.map(podcast => podcast.category).filter((category, index, self) => 
-        index === self.findIndex(c => c.id === category.id)
-      );
+      throw error;
     }
     
     if (!data || data.length === 0) {
-      console.warn("No se encontraron categorías en la base de datos, utilizando datos de muestra");
-      // Return categories from sample data
-      return podcasts.map(podcast => podcast.category).filter((category, index, self) => 
-        index === self.findIndex(c => c.id === category.id)
-      );
+      console.warn("No se encontraron categorías en la base de datos");
+      return [];
     }
     
     return data.map((cat: SupabaseCategoria) => ({
@@ -33,10 +25,7 @@ export const obtenerCategorias = async (): Promise<CategoryModel[]> => {
       nombre: cat.nombre
     }));
   } catch (error) {
-    console.error("Error al obtener categorías, usando datos de muestra:", error);
-    // Return categories from sample data as fallback
-    return podcasts.map(podcast => podcast.category).filter((category, index, self) => 
-      index === self.findIndex(c => c.id === category.id)
-    );
+    console.error("Error al obtener categorías:", error);
+    throw error;
   }
 };

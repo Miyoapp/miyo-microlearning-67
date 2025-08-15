@@ -1,7 +1,6 @@
 
 import { Module, SupabaseModulo } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
-import { podcasts } from "@/data/podcasts";
 
 /**
  * Obtiene los módulos para un curso específico
@@ -23,14 +22,7 @@ export const obtenerModulos = async (cursoId: string): Promise<Module[]> => {
     }
     
     if (!modulosData || modulosData.length === 0) {
-      console.warn(`No se encontraron módulos para el curso ${cursoId}, usando datos de muestra.`);
-      
-      // Usar datos de muestra como fallback
-      const podcastMuestra = podcasts.find(p => p.id === cursoId);
-      if (podcastMuestra) {
-        return podcastMuestra.modules;
-      }
-      
+      console.warn(`No se encontraron módulos para el curso ${cursoId}`);
       return [];
     }
     
@@ -65,13 +57,6 @@ export const obtenerModulos = async (cursoId: string): Promise<Module[]> => {
     return Promise.all(modulosPromesas);
   } catch (error) {
     console.error(`Error al obtener módulos para curso ${cursoId}:`, error);
-    
-    // Usar datos de muestra como fallback
-    const podcastMuestra = podcasts.find(p => p.id === cursoId);
-    if (podcastMuestra) {
-      return podcastMuestra.modules;
-    }
-    
     return [];
   }
 };

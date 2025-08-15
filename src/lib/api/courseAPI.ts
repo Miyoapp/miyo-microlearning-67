@@ -1,7 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Podcast, SupabaseCurso } from "@/types";
-import { podcasts } from "@/data/podcasts"; // Import sample data as fallback
 import { transformarCursoAModelo } from './transformers';
 
 // Función para obtener todos los cursos (solo los visibles)
@@ -14,13 +13,13 @@ export const obtenerCursos = async (): Promise<Podcast[]> => {
       .eq('show', true); // Filtrar solo cursos visibles
       
     if (error) {
-      console.error("❌ Error fetching courses, using sample data:", error);
-      return podcasts; // Devolver datos de muestra en caso de error
+      console.error("❌ Error fetching courses:", error);
+      throw error;
     }
     
     if (!data || data.length === 0) {
-      console.warn("⚠️ No visible courses found in database, using sample data");
-      return podcasts; // Devolver datos de muestra si no hay cursos
+      console.warn("⚠️ No visible courses found in database");
+      return [];
     }
     
     console.log(`✅ Found ${data.length} visible courses in database`);
@@ -50,8 +49,8 @@ export const obtenerCursos = async (): Promise<Podcast[]> => {
     });
     return Promise.all(promesas);
   } catch (error) {
-    console.error("❌ Error fetching courses, using sample data:", error);
-    return podcasts; // Devolver datos de muestra en caso de error
+    console.error("❌ Error fetching courses:", error);
+    throw error;
   }
 };
 
@@ -66,30 +65,12 @@ export const obtenerCursoPorId = async (id: string): Promise<Podcast | null> => 
       .maybeSingle(); // Usar maybeSingle en lugar de single para evitar errores
       
     if (error) {
-      if (error.code === 'PGRST116') {
-        // No se encontró el curso, intentar buscar en los datos de muestra
-        console.warn(`⚠️ [courseAPI] Course not found in database, searching in sample data for ID: ${id}`);
-        const podcastMuestra = podcasts.find(p => p.id === id);
-        if (podcastMuestra) {
-          console.log(`✅ [courseAPI] Found course in sample data: ${podcastMuestra.title}`);
-          return podcastMuestra;
-        }
-        console.log(`❌ [courseAPI] Course not found in sample data either: ${id}`);
-        throw new Error(`Curso no encontrado: ${id}`);
-      }
       console.error("❌ [courseAPI] Database error fetching course:", error);
       throw new Error(`Error de base de datos: ${error.message}`);
     }
     
     if (!data) {
-      // No se encontró el curso, intentar buscar en los datos de muestra
-      console.warn(`⚠️ [courseAPI] Course not found in database, searching in sample data for ID: ${id}`);
-      const podcastMuestra = podcasts.find(p => p.id === id);
-      if (podcastMuestra) {
-        console.log(`✅ [courseAPI] Found course in sample data: ${podcastMuestra.title}`);
-        return podcastMuestra;
-      }
-      console.log(`❌ [courseAPI] Course not found anywhere: ${id}`);
+      console.log(`❌ [courseAPI] Course not found: ${id}`);
       throw new Error(`Curso no encontrado: ${id}`);
     }
     
@@ -120,15 +101,6 @@ export const obtenerCursoPorId = async (id: string): Promise<Podcast | null> => 
     return transformedCourse;
   } catch (error) {
     console.error(`❌ [courseAPI] Error fetching course ${id}:`, error);
-    
-    // Final fallback: try sample data
-    const podcastMuestra = podcasts.find(p => p.id === id);
-    if (podcastMuestra) {
-      console.log(`✅ [courseAPI] Found course in sample data as final fallback: ${podcastMuestra.title}`);
-      return podcastMuestra;
-    }
-    
-    // If we get here, the course truly doesn't exist
     throw error instanceof Error ? error : new Error(`Error desconocido al cargar curso: ${id}`);
   }
 };

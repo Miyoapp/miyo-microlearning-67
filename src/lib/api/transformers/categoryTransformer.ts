@@ -1,7 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { CategoryModel } from "@/types";
-import { podcasts } from "@/data/podcasts";
 
 /**
  * Obtiene la categoría para un curso específico
@@ -16,15 +15,6 @@ export const obtenerCategoria = async (categoriaId: string): Promise<CategoryMod
       
     if (categoriaError || !categoriaData) {
       console.warn("Error al obtener categoría, usando valor por defecto:", categoriaError);
-      
-      // Buscar la categoría en datos de muestra
-      const sampleCategory = podcasts
-        .map(p => p.category)
-        .find(c => c.id === categoriaId);
-      
-      if (sampleCategory) {
-        return sampleCategory;
-      }
       
       // Categoría por defecto si no se encuentra
       return {
