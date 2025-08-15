@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import Header from '../components/Header';
 import AudioPlayer from '../components/AudioPlayer';
 import CourseHero from '../components/course/CourseHero';
-import CompanyCourseContent from '../components/company/CompanyCourseContent';
+import CourseContent from '../components/course/CourseContent';
 import CourseFooter from '../components/course/CourseFooter';
 import CourseLoading from '../components/course/CourseLoading';
 import CourseNotFound from '../components/course/CourseNotFound';
@@ -69,7 +69,7 @@ const CompanyCourse = () => {
     <div className="min-h-screen bg-gray-50 pb-24">
       <Header />
       <CourseHero podcast={podcast} />
-      <CompanyCourseContent 
+      <CourseContent 
         podcast={podcast}
         currentLessonId={currentLesson?.id || null}
         onSelectLesson={handleSelectLesson}
