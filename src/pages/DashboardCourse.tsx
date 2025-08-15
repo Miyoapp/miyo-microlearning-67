@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useParams } from 'react-router-dom';
+import { useCourseData } from '@/hooks/useCourseData';
 import { useConsolidatedLessons } from '@/hooks/useConsolidatedLessons';
 import CourseHero from '@/components/course/CourseHero';
 import CourseSidebar from '@/components/course/CourseSidebar';
@@ -11,16 +12,23 @@ import DashboardLayout from '@/components/dashboard/DashboardLayout';
 
 const DashboardCourse = () => {
   const { courseId } = useParams<{ courseId: string }>();
+  
+  // First, get the course data
   const {
     podcast,
+    setPodcast,
+    isLoading,
+    error
+  } = useCourseData(courseId);
+
+  // Then, use consolidated lessons with the podcast data
+  const {
     currentLesson,
     isPlaying,
-    isLoading,
-    error,
     handleSelectLesson,
     handleLessonComplete,
     handleProgressUpdate
-  } = useConsolidatedLessons(courseId);
+  } = useConsolidatedLessons(podcast, setPodcast);
 
   if (isLoading) {
     return (
