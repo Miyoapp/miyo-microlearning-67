@@ -1,3 +1,4 @@
+import React from 'react';
 import { Lesson } from '../types';
 import LessonInfo from './audio/LessonInfo';
 import AudioControls from './audio/AudioControls';
