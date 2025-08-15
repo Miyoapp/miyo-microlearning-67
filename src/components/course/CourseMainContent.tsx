@@ -19,6 +19,8 @@ interface CourseMainContentProps {
   onToggleSave: () => void;
   onSelectLesson: (lesson: Lesson) => void;
   onShowCheckout: () => void;
+  onLessonComplete?: (lessonId: string) => void;
+  onProgressUpdate?: (lessonId: string, position: number) => void;
 }
 
 const CourseMainContent: React.FC<CourseMainContentProps> = ({
@@ -33,7 +35,9 @@ const CourseMainContent: React.FC<CourseMainContentProps> = ({
   onStartLearning,
   onToggleSave,
   onSelectLesson,
-  onShowCheckout
+  onShowCheckout,
+  onLessonComplete = () => {},
+  onProgressUpdate = () => {}
 }) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
@@ -53,6 +57,8 @@ const CourseMainContent: React.FC<CourseMainContentProps> = ({
             podcast={podcast}
             currentLessonId={currentLesson?.id || null}
             onSelectLesson={onSelectLesson}
+            onLessonComplete={onLessonComplete}
+            onProgressUpdate={onProgressUpdate}
           />
           
           {/* Premium overlay for learning path */}

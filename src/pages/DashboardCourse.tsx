@@ -1,26 +1,28 @@
+
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import { useCourseData } from '@/hooks/useCourseData';
+import { useConsolidatedLessons } from '@/hooks/useConsolidatedLessons';
 import CourseHero from '@/components/course/CourseHero';
 import CourseSidebar from '@/components/course/CourseSidebar';
 import CourseLearningPathSection from '@/components/course/CourseLearningPathSection';
 import CourseNotFound from '@/components/course/CourseNotFound';
-import DashboardLayout from '@/layouts/DashboardLayout';
+import CoursePageHeader from '@/components/course/CoursePageHeader';
+import DashboardLayout from '@/components/dashboard/DashboardLayout';
 
 const DashboardCourse = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const {
     podcast,
-    isPodcastLoading,
-    podcastError,
     currentLesson,
     isPlaying,
+    isLoading,
+    error,
     handleSelectLesson,
     handleLessonComplete,
     handleProgressUpdate
-  } = useCourseData(courseId);
+  } = useConsolidatedLessons(courseId);
 
-  if (isPodcastLoading) {
+  if (isLoading) {
     return (
       <DashboardLayout>
         <div className="min-h-screen bg-gray-50">
@@ -32,7 +34,7 @@ const DashboardCourse = () => {
     );
   }
 
-  if (podcastError) {
+  if (error) {
     return (
       <DashboardLayout>
         <div className="min-h-screen bg-gray-50">
