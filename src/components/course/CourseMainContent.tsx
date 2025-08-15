@@ -1,11 +1,10 @@
 
-import React, { useState, useCallback } from 'react';
+import React from 'react';
 import { Podcast, Lesson } from '@/types';
-import { useConsolidatedLessons } from '@/hooks/useConsolidatedLessons';
-import CourseInfo from './CourseInfo';
+import CourseHeader from './CourseHeader';
 import CourseLearningPathSection from './CourseLearningPathSection';
-import AudioPlayer from '../AudioPlayer';
-import CourseCompletionModal from './CourseCompletionModal';
+import CourseSidebar from './CourseSidebar';
+import PremiumOverlay from './PremiumOverlay';
 
 interface CourseMainContentProps {
   podcast: Podcast;
@@ -36,75 +35,45 @@ const CourseMainContent: React.FC<CourseMainContentProps> = ({
   onSelectLesson,
   onShowCheckout
 }) => {
-  const [currentLessonId, setCurrentLessonId] = useState<string | null>(currentLesson?.id || null);
-  const setPodcast = (podcast: Podcast) => {
-    console.log('Podcast updated:', podcast.title);
-  };
-  
-  const [showCompletionModal, setShowCompletionModal] = useState(false);
-
-  const {
-    currentLesson: consolidatedCurrentLesson,
-    isPlaying,
-    handleSelectLesson,
-    handleTogglePlay,
-    handleLessonComplete: originalHandleLessonComplete,
-    handleProgressUpdate
-  } = useConsolidatedLessons(podcast, setPodcast);
-
-  // Use the currentLesson from props if available, otherwise use consolidated
-  const activeLesson = currentLesson || consolidatedCurrentLesson;
-
-  // Enhanced lesson complete handler to show completion modal
-  const handleLessonComplete = useCallback(() => {
-    originalHandleLessonComplete();
-    
-    // Check if this was the last lesson and course is now 100% complete
-    if (podcast && activeLesson) {
-      const isLastLesson = podcast.lessons.every(lesson => 
-        lesson.id === activeLesson.id || lesson.isCompleted
-      );
-      
-      if (isLastLesson) {
-        // Small delay to let the completion animation finish
-        setTimeout(() => {
-          setShowCompletionModal(true);
-        }, 1000);
-      }
-    }
-  }, [originalHandleLessonComplete, podcast, activeLesson]);
-
-  // Use onSelectLesson from props if provided, otherwise use consolidated
-  const handleLessonSelection = onSelectLesson || handleSelectLesson;
-
   return (
-    <div className="space-y-8">
-      <CourseInfo podcast={podcast} />
-      
-      <CourseLearningPathSection
-        podcast={podcast}
-        currentLessonId={currentLessonId}
-        onSelectLesson={handleLessonSelection}
-      />
-      
-      {/* Only show AudioPlayer if user has access */}
-      {hasAccess && (
-        <AudioPlayer
-          lesson={activeLesson}
-          isPlaying={isPlaying}
-          onTogglePlay={handleTogglePlay}
-          onComplete={handleLessonComplete}
-          onProgressUpdate={handleProgressUpdate}
-          courseId={podcast?.id}
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
+      {/* Main Content - Full width on mobile */}
+      <div className="lg:col-span-2">
+        <CourseHeader
+          podcast={podcast}
+          hasStarted={hasStarted}
+          isSaved={isSaved}
+          progressPercentage={progressPercentage}
+          onStartLearning={onStartLearning}
+          onToggleSave={onToggleSave}
         />
-      )}
 
-      <CourseCompletionModal
-        isOpen={showCompletionModal}
-        onClose={() => setShowCompletionModal(false)}
-        courseTitle={podcast?.title || ''}
-        courseId={podcast?.id || ''}
-      />
+        <div className="relative mx-4 sm:mx-0">
+          <CourseLearningPathSection
+            podcast={podcast}
+            currentLessonId={currentLesson?.id || null}
+            onSelectLesson={onSelectLesson}
+          />
+          
+          {/* Premium overlay for learning path */}
+          {isPremium && !hasAccess && (
+            <PremiumOverlay
+              onUnlock={onShowCheckout}
+              price={podcast.precio || 0}
+              currency={podcast.moneda || 'USD'}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Sidebar - Hidden on mobile, shown on desktop */}
+      <div className="hidden lg:block">
+        <CourseSidebar 
+          podcast={podcast}
+          progressPercentage={progressPercentage}
+          isCompleted={isCompleted}
+        />
+      </div>
     </div>
   );
 };
