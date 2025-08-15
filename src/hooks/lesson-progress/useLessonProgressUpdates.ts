@@ -33,7 +33,7 @@ export function useLessonProgressUpdates(
       }
     }
 
-    console.log('Updating lesson progress for:', lessonId, 'with updates:', updates);
+    console.log('📝 Updating lesson progress for:', lessonId, 'with updates:', updates);
 
     try {
       // OPTIMIZACIÓN: Actualizar estado local inmediatamente (optimistic update)
@@ -51,9 +51,16 @@ export function useLessonProgressUpdates(
           ...updates
         };
 
-        // Apply defensive validation to local state
+        // NUEVA LÓGICA: Validación mejorada para manejo de estados
         if (updatedProgress.current_position >= 100) {
           updatedProgress.is_completed = true;
+          console.log('✅ Setting is_completed=true because current_position >= 100');
+        }
+
+        // CRÍTICO: Si una lección se marca como no completada, resetear position
+        if (updates.is_completed === false) {
+          updatedProgress.current_position = 0;
+          console.log('🔄 Resetting position to 0 for non-completed lesson');
         }
         
         if (existing) {
@@ -105,13 +112,19 @@ export function useLessonProgressUpdates(
           ...updates
         };
 
-        // DEFENSIVE VALIDATION: If position >= 100, it should be completed
+        // DEFENSIVE VALIDATION: Si position >= 100, debe estar completado
         if (finalData.current_position >= 100) {
           finalData.is_completed = true;
           console.log('🛡️ Defensive validation: Setting is_completed=true because current_position >= 100');
         }
 
-        console.log('Final data for upsert:', finalData);
+        // NUEVA VALIDACIÓN: Si no está completado, current_position debe ser < 100
+        if (!finalData.is_completed && finalData.current_position >= 100) {
+          finalData.current_position = 99; // Mantener justo antes de completar
+          console.log('🛡️ Defensive validation: Capping position at 99% for non-completed lesson');
+        }
+
+        console.log('💾 Final data for upsert:', finalData);
 
         const { data, error } = await supabase
           .from('user_lesson_progress')
@@ -121,22 +134,22 @@ export function useLessonProgressUpdates(
           .select();
 
         if (error) {
-          console.error('Error updating lesson progress:', error);
+          console.error('❌ Error updating lesson progress:', error);
           throw error;
         }
         
-        console.log('Successfully updated lesson progress in DB:', data);
+        console.log('✅ Successfully updated lesson progress in DB:', data);
         return data;
       };
 
       // Ejecutar actualización de BD en background
       updateDatabase().catch(error => {
-        console.error('Background DB update failed:', error);
+        console.error('❌ Background DB update failed:', error);
         toast.error('Error al actualizar el progreso de la lección');
       });
       
     } catch (error) {
-      console.error('Error updating lesson progress:', error);
+      console.error('❌ Error updating lesson progress:', error);
       toast.error('Error al actualizar el progreso de la lección');
     }
   }, [user, isInReviewMode, setLessonProgress]);

@@ -1,10 +1,8 @@
 
 import React from 'react';
 import { Lesson } from '@/types';
-import { Play, Lock, Trophy } from 'lucide-react';
+import { Play, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import LessonMiniPlayer from './LessonMiniPlayer';
-import { useLessonMiniPlayer } from '@/hooks/learning-path/useLessonMiniPlayer';
 
 interface LessonItemProps {
   lesson: Lesson;
@@ -17,139 +15,71 @@ interface LessonItemProps {
     isFirstInSequence: boolean;
   };
   classes: {
-    cardBackgroundClasses: string;
     nodeClasses: string;
     textClasses: string;
   };
   onLessonClick: (lesson: Lesson, shouldAutoPlay?: boolean) => void;
-  onLessonComplete: () => void;
-  onProgressUpdate: (position: number) => void;
-  isActiveMiniPlayer: boolean;
-  onActivatePlayer: () => void;
 }
 
-const LessonItem = React.memo(({ 
-  lesson, 
-  index, 
-  status, 
-  classes, 
-  onLessonClick,
-  onLessonComplete,
-  onProgressUpdate,
-  isActiveMiniPlayer,
-  onActivatePlayer
-}: LessonItemProps) => {
+const LessonItem = React.memo(({ lesson, index, status, classes, onLessonClick }: LessonItemProps) => {
   const { isCompleted, isCurrent, canPlay } = status;
-  const { cardBackgroundClasses, nodeClasses, textClasses } = classes;
+  const { nodeClasses, textClasses } = classes;
   
-  const {
-    audioRef,
-    isPlaying,
-    currentTime,
-    duration,
-    volume,
-    playbackRate,
-    isMuted,
-    handleTogglePlay,
-    handleSeek,
-    handleSkipBack,
-    handleSkipForward,
-    handleVolumeChange,
-    handleToggleMute,
-    handlePlaybackRateChange,
-    handleTimeUpdate,
-    handleLoadedMetadata,
-    handleEnded
-  } = useLessonMiniPlayer({
-    lesson,
-    isActive: isActiveMiniPlayer,
-    onLessonComplete,
-    onProgressUpdate
-  });
-
+  // CLICK HANDLER for play icon - WITH AUTO-PLAY
   const handlePlayClick = () => {
+    console.log('🔥🔥🔥 PLAY ICON CLICK - START:', {
+      lessonTitle: lesson.title,
+      canPlay,
+      isCompleted: isCompleted ? 'SÍ (mantiene play)' : 'NO',
+      timestamp: new Date().toLocaleTimeString()
+    });
+    
     if (canPlay) {
-      onActivatePlayer();
+      // CRITICAL: Pass shouldAutoPlay=true to force immediate playback
       onLessonClick(lesson, true);
+      console.log('🔥🔥🔥 PLAY ICON CLICK - SENT TO onLessonClick with AUTO-PLAY:', lesson.title);
+    } else {
+      console.log('🚫🚫🚫 PLAY ICON CLICK - LESSON LOCKED:', lesson.title);
     }
   };
-
-  const handleMiniPlayerToggle = () => {
-    if (!isActiveMiniPlayer) {
-      onActivatePlayer();
-      onLessonClick(lesson, true);
-    }
-    handleTogglePlay();
-  };
+  
+  // Zigzag effect alternating positions
+  const containerAlignment = index % 2 === 0 
+    ? "justify-start" 
+    : "justify-start ml-[45px]";
   
   return (
-    <div className={cn(cardBackgroundClasses, "mb-4")}>
-      {/* Hidden audio element */}
-      <audio
-        ref={audioRef}
-        src={lesson.urlAudio}
-        onTimeUpdate={handleTimeUpdate}
-        onLoadedMetadata={handleLoadedMetadata}
-        onEnded={handleEnded}
-        preload="metadata"
-      />
+    <div className={`flex ${containerAlignment} items-center`}>
+      <div 
+        className={cn(nodeClasses, { "cursor-pointer": canPlay, "cursor-not-allowed": !canPlay })}
+        onClick={handlePlayClick}
+      >
+        {/* CRÍTICO: Todas las lecciones reproducibles muestran play (incluyendo completadas) */}
+        {/* NO cambiar a check - mantener play para permitir replay */}
+        {canPlay ? (
+          <Play size={18} fill="white" />
+        ) : (
+          <Lock size={18} />
+        )}
+      </div>
       
-      {/* Header Row */}
-      <div className="flex items-start space-x-3">
-        {/* Status Icon */}
-        <div 
-          className={cn(nodeClasses, "mt-1 flex-shrink-0")}
-          onClick={handlePlayClick}
-        >
-          {isCompleted ? (
-            <Trophy size={14} />
-          ) : canPlay ? (
-            <Play size={14} fill="white" />
-          ) : (
-            <Lock size={14} />
-          )}
+      {/* Progress indicator for current lesson */}
+      {isCurrent && (
+        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+          <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
         </div>
-        
-        {/* Lesson Info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between">
-            <h4 className={cn(textClasses, "leading-snug")}>
-              {lesson.title}
-              {isCurrent && (
-                <span className="ml-2 text-xs text-green-600">● Reproduciendo</span>
-              )}
-            </h4>
-            
-            <div className="text-xs text-gray-500">
-              {Math.floor(lesson.duracion)}:{((lesson.duracion % 1) * 60).toFixed(0).padStart(2, '0')}
-            </div>
-          </div>
-          
-          {/* Mini Player - Only show for available lessons */}
-          {canPlay && (
-            <LessonMiniPlayer
-              lesson={lesson}
-              isPlaying={isPlaying && isActiveMiniPlayer}
-              currentTime={currentTime}
-              duration={duration}
-              volume={volume}
-              playbackRate={playbackRate}
-              isMuted={isMuted}
-              onTogglePlay={handleMiniPlayerToggle}
-              onSeek={handleSeek}
-              onSkipBack={handleSkipBack}
-              onSkipForward={handleSkipForward}
-              onVolumeChange={handleVolumeChange}
-              onToggleMute={handleToggleMute}
-              onPlaybackRateChange={handlePlaybackRateChange}
-            />
+      )}
+      
+      {/* Lesson title WITHOUT onClick - only visual */}
+      <div className="ml-3 flex-1 max-w-[280px]">
+        <div className={cn(textClasses, "leading-snug")}>
+          {lesson.title}
+          {isCurrent && (
+            <span className="ml-2 text-xs text-green-600">● Reproduciendo</span>
           )}
-          
-          {/* Locked message */}
-          {!canPlay && (
-            <p className="text-xs text-gray-400 mt-1">
-              Completa las lecciones anteriores para desbloquear
-            </p>
+          {/* NUEVO: Mostrar check de completado como texto adicional, no en el botón */}
+          {isCompleted && !isCurrent && (
+            <span className="ml-2 text-xs text-green-600">✓ Completada</span>
           )}
         </div>
       </div>

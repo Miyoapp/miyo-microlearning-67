@@ -15,9 +15,10 @@ export function useRealtimeProgress({
   const { user } = useAuth();
   const { createSubscription } = useRealtimeSubscriptionManager();
   
-  // Stable references to prevent re-subscriptions
+  // Track current user and cleanup functions
   const userIdRef = useRef<string | null>(null);
   const cleanupFunctionsRef = useRef<(() => void)[]>([]);
+  const isSubscribedRef = useRef<boolean>(false);
 
   // Stable callbacks to prevent subscription recreation
   const stableLessonCallback = useCallback(() => {
@@ -36,18 +37,22 @@ export function useRealtimeProgress({
       return;
     }
 
-    // Only create new subscriptions if user changed
-    if (userIdRef.current === user.id && cleanupFunctionsRef.current.length > 0) {
-      console.log('🔒 REALTIME PROGRESS: User unchanged, keeping existing subscriptions');
+    // Prevent duplicate subscriptions for the same user
+    if (userIdRef.current === user.id && isSubscribedRef.current) {
+      console.log('🔒 REALTIME PROGRESS: Already subscribed for user:', user.id);
       return;
     }
 
     // Clean up previous subscriptions
-    cleanupFunctionsRef.current.forEach(cleanup => cleanup());
-    cleanupFunctionsRef.current = [];
+    if (cleanupFunctionsRef.current.length > 0) {
+      console.log('🔌 REALTIME PROGRESS: Cleaning up previous subscriptions');
+      cleanupFunctionsRef.current.forEach(cleanup => cleanup());
+      cleanupFunctionsRef.current = [];
+    }
 
     console.log('🔄 REALTIME PROGRESS: Setting up subscriptions for user:', user.id);
     userIdRef.current = user.id;
+    isSubscribedRef.current = true;
 
     // Create lesson progress subscription
     const lessonCleanup = createSubscription({
@@ -75,6 +80,8 @@ export function useRealtimeProgress({
       console.log('🔌 REALTIME PROGRESS: Component cleanup - removing all subscriptions');
       cleanupFunctionsRef.current.forEach(cleanup => cleanup());
       cleanupFunctionsRef.current = [];
+      isSubscribedRef.current = false;
+      userIdRef.current = null;
     };
   }, [setupRealtimeSubscriptions]);
 

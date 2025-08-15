@@ -7,17 +7,9 @@ interface CompanyCourseContentProps {
   podcast: Podcast;
   currentLessonId: string | null;
   onSelectLesson: (lesson: Lesson) => void;
-  onLessonComplete?: (lessonId: string) => void;
-  onProgressUpdate?: (lessonId: string, position: number) => void;
 }
 
-const CompanyCourseContent = ({ 
-  podcast, 
-  currentLessonId, 
-  onSelectLesson,
-  onLessonComplete = () => {},
-  onProgressUpdate = () => {}
-}: CompanyCourseContentProps) => {
+const CompanyCourseContent = ({ podcast, currentLessonId, onSelectLesson }: CompanyCourseContentProps) => {
   return (
     <section className="py-4 px-4 sm:px-6 lg:px-8" id="learning-path">
       <div className="miyo-container">
@@ -27,8 +19,6 @@ const CompanyCourseContent = ({
               lessons={podcast.lessons}
               modules={podcast.modules}
               onSelectLesson={onSelectLesson}
-              onLessonComplete={onLessonComplete}
-              onProgressUpdate={onProgressUpdate}
               currentLessonId={currentLessonId}
             />
           </div>

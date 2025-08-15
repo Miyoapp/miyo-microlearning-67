@@ -38,97 +38,92 @@ export function useLessonCompletion(
       const isReplay = currentLesson.isCompleted;
       const nextLesson = getNextLesson(currentLesson, podcast.lessons, podcast.modules);
       
-      // NUEVO: Detectar modo review (curso 100% completo)
+      // Detectar modo review (curso 100% completo)
       const isReviewMode = podcast.lessons.every(lesson => lesson.isCompleted);
       
       if (isReviewMode) {
-        console.log('🏆 REVIEW MODE (100% complete): No progress changes, smart auto-advance');
+        console.log('🏆 REVIEW MODE (100% complete): Smart auto-advance');
         
-        // En review mode, permitir auto-advance a cualquier lección sin cambiar progreso
         if (isAutoAdvanceAllowed && nextLesson) {
           console.log('⏭️ Review mode auto-advance to:', nextLesson.title);
           setCurrentLesson(nextLesson);
           setIsPlaying(true);
         } else {
-          console.log('⏹️ End of review sequence or auto-advance disabled');
+          console.log('⏹️ End of review sequence');
           setIsPlaying(false);
         }
         
       } else if (isReplay) {
-        console.log('🔄 REPLAY MODE: Continuing sequence from completed lesson');
+        console.log('🔄 REPLAY MODE: Continuing from completed lesson');
         
-        // CORREGIDO: En replay, continuar la secuencia y marcar siguientes como completadas
         if (isAutoAdvanceAllowed && nextLesson) {
           const canPlayNext = nextLesson.isCompleted || !nextLesson.isLocked;
           
           if (canPlayNext) {
-            console.log('⏭️ Auto-advance from replay to:', nextLesson.title, 'willComplete:', !nextLesson.isCompleted);
-            
-            // Si la siguiente lección no está completada, completarla ahora
-            if (!nextLesson.isCompleted) {
-              const updatedLessons = podcast.lessons.map(lesson => {
-                if (lesson.id === nextLesson.id) {
-                  return { ...lesson, isCompleted: true };
-                }
-                return lesson;
-              });
-              
-              const updatedPodcast = { ...podcast, lessons: updatedLessons };
-              setPodcast(updatedPodcast);
-              
-              // Marcar como completada en BD
-              markLessonCompleteInDB(nextLesson.id, podcast.id);
-              updateLessonPosition(nextLesson.id, podcast.id, 100);
-            }
-            
-            setCurrentLesson({ ...nextLesson, isCompleted: true });
+            console.log('⏭️ Auto-advance from replay to:', nextLesson.title);
+            setCurrentLesson(nextLesson);
             setIsPlaying(true);
           } else {
-            console.log('🚫 Next lesson not available - stopping playback');
+            console.log('🚫 Next lesson not available');
             setIsPlaying(false);
           }
         } else {
-          console.log('⏹️ End of replay sequence or auto-advance disabled');
+          console.log('⏹️ End of replay sequence');
           setIsPlaying(false);
         }
         
       } else {
-        console.log('✅ FIRST COMPLETION: Update progress and continue');
+        console.log('✅ FIRST COMPLETION: Update progress and auto-advance');
         
-        // Completion real: actualizar progreso y desbloquear siguiente
-        const updatedLessons = podcast.lessons.map(lesson => {
-          if (lesson.id === currentLesson.id) {
-            return { ...lesson, isCompleted: true };
-          }
-          if (nextLesson && lesson.id === nextLesson.id) {
-            return { ...lesson, isLocked: false };
-          }
-          return lesson;
-        });
+        // CRÍTICO: NO actualizar inmediatamente el estado visual del podcast
+        // Solo actualizar la base de datos en background
+        console.log('💾 Marking lesson as completed in DB (background)');
         
-        const updatedPodcast = { ...podcast, lessons: updatedLessons };
-        setPodcast(updatedPodcast);
-        
-        // Auto-advance a la siguiente lección desbloqueada
-        if (isAutoAdvanceAllowed && nextLesson) {
-          console.log('⏭️ Auto-advance to newly unlocked:', nextLesson.title);
-          const updatedNextLesson = { ...nextLesson, isLocked: false };
-          setCurrentLesson(updatedNextLesson);
-          setIsPlaying(true);
-        } else {
-          console.log('⏹️ No auto-advance: reached end or not allowed');
-          setIsPlaying(false);
-        }
-        
-        // Background DB updates solo para completion real
+        // Background DB updates (sin actualizar estado visual inmediatamente)
         Promise.all([
           markLessonCompleteInDB(currentLesson.id, podcast.id),
           updateLessonPosition(currentLesson.id, podcast.id, 100)
         ]).then(() => {
-          console.log('💾 Background DB updates completed for first completion');
+          console.log('💾 Background DB updates completed - refreshing data');
+          // DESPUÉS de que la DB se actualice, refrescar los datos
+          refetchLessonProgress();
+          refetchCourseProgress();
         }).catch(dbError => {
           console.error('❌ Background DB update failed:', dbError);
         });
+        
+        // CRÍTICO: Desbloquear siguiente lección SIN marcar la actual como completada visualmente
+        if (nextLesson) {
+          console.log('🔓 Unlocking next lesson for auto-advance:', nextLesson.title);
+          
+          const updatedLessons = podcast.lessons.map(lesson => {
+            // NO cambiar la lección actual - mantener estado visual
+            if (nextLesson && lesson.id === nextLesson.id) {
+              console.log('🔓 Desbloqueando siguiente lección:', lesson.title);
+              return { ...lesson, isLocked: false };
+            }
+            return lesson;
+          });
+          
+          const updatedPodcast = { ...podcast, lessons: updatedLessons };
+          
+          // Actualizar podcast SOLO para desbloquear siguiente lección
+          console.log('🔄 Updating podcast to unlock next lesson (visual state preserved)');
+          setPodcast(updatedPodcast);
+          
+          // Auto-advance con delay para permitir actualización visual
+          if (isAutoAdvanceAllowed) {
+            setTimeout(() => {
+              console.log('⏭️ AUTO-ADVANCE to unlocked next lesson:', nextLesson.title);
+              const unlockedNextLesson = { ...nextLesson, isLocked: false };
+              setCurrentLesson(unlockedNextLesson);
+              setIsPlaying(true);
+            }, 300);
+          }
+        } else {
+          console.log('⏹️ No next lesson available');
+          setIsPlaying(false);
+        }
       }
       
     } catch (error) {
@@ -136,7 +131,7 @@ export function useLessonCompletion(
     } finally {
       setTimeout(() => {
         isCompletingRef.current = false;
-      }, 300);
+      }, 1000);
     }
   }, [
     currentLesson,
@@ -147,6 +142,8 @@ export function useLessonCompletion(
     setIsPlaying,
     markLessonCompleteInDB,
     updateLessonPosition,
+    refetchLessonProgress,
+    refetchCourseProgress,
     isAutoAdvanceAllowed
   ]);
 
