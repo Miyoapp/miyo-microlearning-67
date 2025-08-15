@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Module, Lesson } from '@/types';
 import LessonItem from './LessonItem';
 
@@ -9,6 +9,8 @@ interface ModuleSectionProps {
   lessonStatusMap: Map<string, any>;
   getLessonClasses: Map<string, any>;
   onLessonClick: (lesson: Lesson) => void;
+  onLessonComplete: (lessonId: string) => void;
+  onProgressUpdate: (lessonId: string, position: number) => void;
 }
 
 const ModuleSection = React.memo(({ 
@@ -16,21 +18,25 @@ const ModuleSection = React.memo(({
   moduleLessons, 
   lessonStatusMap, 
   getLessonClasses, 
-  onLessonClick 
+  onLessonClick,
+  onLessonComplete,
+  onProgressUpdate
 }: ModuleSectionProps) => {
+  const [activeMiniPlayer, setActiveMiniPlayer] = useState<string | null>(null);
+  
   if (moduleLessons.length === 0) return null;
   
   return (
-    <div className="mb-6">
-      {/* Título del módulo */}
-      <div className="text-center mb-3 px-2">
-        <h3 className="text-sm font-medium text-indigo-700 bg-indigo-50 inline-block py-1 px-3 rounded-full">
+    <div className="mb-8">
+      {/* Module Title */}
+      <div className="text-center mb-4 px-2">
+        <h3 className="text-sm font-medium text-indigo-700 bg-indigo-50 inline-block py-2 px-4 rounded-full">
           {module.title}
         </h3>
       </div>
       
-      {/* Lecciones dentro de este módulo */}
-      <div className="space-y-[25px]">
+      {/* Lessons */}
+      <div className="space-y-0">
         {moduleLessons.map((lesson, index) => {
           const status = lessonStatusMap.get(lesson.id);
           if (!status) return null;
@@ -46,6 +52,10 @@ const ModuleSection = React.memo(({
               status={status}
               classes={classes}
               onLessonClick={onLessonClick}
+              onLessonComplete={() => onLessonComplete(lesson.id)}
+              onProgressUpdate={(position) => onProgressUpdate(lesson.id, position)}
+              isActiveMiniPlayer={activeMiniPlayer === lesson.id}
+              onActivatePlayer={() => setActiveMiniPlayer(lesson.id)}
             />
           );
         })}

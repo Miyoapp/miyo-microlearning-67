@@ -1,86 +1,80 @@
-
-import { useEffect } from 'react';
+import React from 'react';
 import { useParams } from 'react-router-dom';
-import Header from '../components/Header';
-import AudioPlayer from '../components/AudioPlayer';
-import CourseHero from '../components/course/CourseHero';
-import CompanyCourseContent from '../components/company/CompanyCourseContent';
-import CourseFooter from '../components/course/CourseFooter';
-import CourseLoading from '../components/course/CourseLoading';
-import CourseNotFound from '../components/course/CourseNotFound';
 import { useCourseData } from '@/hooks/useCourseData';
-import { useLessons } from '@/hooks/useLessons';
+import CourseHero from '@/components/course/CourseHero';
+import CourseLearningPathSection from '@/components/course/CourseLearningPathSection';
+import CourseSidebar from '@/components/course/CourseSidebar';
+import CourseNotFound from '@/components/course/CourseNotFound';
+import Header from '@/components/Header';
 
 const CompanyCourse = () => {
-  const { id } = useParams<{ id: string }>();
-  const { podcast, setPodcast, isLoading } = useCourseData(id);
-  const { 
-    currentLesson, 
-    isPlaying, 
-    initializeCurrentLesson,
-    handleSelectLesson, 
-    handleTogglePlay, 
+  const { courseId } = useParams<{ courseId: string }>();
+  const {
+    podcast,
+    isPodcastLoading,
+    podcastError,
+    currentLesson,
+    isPlaying,
+    handleSelectLesson,
     handleLessonComplete,
-    advanceToNextLesson
-  } = useLessons(podcast, setPodcast);
-  
-  // Set initial lesson once podcast data is loaded
-  useEffect(() => {
-    if (podcast) {
-      initializeCurrentLesson();
-    }
-  }, [podcast, initializeCurrentLesson]);
-  
-  // Listen for lesson ended event to advance to next lesson
-  useEffect(() => {
-    const handleLessonEnded = (e: Event) => {
-      const event = e as CustomEvent;
-      console.log("Lesson ended event received:", event.detail);
-      
-      if (event.detail && event.detail.lessonId === currentLesson?.id) {
-        console.log("Confirmed current lesson ended, advancing to next");
-        
-        // Mark current lesson as complete first
-        handleLessonComplete();
-        
-        // Then advance to next lesson immediately
-        setTimeout(() => {
-          advanceToNextLesson();
-        }, 100); // Very short delay to ensure completion state is saved first
-      }
-    };
-    
-    window.addEventListener('lessonEnded', handleLessonEnded);
-    
-    return () => {
-      window.removeEventListener('lessonEnded', handleLessonEnded);
-    };
-  }, [currentLesson, advanceToNextLesson, handleLessonComplete]);
-  
-  if (isLoading) {
-    return <CourseLoading />;
+    handleProgressUpdate
+  } = useCourseData(courseId);
+
+  if (isPodcastLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <span className="loading loading-ring loading-lg"></span>
+      </div>
+    );
   }
-  
+
+  if (podcastError) {
+    return (
+      <div className="flex justify-center items-center h-screen text-red-500">
+        Error: {podcastError.message}
+      </div>
+    );
+  }
+
   if (!podcast) {
     return <CourseNotFound />;
   }
-  
+
+  const handleLessonCompleteWrapper = (lessonId: string) => {
+    console.log('📚 Lesson completed:', lessonId);
+    handleLessonComplete();
+  };
+
+  const handleProgressUpdateWrapper = (lessonId: string, position: number) => {
+    console.log('📊 Progress update:', lessonId, position);
+    handleProgressUpdate(position);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="min-h-screen bg-gray-50">
       <Header />
-      <CourseHero podcast={podcast} />
-      <CompanyCourseContent 
-        podcast={podcast}
-        currentLessonId={currentLesson?.id || null}
-        onSelectLesson={handleSelectLesson}
-      />
-      <AudioPlayer 
-        lesson={currentLesson}
-        isPlaying={isPlaying}
-        onTogglePlay={handleTogglePlay}
-        onComplete={handleLessonComplete}
-      />
-      <CourseFooter />
+      
+      <main className="miyo-container py-8">
+        <div className="max-w-6xl mx-auto space-y-8">
+          <CourseHero podcast={podcast} />
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-8">
+              <CourseLearningPathSection
+                podcast={podcast}
+                currentLessonId={currentLesson?.id || null}
+                onSelectLesson={handleSelectLesson}
+                onLessonComplete={handleLessonCompleteWrapper}
+                onProgressUpdate={handleProgressUpdateWrapper}
+              />
+            </div>
+            
+            <div className="space-y-6">
+              <CourseSidebar podcast={podcast} />
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
   );
 };
