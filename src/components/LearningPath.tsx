@@ -84,9 +84,9 @@ const LearningPath = React.memo(({ lessons, modules, onSelectLesson, currentLess
   
   return (
     <div className="py-3">
-      <h2 className="text-2xl font-bold mb-2 text-center">Tu Ruta de Aprendizaje</h2>
+      <h2 className="text-2xl font-bold mb-6 text-center">Tu Ruta de Aprendizaje</h2>
       
-      <div className="relative max-w-[400px] mx-auto">
+      <div className="max-w-2xl mx-auto space-y-8">
         {orderedModules.map((module) => {
           const moduleLessons = getLessonsForModule(module.id);
           

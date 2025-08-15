@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
@@ -214,7 +213,7 @@ const DashboardCourse = () => {
           url={`${window.location.origin}/dashboard/course/${courseId}`}
         />
         
-        <div className="max-w-7xl mx-auto pb-20 sm:pb-24">
+        <div className="max-w-7xl mx-auto pb-8">
           <CoursePageHeader isReviewMode={isReviewMode} />
           
           <CourseAccessHandler
