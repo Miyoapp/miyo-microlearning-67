@@ -6,12 +6,14 @@ import { Podcast, Lesson } from '@/types';
 interface CourseLearningPathSectionProps {
   podcast: Podcast;
   currentLessonId: string | null;
+  isGloballyPlaying: boolean;
   onSelectLesson: (lesson: Lesson) => void;
 }
 
 const CourseLearningPathSection: React.FC<CourseLearningPathSectionProps> = ({
   podcast,
   currentLessonId,
+  isGloballyPlaying,
   onSelectLesson
 }) => {
   return (
@@ -21,6 +23,7 @@ const CourseLearningPathSection: React.FC<CourseLearningPathSectionProps> = ({
         modules={podcast.modules}
         onSelectLesson={onSelectLesson}
         currentLessonId={currentLessonId}
+        isGloballyPlaying={isGloballyPlaying}
       />
     </div>
   );

@@ -87,6 +87,7 @@ const CourseAccessHandler: React.FC<CourseAccessHandlerProps> = ({
         isCompleted={isCompleted}
         isPremium={isPremium}
         hasAccess={hasAccess}
+        isGloballyPlaying={isPlaying}
         onStartLearning={onStartLearning}
         onToggleSave={onToggleSave}
         onSelectLesson={onSelectLesson}

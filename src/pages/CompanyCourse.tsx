@@ -72,6 +72,7 @@ const CompanyCourse = () => {
       <CourseContent 
         podcast={podcast}
         currentLessonId={currentLesson?.id || null}
+        isGloballyPlaying={isPlaying}
         onSelectLesson={handleSelectLesson}
       />
       <AudioPlayer 
