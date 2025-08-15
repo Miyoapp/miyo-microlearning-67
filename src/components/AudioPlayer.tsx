@@ -16,14 +16,6 @@ interface AudioPlayerProps {
 }
 
 const AudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgressUpdate }: AudioPlayerProps) => {
-  console.log('🎵🎵🎵 AudioPlayer component render:', {
-    lessonTitle: lesson?.title || 'NO LESSON',
-    isPlaying,
-    hasOnTogglePlay: !!onTogglePlay,
-    hasOnComplete: !!onComplete,
-    timestamp: new Date().toLocaleTimeString()
-  });
-  
   const {
     audioRef,
     currentTime,
@@ -46,7 +38,7 @@ const AudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgressUp
     return null;
   }
   
-  console.log('🎵 Rendering AudioPlayer for lesson:', lesson.title, 'isPlaying:', isPlaying, 'audioSrc:', lesson.urlAudio);
+  console.log('🎵 Rendering AudioPlayer for lesson:', lesson.title, 'isPlaying:', isPlaying);
   
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white shadow-player z-40 transition-transform duration-150 animate-slide-up">
