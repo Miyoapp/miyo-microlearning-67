@@ -6,26 +6,41 @@ interface UseLessonCardProps {
   lesson: Lesson;
   canPlay: boolean;
   isCurrent: boolean;
+  isGloballyPlaying: boolean;
   onLessonClick: (lesson: Lesson, shouldAutoPlay?: boolean) => void;
 }
 
-export function useLessonCard({ lesson, canPlay, isCurrent, onLessonClick }: UseLessonCardProps) {
-  const [isPlaying, setIsPlaying] = useState(false);
+export function useLessonCard({ 
+  lesson, 
+  canPlay, 
+  isCurrent, 
+  isGloballyPlaying,
+  onLessonClick 
+}: UseLessonCardProps) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [playbackRate, setPlaybackRate] = useState(1);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const progressUpdateRef = useRef<NodeJS.Timeout | null>(null);
+
+  console.log('🎵 useLessonCard:', {
+    lessonTitle: lesson.title,
+    canPlay,
+    isCurrent,
+    isGloballyPlaying,
+    hasAudio: !!audioRef.current
+  });
 
   // Create audio element for this lesson
   useEffect(() => {
     if (canPlay && lesson.urlAudio) {
+      console.log('🎵 Creating audio element for:', lesson.title);
       const audio = new Audio(lesson.urlAudio);
       audio.preload = 'metadata';
       audio.playbackRate = playbackRate;
       
       // Set up event listeners
       audio.addEventListener('loadedmetadata', () => {
+        console.log('🎵 Audio metadata loaded for:', lesson.title, 'duration:', audio.duration);
         setDuration(audio.duration);
       });
 
@@ -34,15 +49,16 @@ export function useLessonCard({ lesson, canPlay, isCurrent, onLessonClick }: Use
       });
 
       audio.addEventListener('ended', () => {
-        setIsPlaying(false);
+        console.log('🎵 Audio ended for:', lesson.title);
         setCurrentTime(0);
-        // Trigger lesson completion and auto-advance
+        // Trigger lesson completion through global handler
         onLessonClick(lesson, false);
       });
 
       audioRef.current = audio;
 
       return () => {
+        console.log('🎵 Cleaning up audio for:', lesson.title);
         audio.pause();
         audio.removeEventListener('loadedmetadata', () => {});
         audio.removeEventListener('timeupdate', () => {});
@@ -52,41 +68,40 @@ export function useLessonCard({ lesson, canPlay, isCurrent, onLessonClick }: Use
     }
   }, [lesson.urlAudio, canPlay, playbackRate, onLessonClick, lesson]);
 
-  // Handle play/pause when this lesson becomes current
+  // Handle play/pause when this lesson becomes current and global state changes
   useEffect(() => {
-    if (audioRef.current) {
-      if (isCurrent && isPlaying) {
+    if (audioRef.current && isCurrent) {
+      console.log('🎵 Global playback state changed for current lesson:', lesson.title, 'playing:', isGloballyPlaying);
+      if (isGloballyPlaying) {
         audioRef.current.play().catch(console.error);
       } else {
         audioRef.current.pause();
       }
+    } else if (audioRef.current && !isCurrent) {
+      // Ensure non-current lessons are paused
+      audioRef.current.pause();
     }
-  }, [isCurrent, isPlaying]);
-
-  // Stop other players when this one starts
-  useEffect(() => {
-    if (isPlaying && isCurrent) {
-      // Pause all other audio elements
-      const allAudioElements = document.querySelectorAll('audio');
-      allAudioElements.forEach(audio => {
-        if (audio !== audioRef.current) {
-          audio.pause();
-        }
-      });
-    }
-  }, [isPlaying, isCurrent]);
+  }, [isCurrent, isGloballyPlaying, lesson.title]);
 
   const handlePlayPause = useCallback(() => {
-    if (!canPlay || !audioRef.current) return;
+    console.log('🎵 handlePlayPause clicked for:', lesson.title, { canPlay, isCurrent, isGloballyPlaying });
+    
+    if (!canPlay) {
+      console.log('🚫 Cannot play lesson:', lesson.title);
+      return;
+    }
 
     if (!isCurrent) {
-      // If this lesson is not current, select it first
+      // If this lesson is not current, select it first (with auto-play)
+      console.log('🎯 Selecting non-current lesson:', lesson.title);
       onLessonClick(lesson, true);
       return;
     }
 
-    setIsPlaying(!isPlaying);
-  }, [canPlay, isCurrent, isPlaying, onLessonClick, lesson]);
+    // If this is the current lesson, toggle play/pause through global handler
+    console.log('🎵 Toggling current lesson:', lesson.title);
+    onLessonClick(lesson, !isGloballyPlaying);
+  }, [canPlay, isCurrent, isGloballyPlaying, onLessonClick, lesson]);
 
   const handleSeek = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     if (!audioRef.current) return;
@@ -128,7 +143,8 @@ export function useLessonCard({ lesson, canPlay, isCurrent, onLessonClick }: Use
   }, []);
 
   return {
-    isPlaying: isCurrent && isPlaying,
+    // Use global state for playing status
+    isPlaying: isCurrent && isGloballyPlaying,
     currentTime,
     duration,
     playbackRate,

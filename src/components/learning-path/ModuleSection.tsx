@@ -8,7 +8,9 @@ interface ModuleSectionProps {
   moduleLessons: Lesson[];
   lessonStatusMap: Map<string, any>;
   getLessonClasses: Map<string, any>;
-  onLessonClick: (lesson: Lesson) => void;
+  currentLessonId: string | null;
+  isGloballyPlaying: boolean;
+  onLessonClick: (lesson: Lesson, shouldAutoPlay?: boolean) => void;
 }
 
 const ModuleSection = React.memo(({ 
@@ -16,9 +18,18 @@ const ModuleSection = React.memo(({
   moduleLessons, 
   lessonStatusMap, 
   getLessonClasses, 
+  currentLessonId,
+  isGloballyPlaying,
   onLessonClick 
 }: ModuleSectionProps) => {
   if (moduleLessons.length === 0) return null;
+  
+  console.log('🏗️ ModuleSection render:', {
+    moduleTitle: module.title,
+    currentLessonId,
+    isGloballyPlaying,
+    lessonCount: moduleLessons.length
+  });
   
   return (
     <div className="mb-8">
@@ -35,12 +46,19 @@ const ModuleSection = React.memo(({
           const status = lessonStatusMap.get(lesson.id);
           if (!status) return null;
           
+          // Add isCurrent calculation
+          const enhancedStatus = {
+            ...status,
+            isCurrent: lesson.id === currentLessonId
+          };
+          
           return (
             <LessonCard
               key={lesson.id}
               lesson={lesson}
               index={index}
-              status={status}
+              status={enhancedStatus}
+              isGloballyPlaying={isGloballyPlaying}
               onLessonClick={onLessonClick}
             />
           );

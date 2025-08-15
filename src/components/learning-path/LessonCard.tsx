@@ -15,11 +15,20 @@ interface LessonCardProps {
     canPlay: boolean;
     isFirstInSequence: boolean;
   };
+  isGloballyPlaying: boolean;
   onLessonClick: (lesson: Lesson, shouldAutoPlay?: boolean) => void;
 }
 
-const LessonCard = React.memo(({ lesson, index, status, onLessonClick }: LessonCardProps) => {
+const LessonCard = React.memo(({ lesson, index, status, isGloballyPlaying, onLessonClick }: LessonCardProps) => {
   const { isCompleted, isLocked, isCurrent, canPlay } = status;
+  
+  console.log('🎯 LessonCard render:', {
+    lessonTitle: lesson.title,
+    isCurrent,
+    isGloballyPlaying,
+    canPlay,
+    isCompleted
+  });
   
   const {
     isPlaying,
@@ -36,6 +45,7 @@ const LessonCard = React.memo(({ lesson, index, status, onLessonClick }: LessonC
     lesson,
     canPlay,
     isCurrent,
+    isGloballyPlaying,
     onLessonClick
   });
 

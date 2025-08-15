@@ -9,14 +9,28 @@ import ModuleSection from './learning-path/ModuleSection';
 interface LearningPathProps {
   lessons: Lesson[];
   modules: Module[];
-  onSelectLesson: (lesson: Lesson) => void;
+  onSelectLesson: (lesson: Lesson, shouldAutoPlay?: boolean) => void;
   currentLessonId: string | null;
+  isGloballyPlaying: boolean;
 }
 
-const LearningPath = React.memo(({ lessons, modules, onSelectLesson, currentLessonId }: LearningPathProps) => {
+const LearningPath = React.memo(({ 
+  lessons, 
+  modules, 
+  onSelectLesson, 
+  currentLessonId, 
+  isGloballyPlaying 
+}: LearningPathProps) => {
   // Use custom hooks for status and classes
   const lessonStatusMap = useLessonStatus(lessons, modules, currentLessonId);
   const getLessonClasses = useLessonClasses(lessons, lessonStatusMap);
+
+  console.log('🛤️ LearningPath render:', {
+    currentLessonId,
+    isGloballyPlaying,
+    lessonCount: lessons.length,
+    moduleCount: modules.length
+  });
 
   // OPTIMIZADO: Memoizar función de agrupación con hash estable
   const getLessonsForModule = useCallback((moduleId: string) => {
@@ -34,9 +48,10 @@ const LearningPath = React.memo(({ lessons, modules, onSelectLesson, currentLess
   ]);
 
   // HANDLER DE CLICK CON LOGS ESPECÍFICOS
-  const handleLessonClick = useCallback((lesson: Lesson) => {
+  const handleLessonClick = useCallback((lesson: Lesson, shouldAutoPlay = true) => {
     console.log('🎯🎯🎯 LEARNING PATH - CLICK RECIBIDO:', {
       lessonTitle: lesson.title,
+      shouldAutoPlay,
       timestamp: new Date().toLocaleTimeString()
     });
     
@@ -59,7 +74,7 @@ const LearningPath = React.memo(({ lessons, modules, onSelectLesson, currentLess
     
     if (canPlay) {
       console.log('✅✅✅ LEARNING PATH - ENVIANDO A onSelectLesson:', lesson.title);
-      onSelectLesson(lesson);
+      onSelectLesson(lesson, shouldAutoPlay);
       console.log('✅✅✅ LEARNING PATH - onSelectLesson LLAMADO EXITOSAMENTE:', lesson.title);
     } else {
       console.log('🚫🚫🚫 LEARNING PATH - LECCIÓN BLOQUEADA:', {
@@ -97,6 +112,8 @@ const LearningPath = React.memo(({ lessons, modules, onSelectLesson, currentLess
               moduleLessons={moduleLessons}
               lessonStatusMap={lessonStatusMap}
               getLessonClasses={getLessonClasses}
+              currentLessonId={currentLessonId}
+              isGloballyPlaying={isGloballyPlaying}
               onLessonClick={handleLessonClick}
             />
           );
