@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useCourseData } from '@/hooks/useCourseData';
@@ -11,16 +12,11 @@ const CompanyCourse = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const {
     podcast,
-    isPodcastLoading,
-    podcastError,
-    currentLesson,
-    isPlaying,
-    handleSelectLesson,
-    handleLessonComplete,
-    handleProgressUpdate
+    isLoading,
+    error
   } = useCourseData(courseId);
 
-  if (isPodcastLoading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
         <span className="loading loading-ring loading-lg"></span>
@@ -28,10 +24,10 @@ const CompanyCourse = () => {
     );
   }
 
-  if (podcastError) {
+  if (error) {
     return (
       <div className="flex justify-center items-center h-screen text-red-500">
-        Error: {podcastError.message}
+        Error: {error.message}
       </div>
     );
   }
@@ -42,12 +38,14 @@ const CompanyCourse = () => {
 
   const handleLessonCompleteWrapper = (lessonId: string) => {
     console.log('📚 Lesson completed:', lessonId);
-    handleLessonComplete();
   };
 
   const handleProgressUpdateWrapper = (lessonId: string, position: number) => {
     console.log('📊 Progress update:', lessonId, position);
-    handleProgressUpdate(position);
+  };
+
+  const handleSelectLesson = (lesson: any) => {
+    console.log('🎯 Lesson selected:', lesson.title);
   };
 
   return (
@@ -62,7 +60,7 @@ const CompanyCourse = () => {
             <div className="lg:col-span-2 space-y-8">
               <CourseLearningPathSection
                 podcast={podcast}
-                currentLessonId={currentLesson?.id || null}
+                currentLessonId={null}
                 onSelectLesson={handleSelectLesson}
                 onLessonComplete={handleLessonCompleteWrapper}
                 onProgressUpdate={handleProgressUpdateWrapper}

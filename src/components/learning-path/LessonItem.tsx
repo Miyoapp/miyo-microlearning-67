@@ -118,7 +118,7 @@ const LessonItem = React.memo(({
               {isCurrent && (
                 <span className="ml-2 text-xs text-green-600">● Reproduciendo</span>
               )}
-            </div>
+            </h4>
             
             <div className="text-xs text-gray-500">
               {Math.floor(lesson.duracion)}:{((lesson.duracion % 1) * 60).toFixed(0).padStart(2, '0')}
