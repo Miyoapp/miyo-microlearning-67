@@ -20,6 +20,13 @@ interface CourseMainContentProps {
   onToggleSave: () => void;
   onSelectLesson: (lesson: Lesson) => void;
   onShowCheckout: () => void;
+  // NEW: Audio control props
+  globalCurrentTime?: number;
+  globalDuration?: number;
+  onSeek?: (value: number) => void;
+  onSkipBackward?: () => void;
+  onSkipForward?: () => void;
+  onPlaybackRateChange?: (rate: number) => void;
 }
 
 const CourseMainContent: React.FC<CourseMainContentProps> = ({
@@ -35,7 +42,13 @@ const CourseMainContent: React.FC<CourseMainContentProps> = ({
   onStartLearning,
   onToggleSave,
   onSelectLesson,
-  onShowCheckout
+  onShowCheckout,
+  globalCurrentTime = 0,
+  globalDuration = 0,
+  onSeek,
+  onSkipBackward,
+  onSkipForward,
+  onPlaybackRateChange
 }) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
@@ -56,6 +69,12 @@ const CourseMainContent: React.FC<CourseMainContentProps> = ({
             currentLessonId={currentLesson?.id || null}
             isGloballyPlaying={isGloballyPlaying}
             onSelectLesson={onSelectLesson}
+            globalCurrentTime={globalCurrentTime}
+            globalDuration={globalDuration}
+            onSeek={onSeek}
+            onSkipBackward={onSkipBackward}
+            onSkipForward={onSkipForward}
+            onPlaybackRateChange={onPlaybackRateChange}
           />
           
           {/* Premium overlay for learning path */}

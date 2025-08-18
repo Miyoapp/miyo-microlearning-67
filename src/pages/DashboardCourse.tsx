@@ -11,6 +11,7 @@ import CourseLoadingSkeleton from '@/components/course/CourseLoadingSkeleton';
 import CourseErrorState from '@/components/course/CourseErrorState';
 import CourseNotFoundState from '@/components/course/CourseNotFoundState';
 import CourseAccessHandler from '@/components/course/CourseAccessHandler';
+import AudioPlayer from '@/components/AudioPlayer';
 import MetaTags from '@/components/MetaTags';
 
 const DashboardCourse = () => {
@@ -18,6 +19,16 @@ const DashboardCourse = () => {
   const { podcast, setPodcast, isLoading: courseLoading, error: courseError, retry: retryCourse } = useCourseData(courseId);
   const { userProgress, loading: progressLoading, refetch, startCourse, toggleSaveCourse } = useUserProgress();
   const [showCheckout, setShowCheckout] = useState(false);
+  
+  // GLOBAL AUDIO STATE - Added for mini-player synchronization
+  const [globalCurrentTime, setGlobalCurrentTime] = useState(0);
+  const [globalDuration, setGlobalDuration] = useState(0);
+  
+  // AUDIO CALLBACK REFS - To control global audio from lesson cards
+  const onSeekRef = useRef<((value: number) => void) | null>(null);
+  const onSkipBackwardRef = useRef<(() => void) | null>(null);
+  const onSkipForwardRef = useRef<(() => void) | null>(null);
+  const onPlaybackRateRef = useRef<((rate: number) => void) | null>(null);
   
   // ENHANCED STABLE REFERENCE: Keep last valid podcast with timeout-based cleanup
   const lastValidPodcast = useRef(podcast);
@@ -87,6 +98,41 @@ const DashboardCourse = () => {
 
   // DEFINITIVE DISPLAY PODCAST: Always prefer current, with stable fallback
   const displayPodcast = podcast || lastValidPodcast.current;
+
+  // AUDIO CALLBACK HANDLERS - Connect lesson cards to global audio player
+  const handleAudioSeek = (value: number) => {
+    console.log('🎯 DASHBOARD: Audio seek request from lesson card:', value);
+    if (onSeekRef.current) {
+      onSeekRef.current(value);
+    }
+  };
+
+  const handleAudioSkipBackward = () => {
+    console.log('⏪ DASHBOARD: Audio skip backward request from lesson card');
+    if (onSkipBackwardRef.current) {
+      onSkipBackwardRef.current();
+    }
+  };
+
+  const handleAudioSkipForward = () => {
+    console.log('⏩ DASHBOARD: Audio skip forward request from lesson card');
+    if (onSkipForwardRef.current) {
+      onSkipForwardRef.current();
+    }
+  };
+
+  const handleAudioPlaybackRateChange = (rate: number) => {
+    console.log('🎛️ DASHBOARD: Audio playback rate change request from lesson card:', rate);
+    if (onPlaybackRateRef.current) {
+      onPlaybackRateRef.current(rate);
+    }
+  };
+
+  // AUDIO DATA UPDATE HANDLER - Sync global audio state
+  const handleAudioDataUpdate = (currentTime: number, duration: number) => {
+    setGlobalCurrentTime(currentTime);
+    setGlobalDuration(duration);
+  };
 
   // TAB SWITCH DETECTION: Enhanced logging for realtime subscription tracking
   console.log('🎭 TAB SWITCH & REALTIME DIAGNOSTIC - DASHBOARD COURSE STATE:', {
@@ -236,8 +282,28 @@ const DashboardCourse = () => {
             onLessonComplete={handleLessonComplete}
             onProgressUpdate={handleProgressUpdate}
             onPurchaseComplete={handlePurchaseComplete}
+            globalCurrentTime={globalCurrentTime}
+            globalDuration={globalDuration}
+            onSeek={handleAudioSeek}
+            onSkipBackward={handleAudioSkipBackward}
+            onSkipForward={handleAudioSkipForward}
+            onPlaybackRateChange={handleAudioPlaybackRateChange}
           />
         </div>
+        
+        {/* GLOBAL AUDIO PLAYER - Single source of audio playback */}
+        <AudioPlayer 
+          lesson={currentLesson}
+          isPlaying={isPlaying}
+          onTogglePlay={handleTogglePlay}
+          onComplete={handleLessonComplete}
+          onProgressUpdate={handleProgressUpdate}
+          onAudioDataUpdate={handleAudioDataUpdate}
+          onSeekRequest={(handler) => { onSeekRef.current = handler; }}
+          onSkipBackwardRequest={(handler) => { onSkipBackwardRef.current = handler; }}
+          onSkipForwardRequest={(handler) => { onSkipForwardRef.current = handler; }}
+          onPlaybackRateRequest={(handler) => { onPlaybackRateRef.current = handler; }}
+        />
       </DashboardLayout>
     );
   }

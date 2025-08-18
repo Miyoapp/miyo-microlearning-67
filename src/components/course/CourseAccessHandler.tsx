@@ -22,8 +22,15 @@ interface CourseAccessHandlerProps {
   onCloseCheckout: () => void;
   onTogglePlay: () => void;
   onLessonComplete: () => void;
-  onProgressUpdate: (progress: number) => void;
+  onProgressUpdate: (position: number) => void;
   onPurchaseComplete: () => void;
+  // NEW: Audio control props
+  globalCurrentTime?: number;
+  globalDuration?: number;
+  onSeek?: (value: number) => void;
+  onSkipBackward?: () => void;
+  onSkipForward?: () => void;
+  onPlaybackRateChange?: (rate: number) => void;
 }
 
 const CourseAccessHandler: React.FC<CourseAccessHandlerProps> = ({
@@ -45,37 +52,14 @@ const CourseAccessHandler: React.FC<CourseAccessHandlerProps> = ({
   onTogglePlay,
   onLessonComplete,
   onProgressUpdate,
-  onPurchaseComplete
+  onPurchaseComplete,
+  globalCurrentTime = 0,
+  globalDuration = 0,
+  onSeek,
+  onSkipBackward,
+  onSkipForward,
+  onPlaybackRateChange
 }) => {
-  // DIAGNOSTIC: Monitor props validity during render
-  console.log('🎬 COURSE ACCESS HANDLER RENDER:', {
-    timestamp: new Date().toISOString(),
-    podcastValid: !!podcast,
-    podcastId: podcast?.id,
-    podcastTitle: podcast?.title,
-    currentLessonValid: !!currentLesson,
-    currentLessonId: currentLesson?.id,
-    hasStarted,
-    isSaved,
-    progressPercentage,
-    isCompleted,
-    isPremium,
-    hasAccess,
-    isPlaying,
-    showCheckout,
-    propsReceived: {
-      podcast: podcast ? 'valid' : 'invalid',
-      currentLesson: currentLesson ? 'valid' : 'null',
-      hasAccess: hasAccess ? 'granted' : 'denied'
-    }
-  });
-
-  // GUARD: Ensure podcast is valid before rendering
-  if (!podcast) {
-    console.error('❌ CourseAccessHandler received invalid podcast prop');
-    return null;
-  }
-
   return (
     <>
       <CourseMainContent
@@ -92,20 +76,18 @@ const CourseAccessHandler: React.FC<CourseAccessHandlerProps> = ({
         onToggleSave={onToggleSave}
         onSelectLesson={onSelectLesson}
         onShowCheckout={onShowCheckout}
+        globalCurrentTime={globalCurrentTime}
+        globalDuration={globalDuration}
+        onSeek={onSeek}
+        onSkipBackward={onSkipBackward}
+        onSkipForward={onSkipForward}
+        onPlaybackRateChange={onPlaybackRateChange}
       />
 
-      {/* Checkout Modal */}
-      {isPremium && (
+      {showCheckout && (
         <CheckoutModal
-          isOpen={showCheckout}
+          podcast={podcast}
           onClose={onCloseCheckout}
-          course={{
-            id: podcast.id,
-            title: podcast.title,
-            precio: podcast.precio || 0,
-            imageUrl: podcast.imageUrl,
-            moneda: podcast.moneda || 'USD'
-          }}
           onPurchaseComplete={onPurchaseComplete}
         />
       )}
