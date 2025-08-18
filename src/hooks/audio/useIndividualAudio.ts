@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Lesson } from '@/types';
 
@@ -42,7 +43,7 @@ export function useIndividualAudio({
       console.log("🎵 Initializing audio for lesson:", lesson.title, "isCompleted:", lesson.isCompleted);
       const audio = audioRef.current;
       
-      // NUEVO: Para lecciones completadas, inicializar al final
+      // CORREGIDO: Para lecciones completadas, inicializar al final
       if (lesson.isCompleted && duration > 0) {
         console.log("✅ Completed lesson - initializing progress at 100%");
         audio.currentTime = duration;
@@ -60,7 +61,7 @@ export function useIndividualAudio({
     }
   }, [lesson.id, lesson.isCompleted]);
 
-  // NUEVO: Cuando se carga metadata, inicializar posición para lecciones completadas
+  // CORREGIDO: Cuando se carga metadata, inicializar posición para lecciones completadas
   useEffect(() => {
     if (duration > 0 && lesson.isCompleted) {
       console.log("📊 Duration loaded for completed lesson - setting progress to 100%");
@@ -200,7 +201,7 @@ export function useIndividualAudio({
       console.log("📋 Audio metadata loaded for", lesson.title, "duration:", newDuration, "isCompleted:", lesson.isCompleted);
       setDuration(newDuration);
       
-      // NUEVO: Para lecciones completadas, inicializar al final inmediatamente
+      // CORREGIDO: Para lecciones completadas, inicializar al final inmediatamente
       if (lesson.isCompleted) {
         console.log("✅ Setting completed lesson to 100% after metadata load");
         setCurrentTime(newDuration);
@@ -209,7 +210,7 @@ export function useIndividualAudio({
     }
   }, [lesson.title, lesson.isCompleted]);
 
-  // Handle audio ended - CORREGIDO: Mantener progreso para lecciones completadas
+  // CRÍTICO: Handle audio ended - Garantizar completación correcta
   const handleAudioEnded = useCallback(() => {
     console.log("🏁 Audio ended for lesson:", lesson.title, "isCompleted:", lesson.isCompleted);
     
@@ -218,17 +219,25 @@ export function useIndividualAudio({
       onPlayStateChange(false);
     }
     
-    // CRÍTICO: Para lecciones completadas (replay), mantener progreso al 100%
+    // CRÍTICO: Garantizar que se llame onProgressUpdate(100) ANTES de onComplete
+    if (onProgressUpdate && !lesson.isCompleted) {
+      console.log("🎯 CRITICAL: Ensuring 100% progress update before completion for:", lesson.title);
+      onProgressUpdate(100);
+    }
+    
+    // CORREGIDO: Para lecciones completadas (replay), mantener progreso al 100%
     if (lesson.isCompleted) {
       console.log("✅ Completed lesson ended - maintaining progress at 100%");
       setCurrentTime(duration); // Mantener al final, no resetear a 0
     } else {
-      console.log("🎯 New lesson completed - resetting for next cycle");
-      setCurrentTime(0); // Solo resetear para lecciones nuevas
+      console.log("🎯 New lesson completion - setting to end position for visual consistency");
+      setCurrentTime(duration); // CORREGIDO: Mantener al final en lugar de resetear a 0
     }
     
+    // Llamar onComplete después de asegurar el progreso
+    console.log("🏁 Calling onComplete for lesson:", lesson.title);
     onComplete();
-  }, [lesson.title, lesson.isCompleted, duration, onComplete, onPlayStateChange]);
+  }, [lesson.title, lesson.isCompleted, duration, onComplete, onPlayStateChange, onProgressUpdate]);
 
   // Handle seek - MEJORADO: Progreso inteligente durante seek
   const handleSeek = useCallback((value: number) => {
@@ -256,7 +265,6 @@ export function useIndividualAudio({
     }
   }, [lesson.title]);
 
-  // Handle skip forward
   const handleSkipForward = useCallback(() => {
     if (audioRef.current) {
       console.log('⏩ Skip forward for lesson:', lesson.title);
@@ -266,19 +274,16 @@ export function useIndividualAudio({
     }
   }, [duration, lesson.title]);
 
-  // Handle volume change
   const handleVolumeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseFloat(e.target.value);
     setVolume(value);
     setIsMuted(value === 0);
   }, []);
 
-  // Toggle mute
   const toggleMute = useCallback(() => {
     setIsMuted(prev => !prev);
   }, []);
 
-  // Handle playback rate change
   const handlePlaybackRateChange = useCallback((rate: number) => {
     console.log("🎛️ Changing playback rate to", rate + "x", "for lesson:", lesson.title);
     setPlaybackRate(rate);

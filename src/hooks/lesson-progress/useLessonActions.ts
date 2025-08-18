@@ -36,25 +36,33 @@ export function useLessonActions(
         return;
       }
       
+      // CRÍTICO: Si position >= 100, SIEMPRE marcar como completada
+      if (position >= 100) {
+        console.log('🎯 CRITICAL: Position >= 100 detected, forcing completion:', lessonId, 'position:', position);
+        
+        const updates = {
+          current_position: 100,
+          is_completed: true
+        };
+        
+        console.log('🎯 CRITICAL: Forcing completion with updates:', updates);
+        await updateLessonProgress(lessonId, courseId, updates);
+        return;
+      }
+      
       // Escenario 2: Lección ya completada siendo reproducida (replay)
       if (existingProgress?.is_completed) {
         console.log('🔄 Replay of completed lesson - preserving completion status and not updating position:', lessonId);
         return; // MEJORADO: No actualizar posición durante replay
       }
       
-      // Escenario 3: Primera completion de lección o progreso de lección incompleta
-      if (!existingProgress?.is_completed) {
+      // Escenario 3: Progreso de lección incompleta (< 100%)
+      if (!existingProgress?.is_completed && position < 100) {
         console.log('📍 Updating position for incomplete lesson:', lessonId, 'position:', position);
         
         const updates: any = {
           current_position: Math.round(position)
         };
-
-        // Solo marcar como completada si llega al 100%
-        if (position >= 100) {
-          updates.is_completed = true;
-          console.log('🎯 First completion - marking as completed');
-        }
 
         await updateLessonProgress(lessonId, courseId, updates);
       }
