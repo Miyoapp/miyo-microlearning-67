@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Lesson } from '@/types';
-import { Play, Pause, Lock, Trophy, SkipBack, SkipForward, ChevronDown } from 'lucide-react';
+import { Play, Pause, Lock, Trophy, SkipBack, SkipForward, ChevronDown, Volume2, VolumeX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLessonCard } from '@/hooks/learning-path/useLessonCard';
 
@@ -15,91 +15,76 @@ interface LessonCardProps {
     canPlay: boolean;
     isFirstInSequence: boolean;
   };
-  isGloballyPlaying: boolean;
+  isPlaying: boolean;
   onLessonClick: (lesson: Lesson, shouldAutoPlay?: boolean) => void;
-  globalCurrentTime?: number;
-  globalDuration?: number;
-  onSeek?: (value: number) => void;
-  onSkipBackward?: () => void;
-  onSkipForward?: () => void;
-  onPlaybackRateChange?: (rate: number) => void;
+  onProgressUpdate?: (position: number) => void;
+  onLessonComplete?: () => void;
 }
 
 const LessonCard = React.memo(({ 
   lesson, 
   index, 
   status, 
-  isGloballyPlaying, 
+  isPlaying,
   onLessonClick,
-  globalCurrentTime = 0,
-  globalDuration = 0,
-  onSeek,
-  onSkipBackward,
-  onSkipForward,
-  onPlaybackRateChange
+  onProgressUpdate,
+  onLessonComplete
 }: LessonCardProps) => {
   const { isCompleted, isLocked, isCurrent, canPlay } = status;
   
-  console.log('🎯 LessonCard render (UI ONLY):', {
+  console.log('🎯 LessonCard render:', {
     lessonTitle: lesson.title,
     isCurrent,
-    isGloballyPlaying,
+    isPlaying,
     canPlay,
-    isCompleted,
-    globalCurrentTime,
-    globalDuration
+    isCompleted
   });
   
   const {
-    isPlaying,
     currentTime,
     duration,
     playbackRate,
+    volume,
+    isMuted,
     handlePlayPause,
+    handleSeek,
+    handleSkipBackward,
+    handleSkipForward,
     handlePlaybackRateChange,
-    formatTime
+    handleVolumeChange,
+    toggleMute,
+    formatTime,
+    audioRef,
+    handleMetadata,
+    updateTime,
+    handleAudioEnded
   } = useLessonCard({
     lesson,
     canPlay,
     isCurrent,
-    isGloballyPlaying,
+    isPlaying,
     onLessonClick,
-    globalCurrentTime,
-    globalDuration
+    onProgressUpdate,
+    onLessonComplete
   });
 
   // Speed options for dropdown
   const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
   const [showSpeedDropdown, setShowSpeedDropdown] = React.useState(false);
+  const [showVolumeControl, setShowVolumeControl] = React.useState(false);
 
   const validDuration = duration || (lesson.duracion * 60);
   const validCurrentTime = Math.min(currentTime, validDuration);
 
-  // Handle seek - delegate to global handler
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!isCurrent || !onSeek) return;
+  // Handle seek
+  const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseFloat(e.target.value);
-    onSeek(value);
+    handleSeek(value);
   };
 
-  // Handle skip backward - delegate to global handler
-  const handleSkipBackwardClick = () => {
-    if (!isCurrent || !onSkipBackward) return;
-    onSkipBackward();
-  };
-
-  // Handle skip forward - delegate to global handler
-  const handleSkipForwardClick = () => {
-    if (!isCurrent || !onSkipForward) return;
-    onSkipForward();
-  };
-
-  // Handle playback rate change - delegate to global handler
+  // Handle playback rate change
   const handleRateChange = (rate: number) => {
     handlePlaybackRateChange(rate);
-    if (isCurrent && onPlaybackRateChange) {
-      onPlaybackRateChange(rate);
-    }
     setShowSpeedDropdown(false);
   };
 
@@ -130,6 +115,18 @@ const LessonCard = React.memo(({
         "cursor-not-allowed": !canPlay
       }
     )}>
+      {/* Audio element for current playing lesson */}
+      {audioRef && (
+        <audio
+          ref={audioRef}
+          src={lesson.audioUrl}
+          onLoadedMetadata={handleMetadata}
+          onTimeUpdate={updateTime}
+          onEnded={handleAudioEnded}
+          preload="metadata"
+        />
+      )}
+      
       {/* Header with title and status */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-3">
@@ -172,7 +169,7 @@ const LessonCard = React.memo(({
             )}>
               {lesson.title}
             </h4>
-            {isCurrent && (
+            {isCurrent && isPlaying && (
               <span className="text-xs text-green-600">● Reproduciendo</span>
             )}
           </div>
@@ -202,7 +199,7 @@ const LessonCard = React.memo(({
               min={0}
               max={validDuration}
               value={validCurrentTime}
-              onChange={handleSeek}
+              onChange={handleSeekChange}
               className="w-full accent-[#5e16ea] h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer"
               style={{
                 background: `linear-gradient(to right, #5e16ea 0%, #5e16ea ${(validCurrentTime / validDuration) * 100}%, #e5e7eb ${(validCurrentTime / validDuration) * 100}%, #e5e7eb 100%)`
@@ -210,12 +207,12 @@ const LessonCard = React.memo(({
             />
           </div>
 
-          {/* Control Buttons - Only skip and speed controls */}
+          {/* Control Buttons */}
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               {/* Skip Backward */}
               <button
-                onClick={handleSkipBackwardClick}
+                onClick={handleSkipBackward}
                 className="p-1 text-gray-600 hover:text-[#5e16ea] transition-colors"
                 aria-label="Retroceder 15 segundos"
               >
@@ -224,12 +221,42 @@ const LessonCard = React.memo(({
 
               {/* Skip Forward */}
               <button
-                onClick={handleSkipForwardClick}
+                onClick={handleSkipForward}
                 className="p-1 text-gray-600 hover:text-[#5e16ea] transition-colors"
                 aria-label="Avanzar 15 segundos"
               >
                 <SkipForward size={16} />
               </button>
+
+              {/* Volume Control */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowVolumeControl(!showVolumeControl)}
+                  className="p-1 text-gray-600 hover:text-[#5e16ea] transition-colors"
+                  aria-label={isMuted ? "Activar sonido" : "Silenciar"}
+                >
+                  {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                </button>
+
+                {showVolumeControl && (
+                  <div className="absolute bottom-full left-0 mb-2 bg-white rounded-md shadow-lg p-3 z-10 min-w-32">
+                    <div className="flex items-center space-x-2">
+                      <button onClick={toggleMute} className="text-gray-600 hover:text-[#5e16ea]">
+                        {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+                      </button>
+                      <input
+                        type="range"
+                        min={0}
+                        max={1}
+                        step={0.01}
+                        value={volume}
+                        onChange={handleVolumeChange}
+                        className="flex-1 accent-[#5e16ea] h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Speed Control */}

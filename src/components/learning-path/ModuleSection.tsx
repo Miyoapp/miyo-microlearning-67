@@ -11,12 +11,8 @@ interface ModuleSectionProps {
   currentLessonId: string | null;
   isGloballyPlaying: boolean;
   onLessonClick: (lesson: Lesson, shouldAutoPlay?: boolean) => void;
-  globalCurrentTime?: number;
-  globalDuration?: number;
-  onSeek?: (value: number) => void;
-  onSkipBackward?: () => void;
-  onSkipForward?: () => void;
-  onPlaybackRateChange?: (rate: number) => void;
+  onProgressUpdate?: (position: number) => void;
+  onLessonComplete?: () => void;
 }
 
 const ModuleSection = React.memo(({ 
@@ -27,12 +23,8 @@ const ModuleSection = React.memo(({
   currentLessonId,
   isGloballyPlaying,
   onLessonClick,
-  globalCurrentTime = 0,
-  globalDuration = 0,
-  onSeek,
-  onSkipBackward,
-  onSkipForward,
-  onPlaybackRateChange
+  onProgressUpdate,
+  onLessonComplete
 }: ModuleSectionProps) => {
   if (moduleLessons.length === 0) return null;
   
@@ -40,9 +32,7 @@ const ModuleSection = React.memo(({
     moduleTitle: module.title,
     currentLessonId,
     isGloballyPlaying,
-    lessonCount: moduleLessons.length,
-    globalCurrentTime,
-    globalDuration
+    lessonCount: moduleLessons.length
   });
   
   return (
@@ -60,10 +50,13 @@ const ModuleSection = React.memo(({
           const status = lessonStatusMap.get(lesson.id);
           if (!status) return null;
           
-          // Add isCurrent calculation
+          // Add isCurrent calculation and determine if this lesson is playing
+          const isCurrent = lesson.id === currentLessonId;
+          const isPlaying = isCurrent && isGloballyPlaying;
+          
           const enhancedStatus = {
             ...status,
-            isCurrent: lesson.id === currentLessonId
+            isCurrent
           };
           
           return (
@@ -72,14 +65,10 @@ const ModuleSection = React.memo(({
               lesson={lesson}
               index={index}
               status={enhancedStatus}
-              isGloballyPlaying={isGloballyPlaying}
+              isPlaying={isPlaying}
               onLessonClick={onLessonClick}
-              globalCurrentTime={globalCurrentTime}
-              globalDuration={globalDuration}
-              onSeek={onSeek}
-              onSkipBackward={onSkipBackward}
-              onSkipForward={onSkipForward}
-              onPlaybackRateChange={onPlaybackRateChange}
+              onProgressUpdate={onProgressUpdate}
+              onLessonComplete={onLessonComplete}
             />
           );
         })}

@@ -8,13 +8,8 @@ interface CourseLearningPathSectionProps {
   currentLessonId: string | null;
   isGloballyPlaying: boolean;
   onSelectLesson: (lesson: Lesson) => void;
-  // NEW: Audio control props
-  globalCurrentTime?: number;
-  globalDuration?: number;
-  onSeek?: (value: number) => void;
-  onSkipBackward?: () => void;
-  onSkipForward?: () => void;
-  onPlaybackRateChange?: (rate: number) => void;
+  onProgressUpdate?: (position: number) => void;
+  onLessonComplete?: () => void;
 }
 
 const CourseLearningPathSection: React.FC<CourseLearningPathSectionProps> = ({
@@ -22,12 +17,8 @@ const CourseLearningPathSection: React.FC<CourseLearningPathSectionProps> = ({
   currentLessonId,
   isGloballyPlaying,
   onSelectLesson,
-  globalCurrentTime = 0,
-  globalDuration = 0,
-  onSeek,
-  onSkipBackward,
-  onSkipForward,
-  onPlaybackRateChange
+  onProgressUpdate,
+  onLessonComplete
 }) => {
   return (
     <div id="learning-path-section" className="bg-white rounded-2xl shadow-sm p-6">
@@ -37,12 +28,8 @@ const CourseLearningPathSection: React.FC<CourseLearningPathSectionProps> = ({
         onSelectLesson={onSelectLesson}
         currentLessonId={currentLessonId}
         isGloballyPlaying={isGloballyPlaying}
-        globalCurrentTime={globalCurrentTime}
-        globalDuration={globalDuration}
-        onSeek={onSeek}
-        onSkipBackward={onSkipBackward}
-        onSkipForward={onSkipForward}
-        onPlaybackRateChange={onPlaybackRateChange}
+        onProgressUpdate={onProgressUpdate}
+        onLessonComplete={onLessonComplete}
       />
     </div>
   );

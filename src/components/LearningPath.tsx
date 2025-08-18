@@ -12,12 +12,8 @@ interface LearningPathProps {
   onSelectLesson: (lesson: Lesson, shouldAutoPlay?: boolean) => void;
   currentLessonId: string | null;
   isGloballyPlaying: boolean;
-  globalCurrentTime?: number;
-  globalDuration?: number;
-  onSeek?: (value: number) => void;
-  onSkipBackward?: () => void;
-  onSkipForward?: () => void;
-  onPlaybackRateChange?: (rate: number) => void;
+  onProgressUpdate?: (position: number) => void;
+  onLessonComplete?: () => void;
 }
 
 const LearningPath = React.memo(({ 
@@ -26,12 +22,8 @@ const LearningPath = React.memo(({
   onSelectLesson, 
   currentLessonId, 
   isGloballyPlaying,
-  globalCurrentTime = 0,
-  globalDuration = 0,
-  onSeek,
-  onSkipBackward,
-  onSkipForward,
-  onPlaybackRateChange
+  onProgressUpdate,
+  onLessonComplete
 }: LearningPathProps) => {
   // Use custom hooks for status and classes
   const lessonStatusMap = useLessonStatus(lessons, modules, currentLessonId);
@@ -41,9 +33,7 @@ const LearningPath = React.memo(({
     currentLessonId,
     isGloballyPlaying,
     lessonCount: lessons.length,
-    moduleCount: modules.length,
-    globalCurrentTime,
-    globalDuration
+    moduleCount: modules.length
   });
 
   // OPTIMIZADO: Memoizar función de agrupación con hash estable
@@ -129,12 +119,8 @@ const LearningPath = React.memo(({
               currentLessonId={currentLessonId}
               isGloballyPlaying={isGloballyPlaying}
               onLessonClick={handleLessonClick}
-              globalCurrentTime={globalCurrentTime}
-              globalDuration={globalDuration}
-              onSeek={onSeek}
-              onSkipBackward={onSkipBackward}
-              onSkipForward={onSkipForward}
-              onPlaybackRateChange={onPlaybackRateChange}
+              onProgressUpdate={onProgressUpdate}
+              onLessonComplete={onLessonComplete}
             />
           );
         })}
