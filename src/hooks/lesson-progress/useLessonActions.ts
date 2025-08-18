@@ -37,12 +37,12 @@ export function useLessonActions(
       }
       
       // Escenario 2: Lección ya completada siendo reproducida (replay)
-      if (existingProgress?.is_completed && position < 100) {
-        console.log('🔄 Replay of completed lesson - preserving completion status:', lessonId);
-        return;
+      if (existingProgress?.is_completed) {
+        console.log('🔄 Replay of completed lesson - preserving completion status and not updating position:', lessonId);
+        return; // MEJORADO: No actualizar posición durante replay
       }
       
-      // Escenario 3: Primera completion de lección
+      // Escenario 3: Primera completion de lección o progreso de lección incompleta
       if (!existingProgress?.is_completed) {
         console.log('📍 Updating position for incomplete lesson:', lessonId, 'position:', position);
         

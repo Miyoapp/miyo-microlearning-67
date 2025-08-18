@@ -32,23 +32,44 @@ export function useIndividualAudio({
     actualIsPlaying,
     currentTime,
     duration,
-    playbackRate
+    playbackRate,
+    isCompleted: lesson.isCompleted
   });
 
-  // Reset audio when lesson changes
+  // Reset audio when lesson changes with smart initialization for completed lessons
   useEffect(() => {
     if (audioRef.current) {
-      console.log("🎵 Initializing audio for lesson:", lesson.title);
+      console.log("🎵 Initializing audio for lesson:", lesson.title, "isCompleted:", lesson.isCompleted);
       const audio = audioRef.current;
-      audio.currentTime = 0;
+      
+      // NUEVO: Para lecciones completadas, inicializar al final
+      if (lesson.isCompleted && duration > 0) {
+        console.log("✅ Completed lesson - initializing progress at 100%");
+        audio.currentTime = duration;
+        setCurrentTime(duration);
+      } else {
+        audio.currentTime = 0;
+        setCurrentTime(0);
+      }
+      
       audio.volume = isMuted ? 0 : volume;
       audio.playbackRate = playbackRate;
-      setCurrentTime(0);
       setDuration(0);
       setActualIsPlaying(false);
       audio.load();
     }
-  }, [lesson.id]);
+  }, [lesson.id, lesson.isCompleted]);
+
+  // NUEVO: Cuando se carga metadata, inicializar posición para lecciones completadas
+  useEffect(() => {
+    if (duration > 0 && lesson.isCompleted) {
+      console.log("📊 Duration loaded for completed lesson - setting progress to 100%");
+      setCurrentTime(duration);
+      if (audioRef.current) {
+        audioRef.current.currentTime = duration;
+      }
+    }
+  }, [duration, lesson.isCompleted]);
 
   // NEW: Direct play/pause control for immediate response
   const handleDirectToggle = useCallback(() => {
@@ -155,48 +176,71 @@ export function useIndividualAudio({
     }
   }, [playbackRate]);
 
-  // Update time and progress
+  // Update time and progress - MEJORADO: Inteligente para replay vs primera vez
   const updateTime = useCallback(() => {
     if (audioRef.current && duration > 0) {
       const newCurrentTime = audioRef.current.currentTime;
       setCurrentTime(newCurrentTime);
       
+      // OPTIMIZADO: Solo actualizar progreso si no es replay de lección completada
       if (onProgressUpdate && !lesson.isCompleted) {
         const progressPercent = (newCurrentTime / duration) * 100;
+        console.log('📊 Updating progress for incomplete lesson:', lesson.title, 'progress:', progressPercent);
         onProgressUpdate(progressPercent);
+      } else if (lesson.isCompleted) {
+        console.log('🔄 Replay mode - not updating progress for completed lesson:', lesson.title);
       }
     }
-  }, [duration, lesson.isCompleted, onProgressUpdate]);
+  }, [duration, lesson.isCompleted, lesson.title, onProgressUpdate]);
 
   // Handle metadata loaded
   const handleMetadata = useCallback(() => {
     if (audioRef.current) {
       const newDuration = audioRef.current.duration;
-      console.log("📋 Audio metadata loaded for", lesson.title, "duration:", newDuration);
+      console.log("📋 Audio metadata loaded for", lesson.title, "duration:", newDuration, "isCompleted:", lesson.isCompleted);
       setDuration(newDuration);
+      
+      // NUEVO: Para lecciones completadas, inicializar al final inmediatamente
+      if (lesson.isCompleted) {
+        console.log("✅ Setting completed lesson to 100% after metadata load");
+        setCurrentTime(newDuration);
+        audioRef.current.currentTime = newDuration;
+      }
     }
-  }, [lesson.title]);
+  }, [lesson.title, lesson.isCompleted]);
 
-  // Handle audio ended
+  // Handle audio ended - CORREGIDO: Mantener progreso para lecciones completadas
   const handleAudioEnded = useCallback(() => {
-    console.log("🏁 Audio ended for lesson:", lesson.title);
-    setCurrentTime(0);
+    console.log("🏁 Audio ended for lesson:", lesson.title, "isCompleted:", lesson.isCompleted);
+    
     setActualIsPlaying(false);
     if (onPlayStateChange) {
       onPlayStateChange(false);
     }
+    
+    // CRÍTICO: Para lecciones completadas (replay), mantener progreso al 100%
+    if (lesson.isCompleted) {
+      console.log("✅ Completed lesson ended - maintaining progress at 100%");
+      setCurrentTime(duration); // Mantener al final, no resetear a 0
+    } else {
+      console.log("🎯 New lesson completed - resetting for next cycle");
+      setCurrentTime(0); // Solo resetear para lecciones nuevas
+    }
+    
     onComplete();
-  }, [lesson.title, onComplete, onPlayStateChange]);
+  }, [lesson.title, lesson.isCompleted, duration, onComplete, onPlayStateChange]);
 
-  // Handle seek
+  // Handle seek - MEJORADO: Progreso inteligente durante seek
   const handleSeek = useCallback((value: number) => {
     if (audioRef.current) {
-      console.log('🎯 Seeking to position:', value, 'for lesson:', lesson.title);
+      console.log('🎯 Seeking to position:', value, 'for lesson:', lesson.title, 'isCompleted:', lesson.isCompleted);
       setCurrentTime(value);
       audioRef.current.currentTime = value;
       
+      // OPTIMIZADO: Solo actualizar progreso en BD si no es replay
       if (onProgressUpdate && duration > 0 && !lesson.isCompleted) {
         const progressPercent = (value / duration) * 100;
+        console.log('📊 Updating seek progress for incomplete lesson:', progressPercent);
         onProgressUpdate(progressPercent);
       }
     }
