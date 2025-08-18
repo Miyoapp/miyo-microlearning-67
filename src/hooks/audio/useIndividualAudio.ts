@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Lesson } from '@/types';
 
@@ -8,6 +7,7 @@ interface UseIndividualAudioProps {
   onTogglePlay: () => void;
   onComplete: () => void;
   onProgressUpdate?: (position: number) => void;
+  onPlayStateChange?: (isPlaying: boolean) => void;
 }
 
 export function useIndividualAudio({
@@ -15,18 +15,21 @@ export function useIndividualAudio({
   isPlaying,
   onTogglePlay,
   onComplete,
-  onProgressUpdate
+  onProgressUpdate,
+  onPlayStateChange
 }: UseIndividualAudioProps) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.7);
   const [isMuted, setIsMuted] = useState(false);
   const [playbackRate, setPlaybackRate] = useState(1);
+  const [actualIsPlaying, setActualIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const lastPlayingState = useRef(isPlaying);
 
   console.log('🎵 useIndividualAudio for lesson:', lesson.title, {
     isPlaying,
+    actualIsPlaying,
     currentTime,
     duration,
     playbackRate
@@ -42,11 +45,46 @@ export function useIndividualAudio({
       audio.playbackRate = playbackRate;
       setCurrentTime(0);
       setDuration(0);
+      setActualIsPlaying(false);
       audio.load();
     }
   }, [lesson.id]);
 
-  // ENHANCED: Handle play/pause state changes with better state tracking
+  // NEW: Direct play/pause control for immediate response
+  const handleDirectToggle = useCallback(() => {
+    if (!audioRef.current) return;
+
+    const audio = audioRef.current;
+    const newPlayingState = !actualIsPlaying;
+
+    console.log('🎵 Direct toggle:', lesson.title, 'new state:', newPlayingState);
+
+    if (newPlayingState) {
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          setActualIsPlaying(true);
+          if (onPlayStateChange) {
+            onPlayStateChange(true);
+          }
+        }).catch(error => {
+          console.error("❌ Audio playback failed:", error);
+          setActualIsPlaying(false);
+          if (onPlayStateChange) {
+            onPlayStateChange(false);
+          }
+        });
+      }
+    } else {
+      audio.pause();
+      setActualIsPlaying(false);
+      if (onPlayStateChange) {
+        onPlayStateChange(false);
+      }
+    }
+  }, [actualIsPlaying, lesson.title, onPlayStateChange]);
+
+  // Handle external play/pause state changes (from global state)
   useEffect(() => {
     if (!audioRef.current) return;
 
@@ -54,22 +92,54 @@ export function useIndividualAudio({
     const stateChanged = lastPlayingState.current !== isPlaying;
     lastPlayingState.current = isPlaying;
 
-    if (stateChanged) {
+    // Only react to external changes, not our own direct changes
+    if (stateChanged && isPlaying !== actualIsPlaying) {
       if (isPlaying) {
         console.log("▶️ External trigger: Playing audio for lesson:", lesson.title);
         const playPromise = audio.play();
         if (playPromise !== undefined) {
-          playPromise.catch(error => {
+          playPromise.then(() => {
+            setActualIsPlaying(true);
+          }).catch(error => {
             console.error("❌ Audio playback failed:", error);
-            // Don't call onTogglePlay here to avoid infinite loops
+            setActualIsPlaying(false);
+            if (onPlayStateChange) {
+              onPlayStateChange(false);
+            }
           });
         }
       } else {
         console.log("⏸️ External trigger: Pausing audio for lesson:", lesson.title);
         audio.pause();
+        setActualIsPlaying(false);
       }
     }
-  }, [isPlaying, lesson.id, lesson.title]);
+  }, [isPlaying, lesson.id, lesson.title, actualIsPlaying, onPlayStateChange]);
+
+  // NEW: Listen to actual audio events to track real state
+  useEffect(() => {
+    if (!audioRef.current) return;
+
+    const audio = audioRef.current;
+
+    const handlePlay = () => {
+      console.log('🎵 Audio play event for:', lesson.title);
+      setActualIsPlaying(true);
+    };
+
+    const handlePause = () => {
+      console.log('⏸️ Audio pause event for:', lesson.title);
+      setActualIsPlaying(false);
+    };
+
+    audio.addEventListener('play', handlePlay);
+    audio.addEventListener('pause', handlePause);
+
+    return () => {
+      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('pause', handlePause);
+    };
+  }, [lesson.title]);
 
   // Handle volume changes
   useEffect(() => {
@@ -111,8 +181,12 @@ export function useIndividualAudio({
   const handleAudioEnded = useCallback(() => {
     console.log("🏁 Audio ended for lesson:", lesson.title);
     setCurrentTime(0);
+    setActualIsPlaying(false);
+    if (onPlayStateChange) {
+      onPlayStateChange(false);
+    }
     onComplete();
-  }, [lesson.title, onComplete]);
+  }, [lesson.title, onComplete, onPlayStateChange]);
 
   // Handle seek
   const handleSeek = useCallback((value: number) => {
@@ -173,6 +247,8 @@ export function useIndividualAudio({
     volume,
     isMuted,
     playbackRate,
+    actualIsPlaying,
+    handleDirectToggle,
     handleSeek,
     handleSkipBackward,
     handleSkipForward,

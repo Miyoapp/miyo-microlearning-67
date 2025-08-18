@@ -22,7 +22,7 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     refetch: refetchCourseProgress 
   } = useUserProgress();
 
-  // MEJORADO: Control más granular de la inicialización
+  // Control más granular de la inicialización
   const hasAutoInitialized = useRef(false);
   const hasUserMadeSelection = useRef(false);
   const hasAutoPositioned = useRef(false);
@@ -60,55 +60,39 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     isAutoAdvanceAllowed
   );
 
-  // ENHANCED: Selección de lección con manejo mejorado de play/pause
+  // SIMPLIFIED: Lesson selection focused only on changing lessons
   const handleSelectLesson = useCallback((lesson: any, shouldAutoPlay = false) => {
-    console.log('🚀🚀🚀 useConsolidatedLessons - handleSelectLesson RECIBIDO:', {
+    console.log('🚀 useConsolidatedLessons - handleSelectLesson:', {
       lessonTitle: lesson.title,
-      isCompleted: lesson.isCompleted ? '🏆' : '❌',
-      isLocked: lesson.isLocked ? '🔒' : '🔓',
-      shouldAutoPlay: shouldAutoPlay ? '▶️ AUTO-PLAY' : '⏸️ NO AUTO-PLAY',
+      shouldAutoPlay,
       currentLessonId: currentLesson?.id,
       isSameLesson: currentLesson?.id === lesson.id,
-      timestamp: new Date().toLocaleTimeString()
     });
     
-    // Check if this is the same lesson (toggle case)
+    // Check if this is the same lesson
     const isSameLesson = currentLesson?.id === lesson.id;
     
     if (isSameLesson) {
-      // ENHANCED: For current lesson, just toggle the playing state
-      console.log('🔄🔄🔄 SAME LESSON - TOGGLING PLAY STATE:', {
-        currentState: isPlaying ? 'PLAYING' : 'PAUSED',
-        newState: shouldAutoPlay ? 'PLAYING' : 'PAUSED'
-      });
-      
+      // SAME LESSON: Only update global playing state for synchronization
+      console.log('🔄 Same lesson selected - updating global state only:', shouldAutoPlay);
       setIsPlaying(shouldAutoPlay);
       return;
     }
     
-    // Different lesson - change selection
+    // DIFFERENT LESSON: Full lesson change workflow
     hasUserMadeSelection.current = true;
-    console.log('👤👤👤 DIFFERENT LESSON SELECTED - changing current lesson');
+    console.log('✅ Changing to different lesson:', lesson.title);
     
-    const lessonType = lesson.isCompleted ? 'COMPLETADA/REPLAY (🏆)' : 'EN PROGRESO (▶)';
-    console.log('✅✅✅ ESTABLECIENDO NUEVA LECCIÓN ACTUAL:', lesson.title, 'Tipo:', lessonType);
-    
-    // Establecer la lección actual primero
+    // Set the new current lesson
     setCurrentLesson(lesson);
     
-    // Set playing state based on shouldAutoPlay
-    if (shouldAutoPlay) {
-      console.log('🎵🎵🎵 AUTO-PLAY ENABLED - Setting playing state');
-      setIsPlaying(true);
-    } else {
-      console.log('⏸️⏸️⏸️ AUTO-PLAY DISABLED - Setting paused state');
-      setIsPlaying(false);
-    }
+    // Set playing state
+    setIsPlaying(shouldAutoPlay);
     
-    console.log('🔄🔄🔄 CALLING handleSelectLessonFromPlayback');
+    // Handle the lesson change through playback hook
     handleSelectLessonFromPlayback(lesson, shouldAutoPlay);
     
-  }, [setCurrentLesson, handleSelectLessonFromPlayback, setIsPlaying, currentLesson?.id, isPlaying]);
+  }, [setCurrentLesson, handleSelectLessonFromPlayback, setIsPlaying, currentLesson?.id]);
 
   // CRÍTICO: Inicializar podcast cuando todos los datos estén disponibles
   useEffect(() => {
@@ -128,7 +112,7 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     }
   }, [podcast?.id, user?.id, lessonProgress, userProgress, initializePodcastWithProgress]);
 
-  // MEJORADO: Auto-inicialización inteligente que respeta el progreso del curso
+  // Auto-inicialización inteligente que respeta el progreso del curso
   useEffect(() => {
     console.log('🎯 CURRENT LESSON AUTO-POSITIONING EFFECT');
     console.log('🔍 Conditions:', {
@@ -141,12 +125,6 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
       hasAutoPositioned: hasAutoPositioned.current
     });
 
-    // MEJORADO: Solo auto-posicionar si:
-    // 1. Tenemos podcast y lecciones
-    // 2. No hay lección actual seleccionada
-    // 3. El usuario no ha hecho una selección manual
-    // 4. Ya se inicializó el podcast con progreso
-    // 5. No hemos auto-posicionado antes
     if (
       podcast && 
       podcast.lessons && 
@@ -157,7 +135,7 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
       !hasUserMadeSelection.current &&
       !hasAutoPositioned.current
     ) {
-      console.log('🎯 AUTO-POSITIONING on next lesson to continue (▶)...');
+      console.log('🎯 AUTO-POSITIONING on next lesson to continue...');
       initializeCurrentLesson();
       hasAutoPositioned.current = true;
     } else if (hasUserMadeSelection.current) {

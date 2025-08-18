@@ -22,36 +22,48 @@ export function useLessonCard({
   onProgressUpdate,
   onLessonComplete
 }: UseLessonCardProps) {
+  const [localIsPlaying, setLocalIsPlaying] = useState(false); // NEW: Local state for current lesson
+
   console.log('🎵 useLessonCard for:', lesson.title, {
     canPlay,
     isCurrent,
-    isPlaying
+    isPlaying,
+    localIsPlaying
   });
 
   // Handle lesson completion
   const handleComplete = useCallback(() => {
     console.log('🏁 Lesson completed:', lesson.title);
+    setLocalIsPlaying(false);
     if (onLessonComplete) {
       onLessonComplete();
     }
   }, [lesson.title, onLessonComplete]);
 
-  // Use individual audio management when this is the current lesson and playing
-  const shouldUseAudio = isCurrent && isPlaying;
+  // NEW: Handle actual audio state changes for current lesson
+  const handlePlayStateChange = useCallback((newIsPlaying: boolean) => {
+    console.log('🔄 Audio state changed for:', lesson.title, 'new state:', newIsPlaying);
+    if (isCurrent) {
+      setLocalIsPlaying(newIsPlaying);
+    }
+  }, [isCurrent, lesson.title]);
+
+  // Use individual audio management when this is the current lesson
+  const shouldUseAudio = isCurrent;
   const audioHook = useIndividualAudio({
     lesson,
-    isPlaying: shouldUseAudio,
+    isPlaying: isCurrent ? isPlaying : false,
     onTogglePlay: () => {
-      // This will be handled by the new toggle logic below
       console.log('🎵 Audio hook onTogglePlay called for:', lesson.title);
     },
     onComplete: handleComplete,
-    onProgressUpdate
+    onProgressUpdate,
+    onPlayStateChange: handlePlayStateChange // NEW: Track actual audio state
   });
 
-  // MODIFIED: Handle play/pause toggle with direct audio control for current lesson
+  // SIMPLIFIED: Handle play/pause with clear separation of concerns
   const handleTogglePlay = useCallback(() => {
-    console.log('🎵 handleTogglePlay clicked for:', lesson.title, { canPlay, isCurrent, isPlaying });
+    console.log('🎵 handleTogglePlay clicked for:', lesson.title, { canPlay, isCurrent, isPlaying, localIsPlaying });
     
     if (!canPlay) {
       console.log('🚫 Cannot play lesson:', lesson.title);
@@ -59,39 +71,17 @@ export function useLessonCard({
     }
 
     if (!isCurrent) {
-      // If this lesson is not current, select it first (with auto-play)
-      console.log('🎯 Selecting non-current lesson:', lesson.title);
+      // Different lesson - select it with auto-play
+      console.log('🎯 Selecting different lesson:', lesson.title);
       onLessonClick(lesson, true);
       return;
     }
 
-    // NEW: If this is the current lesson, handle play/pause directly
-    // Don't call onLessonClick to avoid the global state override
-    console.log('🎵 Direct toggle for current lesson:', lesson.title, 'current state:', isPlaying);
+    // CURRENT LESSON: Handle play/pause directly without going through global state
+    console.log('🎵 Direct toggle for current lesson:', lesson.title);
+    audioHook.handleDirectToggle();
     
-    if (isPlaying) {
-      // Pause directly through audio
-      console.log('⏸️ Pausing current lesson directly:', lesson.title);
-      if (audioHook.audioRef?.current) {
-        audioHook.audioRef.current.pause();
-      }
-      // Signal to parent that this lesson should be paused
-      onLessonClick(lesson, false);
-    } else {
-      // Resume directly through audio
-      console.log('▶️ Resuming current lesson directly:', lesson.title);
-      if (audioHook.audioRef?.current) {
-        const playPromise = audioHook.audioRef.current.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(error => {
-            console.error("❌ Audio playback failed:", error);
-          });
-        }
-      }
-      // Signal to parent that this lesson should be playing
-      onLessonClick(lesson, true);
-    }
-  }, [canPlay, isCurrent, isPlaying, onLessonClick, lesson, audioHook.audioRef]);
+  }, [canPlay, isCurrent, isPlaying, localIsPlaying, onLessonClick, lesson, audioHook]);
 
   // Format time helper
   const formatTime = useCallback((seconds: number) => {
@@ -102,12 +92,15 @@ export function useLessonCard({
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   }, []);
 
-  // Use audio data when current and playing, otherwise use lesson defaults
+  // Use audio data when current, otherwise use lesson defaults
   const currentTime = shouldUseAudio ? audioHook.currentTime : 0;
   const duration = shouldUseAudio ? audioHook.duration : (lesson.duracion * 60);
+  
+  // FIXED: Use actual audio state for current lesson, global state for others
+  const effectiveIsPlaying = isCurrent ? (audioHook.actualIsPlaying || localIsPlaying) : false;
 
   return {
-    isPlaying: isCurrent && isPlaying,
+    isPlaying: effectiveIsPlaying,
     currentTime,
     duration,
     playbackRate: audioHook.playbackRate,
