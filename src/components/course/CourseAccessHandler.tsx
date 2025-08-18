@@ -86,7 +86,14 @@ const CourseAccessHandler: React.FC<CourseAccessHandlerProps> = ({
 
       {showCheckout && (
         <CheckoutModal
-          podcast={podcast}
+          isOpen={showCheckout}
+          course={{
+            id: podcast.id,
+            title: podcast.title,
+            precio: podcast.precio || 0,
+            imageUrl: podcast.imageUrl,
+            moneda: podcast.moneda
+          }}
           onClose={onCloseCheckout}
           onPurchaseComplete={onPurchaseComplete}
         />
