@@ -64,6 +64,8 @@ const CourseAccessHandler: React.FC<CourseAccessHandlerProps> = ({
         onToggleSave={onToggleSave}
         onSelectLesson={onSelectLesson}
         onShowCheckout={onShowCheckout}
+        onProgressUpdate={onProgressUpdate}
+        onLessonComplete={onLessonComplete}
       />
 
       {showCheckout && (
