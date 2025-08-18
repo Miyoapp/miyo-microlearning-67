@@ -60,40 +60,55 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     isAutoAdvanceAllowed
   );
 
-  // MEJORADO: Selección de lección con auto-play forzado
+  // ENHANCED: Selección de lección con manejo mejorado de play/pause
   const handleSelectLesson = useCallback((lesson: any, shouldAutoPlay = false) => {
     console.log('🚀🚀🚀 useConsolidatedLessons - handleSelectLesson RECIBIDO:', {
       lessonTitle: lesson.title,
       isCompleted: lesson.isCompleted ? '🏆' : '❌',
       isLocked: lesson.isLocked ? '🔒' : '🔓',
       shouldAutoPlay: shouldAutoPlay ? '▶️ AUTO-PLAY' : '⏸️ NO AUTO-PLAY',
+      currentLessonId: currentLesson?.id,
+      isSameLesson: currentLesson?.id === lesson.id,
       timestamp: new Date().toLocaleTimeString()
     });
     
-    // NUEVO: Marcar que el usuario ha hecho una selección manual
+    // Check if this is the same lesson (toggle case)
+    const isSameLesson = currentLesson?.id === lesson.id;
+    
+    if (isSameLesson) {
+      // ENHANCED: For current lesson, just toggle the playing state
+      console.log('🔄🔄🔄 SAME LESSON - TOGGLING PLAY STATE:', {
+        currentState: isPlaying ? 'PLAYING' : 'PAUSED',
+        newState: shouldAutoPlay ? 'PLAYING' : 'PAUSED'
+      });
+      
+      setIsPlaying(shouldAutoPlay);
+      return;
+    }
+    
+    // Different lesson - change selection
     hasUserMadeSelection.current = true;
-    console.log('👤👤👤 SELECCIÓN MANUAL DETECTADA - previniendo auto-inicialización futura');
+    console.log('👤👤👤 DIFFERENT LESSON SELECTED - changing current lesson');
     
     const lessonType = lesson.isCompleted ? 'COMPLETADA/REPLAY (🏆)' : 'EN PROGRESO (▶)';
-    console.log('✅✅✅ ESTABLECIENDO LECCIÓN ACTUAL:', lesson.title, 'Tipo:', lessonType);
+    console.log('✅✅✅ ESTABLECIENDO NUEVA LECCIÓN ACTUAL:', lesson.title, 'Tipo:', lessonType);
     
     // Establecer la lección actual primero
     setCurrentLesson(lesson);
     
-    // CRÍTICO: Si shouldAutoPlay es true, forzar reproducción inmediata
+    // Set playing state based on shouldAutoPlay
     if (shouldAutoPlay) {
-      console.log('🎵🎵🎵 AUTO-PLAY FORZADO - Iniciando reproducción inmediata');
-      // Dar un pequeño delay para que la lección se establezca primero
-      setTimeout(() => {
-        setIsPlaying(true);
-        console.log('🎵🎵🎵 setIsPlaying(true) EJECUTADO - Audio debe comenzar');
-      }, 100);
+      console.log('🎵🎵🎵 AUTO-PLAY ENABLED - Setting playing state');
+      setIsPlaying(true);
+    } else {
+      console.log('⏸️⏸️⏸️ AUTO-PLAY DISABLED - Setting paused state');
+      setIsPlaying(false);
     }
     
-    console.log('🔄🔄🔄 LLAMANDO handleSelectLessonFromPlayback');
-    handleSelectLessonFromPlayback(lesson, true);
+    console.log('🔄🔄🔄 CALLING handleSelectLessonFromPlayback');
+    handleSelectLessonFromPlayback(lesson, shouldAutoPlay);
     
-  }, [setCurrentLesson, handleSelectLessonFromPlayback, setIsPlaying]);
+  }, [setCurrentLesson, handleSelectLessonFromPlayback, setIsPlaying, currentLesson?.id, isPlaying]);
 
   // CRÍTICO: Inicializar podcast cuando todos los datos estén disponibles
   useEffect(() => {

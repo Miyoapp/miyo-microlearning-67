@@ -28,27 +28,6 @@ export function useLessonCard({
     isPlaying
   });
 
-  // Handle play/pause toggle
-  const handleTogglePlay = useCallback(() => {
-    console.log('🎵 handlePlayPause clicked for:', lesson.title, { canPlay, isCurrent, isPlaying });
-    
-    if (!canPlay) {
-      console.log('🚫 Cannot play lesson:', lesson.title);
-      return;
-    }
-
-    if (!isCurrent) {
-      // If this lesson is not current, select it first (with auto-play)
-      console.log('🎯 Selecting non-current lesson:', lesson.title);
-      onLessonClick(lesson, true);
-      return;
-    }
-
-    // If this is the current lesson, toggle play/pause
-    console.log('🎵 Toggling current lesson:', lesson.title);
-    onLessonClick(lesson, !isPlaying);
-  }, [canPlay, isCurrent, isPlaying, onLessonClick, lesson]);
-
   // Handle lesson completion
   const handleComplete = useCallback(() => {
     console.log('🏁 Lesson completed:', lesson.title);
@@ -62,10 +41,57 @@ export function useLessonCard({
   const audioHook = useIndividualAudio({
     lesson,
     isPlaying: shouldUseAudio,
-    onTogglePlay: handleTogglePlay,
+    onTogglePlay: () => {
+      // This will be handled by the new toggle logic below
+      console.log('🎵 Audio hook onTogglePlay called for:', lesson.title);
+    },
     onComplete: handleComplete,
     onProgressUpdate
   });
+
+  // MODIFIED: Handle play/pause toggle with direct audio control for current lesson
+  const handleTogglePlay = useCallback(() => {
+    console.log('🎵 handleTogglePlay clicked for:', lesson.title, { canPlay, isCurrent, isPlaying });
+    
+    if (!canPlay) {
+      console.log('🚫 Cannot play lesson:', lesson.title);
+      return;
+    }
+
+    if (!isCurrent) {
+      // If this lesson is not current, select it first (with auto-play)
+      console.log('🎯 Selecting non-current lesson:', lesson.title);
+      onLessonClick(lesson, true);
+      return;
+    }
+
+    // NEW: If this is the current lesson, handle play/pause directly
+    // Don't call onLessonClick to avoid the global state override
+    console.log('🎵 Direct toggle for current lesson:', lesson.title, 'current state:', isPlaying);
+    
+    if (isPlaying) {
+      // Pause directly through audio
+      console.log('⏸️ Pausing current lesson directly:', lesson.title);
+      if (audioHook.audioRef?.current) {
+        audioHook.audioRef.current.pause();
+      }
+      // Signal to parent that this lesson should be paused
+      onLessonClick(lesson, false);
+    } else {
+      // Resume directly through audio
+      console.log('▶️ Resuming current lesson directly:', lesson.title);
+      if (audioHook.audioRef?.current) {
+        const playPromise = audioHook.audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(error => {
+            console.error("❌ Audio playback failed:", error);
+          });
+        }
+      }
+      // Signal to parent that this lesson should be playing
+      onLessonClick(lesson, true);
+    }
+  }, [canPlay, isCurrent, isPlaying, onLessonClick, lesson, audioHook.audioRef]);
 
   // Format time helper
   const formatTime = useCallback((seconds: number) => {

@@ -23,6 +23,7 @@ export function useIndividualAudio({
   const [isMuted, setIsMuted] = useState(false);
   const [playbackRate, setPlaybackRate] = useState(1);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const lastPlayingState = useRef(isPlaying);
 
   console.log('🎵 useIndividualAudio for lesson:', lesson.title, {
     isPlaying,
@@ -45,26 +46,30 @@ export function useIndividualAudio({
     }
   }, [lesson.id]);
 
-  // Handle play/pause state changes
+  // ENHANCED: Handle play/pause state changes with better state tracking
   useEffect(() => {
     if (!audioRef.current) return;
 
     const audio = audioRef.current;
+    const stateChanged = lastPlayingState.current !== isPlaying;
+    lastPlayingState.current = isPlaying;
 
-    if (isPlaying) {
-      console.log("▶️ Playing audio for lesson:", lesson.title);
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          console.error("❌ Audio playback failed:", error);
-          onTogglePlay();
-        });
+    if (stateChanged) {
+      if (isPlaying) {
+        console.log("▶️ External trigger: Playing audio for lesson:", lesson.title);
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(error => {
+            console.error("❌ Audio playback failed:", error);
+            // Don't call onTogglePlay here to avoid infinite loops
+          });
+        }
+      } else {
+        console.log("⏸️ External trigger: Pausing audio for lesson:", lesson.title);
+        audio.pause();
       }
-    } else {
-      console.log("⏸️ Pausing audio for lesson:", lesson.title);
-      audio.pause();
     }
-  }, [isPlaying, lesson.id, onTogglePlay]);
+  }, [isPlaying, lesson.id, lesson.title]);
 
   // Handle volume changes
   useEffect(() => {
