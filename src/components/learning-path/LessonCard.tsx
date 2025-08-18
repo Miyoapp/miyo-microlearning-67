@@ -119,7 +119,7 @@ const LessonCard = React.memo(({
       {audioRef && (
         <audio
           ref={audioRef}
-          src={lesson.audioUrl}
+          src={lesson.urlAudio}
           onLoadedMetadata={handleMetadata}
           onTimeUpdate={updateTime}
           onEnded={handleAudioEnded}

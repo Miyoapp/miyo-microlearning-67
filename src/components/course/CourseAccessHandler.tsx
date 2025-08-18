@@ -24,13 +24,7 @@ interface CourseAccessHandlerProps {
   onLessonComplete: () => void;
   onProgressUpdate: (position: number) => void;
   onPurchaseComplete: () => void;
-  // NEW: Audio control props
-  globalCurrentTime?: number;
-  globalDuration?: number;
-  onSeek?: (value: number) => void;
-  onSkipBackward?: () => void;
-  onSkipForward?: () => void;
-  onPlaybackRateChange?: (rate: number) => void;
+  // Removed global audio control props as they're no longer needed
 }
 
 const CourseAccessHandler: React.FC<CourseAccessHandlerProps> = ({
@@ -52,13 +46,7 @@ const CourseAccessHandler: React.FC<CourseAccessHandlerProps> = ({
   onTogglePlay,
   onLessonComplete,
   onProgressUpdate,
-  onPurchaseComplete,
-  globalCurrentTime = 0,
-  globalDuration = 0,
-  onSeek,
-  onSkipBackward,
-  onSkipForward,
-  onPlaybackRateChange
+  onPurchaseComplete
 }) => {
   return (
     <>
@@ -76,12 +64,6 @@ const CourseAccessHandler: React.FC<CourseAccessHandlerProps> = ({
         onToggleSave={onToggleSave}
         onSelectLesson={onSelectLesson}
         onShowCheckout={onShowCheckout}
-        globalCurrentTime={globalCurrentTime}
-        globalDuration={globalDuration}
-        onSeek={onSeek}
-        onSkipBackward={onSkipBackward}
-        onSkipForward={onSkipForward}
-        onPlaybackRateChange={onPlaybackRateChange}
       />
 
       {showCheckout && (
