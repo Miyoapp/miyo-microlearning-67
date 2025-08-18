@@ -20,7 +20,8 @@ interface CourseMainContentProps {
   onToggleSave: () => void;
   onSelectLesson: (lesson: Lesson) => void;
   onShowCheckout: () => void;
-  // Removed global audio control props as they're no longer needed
+  onProgressUpdate: (position: number) => void;
+  onLessonComplete: () => void;
 }
 
 const CourseMainContent: React.FC<CourseMainContentProps> = ({
@@ -36,7 +37,9 @@ const CourseMainContent: React.FC<CourseMainContentProps> = ({
   onStartLearning,
   onToggleSave,
   onSelectLesson,
-  onShowCheckout
+  onShowCheckout,
+  onProgressUpdate,
+  onLessonComplete
 }) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
@@ -57,6 +60,8 @@ const CourseMainContent: React.FC<CourseMainContentProps> = ({
             currentLessonId={currentLesson?.id || null}
             isGloballyPlaying={isGloballyPlaying}
             onSelectLesson={onSelectLesson}
+            onProgressUpdate={onProgressUpdate}
+            onLessonComplete={onLessonComplete}
           />
           
           {/* Premium overlay for learning path */}

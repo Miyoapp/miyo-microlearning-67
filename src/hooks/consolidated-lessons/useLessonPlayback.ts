@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useRef } from 'react';
 import { Podcast, Lesson } from '@/types';
 import { User } from '@supabase/supabase-js';
@@ -66,7 +65,8 @@ export function useLessonPlayback(
       // Para selecciones automáticas (auto-positioning), no iniciar reproducción
       console.log('🎯 Auto-posicionamiento - NO iniciando reproducción');
       setIsPlaying(false);
-      setIsAutoAdvanceAllowed(false);
+      // FIXED: Don't disable auto-advance for auto-positioning
+      setIsAutoAdvanceAllowed(true);
     }
     
     // OPTIMIZADO: Tracking de inicio para todas las lecciones en review mode o incompletas
@@ -82,9 +82,8 @@ export function useLessonPlayback(
     console.log('🎵🎵🎵 Toggle play - estado actual:', isPlaying, '→ nuevo estado:', !isPlaying);
     setIsPlaying(!isPlaying);
     
-    if (!isPlaying) {
-      setIsAutoAdvanceAllowed(true);
-    }
+    // FIXED: Always keep auto-advance allowed when toggling play
+    setIsAutoAdvanceAllowed(true);
   }, [isPlaying, currentLesson]);
 
   const handleProgressUpdate = useCallback((position: number) => {
