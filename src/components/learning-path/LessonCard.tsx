@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Lesson } from '@/types';
 import { Play, Pause, Lock, Trophy, SkipBack, SkipForward, ChevronDown, Volume2, VolumeX } from 'lucide-react';
@@ -25,7 +24,7 @@ const LessonCard = React.memo(({
   lesson, 
   index, 
   status, 
-  isPlaying,
+  isPlaying: propIsPlaying,
   onLessonClick,
   onProgressUpdate,
   onLessonComplete
@@ -35,12 +34,13 @@ const LessonCard = React.memo(({
   console.log('🎯 LessonCard render:', {
     lessonTitle: lesson.title,
     isCurrent,
-    isPlaying,
+    propIsPlaying,
     canPlay,
     isCompleted
   });
   
   const {
+    isPlaying,
     currentTime,
     duration,
     playbackRate,
@@ -62,7 +62,7 @@ const LessonCard = React.memo(({
     lesson,
     canPlay,
     isCurrent,
-    isPlaying,
+    isPlaying: propIsPlaying,
     onLessonClick,
     onProgressUpdate,
     onLessonComplete
@@ -88,7 +88,7 @@ const LessonCard = React.memo(({
     setShowSpeedDropdown(false);
   };
 
-  // Determine which icon to show in the status button
+  // Determine which icon to show in the status button - NOW USING HOOK STATE
   const getStatusIcon = () => {
     if (isCompleted) {
       return <Trophy size={16} />;
@@ -96,7 +96,7 @@ const LessonCard = React.memo(({
     if (!canPlay) {
       return <Lock size={16} />;
     }
-    // For playable lessons, show play/pause based on current state
+    // For playable lessons, show play/pause based on HOOK state, not prop
     if (isCurrent && isPlaying) {
       return <Pause size={16} />;
     }
@@ -148,7 +148,7 @@ const LessonCard = React.memo(({
                 ? "Reproducir lección completada" 
                 : !canPlay 
                   ? "Lección bloqueada" 
-                  : isPlaying 
+                  : isPlaying  // NOW USING HOOK STATE
                     ? "Pausar" 
                     : "Reproducir"
             }
@@ -169,6 +169,7 @@ const LessonCard = React.memo(({
             )}>
               {lesson.title}
             </h4>
+            {/* NOW USING HOOK STATE for "Reproduciendo" text */}
             {isCurrent && isPlaying && (
               <span className="text-xs text-green-600">● Reproduciendo</span>
             )}
