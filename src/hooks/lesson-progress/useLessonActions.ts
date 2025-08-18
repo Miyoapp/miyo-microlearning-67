@@ -11,6 +11,8 @@ export function useLessonActions(
 
   const markLessonComplete = useCallback(async (lessonId: string, courseId: string) => {
     const existingProgress = lessonProgress.find(p => p.lesson_id === lessonId);
+    
+    // SIMPLIFICADO: Solo verificar estado de BD, no estado local
     if (existingProgress?.is_completed) {
       console.log('✅ Lesson already completed in DB, skipping update:', lessonId);
       return;
@@ -27,7 +29,7 @@ export function useLessonActions(
     async (lessonId: string, courseId: string, position: number) => {
       const existingProgress = lessonProgress.find(p => p.lesson_id === lessonId);
       
-      // CRÍTICO: Proteger progreso en diferentes escenarios
+      // CRÍTICO: Verificar modo review usando estado de BD
       const reviewMode = await isInReviewMode(courseId);
       
       // Escenario 1: Curso 100% completo (modo revisión)
@@ -36,7 +38,7 @@ export function useLessonActions(
         return;
       }
       
-      // CRÍTICO: Si position >= 100, SIEMPRE marcar como completada
+      // CRÍTICO: Si position >= 100, SIEMPRE marcar como completada (sin importar estado local)
       if (position >= 100) {
         console.log('🎯 CRITICAL: Position >= 100 detected, forcing completion:', lessonId, 'position:', position);
         
@@ -50,10 +52,10 @@ export function useLessonActions(
         return;
       }
       
-      // Escenario 2: Lección ya completada siendo reproducida (replay)
+      // SIMPLIFICADO: Solo verificar estado BD para replay, no estado local
       if (existingProgress?.is_completed) {
-        console.log('🔄 Replay of completed lesson - preserving completion status and not updating position:', lessonId);
-        return; // MEJORADO: No actualizar posición durante replay
+        console.log('🔄 Replay of completed lesson (BD state) - preserving completion status:', lessonId);
+        return;
       }
       
       // Escenario 3: Progreso de lección incompleta (< 100%)

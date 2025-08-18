@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Lesson } from '@/types';
 
@@ -210,7 +209,7 @@ export function useIndividualAudio({
     }
   }, [lesson.title, lesson.isCompleted]);
 
-  // CRÍTICO: Handle audio ended - Garantizar completación correcta
+  // CRÍTICO: Handle audio ended - GARANTIZAR completación correcta y simple
   const handleAudioEnded = useCallback(() => {
     console.log("🏁 Audio ended for lesson:", lesson.title, "isCompleted:", lesson.isCompleted);
     
@@ -219,24 +218,30 @@ export function useIndividualAudio({
       onPlayStateChange(false);
     }
     
-    // CRÍTICO: Garantizar que se llame onProgressUpdate(100) ANTES de onComplete
-    if (onProgressUpdate && !lesson.isCompleted) {
-      console.log("🎯 CRITICAL: Ensuring 100% progress update before completion for:", lesson.title);
-      onProgressUpdate(100);
-    }
-    
-    // CORREGIDO: Para lecciones completadas (replay), mantener progreso al 100%
-    if (lesson.isCompleted) {
-      console.log("✅ Completed lesson ended - maintaining progress at 100%");
-      setCurrentTime(duration); // Mantener al final, no resetear a 0
+    // CRÍTICO: SIEMPRE garantizar progreso al 100% antes de completación
+    if (!lesson.isCompleted) {
+      console.log("🎯 CRITICAL: First completion - ensuring 100% progress BEFORE onComplete for:", lesson.title);
+      
+      // PASO 1: Actualizar progreso visual
+      setCurrentTime(duration);
+      
+      // PASO 2: GARANTIZAR que onProgressUpdate(100) se ejecute ANTES de onComplete
+      if (onProgressUpdate) {
+        console.log("🎯 CRITICAL: Calling onProgressUpdate(100) before onComplete for:", lesson.title);
+        onProgressUpdate(100);
+      }
+      
+      // PASO 3: Pequeño delay para asegurar que la BD se actualice antes de onComplete
+      setTimeout(() => {
+        console.log("🏁 CRITICAL: Now calling onComplete after progress update for:", lesson.title);
+        onComplete();
+      }, 100);
+      
     } else {
-      console.log("🎯 New lesson completion - setting to end position for visual consistency");
-      setCurrentTime(duration); // CORREGIDO: Mantener al final en lugar de resetear a 0
+      console.log("✅ Completed lesson ended (replay) - maintaining progress at 100%");
+      setCurrentTime(duration);
+      onComplete();
     }
-    
-    // Llamar onComplete después de asegurar el progreso
-    console.log("🏁 Calling onComplete for lesson:", lesson.title);
-    onComplete();
   }, [lesson.title, lesson.isCompleted, duration, onComplete, onPlayStateChange, onProgressUpdate]);
 
   // Handle seek - MEJORADO: Progreso inteligente durante seek
