@@ -1,12 +1,12 @@
+
 import React from 'react';
 import { Lesson } from '@/types';
-import { Play, Pause, Lock, SkipBack, SkipForward, ChevronDown, Volume2, VolumeX, PenTool } from 'lucide-react';
+import { Play, Pause, Lock, SkipBack, SkipForward, ChevronDown, Volume2, VolumeX, StickyNote } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLessonCard } from '@/hooks/learning-path/useLessonCard';
 import { useMemo } from 'react';
 import { useNotes } from '@/hooks/useNotes';
-import AddNoteModal from '@/components/notes/AddNoteModal';
-import NotesListSection from '@/components/notes/NotesListSection';
+import NotesDropdown from '@/components/notes/NotesDropdown';
 
 interface LessonCardProps {
   lesson: Lesson;
@@ -47,12 +47,12 @@ const LessonCard = React.memo(({
     courseIdType: typeof courseId
   });
   
-  // Notes functionality - Only initialize when courseId exists (not when current)
+  // Notes functionality - Only initialize when courseId exists
   const { notes, addNote, updateNote, deleteNote, fetchNotes } = useNotes(
     canPlay ? lesson.id : undefined, 
     canPlay ? courseId : undefined
   );
-  const [isAddNoteModalOpen, setIsAddNoteModalOpen] = React.useState(false);
+  const [showNotesDropdown, setShowNotesDropdown] = React.useState(false);
 
   console.log('🎯 LessonCard render:', {
     lessonTitle: lesson.title,
@@ -109,6 +109,12 @@ const LessonCard = React.memo(({
     handleSeek(timeInSeconds);
   };
 
+  // Handle notes dropdown toggle - doesn't affect audio playback
+  const handleNotesToggle = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent lesson selection
+    setShowNotesDropdown(!showNotesDropdown);
+  };
+
   // Speed options for dropdown
   const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
   const [showSpeedDropdown, setShowSpeedDropdown] = React.useState(false);
@@ -147,7 +153,7 @@ const LessonCard = React.memo(({
   return (
     <>
       <div className={cn(
-        "bg-white rounded-lg border shadow-sm p-4 transition-all duration-200",
+        "bg-white rounded-lg border shadow-sm p-4 transition-all duration-200 relative",
         {
           "border-[#5e16ea] shadow-md": isCompleted || (isCurrent && !isCompleted),
           "border-gray-200": !isCurrent && !isCompleted && canPlay,
@@ -214,15 +220,34 @@ const LessonCard = React.memo(({
 
           {/* Duration and Notes Icon */}
           <div className="flex items-center gap-2">
-            {/* Notes Icon - Show on ALL playable lessons with valid courseId */}
+            {/* Custom Notes Icon with Badge - Show on ALL playable lessons with valid courseId */}
             {canPlay && courseId && (
-              <button
-                onClick={() => setIsAddNoteModalOpen(true)}
-                className="p-1 text-gray-600 hover:text-[#5e16ea] transition-colors"
-                aria-label="Agregar nota"
-              >
-                <PenTool size={16} />
-              </button>
+              <div className="relative">
+                <button
+                  onClick={handleNotesToggle}
+                  className="relative flex items-center justify-center w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full hover:from-yellow-500 hover:to-orange-600 transition-all duration-200 shadow-sm hover:shadow-md"
+                  aria-label={`Notas (${notes.length})`}
+                >
+                  <StickyNote size={16} className="text-white" />
+                  {notes.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold text-[10px]">
+                      {notes.length > 9 ? '9+' : notes.length}
+                    </span>
+                  )}
+                </button>
+
+                {/* Notes Dropdown */}
+                <NotesDropdown
+                  isOpen={showNotesDropdown}
+                  onClose={() => setShowNotesDropdown(false)}
+                  notes={notes}
+                  onAddNote={handleAddNote}
+                  onDeleteNote={deleteNote}
+                  onEditNote={updateNote}
+                  onSeekToTime={handleSeekToNote}
+                  currentTimeSeconds={currentTime}
+                />
+              </div>
             )}
             
             {/* Duration */}
@@ -342,16 +367,6 @@ const LessonCard = React.memo(({
           </div>
         )}
 
-        {/* Notes List - Only show for current lesson if there are notes and courseId exists */}
-        {isCurrent && canPlay && courseId && notes.length > 0 && (
-          <NotesListSection
-            notes={notes}
-            onDeleteNote={deleteNote}
-            onEditNote={updateNote}
-            onSeekToTime={handleSeekToNote}
-          />
-        )}
-
         {/* Locked message */}
         {!canPlay && (
           <div className="text-center py-2">
@@ -361,16 +376,6 @@ const LessonCard = React.memo(({
           </div>
         )}
       </div>
-
-      {/* Add Note Modal - Only show when courseId exists */}
-      {courseId && (
-        <AddNoteModal
-          isOpen={isAddNoteModalOpen}
-          onClose={() => setIsAddNoteModalOpen(false)}
-          onSave={handleAddNote}
-          currentTimeSeconds={currentTime}
-        />
-      )}
     </>
   );
 });
