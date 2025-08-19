@@ -63,7 +63,8 @@ const LearningPath = React.memo(({
     isGloballyPlaying,
     lessonCount: lessons.length,
     moduleCount: modules.length,
-    courseId
+    courseId,
+    lessonProgressCount: lessonProgress.length
   });
 
   // OPTIMIZADO: Memoizar función de agrupación con hash estable
@@ -150,6 +151,7 @@ const LearningPath = React.memo(({
                 currentLessonId={currentLessonId}
                 isGloballyPlaying={isGloballyPlaying}
                 courseId={courseId}
+                lessonProgress={lessonProgress}
                 onLessonClick={handleLessonClick}
                 onProgressUpdate={onProgressUpdate}
                 onLessonComplete={onLessonComplete}

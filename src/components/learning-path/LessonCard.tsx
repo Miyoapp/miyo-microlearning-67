@@ -20,6 +20,10 @@ interface LessonCardProps {
   };
   isPlaying: boolean;
   courseId: string | null;
+  savedProgress?: {
+    current_position: number;
+    is_completed: boolean;
+  };
   onLessonClick: (lesson: Lesson, shouldAutoPlay?: boolean) => void;
   onProgressUpdate?: (position: number) => void;
   onLessonComplete?: () => void;
@@ -31,6 +35,7 @@ const LessonCard = React.memo(({
   status, 
   isPlaying: propIsPlaying,
   courseId,
+  savedProgress,
   onLessonClick,
   onProgressUpdate,
   onLessonComplete
@@ -43,7 +48,8 @@ const LessonCard = React.memo(({
     canPlay,
     isCurrent,
     shouldShowNotes: canPlay && courseId,
-    courseIdType: typeof courseId
+    courseIdType: typeof courseId,
+    savedProgress
   });
   
   // Notes functionality - Only initialize when courseId exists
@@ -59,7 +65,8 @@ const LessonCard = React.memo(({
     propIsPlaying,
     canPlay,
     isCompleted,
-    courseId
+    courseId,
+    savedProgress
   });
   
   const {
@@ -88,7 +95,8 @@ const LessonCard = React.memo(({
     isPlaying: propIsPlaying,
     onLessonClick,
     onProgressUpdate,
-    onLessonComplete
+    onLessonComplete,
+    savedProgress
   });
 
   // Fetch notes when lesson can play and courseId is available

@@ -2,7 +2,6 @@
 import { useState, useCallback } from 'react';
 import { Lesson } from '@/types';
 import { useIndividualAudio } from '@/hooks/audio/useIndividualAudio';
-import { useUserLessonProgress } from '@/hooks/useUserLessonProgress';
 
 interface UseLessonCardProps {
   lesson: Lesson;
@@ -12,6 +11,10 @@ interface UseLessonCardProps {
   onLessonClick: (lesson: Lesson, shouldAutoPlay?: boolean) => void;
   onProgressUpdate?: (position: number) => void;
   onLessonComplete?: () => void;
+  savedProgress?: {
+    current_position: number;
+    is_completed: boolean;
+  };
 }
 
 export function useLessonCard({ 
@@ -21,15 +24,10 @@ export function useLessonCard({
   isPlaying,
   onLessonClick,
   onProgressUpdate,
-  onLessonComplete
+  onLessonComplete,
+  savedProgress
 }: UseLessonCardProps) {
   const [localIsPlaying, setLocalIsPlaying] = useState(false);
-  
-  // Get lesson progress data
-  const { lessonProgress } = useUserLessonProgress();
-  
-  // Find saved progress for this lesson
-  const savedProgress = lessonProgress.find(p => p.lesson_id === lesson.id);
   
   console.log('🎵 useLessonCard for:', lesson.title, {
     canPlay,
@@ -70,10 +68,7 @@ export function useLessonCard({
     onComplete: handleComplete,
     onProgressUpdate,
     onPlayStateChange: handlePlayStateChange,
-    savedProgress: savedProgress ? {
-      current_position: savedProgress.current_position || 0,
-      is_completed: savedProgress.is_completed || false
-    } : undefined
+    savedProgress
   });
 
   // SIMPLIFIED: Handle play/pause with clear separation of concerns

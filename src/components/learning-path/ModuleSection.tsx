@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Module, Lesson } from '@/types';
+import { UserLessonProgress } from '@/hooks/useUserLessonProgress';
 import LessonCard from './LessonCard';
 
 interface ModuleSectionProps {
@@ -11,6 +12,7 @@ interface ModuleSectionProps {
   currentLessonId: string | null;
   isGloballyPlaying: boolean;
   courseId: string | null;
+  lessonProgress: UserLessonProgress[];
   onLessonClick: (lesson: Lesson, shouldAutoPlay?: boolean) => void;
   onProgressUpdate?: (position: number) => void;
   onLessonComplete?: () => void;
@@ -24,6 +26,7 @@ const ModuleSection = React.memo(({
   currentLessonId,
   isGloballyPlaying,
   courseId,
+  lessonProgress,
   onLessonClick,
   onProgressUpdate,
   onLessonComplete
@@ -35,7 +38,8 @@ const ModuleSection = React.memo(({
     currentLessonId,
     isGloballyPlaying,
     lessonCount: moduleLessons.length,
-    courseId
+    courseId,
+    lessonProgressCount: lessonProgress.length
   });
   
   return (
@@ -57,6 +61,9 @@ const ModuleSection = React.memo(({
           const isCurrent = lesson.id === currentLessonId;
           const isPlaying = isCurrent && isGloballyPlaying;
           
+          // Find saved progress for this specific lesson
+          const savedProgress = lessonProgress.find(p => p.lesson_id === lesson.id);
+          
           const enhancedStatus = {
             ...status,
             isCurrent
@@ -70,6 +77,10 @@ const ModuleSection = React.memo(({
               status={enhancedStatus}
               isPlaying={isPlaying}
               courseId={courseId}
+              savedProgress={savedProgress ? {
+                current_position: savedProgress.current_position || 0,
+                is_completed: savedProgress.is_completed || false
+              } : undefined}
               onLessonClick={onLessonClick}
               onProgressUpdate={onProgressUpdate}
               onLessonComplete={onLessonComplete}
