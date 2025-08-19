@@ -25,7 +25,8 @@ export function useNotes(lessonId?: string, courseId?: string) {
 
       if (error) throw error;
       
-      setNotes((data as LessonNote[]) || []);
+      // Usar unknown como tipo intermedio para evitar errores de conversión
+      setNotes((data as unknown as LessonNote[]) || []);
     } catch (error) {
       console.error('Error fetching notes:', error);
       toast.error('Error al cargar las notas');
@@ -52,7 +53,8 @@ export function useNotes(lessonId?: string, courseId?: string) {
 
       if (error) throw error;
       
-      const newNote = data as LessonNote;
+      // Usar unknown como tipo intermedio
+      const newNote = data as unknown as LessonNote;
       setNotes(prev => [...prev, newNote].sort((a, b) => a.timestamp_seconds - b.timestamp_seconds));
       toast.success('Nota guardada exitosamente');
       return newNote;
@@ -76,7 +78,8 @@ export function useNotes(lessonId?: string, courseId?: string) {
 
       if (error) throw error;
       
-      const updatedNote = data as LessonNote;
+      // Usar unknown como tipo intermedio
+      const updatedNote = data as unknown as LessonNote;
       setNotes(prev => prev.map(note => note.id === noteId ? updatedNote : note));
       toast.success('Nota actualizada');
     } catch (error) {
