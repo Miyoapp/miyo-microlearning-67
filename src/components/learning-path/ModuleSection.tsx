@@ -66,9 +66,9 @@ const ModuleSection = React.memo(({
             <LessonCard
               key={lesson.id}
               lesson={lesson}
+              index={index}
               status={enhancedStatus}
-              isActive={isCurrent}
-              isGloballyPlaying={isPlaying}
+              isPlaying={isPlaying}
               courseId={courseId}
               onLessonClick={onLessonClick}
               onProgressUpdate={onProgressUpdate}

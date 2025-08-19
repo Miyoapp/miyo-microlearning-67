@@ -1,39 +1,32 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { LessonNote } from '@/types/notes';
 import { StickyNote, Plus, Clock, Edit, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useNotes } from '@/hooks/useNotes';
 
 interface NotesPanelProps {
   isOpen: boolean;
-  lessonId: string;
-  courseId: string;
-  currentTimeSeconds: number;
+  notes: LessonNote[];
+  onAddNote: (noteText: string) => void;
+  onDeleteNote: (noteId: string) => void;
+  onEditNote: (noteId: string, noteText: string) => void;
   onSeekToTime: (timeInSeconds: number) => void;
+  currentTimeSeconds: number;
 }
 
 const NotesPanel: React.FC<NotesPanelProps> = ({
   isOpen,
-  lessonId,
-  courseId,
-  currentTimeSeconds,
-  onSeekToTime
+  notes,
+  onAddNote,
+  onDeleteNote,
+  onEditNote,
+  onSeekToTime,
+  currentTimeSeconds
 }) => {
   const [showNoteForm, setShowNoteForm] = useState(false);
   const [newNoteText, setNewNoteText] = useState('');
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState('');
-
-  const { notes, loading, fetchNotes, addNote, updateNote, deleteNote } = useNotes(lessonId, courseId);
-
-  // Fetch notes when panel opens or lesson changes
-  useEffect(() => {
-    if (isOpen && lessonId && courseId) {
-      console.log('🔄 NOTES PANEL: Fetching notes for lesson:', lessonId, 'course:', courseId);
-      fetchNotes();
-    }
-  }, [isOpen, lessonId, courseId, fetchNotes]);
 
   // Format time helper
   const formatTime = (seconds: number) => {
@@ -43,16 +36,9 @@ const NotesPanel: React.FC<NotesPanelProps> = ({
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  const handleAddNote = async () => {
-    if (!newNoteText.trim()) {
-      console.log('❌ NOTES PANEL: Empty note text, not saving');
-      return;
-    }
-
-    console.log('💾 NOTES PANEL: Adding note at timestamp:', currentTimeSeconds);
-    
-    const result = await addNote(newNoteText.trim(), currentTimeSeconds);
-    if (result) {
+  const handleAddNote = () => {
+    if (newNoteText.trim()) {
+      onAddNote(newNoteText.trim());
       setNewNoteText('');
       setShowNoteForm(false);
     }
@@ -68,9 +54,9 @@ const NotesPanel: React.FC<NotesPanelProps> = ({
     setEditingText(currentText);
   };
 
-  const handleSaveEdit = async () => {
+  const handleSaveEdit = () => {
     if (editingNoteId && editingText.trim()) {
-      await updateNote(editingNoteId, editingText.trim());
+      onEditNote(editingNoteId, editingText.trim());
       setEditingNoteId(null);
       setEditingText('');
     }
@@ -82,19 +68,8 @@ const NotesPanel: React.FC<NotesPanelProps> = ({
   };
 
   const handleSeekToNote = (timeInSeconds: number) => {
-    console.log('🎯 NOTES PANEL: Seeking to time:', timeInSeconds);
     onSeekToTime(timeInSeconds);
   };
-
-  const handleDeleteNote = async (noteId: string) => {
-    console.log('🗑️ NOTES PANEL: Deleting note:', noteId);
-    await deleteNote(noteId);
-  };
-
-  if (!lessonId || !courseId) {
-    console.log('❌ NOTES PANEL: Missing lessonId or courseId');
-    return null;
-  }
 
   return (
     <div 
@@ -109,9 +84,7 @@ const NotesPanel: React.FC<NotesPanelProps> = ({
           <div className="flex items-center gap-2">
             <StickyNote size={18} className="text-[#5e16ea]" />
             <h4 className="font-medium text-gray-900">📝 Mis notas</h4>
-            <span className="text-xs text-gray-500">
-              {loading ? '...' : `(${notes.length})`}
-            </span>
+            <span className="text-xs text-gray-500">({notes.length})</span>
           </div>
           <button
             onClick={() => setShowNoteForm(!showNoteForm)}
@@ -160,84 +133,74 @@ const NotesPanel: React.FC<NotesPanelProps> = ({
           </div>
         )}
 
-        {/* Loading State */}
-        {loading && (
-          <div className="text-center py-4 text-gray-500">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#5e16ea] mx-auto"></div>
-            <p className="text-sm mt-2">Cargando notas...</p>
-          </div>
-        )}
-
         {/* Notes List */}
-        {!loading && (
-          <div className="space-y-3 max-h-60 overflow-y-auto">
-            {notes.length === 0 ? (
-              <div className="text-center py-4 text-gray-500">
-                <StickyNote size={32} className="mx-auto mb-2 text-gray-300" />
-                <p className="text-sm">Aún no tienes notas en esta lección</p>
-                <p className="text-xs mt-1">Haz clic en "Agregar nota" para crear una</p>
-              </div>
-            ) : (
-              notes.map((note) => (
-                <div key={note.id} className="bg-gray-50 border-l-4 border-[#5e16ea] rounded-lg p-3 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <button
-                      onClick={() => handleSeekToNote(note.timestamp_seconds)}
-                      className="text-sm text-[#5e16ea] font-medium hover:underline transition-colors"
-                    >
-                      📍 {formatTime(note.timestamp_seconds)} - Saltar a este momento
-                    </button>
-                    
-                    {editingNoteId !== note.id && (
-                      <div className="flex gap-1">
-                        <button
-                          onClick={() => handleEditNote(note.id, note.note_text)}
-                          className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                        >
-                          <Edit size={12} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteNote(note.id)}
-                          className="p-1 text-gray-400 hover:text-red-500 transition-colors"
-                        >
-                          <Trash2 size={12} />
-                        </button>
-                      </div>
-                    )}
-                  </div>
+        <div className="space-y-3 max-h-60 overflow-y-auto">
+          {notes.length === 0 ? (
+            <div className="text-center py-4 text-gray-500">
+              <StickyNote size={32} className="mx-auto mb-2 text-gray-300" />
+              <p className="text-sm">Aún no tienes notas en esta lección</p>
+              <p className="text-xs mt-1">Haz clic en "Agregar nota" para crear una</p>
+            </div>
+          ) : (
+            notes.map((note) => (
+              <div key={note.id} className="bg-gray-50 border-l-4 border-[#5e16ea] rounded-lg p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => handleSeekToNote(note.timestamp_seconds)}
+                    className="text-sm text-[#5e16ea] font-medium hover:underline transition-colors"
+                  >
+                    📍 {formatTime(note.timestamp_seconds)} - Saltar a este momento
+                  </button>
                   
-                  {editingNoteId === note.id ? (
-                    <div className="space-y-2">
-                      <textarea
-                        value={editingText}
-                        onChange={(e) => setEditingText(e.target.value)}
-                        className="w-full text-sm border border-gray-200 rounded-md p-2 resize-none min-h-[60px]"
-                        rows={2}
-                        autoFocus
-                      />
-                      <div className="flex gap-2">
-                        <button
-                          onClick={handleSaveEdit}
-                          className="text-xs bg-emerald-500 text-white px-3 py-1 rounded-md hover:bg-emerald-600 transition-colors"
-                        >
-                          Guardar
-                        </button>
-                        <button
-                          onClick={handleCancelEdit}
-                          className="text-xs text-gray-600 px-3 py-1 rounded-md hover:bg-gray-200 transition-colors"
-                        >
-                          Cancelar
-                        </button>
-                      </div>
+                  {editingNoteId !== note.id && (
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => handleEditNote(note.id, note.note_text)}
+                        className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        <Edit size={12} />
+                      </button>
+                      <button
+                        onClick={() => onDeleteNote(note.id)}
+                        className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                      >
+                        <Trash2 size={12} />
+                      </button>
                     </div>
-                  ) : (
-                    <p className="text-sm text-gray-700 leading-relaxed">{note.note_text}</p>
                   )}
                 </div>
-              ))
-            )}
-          </div>
-        )}
+                
+                {editingNoteId === note.id ? (
+                  <div className="space-y-2">
+                    <textarea
+                      value={editingText}
+                      onChange={(e) => setEditingText(e.target.value)}
+                      className="w-full text-sm border border-gray-200 rounded-md p-2 resize-none min-h-[60px]"
+                      rows={2}
+                      autoFocus
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleSaveEdit}
+                        className="text-xs bg-emerald-500 text-white px-3 py-1 rounded-md hover:bg-emerald-600 transition-colors"
+                      >
+                        Guardar
+                      </button>
+                      <button
+                        onClick={handleCancelEdit}
+                        className="text-xs text-gray-600 px-3 py-1 rounded-md hover:bg-gray-200 transition-colors"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-700 leading-relaxed">{note.note_text}</p>
+                )}
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
