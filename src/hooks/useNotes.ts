@@ -20,31 +20,18 @@ export function useNotes(lessonId?: string, courseId?: string) {
     try {
       console.log('🔍 NOTES: Fetching notes for lesson:', lessonId, 'course:', courseId, 'user:', user.id);
       
-      // Use raw SQL query to bypass type issues temporarily
-      const { data, error } = await supabase.rpc('get_lesson_notes', {
-        p_user_id: user.id,
-        p_lesson_id: lessonId,
-        p_course_id: courseId
-      });
+      // Use direct query to lesson_notes table
+      const { data, error } = await (supabase as any)
+        .from('lesson_notes')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('lesson_id', lessonId)
+        .eq('course_id', courseId)
+        .order('timestamp_seconds', { ascending: true });
 
       if (error) {
         console.error('❌ NOTES: Error fetching notes:', error);
-        // Fallback to direct query with any type
-        const { data: fallbackData, error: fallbackError } = await (supabase as any)
-          .from('lesson_notes')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('lesson_id', lessonId)
-          .eq('course_id', courseId)
-          .order('timestamp_seconds', { ascending: true });
-
-        if (fallbackError) {
-          throw fallbackError;
-        }
-        
-        console.log('✅ NOTES: Fetched notes successfully (fallback):', fallbackData?.length || 0, 'notes');
-        setNotes((fallbackData || []) as LessonNote[]);
-        return;
+        throw error;
       }
       
       console.log('✅ NOTES: Fetched notes successfully:', data?.length || 0, 'notes');
@@ -90,7 +77,6 @@ export function useNotes(lessonId?: string, courseId?: string) {
 
       console.log('💾 NOTES: Inserting note data:', noteData);
 
-      // Use any type to bypass TypeScript issues temporarily
       const { data, error } = await (supabase as any)
         .from('lesson_notes')
         .insert(noteData)
