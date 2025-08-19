@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Lesson } from '@/types';
 import { Play, Pause, Lock, SkipBack, SkipForward, ChevronDown, Volume2, VolumeX, PenTool } from 'lucide-react';
@@ -38,10 +37,20 @@ const LessonCard = React.memo(({
 }: LessonCardProps) => {
   const { isCompleted, isLocked, isCurrent, canPlay } = status;
   
-  // Notes functionality - Only initialize when current and courseId exists
+  // DEBUG: Add logging to verify courseId and conditions
+  console.log('🎴 LessonCard Debug:', {
+    lessonTitle: lesson.title,
+    courseId,
+    canPlay,
+    isCurrent,
+    shouldShowNotes: canPlay && courseId,
+    courseIdType: typeof courseId
+  });
+  
+  // Notes functionality - Only initialize when courseId exists (not when current)
   const { notes, addNote, updateNote, deleteNote, fetchNotes } = useNotes(
-    isCurrent ? lesson.id : undefined, 
-    isCurrent ? courseId : undefined
+    canPlay ? lesson.id : undefined, 
+    canPlay ? courseId : undefined
   );
   const [isAddNoteModalOpen, setIsAddNoteModalOpen] = React.useState(false);
 
@@ -83,12 +92,12 @@ const LessonCard = React.memo(({
     onLessonComplete
   });
 
-  // Fetch notes when lesson becomes current and courseId is available
+  // Fetch notes when lesson can play and courseId is available
   React.useEffect(() => {
-    if (isCurrent && courseId) {
+    if (canPlay && courseId) {
       fetchNotes();
     }
-  }, [isCurrent, courseId, fetchNotes]);
+  }, [canPlay, courseId, fetchNotes]);
 
   // Handle adding note
   const handleAddNote = async (noteText: string) => {
@@ -205,8 +214,8 @@ const LessonCard = React.memo(({
 
           {/* Duration and Notes Icon */}
           <div className="flex items-center gap-2">
-            {/* Notes Icon - Only show when current, can play, and courseId exists */}
-            {isCurrent && canPlay && courseId && (
+            {/* Notes Icon - Show on ALL playable lessons with valid courseId */}
+            {canPlay && courseId && (
               <button
                 onClick={() => setIsAddNoteModalOpen(true)}
                 className="p-1 text-gray-600 hover:text-[#5e16ea] transition-colors"
