@@ -1,9 +1,9 @@
-
 import React from 'react';
 import { Lesson } from '@/types';
 import { Play, Pause, Lock, SkipBack, SkipForward, ChevronDown, Volume2, VolumeX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLessonCard } from '@/hooks/learning-path/useLessonCard';
+import { useMemo } from 'react';
 
 interface LessonCardProps {
   lesson: Lesson;
@@ -75,8 +75,19 @@ const LessonCard = React.memo(({
   const [showVolumeControl, setShowVolumeControl] = React.useState(false);
 
   const validDuration = duration || (lesson.duracion * 60);
-  // FIXED: For completed lessons, show 100% progress instead of resetting to 0
-  const validCurrentTime = isCompleted ? validDuration : Math.min(currentTime, validDuration);
+  
+  // FIXED: Smart progress display logic
+  // - If completed AND not currently playing: show 100% (visual indicator of completion)
+  // - If completed AND currently playing: show real-time progress (allow normal playback)
+  // - If not completed: always show real-time progress
+  const validCurrentTime = useMemo(() => {
+    if (isCompleted && !isPlaying) {
+      // Completed lesson at rest - show 100%
+      return validDuration;
+    }
+    // Active playback or incomplete lesson - show real progress
+    return Math.min(currentTime, validDuration);
+  }, [isCompleted, isPlaying, currentTime, validDuration]);
 
   // Handle seek
   const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -90,12 +101,11 @@ const LessonCard = React.memo(({
     setShowSpeedDropdown(false);
   };
 
-  // UPDATED: Always show play/pause icon, never trophy
+  // Always show play/pause icon, never trophy
   const getStatusIcon = () => {
     if (!canPlay) {
       return <Lock size={16} />;
     }
-    // Always show play/pause, never trophy
     if (isCurrent && isPlaying) {
       return <Pause size={16} />;
     }
@@ -106,7 +116,6 @@ const LessonCard = React.memo(({
     <div className={cn(
       "bg-white rounded-lg border shadow-sm p-4 transition-all duration-200",
       {
-        // UPDATED: Use purple for completed lessons instead of yellow
         "border-[#5e16ea] shadow-md": isCompleted || (isCurrent && !isCompleted),
         "border-gray-200": !isCurrent && !isCompleted && canPlay,
         "border-gray-100 bg-gray-50": !canPlay,
@@ -136,7 +145,6 @@ const LessonCard = React.memo(({
             className={cn(
               "flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200",
               {
-                // UPDATED: Use purple for completed lessons instead of yellow
                 "bg-[#5e16ea] text-white hover:bg-[#4a11ba]": canPlay && (isCompleted || !isCompleted),
                 "bg-gray-300 text-gray-500 cursor-not-allowed": !canPlay,
                 "hover:scale-105": canPlay
@@ -158,7 +166,6 @@ const LessonCard = React.memo(({
             <h4 className={cn(
               "font-medium text-sm",
               {
-                // UPDATED: Use purple for completed lessons instead of yellow
                 "text-[#5e16ea]": isCompleted || (isCurrent && !isCompleted),
                 "text-gray-900": canPlay && !isCurrent && !isCompleted,
                 "text-gray-400": !canPlay
@@ -176,7 +183,6 @@ const LessonCard = React.memo(({
         <div className={cn(
           "text-xs",
           {
-            // UPDATED: Use purple for completed lessons instead of yellow
             "text-[#5e16ea]": isCompleted || (isCurrent && !isCompleted),
             "text-gray-600": canPlay && !isCurrent && !isCompleted,
             "text-gray-400": !canPlay
