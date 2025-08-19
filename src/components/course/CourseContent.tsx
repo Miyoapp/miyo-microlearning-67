@@ -22,6 +22,7 @@ const CourseContent = ({ podcast, currentLessonId, isGloballyPlaying, onSelectLe
               onSelectLesson={onSelectLesson}
               currentLessonId={currentLessonId}
               isGloballyPlaying={isGloballyPlaying}
+              podcast={podcast}
             />
           </div>
           

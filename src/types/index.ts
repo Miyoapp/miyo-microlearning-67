@@ -1,4 +1,3 @@
-
 export interface CategoryModel {
   id: string;
   nombre: string;
@@ -119,3 +118,6 @@ export interface SupabaseModulo {
   fecha_creacion: string;
   fecha_actualizacion: string;
 }
+
+// Export new types
+export type { LessonNote, CourseSummary, CourseCompletionStats } from './notes';

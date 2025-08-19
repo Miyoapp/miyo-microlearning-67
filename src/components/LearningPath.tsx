@@ -1,10 +1,14 @@
-
 import { useCallback, useMemo } from 'react';
 import { Lesson, Module } from '../types';
 import React from 'react';
 import { useLessonStatus } from '@/hooks/learning-path/useLessonStatus';
 import { useLessonClasses } from '@/hooks/learning-path/useLessonClasses';
 import ModuleSection from './learning-path/ModuleSection';
+import { useCourseCompletion } from '@/hooks/useCourseCompletion';
+import { useUserProgress } from '@/hooks/useUserProgress';
+import { useUserLessonProgress } from '@/hooks/useUserLessonProgress';
+import CourseCompletionModal from '@/components/summaries/CourseCompletionModal';
+import CreateSummaryModal from '@/components/summaries/CreateSummaryModal';
 
 interface LearningPathProps {
   lessons: Lesson[];
@@ -14,6 +18,7 @@ interface LearningPathProps {
   isGloballyPlaying: boolean;
   onProgressUpdate?: (position: number) => void;
   onLessonComplete?: () => void;
+  podcast?: any; // Add podcast prop for course completion
 }
 
 const LearningPath = React.memo(({ 
@@ -23,8 +28,28 @@ const LearningPath = React.memo(({
   currentLessonId, 
   isGloballyPlaying,
   onProgressUpdate,
-  onLessonComplete
+  onLessonComplete,
+  podcast
 }: LearningPathProps) => {
+  // Get user progress data for course completion detection
+  const { userProgress } = useUserProgress();
+  const { lessonProgress } = useUserLessonProgress();
+  
+  // Course completion functionality
+  const {
+    showCompletionModal,
+    showSummaryModal,
+    completionStats,
+    setShowCompletionModal,
+    setShowSummaryModal,
+    handleCreateSummary,
+    handleOpenSummaryModal
+  } = useCourseCompletion({
+    podcast,
+    userProgress,
+    lessonProgress
+  });
+
   // Use custom hooks for status and classes
   const lessonStatusMap = useLessonStatus(lessons, modules, currentLessonId);
   const getLessonClasses = useLessonClasses(lessons, lessonStatusMap);
@@ -102,30 +127,53 @@ const LearningPath = React.memo(({
   }, [modules, getLessonsForModule]);
   
   return (
-    <div className="py-3">
-      <h2 className="text-2xl font-bold mb-6 text-center">Tu Ruta de Aprendizaje</h2>
-      
-      <div className="max-w-2xl mx-auto space-y-8">
-        {orderedModules.map((module) => {
-          const moduleLessons = getLessonsForModule(module.id);
-          
-          return (
-            <ModuleSection
-              key={module.id}
-              module={module}
-              moduleLessons={moduleLessons}
-              lessonStatusMap={lessonStatusMap}
-              getLessonClasses={getLessonClasses}
-              currentLessonId={currentLessonId}
-              isGloballyPlaying={isGloballyPlaying}
-              onLessonClick={handleLessonClick}
-              onProgressUpdate={onProgressUpdate}
-              onLessonComplete={onLessonComplete}
-            />
-          );
-        })}
+    <>
+      <div className="py-3">
+        <h2 className="text-2xl font-bold mb-6 text-center">Tu Ruta de Aprendizaje</h2>
+        
+        <div className="max-w-2xl mx-auto space-y-8">
+          {orderedModules.map((module) => {
+            const moduleLessons = getLessonsForModule(module.id);
+            
+            return (
+              <ModuleSection
+                key={module.id}
+                module={module}
+                moduleLessons={moduleLessons}
+                lessonStatusMap={lessonStatusMap}
+                getLessonClasses={getLessonClasses}
+                currentLessonId={currentLessonId}
+                isGloballyPlaying={isGloballyPlaying}
+                onLessonClick={handleLessonClick}
+                onProgressUpdate={onProgressUpdate}
+                onLessonComplete={onLessonComplete}
+              />
+            );
+          })}
+        </div>
       </div>
-    </div>
+
+      {/* Course Completion Modal */}
+      {podcast && completionStats && (
+        <CourseCompletionModal
+          isOpen={showCompletionModal}
+          onClose={() => setShowCompletionModal(false)}
+          onCreateSummary={handleOpenSummaryModal}
+          course={podcast}
+          stats={completionStats}
+        />
+      )}
+
+      {/* Create Summary Modal */}
+      {podcast && (
+        <CreateSummaryModal
+          isOpen={showSummaryModal}
+          onClose={() => setShowSummaryModal(false)}
+          onSave={handleCreateSummary}
+          courseTitle={podcast.title}
+        />
+      )}
+    </>
   );
 });
 
