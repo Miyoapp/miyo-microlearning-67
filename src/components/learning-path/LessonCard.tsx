@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { useLessonCard } from '@/hooks/learning-path/useLessonCard';
 import { useMemo } from 'react';
 import { useNotes } from '@/hooks/useNotes';
-import NotesDropdown from '@/components/notes/NotesDropdown';
+import NotesPanel from '@/components/notes/NotesPanel';
 
 interface LessonCardProps {
   lesson: Lesson;
@@ -37,7 +37,6 @@ const LessonCard = React.memo(({
 }: LessonCardProps) => {
   const { isCompleted, isLocked, isCurrent, canPlay } = status;
   
-  // DEBUG: Add logging to verify courseId and conditions
   console.log('🎴 LessonCard Debug:', {
     lessonTitle: lesson.title,
     courseId,
@@ -52,7 +51,7 @@ const LessonCard = React.memo(({
     canPlay ? lesson.id : undefined, 
     canPlay ? courseId : undefined
   );
-  const [showNotesDropdown, setShowNotesDropdown] = React.useState(false);
+  const [showNotesPanel, setShowNotesPanel] = React.useState(false);
 
   console.log('🎯 LessonCard render:', {
     lessonTitle: lesson.title,
@@ -109,10 +108,10 @@ const LessonCard = React.memo(({
     handleSeek(timeInSeconds);
   };
 
-  // Handle notes dropdown toggle - doesn't affect audio playback
+  // Handle notes panel toggle
   const handleNotesToggle = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent lesson selection
-    setShowNotesDropdown(!showNotesDropdown);
+    e.stopPropagation();
+    setShowNotesPanel(!showNotesPanel);
   };
 
   // Speed options for dropdown
@@ -151,17 +150,18 @@ const LessonCard = React.memo(({
   };
 
   return (
-    <>
-      <div className={cn(
-        "bg-white rounded-lg border shadow-sm p-4 transition-all duration-200 relative",
-        {
-          "border-[#5e16ea] shadow-md": isCompleted || (isCurrent && !isCompleted),
-          "border-gray-200": !isCurrent && !isCompleted && canPlay,
-          "border-gray-100 bg-gray-50": !canPlay,
-          "hover:shadow-md": canPlay,
-          "cursor-not-allowed": !canPlay
-        }
-      )}>
+    <div className={cn(
+      "bg-white rounded-lg border shadow-sm transition-all duration-200",
+      {
+        "border-[#5e16ea] shadow-md": isCompleted || (isCurrent && !isCompleted),
+        "border-gray-200": !isCurrent && !isCompleted && canPlay,
+        "border-gray-100 bg-gray-50": !canPlay,
+        "hover:shadow-md": canPlay,
+        "cursor-not-allowed": !canPlay
+      }
+    )}>
+      {/* Main Card Content */}
+      <div className="p-4">
         {/* Audio element for current playing lesson */}
         {audioRef && (
           <audio
@@ -220,34 +220,25 @@ const LessonCard = React.memo(({
 
           {/* Duration and Notes Icon */}
           <div className="flex items-center gap-2">
-            {/* Custom Notes Icon with Badge - Show on ALL playable lessons with valid courseId */}
+            {/* Notes Icon with Badge */}
             {canPlay && courseId && (
-              <div className="relative">
-                <button
-                  onClick={handleNotesToggle}
-                  className="relative flex items-center justify-center w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full hover:from-yellow-500 hover:to-orange-600 transition-all duration-200 shadow-sm hover:shadow-md"
-                  aria-label={`Notas (${notes.length})`}
-                >
-                  <StickyNote size={16} className="text-white" />
-                  {notes.length > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold text-[10px]">
-                      {notes.length > 9 ? '9+' : notes.length}
-                    </span>
-                  )}
-                </button>
-
-                {/* Notes Dropdown */}
-                <NotesDropdown
-                  isOpen={showNotesDropdown}
-                  onClose={() => setShowNotesDropdown(false)}
-                  notes={notes}
-                  onAddNote={handleAddNote}
-                  onDeleteNote={deleteNote}
-                  onEditNote={updateNote}
-                  onSeekToTime={handleSeekToNote}
-                  currentTimeSeconds={currentTime}
-                />
-              </div>
+              <button
+                onClick={handleNotesToggle}
+                className={cn(
+                  "relative flex items-center justify-center w-8 h-8 rounded-full hover:scale-105 transition-all duration-200 shadow-sm hover:shadow-md",
+                  showNotesPanel 
+                    ? "bg-gradient-to-br from-yellow-500 to-orange-600" 
+                    : "bg-gradient-to-br from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600"
+                )}
+                aria-label={`Notas (${notes.length})`}
+              >
+                <StickyNote size={16} className="text-white" />
+                {notes.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold text-[10px]">
+                    {notes.length > 9 ? '9+' : notes.length}
+                  </span>
+                )}
+              </button>
             )}
             
             {/* Duration */}
@@ -376,7 +367,20 @@ const LessonCard = React.memo(({
           </div>
         )}
       </div>
-    </>
+
+      {/* Notes Panel - Integrated */}
+      {canPlay && courseId && (
+        <NotesPanel
+          isOpen={showNotesPanel}
+          notes={notes}
+          onAddNote={handleAddNote}
+          onDeleteNote={deleteNote}
+          onEditNote={updateNote}
+          onSeekToTime={handleSeekToNote}
+          currentTimeSeconds={currentTime}
+        />
+      )}
+    </div>
   );
 });
 
