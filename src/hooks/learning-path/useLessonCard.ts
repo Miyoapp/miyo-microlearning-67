@@ -2,6 +2,7 @@
 import { useState, useCallback } from 'react';
 import { Lesson } from '@/types';
 import { useIndividualAudio } from '@/hooks/audio/useIndividualAudio';
+import { useUserLessonProgress } from '@/hooks/useUserLessonProgress';
 
 interface UseLessonCardProps {
   lesson: Lesson;
@@ -22,13 +23,23 @@ export function useLessonCard({
   onProgressUpdate,
   onLessonComplete
 }: UseLessonCardProps) {
-  const [localIsPlaying, setLocalIsPlaying] = useState(false); // NEW: Local state for current lesson
-
+  const [localIsPlaying, setLocalIsPlaying] = useState(false);
+  
+  // Get lesson progress data
+  const { lessonProgress } = useUserLessonProgress();
+  
+  // Find saved progress for this lesson
+  const savedProgress = lessonProgress.find(p => p.lesson_id === lesson.id);
+  
   console.log('🎵 useLessonCard for:', lesson.title, {
     canPlay,
     isCurrent,
     isPlaying,
-    localIsPlaying
+    localIsPlaying,
+    savedProgress: savedProgress ? {
+      current_position: savedProgress.current_position,
+      is_completed: savedProgress.is_completed
+    } : null
   });
 
   // Handle lesson completion
@@ -58,7 +69,11 @@ export function useLessonCard({
     },
     onComplete: handleComplete,
     onProgressUpdate,
-    onPlayStateChange: handlePlayStateChange // NEW: Track actual audio state
+    onPlayStateChange: handlePlayStateChange,
+    savedProgress: savedProgress ? {
+      current_position: savedProgress.current_position || 0,
+      is_completed: savedProgress.is_completed || false
+    } : undefined
   });
 
   // SIMPLIFIED: Handle play/pause with clear separation of concerns
@@ -92,8 +107,11 @@ export function useLessonCard({
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   }, []);
 
-  // Use audio data when current, otherwise use lesson defaults
-  const currentTime = shouldUseAudio ? audioHook.currentTime : 0;
+  // Use audio data when current, otherwise use lesson defaults and saved progress
+  const currentTime = shouldUseAudio ? audioHook.currentTime : 
+    (savedProgress?.is_completed ? (lesson.duracion * 60) : 
+     savedProgress?.current_position ? (savedProgress.current_position / 100 * lesson.duracion * 60) : 0);
+  
   const duration = shouldUseAudio ? audioHook.duration : (lesson.duracion * 60);
   
   // FIXED: Use actual audio state for current lesson, global state for others

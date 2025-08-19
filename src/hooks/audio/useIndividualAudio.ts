@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Lesson } from '@/types';
 
@@ -8,6 +9,10 @@ interface UseIndividualAudioProps {
   onComplete: () => void;
   onProgressUpdate?: (position: number) => void;
   onPlayStateChange?: (isPlaying: boolean) => void;
+  savedProgress?: {
+    current_position: number;
+    is_completed: boolean;
+  };
 }
 
 export function useIndividualAudio({
@@ -16,7 +21,8 @@ export function useIndividualAudio({
   onTogglePlay,
   onComplete,
   onProgressUpdate,
-  onPlayStateChange
+  onPlayStateChange,
+  savedProgress
 }: UseIndividualAudioProps) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -33,18 +39,32 @@ export function useIndividualAudio({
     currentTime,
     duration,
     playbackRate,
-    isCompleted: lesson.isCompleted
+    isCompleted: lesson.isCompleted,
+    savedProgress
   });
 
-  // Reset audio when lesson changes - FIXED: Allow completed lessons to start from 0
+  // Reset audio when lesson changes - FIXED: Initialize with saved progress
   useEffect(() => {
     if (audioRef.current) {
-      console.log("🎵 Initializing audio for lesson:", lesson.title, "isCompleted:", lesson.isCompleted);
+      console.log("🎵 Initializing audio for lesson:", lesson.title, "savedProgress:", savedProgress);
       const audio = audioRef.current;
       
-      // FIXED: Always start from 0, regardless of completion status
-      audio.currentTime = 0;
-      setCurrentTime(0);
+      // FIXED: Initialize currentTime based on saved progress
+      if (savedProgress?.is_completed) {
+        // For completed lessons, show 100% progress
+        console.log("✅ Lesson is completed, will set to 100% after metadata loads");
+        setCurrentTime(0); // Will be set to duration after metadata loads
+      } else if (savedProgress?.current_position && savedProgress.current_position > 0) {
+        // For lessons with partial progress, calculate saved time
+        const savedTimePercent = savedProgress.current_position / 100;
+        console.log("📍 Lesson has partial progress:", savedProgress.current_position + "%");
+        setCurrentTime(0); // Will be calculated after metadata loads
+      } else {
+        // For new lessons, start from beginning
+        console.log("🆕 New lesson, starting from 0");
+        audio.currentTime = 0;
+        setCurrentTime(0);
+      }
       
       audio.volume = isMuted ? 0 : volume;
       audio.playbackRate = playbackRate;
@@ -52,7 +72,7 @@ export function useIndividualAudio({
       setActualIsPlaying(false);
       audio.load();
     }
-  }, [lesson.id, lesson.isCompleted]);
+  }, [lesson.id, savedProgress?.current_position, savedProgress?.is_completed]);
 
   // NEW: Direct play/pause control for immediate response
   const handleDirectToggle = useCallback(() => {
@@ -174,16 +194,28 @@ export function useIndividualAudio({
     }
   }, [duration, lesson.title, onProgressUpdate, actualIsPlaying]);
 
-  // Handle metadata loaded - FIXED: Don't force completed lessons to 100%
+  // Handle metadata loaded - FIXED: Initialize with saved progress after metadata loads
   const handleMetadata = useCallback(() => {
     if (audioRef.current) {
       const newDuration = audioRef.current.duration;
-      console.log("📋 Audio metadata loaded for", lesson.title, "duration:", newDuration, "isCompleted:", lesson.isCompleted);
+      console.log("📋 Audio metadata loaded for", lesson.title, "duration:", newDuration, "savedProgress:", savedProgress);
       setDuration(newDuration);
       
-      // FIXED: Don't force completed lessons to 100% - let them play normally
+      // FIXED: Set initial currentTime based on saved progress after metadata loads
+      if (savedProgress?.is_completed) {
+        // For completed lessons, show at 100%
+        console.log("✅ Setting completed lesson to 100%");
+        setCurrentTime(newDuration);
+        audioRef.current.currentTime = newDuration;
+      } else if (savedProgress?.current_position && savedProgress.current_position > 0) {
+        // For lessons with partial progress, calculate saved time
+        const savedTime = (savedProgress.current_position / 100) * newDuration;
+        console.log("📍 Setting partial progress to:", savedTime, "seconds (", savedProgress.current_position + "%)");
+        setCurrentTime(savedTime);
+        audioRef.current.currentTime = savedTime;
+      }
     }
-  }, [lesson.title]);
+  }, [lesson.title, savedProgress]);
 
   // Handle audio ended - FIXED: Ensure proper completion handling
   const handleAudioEnded = useCallback(() => {
