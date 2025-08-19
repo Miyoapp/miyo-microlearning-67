@@ -1,389 +1,229 @@
-
-import React from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Lesson } from '@/types';
-import { Play, Pause, Lock, SkipBack, SkipForward, ChevronDown, Volume2, VolumeX, StickyNote } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useLessonCard } from '@/hooks/learning-path/useLessonCard';
-import { useMemo } from 'react';
-import { useNotes } from '@/hooks/useNotes';
+import {
+  Play,
+  Pause,
+  SkipForward,
+  SkipBack,
+  Volume1,
+  Volume0,
+  StickyNote,
+  Lock,
+  CheckCircle,
+} from 'lucide-react';
+import { useAudio } from '@/hooks/useAudio';
+import { useUserLessonProgress } from '@/hooks/useUserLessonProgress';
 import NotesPanel from '@/components/notes/NotesPanel';
 
 interface LessonCardProps {
   lesson: Lesson;
-  index: number;
   status: {
+    canPlay: boolean;
     isCompleted: boolean;
     isLocked: boolean;
-    isCurrent: boolean;
-    canPlay: boolean;
     isFirstInSequence: boolean;
   };
-  isPlaying: boolean;
-  courseId: string | null;
+  isActive: boolean;
+  isGloballyPlaying: boolean;
+  courseId?: string | null;
   onLessonClick: (lesson: Lesson, shouldAutoPlay?: boolean) => void;
   onProgressUpdate?: (position: number) => void;
   onLessonComplete?: () => void;
 }
 
-const LessonCard = React.memo(({ 
-  lesson, 
-  index, 
-  status, 
-  isPlaying: propIsPlaying,
+const LessonCard = React.memo<LessonCardProps>(({
+  lesson,
+  status,
+  isActive,
+  isGloballyPlaying,
   courseId,
   onLessonClick,
   onProgressUpdate,
   onLessonComplete
-}: LessonCardProps) => {
-  const { isCompleted, isLocked, isCurrent, canPlay } = status;
-  
-  console.log('🎴 LessonCard Debug:', {
-    lessonTitle: lesson.title,
-    courseId,
-    canPlay,
-    isCurrent,
-    shouldShowNotes: canPlay && courseId,
-    courseIdType: typeof courseId
-  });
-  
-  // Notes functionality - Only initialize when courseId exists
-  const { notes, addNote, updateNote, deleteNote, fetchNotes } = useNotes(
-    canPlay ? lesson.id : undefined, 
-    canPlay ? courseId : undefined
-  );
-  const [showNotesPanel, setShowNotesPanel] = React.useState(false);
+}) => {
+  const [notesOpen, setNotesOpen] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const { lessonProgress } = useUserLessonProgress();
+  const [currentTime, setCurrentTime] = useState(0);
 
-  console.log('🎯 LessonCard render:', {
-    lessonTitle: lesson.title,
-    isCurrent,
-    propIsPlaying,
-    canPlay,
-    isCompleted,
-    courseId
-  });
-  
   const {
-    isPlaying,
-    currentTime,
-    duration,
-    playbackRate,
+    playing,
     volume,
-    isMuted,
-    handlePlayPause,
-    handleSeek,
-    handleSkipBackward,
-    handleSkipForward,
-    handlePlaybackRateChange,
-    handleVolumeChange,
+    muted,
+    togglePlay,
+    setVolume,
     toggleMute,
-    formatTime,
-    audioRef,
-    handleMetadata,
-    updateTime,
-    handleAudioEnded
-  } = useLessonCard({
-    lesson,
-    canPlay,
-    isCurrent,
-    isPlaying: propIsPlaying,
-    onLessonClick,
-    onProgressUpdate,
-    onLessonComplete
-  });
+    duration,
+    handleTimeUpdate,
+    handleLoadedData,
+    seek,
+  } = useAudio(audioRef, lesson.urlAudio, isGloballyPlaying);
 
-  // Fetch notes when lesson can play and courseId is available
-  React.useEffect(() => {
-    if (canPlay && courseId) {
-      fetchNotes();
+  const handleSkipForward = () => {
+    if (audioRef.current) {
+      const newTime = Math.min(audioRef.current.currentTime + 10, audioRef.current.duration);
+      seek(newTime);
     }
-  }, [canPlay, courseId, fetchNotes]);
-
-  // Handle adding note
-  const handleAddNote = async (noteText: string) => {
-    await addNote(noteText, currentTime);
   };
 
-  // Handle seeking to note time
-  const handleSeekToNote = (timeInSeconds: number) => {
-    handleSeek(timeInSeconds);
-  };
-
-  // Handle notes panel toggle
-  const handleNotesToggle = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setShowNotesPanel(!showNotesPanel);
-  };
-
-  // Speed options for dropdown
-  const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
-  const [showSpeedDropdown, setShowSpeedDropdown] = React.useState(false);
-  const [showVolumeControl, setShowVolumeControl] = React.useState(false);
-
-  const validDuration = duration || (lesson.duracion * 60);
-  
-  // Always show real progress - no special cases
-  const validCurrentTime = useMemo(() => {
-    return Math.min(currentTime, validDuration);
-  }, [currentTime, validDuration]);
-
-  // Handle seek
-  const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseFloat(e.target.value);
-    handleSeek(value);
-  };
-
-  // Handle playback rate change
-  const handleRateChange = (rate: number) => {
-    handlePlaybackRateChange(rate);
-    setShowSpeedDropdown(false);
-  };
-
-  // Always show play/pause icon, never trophy
-  const getStatusIcon = () => {
-    if (!canPlay) {
-      return <Lock size={16} />;
+  const handleSkipBack = () => {
+    if (audioRef.current) {
+      const newTime = Math.max(audioRef.current.currentTime - 10, 0);
+      seek(newTime);
     }
-    if (isCurrent && isPlaying) {
-      return <Pause size={16} />;
+  };
+
+  const handleVolumeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setVolume(parseFloat(event.target.value));
+  };
+
+  const handleToggleMute = () => {
+    toggleMute();
+  };
+
+  const currentLessonProgress = lessonProgress.find(p => p.lesson_id === lesson.id);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = currentLessonProgress?.current_position || 0;
+      setCurrentTime(currentLessonProgress?.current_position || 0);
     }
-    return <Play size={16} fill="white" />;
+  }, [currentLessonProgress?.current_position, lesson.id]);
+
+  useEffect(() => {
+    const updateProgress = () => {
+      if (audioRef.current) {
+        const currentPosition = audioRef.current.currentTime;
+        const totalDuration = audioRef.current.duration;
+        const progress = totalDuration ? (currentPosition / totalDuration) * 100 : 0;
+        
+        setCurrentTime(currentPosition);
+        onProgressUpdate?.(progress);
+      }
+    };
+
+    if (playing) {
+      const intervalId = setInterval(updateProgress, 1000);
+      return () => clearInterval(intervalId);
+    }
+  }, [playing, onProgressUpdate]);
+
+  const handleLessonClickInner = useCallback((shouldAutoPlay = true) => {
+    onLessonClick(lesson, shouldAutoPlay);
+  }, [lesson, onLessonClick]);
+
+  const handleNotesToggle = () => {
+    console.log('🎵 LESSON CARD: Toggling notes for lesson:', lesson.id);
+    setNotesOpen(!notesOpen);
+  };
+
+  const handleSeekToTime = (timeInSeconds: number) => {
+    console.log('🎯 LESSON CARD: Seeking to time:', timeInSeconds, 'for lesson:', lesson.id);
+    if (audioRef.current) {
+      audioRef.current.currentTime = timeInSeconds;
+    }
   };
 
   return (
-    <div className={cn(
-      "bg-white rounded-lg border shadow-sm transition-all duration-200",
-      {
-        "border-[#5e16ea] shadow-md": isCompleted || (isCurrent && !isCompleted),
-        "border-gray-200": !isCurrent && !isCompleted && canPlay,
-        "border-gray-100 bg-gray-50": !canPlay,
-        "hover:shadow-md": canPlay,
-        "cursor-not-allowed": !canPlay
-      }
-    )}>
-      {/* Main Card Content */}
-      <div className="p-4">
-        {/* Audio element for current playing lesson */}
-        {audioRef && (
-          <audio
-            ref={audioRef}
-            src={lesson.urlAudio}
-            onLoadedMetadata={handleMetadata}
-            onTimeUpdate={updateTime}
-            onEnded={handleAudioEnded}
-            preload="metadata"
-          />
-        )}
-        
-        {/* Header with title and status */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center space-x-3">
-            {/* Functional Status/Play Button */}
+    <>
+      <div className={cn(
+        "border border-gray-200 rounded-xl p-4 transition-all duration-200 shadow-sm",
+        isActive ? "bg-gray-50 border-[#5e16ea] shadow-md" : "bg-white",
+        status.isLocked && "opacity-50 cursor-not-allowed"
+      )}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
             <button
-              onClick={handlePlayPause}
-              disabled={!canPlay}
+              onClick={() => handleLessonClickInner(!playing)}
+              disabled={status.isLocked}
               className={cn(
-                "flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200",
-                {
-                  "bg-[#5e16ea] text-white hover:bg-[#4a11ba]": canPlay && (isCompleted || !isCompleted),
-                  "bg-gray-300 text-gray-500 cursor-not-allowed": !canPlay,
-                  "hover:scale-105": canPlay
-                }
+                "p-2 rounded-full transition-colors",
+                status.canPlay
+                  ? "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                  : "text-gray-400 cursor-not-allowed",
+                isActive && "bg-[#5e16ea] text-white hover:bg-[#4a11ba]",
+                status.isLocked && "cursor-not-allowed"
               )}
-              aria-label={
-                !canPlay 
-                  ? "Lección bloqueada" 
-                  : isPlaying
-                    ? "Pausar" 
-                    : "Reproducir"
-              }
+              aria-label={playing ? "Pause" : "Play"}
             >
-              {getStatusIcon()}
-            </button>
-            
-            {/* Title */}
-            <div>
-              <h4 className={cn(
-                "font-medium text-sm",
-                {
-                  "text-[#5e16ea]": isCompleted || (isCurrent && !isCompleted),
-                  "text-gray-900": canPlay && !isCurrent && !isCompleted,
-                  "text-gray-400": !canPlay
-                }
-              )}>
-                {lesson.title}
-              </h4>
-              {isCurrent && isPlaying && (
-                <span className="text-xs text-green-600">● Reproduciendo</span>
+              {playing && isActive ? (
+                <Pause size={16} />
+              ) : (
+                <Play size={16} />
               )}
-            </div>
+            </button>
+            <h3 className="font-medium text-gray-900">
+              {lesson.title}
+            </h3>
           </div>
 
-          {/* Duration and Notes Icon */}
           <div className="flex items-center gap-2">
-            {/* Notes Icon with Badge */}
-            {canPlay && courseId && (
-              <button
-                onClick={handleNotesToggle}
-                className={cn(
-                  "relative flex items-center justify-center w-8 h-8 rounded-full hover:scale-105 transition-all duration-200 shadow-sm hover:shadow-md",
-                  showNotesPanel 
-                    ? "bg-gradient-to-br from-yellow-500 to-orange-600" 
-                    : "bg-gradient-to-br from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600"
-                )}
-                aria-label={`Notas (${notes.length})`}
-              >
-                <StickyNote size={16} className="text-white" />
-                {notes.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold text-[10px]">
-                    {notes.length > 9 ? '9+' : notes.length}
-                  </span>
-                )}
-              </button>
+            {/* Duration display */}
+            <span className="text-xs text-gray-500">
+              {Math.floor(lesson.duracion / 60)}:{(lesson.duracion % 60).toString().padStart(2, '0')}
+            </span>
+
+            {/* Notes button */}
+            <button
+              onClick={handleNotesToggle}
+              className={cn(
+                "p-2 rounded-lg transition-colors relative",
+                notesOpen 
+                  ? "bg-yellow-100 text-yellow-600 hover:bg-yellow-200" 
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              )}
+              title={notesOpen ? "Ocultar notas" : "Ver notas"}
+            >
+              <StickyNote size={16} />
+              {/* Notes count badge would go here if we had note count */}
+            </button>
+
+            {/* Lock icon for locked lessons */}
+            {status.isLocked && (
+              <Lock size={16} className="text-gray-400" title="Lección bloqueada" />
             )}
-            
-            {/* Duration */}
-            <div className={cn(
-              "text-xs",
-              {
-                "text-[#5e16ea]": isCompleted || (isCurrent && !isCompleted),
-                "text-gray-600": canPlay && !isCurrent && !isCompleted,
-                "text-gray-400": !canPlay
-              }
-            )}>
-              {formatTime(validCurrentTime)} / {formatTime(validDuration)}
-            </div>
           </div>
         </div>
 
-        {/* Audio Controls - Only show if can play */}
-        {canPlay && (
-          <div className="space-y-3">
-            {/* Progress Bar */}
-            <div className="relative">
-              <input
-                type="range"
-                min={0}
-                max={validDuration}
-                value={validCurrentTime}
-                onChange={handleSeekChange}
-                className="w-full accent-[#5e16ea] h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer"
-                style={{
-                  background: `linear-gradient(to right, #5e16ea 0%, #5e16ea ${(validCurrentTime / validDuration) * 100}%, #e5e7eb ${(validCurrentTime / validDuration) * 100}%, #e5e7eb 100%)`
-                }}
-              />
-            </div>
-
-            {/* Control Buttons */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                {/* Skip Backward */}
-                <button
-                  onClick={handleSkipBackward}
-                  className="p-1 text-gray-600 hover:text-[#5e16ea] transition-colors"
-                  aria-label="Retroceder 15 segundos"
-                >
-                  <SkipBack size={16} />
-                </button>
-
-                {/* Skip Forward */}
-                <button
-                  onClick={handleSkipForward}
-                  className="p-1 text-gray-600 hover:text-[#5e16ea] transition-colors"
-                  aria-label="Avanzar 15 segundos"
-                >
-                  <SkipForward size={16} />
-                </button>
-
-                {/* Volume Control */}
-                <div className="relative">
-                  <button
-                    onClick={() => setShowVolumeControl(!showVolumeControl)}
-                    className="p-1 text-gray-600 hover:text-[#5e16ea] transition-colors"
-                    aria-label={isMuted ? "Activar sonido" : "Silenciar"}
-                  >
-                    {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
-                  </button>
-
-                  {showVolumeControl && (
-                    <div className="absolute bottom-full left-0 mb-2 bg-white rounded-md shadow-lg p-3 z-10 min-w-32">
-                      <div className="flex items-center space-x-2">
-                        <button onClick={toggleMute} className="text-gray-600 hover:text-[#5e16ea]">
-                          {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
-                        </button>
-                        <input
-                          type="range"
-                          min={0}
-                          max={1}
-                          step={0.01}
-                          value={volume}
-                          onChange={handleVolumeChange}
-                          className="flex-1 accent-[#5e16ea] h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer"
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Speed Control */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowSpeedDropdown(!showSpeedDropdown)}
-                  className="flex items-center text-gray-600 hover:text-[#5e16ea] transition-colors px-2 py-1 text-xs rounded-md bg-gray-100 hover:bg-gray-200"
-                >
-                  <span>{playbackRate}x</span>
-                  <ChevronDown size={12} className="ml-1" />
-                </button>
-
-                {showSpeedDropdown && (
-                  <div className="absolute bottom-full right-0 mb-2 bg-white rounded-md shadow-lg py-1 z-10 min-w-16">
-                    {speeds.map(speed => (
-                      <button
-                        key={speed}
-                        onClick={() => handleRateChange(speed)}
-                        className={cn(
-                          "block w-full text-left px-3 py-1 text-xs",
-                          speed === playbackRate 
-                            ? "bg-[#5e16ea] bg-opacity-10 text-[#5e16ea]" 
-                            : "hover:bg-gray-100"
-                        )}
-                      >
-                        {speed}x
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
+        {/* Audio Controls */}
+        <div className="flex items-center justify-between gap-4 mt-4">
+          <div className="flex items-center gap-2">
+            <button onClick={handleSkipBack} className="text-gray-500 hover:text-gray-700">
+              <SkipBack size={16} />
+            </button>
+            <button onClick={handleSkipForward} className="text-gray-500 hover:text-gray-700">
+              <SkipForward size={16} />
+            </button>
           </div>
-        )}
 
-        {/* Locked message */}
-        {!canPlay && (
-          <div className="text-center py-2">
-            <p className="text-xs text-gray-400">
-              Completa las lecciones anteriores para desbloquear
-            </p>
+          <div className="flex items-center gap-2">
+            <button onClick={handleToggleMute}>
+              {muted ? <Volume0 size={16} className="text-gray-500" /> : <Volume1 size={16} className="text-gray-500" />}
+            </button>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={volume}
+              onChange={handleVolumeChange}
+              className="w-20"
+            />
           </div>
-        )}
+        </div>
       </div>
 
-      {/* Notes Panel - Integrated */}
-      {canPlay && courseId && (
-        <NotesPanel
-          isOpen={showNotesPanel}
-          notes={notes}
-          onAddNote={handleAddNote}
-          onDeleteNote={deleteNote}
-          onEditNote={updateNote}
-          onSeekToTime={handleSeekToNote}
-          currentTimeSeconds={currentTime}
-        />
-      )}
-    </div>
+      {/* Notes Panel - Integrated below the card */}
+      <NotesPanel
+        isOpen={notesOpen}
+        lessonId={lesson.id}
+        courseId={courseId || ''}
+        currentTimeSeconds={currentTime}
+        onSeekToTime={handleSeekToTime}
+      />
+    </>
   );
 });
-
-LessonCard.displayName = 'LessonCard';
 
 export default LessonCard;
