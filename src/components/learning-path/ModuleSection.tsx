@@ -10,6 +10,7 @@ interface ModuleSectionProps {
   getLessonClasses: Map<string, any>;
   currentLessonId: string | null;
   isGloballyPlaying: boolean;
+  courseId: string | null;
   onLessonClick: (lesson: Lesson, shouldAutoPlay?: boolean) => void;
   onProgressUpdate?: (position: number) => void;
   onLessonComplete?: () => void;
@@ -22,6 +23,7 @@ const ModuleSection = React.memo(({
   getLessonClasses, 
   currentLessonId,
   isGloballyPlaying,
+  courseId,
   onLessonClick,
   onProgressUpdate,
   onLessonComplete
@@ -32,7 +34,8 @@ const ModuleSection = React.memo(({
     moduleTitle: module.title,
     currentLessonId,
     isGloballyPlaying,
-    lessonCount: moduleLessons.length
+    lessonCount: moduleLessons.length,
+    courseId
   });
   
   return (
@@ -66,6 +69,7 @@ const ModuleSection = React.memo(({
               index={index}
               status={enhancedStatus}
               isPlaying={isPlaying}
+              courseId={courseId}
               onLessonClick={onLessonClick}
               onProgressUpdate={onProgressUpdate}
               onLessonComplete={onLessonComplete}

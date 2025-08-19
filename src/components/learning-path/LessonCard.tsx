@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Lesson } from '@/types';
 import { Play, Pause, Lock, SkipBack, SkipForward, ChevronDown, Volume2, VolumeX, PenTool } from 'lucide-react';
@@ -19,6 +20,7 @@ interface LessonCardProps {
     isFirstInSequence: boolean;
   };
   isPlaying: boolean;
+  courseId: string | null;
   onLessonClick: (lesson: Lesson, shouldAutoPlay?: boolean) => void;
   onProgressUpdate?: (position: number) => void;
   onLessonComplete?: () => void;
@@ -29,16 +31,17 @@ const LessonCard = React.memo(({
   index, 
   status, 
   isPlaying: propIsPlaying,
+  courseId,
   onLessonClick,
   onProgressUpdate,
   onLessonComplete
 }: LessonCardProps) => {
   const { isCompleted, isLocked, isCurrent, canPlay } = status;
   
-  // Notes functionality
+  // Notes functionality - Only initialize when current and courseId exists
   const { notes, addNote, updateNote, deleteNote, fetchNotes } = useNotes(
     isCurrent ? lesson.id : undefined, 
-    isCurrent ? 'course-id-placeholder' : undefined // We'll need to pass courseId properly
+    isCurrent ? courseId : undefined
   );
   const [isAddNoteModalOpen, setIsAddNoteModalOpen] = React.useState(false);
 
@@ -47,7 +50,8 @@ const LessonCard = React.memo(({
     isCurrent,
     propIsPlaying,
     canPlay,
-    isCompleted
+    isCompleted,
+    courseId
   });
   
   const {
@@ -79,12 +83,12 @@ const LessonCard = React.memo(({
     onLessonComplete
   });
 
-  // Fetch notes when lesson becomes current
+  // Fetch notes when lesson becomes current and courseId is available
   React.useEffect(() => {
-    if (isCurrent) {
+    if (isCurrent && courseId) {
       fetchNotes();
     }
-  }, [isCurrent, fetchNotes]);
+  }, [isCurrent, courseId, fetchNotes]);
 
   // Handle adding note
   const handleAddNote = async (noteText: string) => {
@@ -201,8 +205,8 @@ const LessonCard = React.memo(({
 
           {/* Duration and Notes Icon */}
           <div className="flex items-center gap-2">
-            {/* Notes Icon - Only show when current and can play */}
-            {isCurrent && canPlay && (
+            {/* Notes Icon - Only show when current, can play, and courseId exists */}
+            {isCurrent && canPlay && courseId && (
               <button
                 onClick={() => setIsAddNoteModalOpen(true)}
                 className="p-1 text-gray-600 hover:text-[#5e16ea] transition-colors"
@@ -329,8 +333,8 @@ const LessonCard = React.memo(({
           </div>
         )}
 
-        {/* Notes List - Only show for current lesson if there are notes */}
-        {isCurrent && canPlay && notes.length > 0 && (
+        {/* Notes List - Only show for current lesson if there are notes and courseId exists */}
+        {isCurrent && canPlay && courseId && notes.length > 0 && (
           <NotesListSection
             notes={notes}
             onDeleteNote={deleteNote}
@@ -349,13 +353,15 @@ const LessonCard = React.memo(({
         )}
       </div>
 
-      {/* Add Note Modal */}
-      <AddNoteModal
-        isOpen={isAddNoteModalOpen}
-        onClose={() => setIsAddNoteModalOpen(false)}
-        onSave={handleAddNote}
-        currentTimeSeconds={currentTime}
-      />
+      {/* Add Note Modal - Only show when courseId exists */}
+      {courseId && (
+        <AddNoteModal
+          isOpen={isAddNoteModalOpen}
+          onClose={() => setIsAddNoteModalOpen(false)}
+          onSave={handleAddNote}
+          currentTimeSeconds={currentTime}
+        />
+      )}
     </>
   );
 });

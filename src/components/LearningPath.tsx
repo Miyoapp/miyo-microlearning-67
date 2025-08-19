@@ -1,3 +1,4 @@
+
 import { useCallback, useMemo } from 'react';
 import { Lesson, Module } from '../types';
 import React from 'react';
@@ -34,6 +35,9 @@ const LearningPath = React.memo(({
   // Get user progress data for course completion detection
   const { userProgress } = useUserProgress();
   const { lessonProgress } = useUserLessonProgress();
+
+  // Extract courseId from podcast
+  const courseId = podcast?.id || null;
   
   // Course completion functionality
   const {
@@ -58,7 +62,8 @@ const LearningPath = React.memo(({
     currentLessonId,
     isGloballyPlaying,
     lessonCount: lessons.length,
-    moduleCount: modules.length
+    moduleCount: modules.length,
+    courseId
   });
 
   // OPTIMIZADO: Memoizar función de agrupación con hash estable
@@ -144,6 +149,7 @@ const LearningPath = React.memo(({
                 getLessonClasses={getLessonClasses}
                 currentLessonId={currentLessonId}
                 isGloballyPlaying={isGloballyPlaying}
+                courseId={courseId}
                 onLessonClick={handleLessonClick}
                 onProgressUpdate={onProgressUpdate}
                 onLessonComplete={onLessonComplete}
