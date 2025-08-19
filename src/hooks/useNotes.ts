@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -46,7 +45,7 @@ export function useNotes(lessonId?: string, courseId?: string) {
           lesson_id: lessonId,
           course_id: courseId,
           note_text: noteText,
-          timestamp_seconds: timestampSeconds
+          timestamp_seconds: Math.floor(timestampSeconds) // Convert to integer
         })
         .select()
         .single();
