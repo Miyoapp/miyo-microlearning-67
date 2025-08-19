@@ -23,13 +23,11 @@ export function useLessonClasses(lessons: Lesson[], lessonStatusMap: Map<string,
         "flex items-center justify-center w-12 h-12 rounded-full shadow-md transition-all duration-200 relative",
         {
           // UPDATED: Use purple for completed lessons instead of yellow
-          "bg-[#5e16ea] text-white hover:bg-[#4a11ba]": isCompleted,
-          "bg-[#5e16ea] text-white hover:bg-[#4a11ba]": !isCompleted && canPlay,
+          "bg-[#5e16ea] text-white hover:bg-[#4a11ba]": (isCompleted) || (!isCompleted && canPlay),
           "bg-gray-300 text-gray-500": isLocked && !isCompleted && !canPlay,
           "hover:scale-110": canPlay,
           // UPDATED: Use purple ring for completed lessons
-          "ring-2 ring-[#5e16ea]": isCurrent && isCompleted,
-          "ring-2 ring-[#5e16ea]": isCurrent && !isCompleted && canPlay,
+          "ring-2 ring-[#5e16ea]": (isCurrent && isCompleted) || (isCurrent && !isCompleted && canPlay),
           "cursor-pointer": canPlay,
           "cursor-not-allowed": !canPlay
         }
@@ -39,8 +37,7 @@ export function useLessonClasses(lessons: Lesson[], lessonStatusMap: Map<string,
         "text-sm transition-colors duration-200",
         {
           // UPDATED: Use purple for completed lessons instead of yellow
-          "text-[#5e16ea] font-semibold": isCompleted,
-          "text-[#5e16ea] font-semibold": isCurrent && !isCompleted && canPlay,
+          "text-[#5e16ea] font-semibold": (isCompleted) || (isCurrent && !isCompleted && canPlay),
           "text-gray-800": canPlay && !isCurrent && !isCompleted,
           "text-gray-400": !canPlay
         }

@@ -107,8 +107,7 @@ const LessonCard = React.memo(({
       "bg-white rounded-lg border shadow-sm p-4 transition-all duration-200",
       {
         // UPDATED: Use purple for completed lessons instead of yellow
-        "border-[#5e16ea] shadow-md": isCompleted,
-        "border-[#5e16ea] shadow-md": isCurrent && !isCompleted,
+        "border-[#5e16ea] shadow-md": isCompleted || (isCurrent && !isCompleted),
         "border-gray-200": !isCurrent && !isCompleted && canPlay,
         "border-gray-100 bg-gray-50": !canPlay,
         "hover:shadow-md": canPlay,
@@ -138,8 +137,7 @@ const LessonCard = React.memo(({
               "flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200",
               {
                 // UPDATED: Use purple for completed lessons instead of yellow
-                "bg-[#5e16ea] text-white hover:bg-[#4a11ba]": isCompleted,
-                "bg-[#5e16ea] text-white hover:bg-[#4a11ba]": !isCompleted && canPlay,
+                "bg-[#5e16ea] text-white hover:bg-[#4a11ba]": canPlay && (isCompleted || !isCompleted),
                 "bg-gray-300 text-gray-500 cursor-not-allowed": !canPlay,
                 "hover:scale-105": canPlay
               }
@@ -161,8 +159,7 @@ const LessonCard = React.memo(({
               "font-medium text-sm",
               {
                 // UPDATED: Use purple for completed lessons instead of yellow
-                "text-[#5e16ea]": isCompleted,
-                "text-[#5e16ea]": isCurrent && !isCompleted,
+                "text-[#5e16ea]": isCompleted || (isCurrent && !isCompleted),
                 "text-gray-900": canPlay && !isCurrent && !isCompleted,
                 "text-gray-400": !canPlay
               }
@@ -180,8 +177,7 @@ const LessonCard = React.memo(({
           "text-xs",
           {
             // UPDATED: Use purple for completed lessons instead of yellow
-            "text-[#5e16ea]": isCompleted,
-            "text-[#5e16ea]": isCurrent && !isCompleted,
+            "text-[#5e16ea]": isCompleted || (isCurrent && !isCompleted),
             "text-gray-600": canPlay && !isCurrent && !isCompleted,
             "text-gray-400": !canPlay
           }
