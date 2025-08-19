@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Lesson } from '@/types';
 import { cn } from '@/lib/utils';
@@ -7,12 +8,11 @@ import {
   SkipForward,
   SkipBack,
   Volume1,
-  Volume0,
+  VolumeX,
   StickyNote,
   Lock,
   CheckCircle,
 } from 'lucide-react';
-import { useAudio } from '@/hooks/useAudio';
 import { useUserLessonProgress } from '@/hooks/useUserLessonProgress';
 import NotesPanel from '@/components/notes/NotesPanel';
 
@@ -46,40 +46,49 @@ const LessonCard = React.memo<LessonCardProps>(({
   const audioRef = useRef<HTMLAudioElement>(null);
   const { lessonProgress } = useUserLessonProgress();
   const [currentTime, setCurrentTime] = useState(0);
-
-  const {
-    playing,
-    volume,
-    muted,
-    togglePlay,
-    setVolume,
-    toggleMute,
-    duration,
-    handleTimeUpdate,
-    handleLoadedData,
-    seek,
-  } = useAudio(audioRef, lesson.urlAudio, isGloballyPlaying);
+  const [playing, setPlaying] = useState(false);
+  const [volume, setVolume] = useState(1);
+  const [muted, setMuted] = useState(false);
 
   const handleSkipForward = () => {
     if (audioRef.current) {
       const newTime = Math.min(audioRef.current.currentTime + 10, audioRef.current.duration);
-      seek(newTime);
+      audioRef.current.currentTime = newTime;
     }
   };
 
   const handleSkipBack = () => {
     if (audioRef.current) {
       const newTime = Math.max(audioRef.current.currentTime - 10, 0);
-      seek(newTime);
+      audioRef.current.currentTime = newTime;
     }
   };
 
   const handleVolumeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setVolume(parseFloat(event.target.value));
+    const newVolume = parseFloat(event.target.value);
+    setVolume(newVolume);
+    if (audioRef.current) {
+      audioRef.current.volume = newVolume;
+    }
   };
 
   const handleToggleMute = () => {
-    toggleMute();
+    if (audioRef.current) {
+      const newMuted = !muted;
+      setMuted(newMuted);
+      audioRef.current.muted = newMuted;
+    }
+  };
+
+  const togglePlay = () => {
+    if (audioRef.current) {
+      if (playing) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setPlaying(!playing);
+    }
   };
 
   const currentLessonProgress = lessonProgress.find(p => p.lesson_id === lesson.id);
@@ -176,12 +185,11 @@ const LessonCard = React.memo<LessonCardProps>(({
               title={notesOpen ? "Ocultar notas" : "Ver notas"}
             >
               <StickyNote size={16} />
-              {/* Notes count badge would go here if we had note count */}
             </button>
 
             {/* Lock icon for locked lessons */}
             {status.isLocked && (
-              <Lock size={16} className="text-gray-400" title="Lección bloqueada" />
+              <Lock size={16} className="text-gray-400" />
             )}
           </div>
         </div>
@@ -199,7 +207,7 @@ const LessonCard = React.memo<LessonCardProps>(({
 
           <div className="flex items-center gap-2">
             <button onClick={handleToggleMute}>
-              {muted ? <Volume0 size={16} className="text-gray-500" /> : <Volume1 size={16} className="text-gray-500" />}
+              {muted ? <VolumeX size={16} className="text-gray-500" /> : <Volume1 size={16} className="text-gray-500" />}
             </button>
             <input
               type="range"
@@ -212,6 +220,21 @@ const LessonCard = React.memo<LessonCardProps>(({
             />
           </div>
         </div>
+
+        {/* Hidden audio element */}
+        <audio
+          ref={audioRef}
+          src={lesson.urlAudio}
+          onTimeUpdate={() => {
+            if (audioRef.current) {
+              setCurrentTime(audioRef.current.currentTime);
+            }
+          }}
+          onEnded={() => {
+            setPlaying(false);
+            onLessonComplete?.();
+          }}
+        />
       </div>
 
       {/* Notes Panel - Integrated below the card */}
@@ -225,5 +248,7 @@ const LessonCard = React.memo<LessonCardProps>(({
     </>
   );
 });
+
+LessonCard.displayName = 'LessonCard';
 
 export default LessonCard;
