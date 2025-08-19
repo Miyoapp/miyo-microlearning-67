@@ -23,7 +23,7 @@ export function useSummaries() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setSummaries((data as CourseSummary[]) || []);
+      setSummaries((data as unknown as CourseSummary[]) || []);
     } catch (error) {
       console.error('Error fetching summaries:', error);
       toast.error('Error al cargar los resúmenes');
@@ -55,7 +55,7 @@ export function useSummaries() {
 
       if (error) throw error;
       
-      const newSummary = data as CourseSummary;
+      const newSummary = data as unknown as CourseSummary;
       setSummaries(prev => [newSummary, ...prev]);
       toast.success('Resumen creado exitosamente');
       return newSummary;
