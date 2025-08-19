@@ -30,6 +30,7 @@ const CourseLearningPathSection: React.FC<CourseLearningPathSectionProps> = ({
         isGloballyPlaying={isGloballyPlaying}
         onProgressUpdate={onProgressUpdate}
         onLessonComplete={onLessonComplete}
+        podcast={podcast}
       />
     </div>
   );
