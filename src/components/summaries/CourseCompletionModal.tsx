@@ -31,6 +31,10 @@ const CourseCompletionModal: React.FC<CourseCompletionModalProps> = ({
     return `${minutes}m`;
   };
 
+  const handleContinueExploring = () => {
+    onClose();
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
@@ -98,7 +102,7 @@ const CourseCompletionModal: React.FC<CourseCompletionModalProps> = ({
             
             <Button
               variant="outline"
-              onClick={onClose}
+              onClick={handleContinueExploring}
               className="w-full"
             >
               Continuar Explorando
