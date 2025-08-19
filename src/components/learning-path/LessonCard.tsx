@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { Lesson } from '@/types';
-import { Play, Pause, Lock, Trophy, SkipBack, SkipForward, ChevronDown, Volume2, VolumeX } from 'lucide-react';
+import { Play, Pause, Lock, SkipBack, SkipForward, ChevronDown, Volume2, VolumeX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLessonCard } from '@/hooks/learning-path/useLessonCard';
 
@@ -74,7 +75,8 @@ const LessonCard = React.memo(({
   const [showVolumeControl, setShowVolumeControl] = React.useState(false);
 
   const validDuration = duration || (lesson.duracion * 60);
-  const validCurrentTime = Math.min(currentTime, validDuration);
+  // FIXED: For completed lessons, show 100% progress instead of resetting to 0
+  const validCurrentTime = isCompleted ? validDuration : Math.min(currentTime, validDuration);
 
   // Handle seek
   const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -88,15 +90,12 @@ const LessonCard = React.memo(({
     setShowSpeedDropdown(false);
   };
 
-  // Determine which icon to show in the status button - NOW USING HOOK STATE
+  // UPDATED: Always show play/pause icon, never trophy
   const getStatusIcon = () => {
-    if (isCompleted) {
-      return <Trophy size={16} />;
-    }
     if (!canPlay) {
       return <Lock size={16} />;
     }
-    // For playable lessons, show play/pause based on HOOK state, not prop
+    // Always show play/pause, never trophy
     if (isCurrent && isPlaying) {
       return <Pause size={16} />;
     }
@@ -107,7 +106,8 @@ const LessonCard = React.memo(({
     <div className={cn(
       "bg-white rounded-lg border shadow-sm p-4 transition-all duration-200",
       {
-        "border-yellow-300 shadow-md": isCompleted,
+        // UPDATED: Use purple for completed lessons instead of yellow
+        "border-[#5e16ea] shadow-md": isCompleted,
         "border-[#5e16ea] shadow-md": isCurrent && !isCompleted,
         "border-gray-200": !isCurrent && !isCompleted && canPlay,
         "border-gray-100 bg-gray-50": !canPlay,
@@ -137,20 +137,19 @@ const LessonCard = React.memo(({
             className={cn(
               "flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200",
               {
-                "bg-yellow-500 text-white hover:bg-yellow-600": isCompleted,
+                // UPDATED: Use purple for completed lessons instead of yellow
+                "bg-[#5e16ea] text-white hover:bg-[#4a11ba]": isCompleted,
                 "bg-[#5e16ea] text-white hover:bg-[#4a11ba]": !isCompleted && canPlay,
                 "bg-gray-300 text-gray-500 cursor-not-allowed": !canPlay,
                 "hover:scale-105": canPlay
               }
             )}
             aria-label={
-              isCompleted 
-                ? "Reproducir lección completada" 
-                : !canPlay 
-                  ? "Lección bloqueada" 
-                  : isPlaying  // NOW USING HOOK STATE
-                    ? "Pausar" 
-                    : "Reproducir"
+              !canPlay 
+                ? "Lección bloqueada" 
+                : isPlaying
+                  ? "Pausar" 
+                  : "Reproducir"
             }
           >
             {getStatusIcon()}
@@ -161,7 +160,8 @@ const LessonCard = React.memo(({
             <h4 className={cn(
               "font-medium text-sm",
               {
-                "text-yellow-600": isCompleted,
+                // UPDATED: Use purple for completed lessons instead of yellow
+                "text-[#5e16ea]": isCompleted,
                 "text-[#5e16ea]": isCurrent && !isCompleted,
                 "text-gray-900": canPlay && !isCurrent && !isCompleted,
                 "text-gray-400": !canPlay
@@ -169,7 +169,6 @@ const LessonCard = React.memo(({
             )}>
               {lesson.title}
             </h4>
-            {/* NOW USING HOOK STATE for "Reproduciendo" text */}
             {isCurrent && isPlaying && (
               <span className="text-xs text-green-600">● Reproduciendo</span>
             )}
@@ -180,7 +179,8 @@ const LessonCard = React.memo(({
         <div className={cn(
           "text-xs",
           {
-            "text-yellow-600": isCompleted,
+            // UPDATED: Use purple for completed lessons instead of yellow
+            "text-[#5e16ea]": isCompleted,
             "text-[#5e16ea]": isCurrent && !isCompleted,
             "text-gray-600": canPlay && !isCurrent && !isCompleted,
             "text-gray-400": !canPlay
