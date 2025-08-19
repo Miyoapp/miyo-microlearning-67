@@ -16,14 +16,14 @@ export function useSummaries() {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('course_summaries')
+        .from('course_summaries' as any)
         .select('*')
         .eq('user_id', user.id)
         .eq('course_id', courseId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setSummaries(data || []);
+      setSummaries((data as CourseSummary[]) || []);
     } catch (error) {
       console.error('Error fetching summaries:', error);
       toast.error('Error al cargar los resúmenes');
@@ -42,7 +42,7 @@ export function useSummaries() {
 
     try {
       const { data, error } = await supabase
-        .from('course_summaries')
+        .from('course_summaries' as any)
         .insert({
           user_id: user.id,
           course_id: courseId,
@@ -55,9 +55,10 @@ export function useSummaries() {
 
       if (error) throw error;
       
-      setSummaries(prev => [data, ...prev]);
+      const newSummary = data as CourseSummary;
+      setSummaries(prev => [newSummary, ...prev]);
       toast.success('Resumen creado exitosamente');
-      return data;
+      return newSummary;
     } catch (error) {
       console.error('Error creating summary:', error);
       toast.error('Error al crear el resumen');
@@ -70,7 +71,7 @@ export function useSummaries() {
     try {
       // Get total notes for this course
       const { data: notesData, error: notesError } = await supabase
-        .from('lesson_notes')
+        .from('lesson_notes' as any)
         .select('id')
         .eq('user_id', user.id)
         .eq('course_id', courseId);

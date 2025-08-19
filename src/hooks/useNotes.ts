@@ -16,7 +16,7 @@ export function useNotes(lessonId?: string, courseId?: string) {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('lesson_notes')
+        .from('lesson_notes' as any)
         .select('*')
         .eq('user_id', user.id)
         .eq('lesson_id', lessonId)
@@ -24,7 +24,7 @@ export function useNotes(lessonId?: string, courseId?: string) {
         .order('timestamp_seconds', { ascending: true });
 
       if (error) throw error;
-      setNotes(data || []);
+      setNotes((data as LessonNote[]) || []);
     } catch (error) {
       console.error('Error fetching notes:', error);
       toast.error('Error al cargar las notas');
@@ -38,7 +38,7 @@ export function useNotes(lessonId?: string, courseId?: string) {
 
     try {
       const { data, error } = await supabase
-        .from('lesson_notes')
+        .from('lesson_notes' as any)
         .insert({
           user_id: user.id,
           lesson_id: lessonId,
@@ -51,9 +51,10 @@ export function useNotes(lessonId?: string, courseId?: string) {
 
       if (error) throw error;
       
-      setNotes(prev => [...prev, data].sort((a, b) => a.timestamp_seconds - b.timestamp_seconds));
+      const newNote = data as LessonNote;
+      setNotes(prev => [...prev, newNote].sort((a, b) => a.timestamp_seconds - b.timestamp_seconds));
       toast.success('Nota guardada exitosamente');
-      return data;
+      return newNote;
     } catch (error) {
       console.error('Error adding note:', error);
       toast.error('Error al guardar la nota');
@@ -65,7 +66,7 @@ export function useNotes(lessonId?: string, courseId?: string) {
 
     try {
       const { data, error } = await supabase
-        .from('lesson_notes')
+        .from('lesson_notes' as any)
         .update({ note_text: noteText })
         .eq('id', noteId)
         .eq('user_id', user.id)
@@ -74,7 +75,8 @@ export function useNotes(lessonId?: string, courseId?: string) {
 
       if (error) throw error;
       
-      setNotes(prev => prev.map(note => note.id === noteId ? data : note));
+      const updatedNote = data as LessonNote;
+      setNotes(prev => prev.map(note => note.id === noteId ? updatedNote : note));
       toast.success('Nota actualizada');
     } catch (error) {
       console.error('Error updating note:', error);
@@ -87,7 +89,7 @@ export function useNotes(lessonId?: string, courseId?: string) {
 
     try {
       const { error } = await supabase
-        .from('lesson_notes')
+        .from('lesson_notes' as any)
         .delete()
         .eq('id', noteId)
         .eq('user_id', user.id);
