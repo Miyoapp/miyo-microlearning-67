@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Lesson } from '@/types';
 import { Play, Pause, Lock, SkipBack, SkipForward, ChevronDown, Volume2, VolumeX } from 'lucide-react';
@@ -76,18 +77,10 @@ const LessonCard = React.memo(({
 
   const validDuration = duration || (lesson.duracion * 60);
   
-  // FIXED: Smart progress display logic
-  // - If completed AND not currently playing: show 100% (visual indicator of completion)
-  // - If completed AND currently playing: show real-time progress (allow normal playback)
-  // - If not completed: always show real-time progress
+  // Always show real progress - no special cases
   const validCurrentTime = useMemo(() => {
-    if (isCompleted && !isPlaying) {
-      // Completed lesson at rest - show 100%
-      return validDuration;
-    }
-    // Active playback or incomplete lesson - show real progress
     return Math.min(currentTime, validDuration);
-  }, [isCompleted, isPlaying, currentTime, validDuration]);
+  }, [currentTime, validDuration]);
 
   // Handle seek
   const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
