@@ -1,214 +1,226 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { X, Edit2, Plus, Trash2, Check } from 'lucide-react';
-import { CourseSummary, ActionPlanItem } from '@/types/notes';
-import { useSummaries } from '@/hooks/useSummaries';
+import { Textarea } from '@/components/ui/textarea';
+import { X, Edit3, Check, X as XIcon } from 'lucide-react';
+import { CourseSummary } from '@/types/notes';
 
 interface ViewSummaryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  summary: CourseSummary;
+  summary: CourseSummary | null;
+  onUpdateSummary?: (summaryId: string, updates: { key_concepts?: string; personal_insight?: string }) => Promise<void>;
 }
 
 const ViewSummaryModal: React.FC<ViewSummaryModalProps> = ({
   isOpen,
   onClose,
-  summary
+  summary,
+  onUpdateSummary
 }) => {
-  const [actionPlans, setActionPlans] = useState<ActionPlanItem[]>([]);
-  const [newActionPlan, setNewActionPlan] = useState('');
-  const [editingItem, setEditingItem] = useState<string | null>(null);
-  const [editingText, setEditingText] = useState('');
-  const { fetchActionPlanItems, updateActionPlanItem, deleteActionPlanItem } = useSummaries();
+  const [editingConcepts, setEditingConcepts] = useState(false);
+  const [editingInsight, setEditingInsight] = useState(false);
+  const [conceptsValue, setConceptsValue] = useState('');
+  const [insightValue, setInsightValue] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  useEffect(() => {
-    if (isOpen && summary.id) {
-      loadActionPlans();
-    }
-  }, [isOpen, summary.id]);
+  if (!summary) return null;
 
-  const loadActionPlans = async () => {
-    const items = await fetchActionPlanItems(summary.id);
-    setActionPlans(items);
+  const handleEditConcepts = () => {
+    setConceptsValue(summary.key_concepts || '');
+    setEditingConcepts(true);
   };
 
-  const handleToggleComplete = async (item: ActionPlanItem) => {
-    await updateActionPlanItem(item.id, { is_completed: !item.is_completed });
-    setActionPlans(prev => 
-      prev.map(p => p.id === item.id ? { ...p, is_completed: !p.is_completed } : p)
-    );
+  const handleEditInsight = () => {
+    setInsightValue(summary.personal_insight || '');
+    setEditingInsight(true);
   };
 
-  const handleAddActionPlan = async () => {
-    if (!newActionPlan.trim()) return;
+  const handleSaveConcepts = async () => {
+    if (!onUpdateSummary || !summary) return;
     
+    setIsUpdating(true);
     try {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await supabase
-        .from('action_plan_items')
-        .insert({
-          summary_id: summary.id,
-          text: newActionPlan.trim(),
-          is_completed: false
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      setActionPlans(prev => [...prev, data]);
-      setNewActionPlan('');
+      await onUpdateSummary(summary.id, { key_concepts: conceptsValue });
+      setEditingConcepts(false);
+      // Update local summary object
+      summary.key_concepts = conceptsValue;
     } catch (error) {
-      console.error('Error adding action plan:', error);
+      console.error('Error updating concepts:', error);
+    } finally {
+      setIsUpdating(false);
     }
   };
 
-  const handleStartEdit = (item: ActionPlanItem) => {
-    setEditingItem(item.id);
-    setEditingText(item.text);
+  const handleSaveInsight = async () => {
+    if (!onUpdateSummary || !summary) return;
+    
+    setIsUpdating(true);
+    try {
+      await onUpdateSummary(summary.id, { personal_insight: insightValue });
+      setEditingInsight(false);
+      // Update local summary object
+      summary.personal_insight = insightValue;
+    } catch (error) {
+      console.error('Error updating insight:', error);
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
-  const handleSaveEdit = async () => {
-    if (!editingItem || !editingText.trim()) return;
-
-    await updateActionPlanItem(editingItem, { text: editingText.trim() });
-    setActionPlans(prev => 
-      prev.map(p => p.id === editingItem ? { ...p, text: editingText.trim() } : p)
-    );
-    setEditingItem(null);
-    setEditingText('');
-  };
-
-  const handleCancelEdit = () => {
-    setEditingItem(null);
-    setEditingText('');
-  };
-
-  const handleDeleteItem = async (itemId: string) => {
-    await deleteActionPlanItem(itemId);
-    setActionPlans(prev => prev.filter(p => p.id !== itemId));
+  const handleCancelEdit = (type: 'concepts' | 'insight') => {
+    if (type === 'concepts') {
+      setEditingConcepts(false);
+      setConceptsValue('');
+    } else {
+      setEditingInsight(false);
+      setInsightValue('');
+    }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto" showCloseButton={false}>
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-center mb-2">
             {summary.title}
           </DialogTitle>
           <button
             onClick={onClose}
-            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100"
+            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
           >
             <X className="h-4 w-4" />
+            <span className="sr-only">Close</span>
           </button>
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Key Concepts */}
-          {summary.key_concepts && (
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Conceptos clave que aprendí</h3>
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-gray-700 whitespace-pre-wrap">{summary.key_concepts}</p>
-              </div>
+          {/* Key Concepts Section */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Conceptos clave que aprendí
+              </h3>
+              {!editingConcepts && onUpdateSummary && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleEditConcepts}
+                  className="p-2 h-8 w-8"
+                >
+                  <Edit3 size={14} />
+                </Button>
+              )}
             </div>
-          )}
-
-          {/* Personal Insight */}
-          {summary.personal_insight && (
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Mi gran insight personal</h3>
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-gray-700 whitespace-pre-wrap">{summary.personal_insight}</p>
-              </div>
-            </div>
-          )}
-
-          {/* Action Plans */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Planes de Acción</h3>
             
-            {/* Existing Action Plans */}
-            <div className="space-y-2">
-              {actionPlans.map((item) => (
-                <div key={item.id} className="flex items-center gap-3 p-3 border rounded-lg">
-                  <Checkbox
-                    checked={item.is_completed}
-                    onCheckedChange={() => handleToggleComplete(item)}
-                  />
-                  
-                  {editingItem === item.id ? (
-                    <div className="flex-1 flex gap-2">
-                      <Input
-                        value={editingText}
-                        onChange={(e) => setEditingText(e.target.value)}
-                        className="flex-1"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') handleSaveEdit();
-                          if (e.key === 'Escape') handleCancelEdit();
-                        }}
-                      />
-                      <Button size="sm" onClick={handleSaveEdit}>
-                        <Check size={14} />
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={handleCancelEdit}>
-                        <X size={14} />
-                      </Button>
-                    </div>
-                  ) : (
-                    <>
-                      <span 
-                        className={`flex-1 ${item.is_completed ? 'line-through text-gray-500' : ''}`}
-                      >
-                        {item.text}
-                      </span>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleStartEdit(item)}
-                      >
-                        <Edit2 size={14} />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleDeleteItem(item.id)}
-                      >
-                        <Trash2 size={14} />
-                      </Button>
-                    </>
-                  )}
+            {editingConcepts ? (
+              <div className="space-y-3">
+                <Textarea
+                  value={conceptsValue}
+                  onChange={(e) => setConceptsValue(e.target.value)}
+                  className="min-h-[100px] resize-none"
+                  autoFocus
+                />
+                <div className="flex gap-2 justify-end">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleCancelEdit('concepts')}
+                    disabled={isUpdating}
+                  >
+                    <XIcon size={14} className="mr-1" />
+                    Cancelar
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleSaveConcepts}
+                    disabled={isUpdating}
+                    className="bg-[#5e16ea] hover:bg-[#4a11ba]"
+                  >
+                    <Check size={14} className="mr-1" />
+                    {isUpdating ? 'Guardando...' : 'Guardar'}
+                  </Button>
                 </div>
-              ))}
-            </div>
-
-            {/* Add New Action Plan */}
-            <div className="flex gap-2">
-              <Input
-                value={newActionPlan}
-                onChange={(e) => setNewActionPlan(e.target.value)}
-                placeholder="Agregar nuevo plan de acción..."
-                className="flex-1"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleAddActionPlan();
-                }}
-              />
-              <Button onClick={handleAddActionPlan} disabled={!newActionPlan.trim()}>
-                <Plus size={16} />
-              </Button>
-            </div>
+              </div>
+            ) : (
+              <div className="bg-gray-50 rounded-lg p-4">
+                <p className="text-gray-700 whitespace-pre-wrap">
+                  {summary.key_concepts || 'No hay conceptos clave registrados.'}
+                </p>
+              </div>
+            )}
           </div>
 
-          {/* Close Button */}
-          <div className="flex justify-end pt-4">
-            <Button onClick={onClose} className="bg-[#5e16ea] hover:bg-[#4a11ba]">
-              Cerrar
-            </Button>
+          {/* Personal Insight Section */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Mi gran insight personal
+              </h3>
+              {!editingInsight && onUpdateSummary && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleEditInsight}
+                  className="p-2 h-8 w-8"
+                >
+                  <Edit3 size={14} />
+                </Button>
+              )}
+            </div>
+            
+            {editingInsight ? (
+              <div className="space-y-3">
+                <Textarea
+                  value={insightValue}
+                  onChange={(e) => setInsightValue(e.target.value)}
+                  className="min-h-[100px] resize-none"
+                  autoFocus
+                />
+                <div className="flex gap-2 justify-end">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleCancelEdit('insight')}
+                    disabled={isUpdating}
+                  >
+                    <XIcon size={14} className="mr-1" />
+                    Cancelar
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleSaveInsight}
+                    disabled={isUpdating}
+                    className="bg-[#5e16ea] hover:bg-[#4a11ba]"
+                  >
+                    <Check size={14} className="mr-1" />
+                    {isUpdating ? 'Guardando...' : 'Guardar'}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-gray-50 rounded-lg p-4">
+                <p className="text-gray-700 whitespace-pre-wrap">
+                  {summary.personal_insight || 'No hay insight personal registrado.'}
+                </p>
+              </div>
+            )}
           </div>
+
+          {/* Action Plans Section (if exists) */}
+          {summary.summary_content && (
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Contenido del Resumen
+              </h3>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <p className="text-gray-700 whitespace-pre-wrap">
+                  {summary.summary_content}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
