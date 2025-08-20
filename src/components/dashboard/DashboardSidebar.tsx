@@ -39,6 +39,11 @@ const DashboardSidebar = () => {
       icon: '📚'
     },
     {
+      title: 'Mis Notas',
+      url: '/dashboard/mis-notas',
+      icon: '📝'
+    },
+    {
       title: 'Mis Resúmenes',
       url: '/dashboard/mis-resumenes',
       icon: '📋'

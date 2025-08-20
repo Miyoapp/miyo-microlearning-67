@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -24,7 +25,6 @@ export function useNotes(lessonId?: string, courseId?: string) {
 
       if (error) throw error;
       
-      // Usar unknown como tipo intermedio para evitar errores de conversión
       setNotes((data as unknown as LessonNote[]) || []);
     } catch (error) {
       console.error('Error fetching notes:', error);
@@ -34,7 +34,7 @@ export function useNotes(lessonId?: string, courseId?: string) {
     }
   }, [user, lessonId, courseId]);
 
-  const addNote = useCallback(async (noteText: string, timestampSeconds: number) => {
+  const addNote = useCallback(async (noteText: string, timestampSeconds: number, noteTitle?: string, tags: string[] = []) => {
     if (!user || !lessonId || !courseId) return;
 
     try {
@@ -45,14 +45,16 @@ export function useNotes(lessonId?: string, courseId?: string) {
           lesson_id: lessonId,
           course_id: courseId,
           note_text: noteText,
-          timestamp_seconds: Math.floor(timestampSeconds) // Convert to integer
+          note_title: noteTitle,
+          timestamp_seconds: Math.floor(timestampSeconds),
+          tags: tags,
+          is_favorite: false
         })
         .select()
         .single();
 
       if (error) throw error;
       
-      // Usar unknown como tipo intermedio
       const newNote = data as unknown as LessonNote;
       setNotes(prev => [...prev, newNote].sort((a, b) => a.timestamp_seconds - b.timestamp_seconds));
       toast.success('Nota guardada exitosamente');
@@ -63,13 +65,13 @@ export function useNotes(lessonId?: string, courseId?: string) {
     }
   }, [user, lessonId, courseId]);
 
-  const updateNote = useCallback(async (noteId: string, noteText: string) => {
+  const updateNote = useCallback(async (noteId: string, updates: Partial<Pick<LessonNote, 'note_text' | 'note_title' | 'tags' | 'is_favorite'>>) => {
     if (!user) return;
 
     try {
       const { data, error } = await supabase
         .from('lesson_notes' as any)
-        .update({ note_text: noteText })
+        .update(updates)
         .eq('id', noteId)
         .eq('user_id', user.id)
         .select()
@@ -77,7 +79,6 @@ export function useNotes(lessonId?: string, courseId?: string) {
 
       if (error) throw error;
       
-      // Usar unknown como tipo intermedio
       const updatedNote = data as unknown as LessonNote;
       setNotes(prev => prev.map(note => note.id === noteId ? updatedNote : note));
       toast.success('Nota actualizada');
@@ -86,6 +87,10 @@ export function useNotes(lessonId?: string, courseId?: string) {
       toast.error('Error al actualizar la nota');
     }
   }, [user]);
+
+  const toggleFavorite = useCallback(async (noteId: string, isFavorite: boolean) => {
+    await updateNote(noteId, { is_favorite: isFavorite });
+  }, [updateNote]);
 
   const deleteNote = useCallback(async (noteId: string) => {
     if (!user) return;
@@ -113,6 +118,7 @@ export function useNotes(lessonId?: string, courseId?: string) {
     fetchNotes,
     addNote,
     updateNote,
+    toggleFavorite,
     deleteNote
   };
 }
