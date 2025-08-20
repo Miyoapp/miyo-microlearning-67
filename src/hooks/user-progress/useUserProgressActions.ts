@@ -31,7 +31,8 @@ export function useUserProgressActions(
           progress_percentage: 0,
           is_completed: false,
           is_saved: newSavedState,
-          last_listened_at: new Date().toISOString()
+          last_listened_at: new Date().toISOString(),
+          completion_modal_shown: false
         };
         console.log('💾 Created new entry for save toggle:', newEntry);
         return [...prev, newEntry];
