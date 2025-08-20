@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { LessonNote } from '@/types/notes';
-import { StickyNote, Plus, Clock, Edit, Trash2 } from 'lucide-react';
+import { LessonNote, NOTE_TAGS } from '@/types/notes';
+import { X, Plus, Heart, Clock, Tag, Trash2, Edit3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface NotesPanelProps {
@@ -9,12 +9,12 @@ interface NotesPanelProps {
   notes: LessonNote[];
   onAddNote: (noteText: string) => void;
   onDeleteNote: (noteId: string) => void;
-  onEditNote: (noteId: string, noteText: string) => void;
+  onEditNote: (noteId: string, updates: Partial<Pick<LessonNote, 'note_text' | 'note_title' | 'tags' | 'is_favorite'>>) => void;
   onSeekToTime: (timeInSeconds: number) => void;
   currentTimeSeconds: number;
 }
 
-const NotesPanel: React.FC<NotesPanelProps> = ({
+const NotesPanel = ({
   isOpen,
   notes,
   onAddNote,
@@ -22,15 +22,13 @@ const NotesPanel: React.FC<NotesPanelProps> = ({
   onEditNote,
   onSeekToTime,
   currentTimeSeconds
-}) => {
-  const [showNoteForm, setShowNoteForm] = useState(false);
+}: NotesPanelProps) => {
   const [newNoteText, setNewNoteText] = useState('');
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
-  const [editingText, setEditingText] = useState('');
+  const [editText, setEditText] = useState('');
+  const [editTitle, setEditTitle] = useState('');
 
-  // Format time helper
   const formatTime = (seconds: number) => {
-    if (!seconds || isNaN(seconds)) return '0:00';
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = Math.floor(seconds % 60);
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
@@ -40,126 +38,127 @@ const NotesPanel: React.FC<NotesPanelProps> = ({
     if (newNoteText.trim()) {
       onAddNote(newNoteText.trim());
       setNewNoteText('');
-      setShowNoteForm(false);
     }
   };
 
-  const handleCancelNote = () => {
-    setNewNoteText('');
-    setShowNoteForm(false);
-  };
-
-  const handleEditNote = (noteId: string, currentText: string) => {
-    setEditingNoteId(noteId);
-    setEditingText(currentText);
+  const handleStartEdit = (note: LessonNote) => {
+    setEditingNoteId(note.id);
+    setEditText(note.note_text);
+    setEditTitle(note.note_title || '');
   };
 
   const handleSaveEdit = () => {
-    if (editingNoteId && editingText.trim()) {
-      onEditNote(editingNoteId, editingText.trim());
+    if (editingNoteId) {
+      onEditNote(editingNoteId, { 
+        note_text: editText, 
+        note_title: editTitle || undefined 
+      });
       setEditingNoteId(null);
-      setEditingText('');
+      setEditText('');
+      setEditTitle('');
     }
   };
 
-  const handleCancelEdit = () => {
-    setEditingNoteId(null);
-    setEditingText('');
+  const handleToggleFavorite = (note: LessonNote) => {
+    onEditNote(note.id, { is_favorite: !note.is_favorite });
   };
 
-  const handleSeekToNote = (timeInSeconds: number) => {
-    onSeekToTime(timeInSeconds);
-  };
+  if (!isOpen) return null;
 
   return (
-    <div 
-      className={cn(
-        "bg-white border-t border-gray-100 overflow-hidden transition-all duration-300 ease-in-out",
-        isOpen ? "max-h-96" : "max-h-0"
-      )}
-    >
-      <div className="p-4 space-y-4">
+    <div className="border-t border-gray-200 bg-gradient-to-br from-yellow-50 to-orange-50 p-4">
+      <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <StickyNote size={18} className="text-[#5e16ea]" />
-            <h4 className="font-medium text-gray-900">📝 Mis notas</h4>
-            <span className="text-xs text-gray-500">({notes.length})</span>
-          </div>
-          <button
-            onClick={() => setShowNoteForm(!showNoteForm)}
-            className="flex items-center gap-2 bg-[#5e16ea] text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-[#4a11ba] transition-colors"
-          >
-            <Plus size={14} />
-            Agregar nota
-          </button>
+          <h4 className="font-medium text-gray-900 flex items-center">
+            <span className="mr-2">📝</span>
+            Notas de la lección ({notes.length})
+          </h4>
         </div>
 
-        {/* Add Note Form */}
-        {showNoteForm && (
-          <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-            <div className="flex items-center gap-2 text-sm text-[#5e16ea] font-medium">
-              <Clock size={14} />
-              📍 En {formatTime(currentTimeSeconds)}
-            </div>
+        {/* Add new note */}
+        <div className="space-y-2">
+          <div className="flex items-center text-xs text-gray-500 mb-2">
+            <Clock size={12} className="mr-1" />
+            Tiempo actual: {formatTime(currentTimeSeconds)}
+          </div>
+          <div className="flex space-x-2">
             <textarea
               value={newNoteText}
               onChange={(e) => setNewNoteText(e.target.value)}
-              placeholder="¿Qué insight tuviste en este momento?"
-              className="w-full text-sm border border-gray-200 rounded-md p-3 resize-none focus:ring-2 focus:ring-[#5e16ea] focus:border-[#5e16ea] min-h-[60px]"
+              placeholder="Escribe tu nota aquí..."
+              className="flex-1 text-sm border border-yellow-200 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent resize-none"
               rows={2}
-              autoFocus
             />
-            <div className="flex gap-2">
-              <button
-                onClick={handleAddNote}
-                disabled={!newNoteText.trim()}
-                className={cn(
-                  "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors",
-                  newNoteText.trim()
-                    ? "bg-emerald-500 text-white hover:bg-emerald-600"
-                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                )}
-              >
-                Guardar
-              </button>
-              <button
-                onClick={handleCancelNote}
-                className="px-4 py-2 text-sm text-gray-600 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
-              >
-                Cancelar
-              </button>
-            </div>
+            <button
+              onClick={handleAddNote}
+              disabled={!newNoteText.trim()}
+              className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 text-white rounded-md hover:from-yellow-500 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md"
+            >
+              <Plus size={16} />
+            </button>
           </div>
-        )}
+        </div>
 
-        {/* Notes List */}
-        <div className="space-y-3 max-h-60 overflow-y-auto">
-          {notes.length === 0 ? (
-            <div className="text-center py-4 text-gray-500">
-              <StickyNote size={32} className="mx-auto mb-2 text-gray-300" />
-              <p className="text-sm">Aún no tienes notas en esta lección</p>
-              <p className="text-xs mt-1">Haz clic en "Agregar nota" para crear una</p>
-            </div>
-          ) : (
-            notes.map((note) => (
-              <div key={note.id} className="bg-gray-50 border-l-4 border-[#5e16ea] rounded-lg p-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <button
-                    onClick={() => handleSeekToNote(note.timestamp_seconds)}
-                    className="text-sm text-[#5e16ea] font-medium hover:underline transition-colors"
-                  >
-                    📍 {formatTime(note.timestamp_seconds)} - Saltar a este momento
-                  </button>
-                  
-                  {editingNoteId !== note.id && (
-                    <div className="flex gap-1">
+        {/* Notes list */}
+        {notes.length > 0 && (
+          <div className="space-y-3 max-h-64 overflow-y-auto">
+            {notes
+              .sort((a, b) => a.timestamp_seconds - b.timestamp_seconds)
+              .map((note) => (
+                <div
+                  key={note.id}
+                  className="bg-white rounded-lg border border-yellow-200 p-3 shadow-sm hover:shadow-md transition-shadow"
+                >
+                  {/* Note header */}
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex-1">
+                      {editingNoteId === note.id ? (
+                        <input
+                          type="text"
+                          value={editTitle}
+                          onChange={(e) => setEditTitle(e.target.value)}
+                          placeholder="Título (opcional)"
+                          className="w-full text-sm font-medium border border-gray-300 rounded px-2 py-1 mb-2"
+                        />
+                      ) : (
+                        note.note_title && (
+                          <h5 className="font-medium text-gray-900 text-sm mb-1">
+                            {note.note_title}
+                          </h5>
+                        )
+                      )}
+                      
                       <button
-                        onClick={() => handleEditNote(note.id, note.note_text)}
-                        className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                        onClick={() => onSeekToTime(note.timestamp_seconds)}
+                        className="flex items-center text-xs text-yellow-600 hover:text-yellow-700 transition-colors"
                       >
-                        <Edit size={12} />
+                        <Clock size={12} className="mr-1" />
+                        {formatTime(note.timestamp_seconds)}
                       </button>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center space-x-1">
+                      <button
+                        onClick={() => handleToggleFavorite(note)}
+                        className={cn(
+                          "p-1 rounded transition-colors",
+                          note.is_favorite 
+                            ? "text-red-500 hover:text-red-600" 
+                            : "text-gray-400 hover:text-red-500"
+                        )}
+                      >
+                        <Heart size={12} fill={note.is_favorite ? "currentColor" : "none"} />
+                      </button>
+                      
+                      <button
+                        onClick={() => handleStartEdit(note)}
+                        className="p-1 text-gray-400 hover:text-blue-500 transition-colors"
+                      >
+                        <Edit3 size={12} />
+                      </button>
+                      
                       <button
                         onClick={() => onDeleteNote(note.id)}
                         className="p-1 text-gray-400 hover:text-red-500 transition-colors"
@@ -167,40 +166,70 @@ const NotesPanel: React.FC<NotesPanelProps> = ({
                         <Trash2 size={12} />
                       </button>
                     </div>
+                  </div>
+
+                  {/* Note content */}
+                  {editingNoteId === note.id ? (
+                    <div className="space-y-2">
+                      <textarea
+                        value={editText}
+                        onChange={(e) => setEditText(e.target.value)}
+                        className="w-full text-sm border border-gray-300 rounded px-2 py-1 resize-none"
+                        rows={2}
+                      />
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={handleSaveEdit}
+                          className="px-2 py-1 text-xs bg-yellow-500 text-white rounded hover:bg-yellow-600 transition-colors"
+                        >
+                          Guardar
+                        </button>
+                        <button
+                          onClick={() => setEditingNoteId(null)}
+                          className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                      {note.note_text}
+                    </p>
+                  )}
+
+                  {/* Tags */}
+                  {note.tags && note.tags.length > 0 && (
+                    <div className="flex items-center flex-wrap gap-1 mt-2">
+                      <Tag size={10} className="text-gray-400" />
+                      {note.tags.map((tagId) => {
+                        const tag = NOTE_TAGS.find(t => t.id === tagId);
+                        return tag ? (
+                          <span
+                            key={tagId}
+                            className={cn(
+                              "inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium border",
+                              tag.color
+                            )}
+                          >
+                            <span className="mr-1">{tag.icon}</span>
+                            {tag.name}
+                          </span>
+                        ) : null;
+                      })}
+                    </div>
                   )}
                 </div>
-                
-                {editingNoteId === note.id ? (
-                  <div className="space-y-2">
-                    <textarea
-                      value={editingText}
-                      onChange={(e) => setEditingText(e.target.value)}
-                      className="w-full text-sm border border-gray-200 rounded-md p-2 resize-none min-h-[60px]"
-                      rows={2}
-                      autoFocus
-                    />
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleSaveEdit}
-                        className="text-xs bg-emerald-500 text-white px-3 py-1 rounded-md hover:bg-emerald-600 transition-colors"
-                      >
-                        Guardar
-                      </button>
-                      <button
-                        onClick={handleCancelEdit}
-                        className="text-xs text-gray-600 px-3 py-1 rounded-md hover:bg-gray-200 transition-colors"
-                      >
-                        Cancelar
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-700 leading-relaxed">{note.note_text}</p>
-                )}
-              </div>
-            ))
-          )}
-        </div>
+              ))}
+          </div>
+        )}
+
+        {notes.length === 0 && (
+          <div className="text-center py-4 text-gray-500">
+            <div className="text-2xl mb-2">📝</div>
+            <p className="text-sm">Aún no hay notas para esta lección</p>
+          </div>
+        )}
       </div>
     </div>
   );
