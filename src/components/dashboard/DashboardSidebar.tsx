@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -37,6 +36,11 @@ const DashboardSidebar = () => {
       title: 'Mis Rutas',
       url: '/dashboard/my-routes',
       icon: '📚'
+    },
+    {
+      title: 'Mis Notas',
+      url: '/dashboard/my-notes',
+      icon: '📝'
     },
     {
       title: 'Mis Resúmenes',

@@ -410,8 +410,11 @@ export type Database = {
           course_id: string
           created_at: string
           id: string
+          is_favorite: boolean | null
           lesson_id: string
           note_text: string
+          note_title: string | null
+          tags: string[] | null
           timestamp_seconds: number
           updated_at: string
           user_id: string
@@ -420,8 +423,11 @@ export type Database = {
           course_id: string
           created_at?: string
           id?: string
+          is_favorite?: boolean | null
           lesson_id: string
           note_text: string
+          note_title?: string | null
+          tags?: string[] | null
           timestamp_seconds?: number
           updated_at?: string
           user_id: string
@@ -430,8 +436,11 @@ export type Database = {
           course_id?: string
           created_at?: string
           id?: string
+          is_favorite?: boolean | null
           lesson_id?: string
           note_text?: string
+          note_title?: string | null
+          tags?: string[] | null
           timestamp_seconds?: number
           updated_at?: string
           user_id?: string
