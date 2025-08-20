@@ -47,7 +47,7 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
       >
         <div className="flex items-center gap-3 w-full">
           {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
-          <Folder size={18} className="text-[#7c3aed]" />
+          <Folder size={18} className="text-primary" />
           <div className="flex-1 text-left">
             <h3 className="font-semibold text-gray-900 text-lg">{categoryName}</h3>
             <p className="text-sm text-gray-600">

@@ -36,7 +36,7 @@ const NoteItem: React.FC<NoteItemProps> = ({
   });
 
   return (
-    <Card className="hover:shadow-md transition-all duration-200 border-l-4 border-l-[#7c3aed]">
+    <Card className="hover:shadow-md transition-all duration-200 border-l-4 border-l-primary">
       <CardContent className="p-4">
         {/* Header con metadatos */}
         <div className="flex items-start justify-between mb-3">
@@ -95,7 +95,7 @@ const NoteItem: React.FC<NoteItemProps> = ({
             variant="ghost"
             size="sm"
             onClick={() => onNavigateToLesson(note)}
-            className="text-[#7c3aed] hover:text-[#6d28d9] hover:bg-purple-50"
+            className="text-primary hover:text-primary/80 hover:bg-purple-50"
           >
             <Play size={14} className="mr-1" />
             Ir al momento

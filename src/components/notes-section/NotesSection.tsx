@@ -79,7 +79,7 @@ const NotesSection: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#7c3aed]"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -113,7 +113,7 @@ const NotesSection: React.FC = () => {
           {notes.length === 0 && (
             <button
               onClick={() => navigate('/dashboard')}
-              className="text-[#7c3aed] hover:text-[#6d28d9] font-medium"
+              className="text-primary hover:text-primary/80 font-medium"
             >
               Explorar cursos →
             </button>

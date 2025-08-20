@@ -51,7 +51,7 @@ const NotesFilters: React.FC<NotesFiltersProps> = ({
             variant={filters.filterType === button.key ? 'default' : 'outline'}
             size="sm"
             onClick={() => onFilterTypeChange(button.key)}
-            className={filters.filterType === button.key ? 'bg-[#7c3aed] hover:bg-[#6d28d9]' : ''}
+            className={filters.filterType === button.key ? 'bg-primary hover:bg-primary/90' : ''}
           >
             {button.label}
           </Button>
@@ -67,7 +67,7 @@ const NotesFilters: React.FC<NotesFiltersProps> = ({
             variant={filters.selectedTags.includes(key) ? 'default' : 'outline'}
             className={`cursor-pointer transition-colors ${
               filters.selectedTags.includes(key) 
-                ? 'bg-[#7c3aed] hover:bg-[#6d28d9]' 
+                ? 'bg-primary hover:bg-primary/90' 
                 : 'hover:bg-gray-100'
             }`}
             onClick={() => onTagToggle(key)}

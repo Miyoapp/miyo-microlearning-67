@@ -21,7 +21,7 @@ const NotesHeader: React.FC<NotesHeaderProps> = ({ onCreateNote }) => {
       
       <Button
         onClick={onCreateNote}
-        className="bg-[#7c3aed] hover:bg-[#6d28d9] text-white flex items-center gap-2"
+        className="bg-primary hover:bg-primary/90 text-primary-foreground flex items-center gap-2"
       >
         <Plus size={16} />
         Nueva Nota
