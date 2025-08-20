@@ -10,7 +10,7 @@ interface NotesDropdownProps {
   notes: LessonNote[];
   onAddNote: (noteText: string) => void;
   onDeleteNote: (noteId: string) => void;
-  onEditNote: (noteId: string, noteText: string) => void;
+  onEditNote: (noteId: string, noteText: string) => void; // Mantener signature original
   onSeekToTime: (timeInSeconds: number) => void;
   currentTimeSeconds: number;
 }
@@ -68,6 +68,7 @@ const NotesDropdown: React.FC<NotesDropdownProps> = ({
 
   const handleSaveEdit = () => {
     if (editingNoteId && editingText.trim()) {
+      // Usar la signature original (noteId, noteText)
       onEditNote(editingNoteId, editingText.trim());
       setEditingNoteId(null);
       setEditingText('');

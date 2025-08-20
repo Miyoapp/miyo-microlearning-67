@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Lesson } from '@/types';
 import { Play, Pause, Lock, SkipBack, SkipForward, ChevronDown, Volume2, VolumeX } from 'lucide-react';
@@ -109,6 +108,11 @@ const LessonCard = React.memo(({
   // Handle adding note
   const handleAddNote = async (noteText: string) => {
     await addNote(noteText, currentTime);
+  };
+
+  // NUEVO: Adaptador para convertir la signature de updateNote a la esperada por NotesPanel
+  const handleEditNote = async (noteId: string, updates: Partial<Pick<LessonNote, 'note_text' | 'note_title' | 'tags' | 'is_favorite'>>) => {
+    await updateNote(noteId, updates);
   };
 
   // Handle seeking to note time
@@ -376,14 +380,14 @@ const LessonCard = React.memo(({
         )}
       </div>
 
-      {/* Notes Panel - Integrated */}
+      {/* Notes Panel - Integrated con el adaptador */}
       {canPlay && courseId && (
         <NotesPanel
           isOpen={showNotesPanel}
           notes={notes}
           onAddNote={handleAddNote}
           onDeleteNote={deleteNote}
-          onEditNote={updateNote}
+          onEditNote={handleEditNote}
           onSeekToTime={handleSeekToNote}
           currentTimeSeconds={currentTime}
         />
