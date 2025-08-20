@@ -21,7 +21,7 @@ const CarouselNavigation: React.FC<CarouselNavigationProps> = ({
       <Button
         variant="outline"
         size="icon"
-        className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 sm:-translate-x-4 bg-white shadow-lg z-10 h-8 w-8 sm:h-10 sm:w-10"
+        className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 sm:-translate-x-8 bg-white shadow-lg z-10 h-8 w-8 sm:h-10 sm:w-10"
         onClick={onScrollPrev}
         disabled={!canScrollPrev}
       >
@@ -31,7 +31,7 @@ const CarouselNavigation: React.FC<CarouselNavigationProps> = ({
       <Button
         variant="outline"
         size="icon"
-        className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 sm:translate-x-4 bg-white shadow-lg z-10 h-8 w-8 sm:h-10 sm:w-10"
+        className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-6 sm:translate-x-8 bg-white shadow-lg z-10 h-8 w-8 sm:h-10 sm:w-10"
         onClick={onScrollNext}
         disabled={!canScrollNext}
       >
