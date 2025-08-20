@@ -41,17 +41,12 @@ const CourseCompletionModal: React.FC<CourseCompletionModalProps> = ({
     onCreateSummary();
   };
 
-  const handleCloseModal = () => {
-    console.log('❌ Close button clicked - closing modal');
-    onClose();
-  };
-
   return (
-    <Dialog open={isOpen} onOpenChange={handleCloseModal}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         {/* Close button */}
         <button
-          onClick={handleCloseModal}
+          onClick={onClose}
           className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
         >
           <X className="h-4 w-4" />
