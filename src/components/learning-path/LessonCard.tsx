@@ -1,5 +1,7 @@
+
 import React from 'react';
 import { Lesson } from '@/types';
+import { LessonNote } from '@/types/notes';
 import { Play, Pause, Lock, SkipBack, SkipForward, ChevronDown, Volume2, VolumeX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLessonCard } from '@/hooks/learning-path/useLessonCard';
