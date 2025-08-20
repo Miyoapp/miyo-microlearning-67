@@ -241,7 +241,7 @@ const LearningPath = React.memo(({
       {podcast && completionStats && (
         <CourseCompletionModal
           isOpen={showCompletionModal}
-          onClose={() => setShowCompletionModal(false)}
+          onClose={setShowCompletionModal}
           onCreateSummary={handleOpenSummaryModal}
           course={podcast}
           stats={completionStats}
