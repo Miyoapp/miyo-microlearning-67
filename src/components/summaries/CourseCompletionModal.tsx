@@ -31,29 +31,12 @@ const CourseCompletionModal: React.FC<CourseCompletionModalProps> = ({
     return `${minutes}m`;
   };
 
-  const handleContinueExploring = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log('🚪 Closing modal - Continue Exploring clicked');
+  const handleContinueExploring = () => {
     onClose();
   };
 
-  const handleClose = (open: boolean) => {
-    if (!open) {
-      console.log('🚪 Closing modal - Dialog onOpenChange triggered');
-      onClose();
-    }
-  };
-
-  const handleCreateSummary = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log('📝 Opening summary modal');
-    onCreateSummary();
-  };
-
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <div className="text-center space-y-6 py-4">
           {/* Trophy Icon */}
@@ -110,7 +93,7 @@ const CourseCompletionModal: React.FC<CourseCompletionModalProps> = ({
           {/* Action Buttons */}
           <div className="space-y-3">
             <Button
-              onClick={handleCreateSummary}
+              onClick={onCreateSummary}
               className="w-full bg-[#5e16ea] hover:bg-[#4a11ba] text-white font-medium py-3"
             >
               <Sparkles size={16} className="mr-2" />
