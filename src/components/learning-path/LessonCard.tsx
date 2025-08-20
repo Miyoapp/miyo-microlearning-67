@@ -235,8 +235,8 @@ const LessonCard = React.memo(({
                 className={cn(
                   "relative flex items-center justify-center w-8 h-8 rounded-full hover:scale-105 transition-all duration-200 shadow-sm hover:shadow-md",
                   showNotesPanel 
-                    ? "bg-gradient-to-br from-orange-300 to-orange-400" 
-                    : "bg-gradient-to-br from-orange-200 to-orange-300 hover:from-orange-300 hover:to-orange-400"
+                    ? "bg-gradient-to-br from-yellow-500 to-orange-600" 
+                    : "bg-gradient-to-br from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600"
                 )}
                 aria-label={`Notas (${notes.length})`}
               >
