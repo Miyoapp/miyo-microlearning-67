@@ -25,7 +25,7 @@ export interface CourseSummary {
   user_id: string;
   title: string;
   summary_content: string;
-  summary_type: 'personal' | 'highlights' | 'insights';
+  summary_type: string; // Changed from union type to string to match database
   key_concepts?: string;
   personal_insight?: string;
   action_plans?: any[];

@@ -10,8 +10,8 @@ export function useSummaries() {
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
 
-  const fetchSummaries = useCallback(async (courseId: string) => {
-    if (!user || !courseId) return;
+  const fetchSummaries = useCallback(async (courseId: string): Promise<CourseSummary[]> => {
+    if (!user || !courseId) return [];
     
     setLoading(true);
     try {
@@ -23,10 +23,14 @@ export function useSummaries() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setSummaries(data || []);
+      
+      const typedData = (data || []) as CourseSummary[];
+      setSummaries(typedData);
+      return typedData;
     } catch (error) {
       console.error('Error fetching summaries:', error);
       toast.error('Error al cargar los resúmenes');
+      return [];
     } finally {
       setLoading(false);
     }
@@ -122,7 +126,7 @@ export function useSummaries() {
   }, [user]);
 
   const hasSummary = useCallback(async (courseId: string) => {
-    if (!user) return false;
+    if (!user || !courseId) return false;
 
     try {
       const { data, error } = await supabase

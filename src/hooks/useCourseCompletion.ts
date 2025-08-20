@@ -95,7 +95,7 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress }: U
   }, []);
 
   // Check if course has summary for fallback button
-  const checkHasSummary = useCallback(async () => {
+  const checkHasSummary = useCallback(async (): Promise<boolean> => {
     if (!podcast) return false;
     return await hasSummary(podcast.id);
   }, [podcast, hasSummary]);
