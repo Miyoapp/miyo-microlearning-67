@@ -17,8 +17,10 @@ const DashboardMisResumenes = () => {
         </div>
       )}
       
-      <div className="max-w-7xl mx-auto pb-6">
-        <ResumesList />
+      <div className="h-full overflow-y-auto pl-6">
+        <div className="max-w-7xl mx-auto pb-6">
+          <ResumesList />
+        </div>
       </div>
     </DashboardLayout>
   );

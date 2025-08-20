@@ -100,91 +100,93 @@ const DashboardMyRoutes = () => {
 
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto">
-        {/* Mobile hamburger menu - positioned like CoursePageHeader */}
-        {isMobile && (
-          <div className="mb-4 px-4 flex justify-end">
-            <SidebarTrigger />
-          </div>
-        )}
-
-        {/* Mobile-first header */}
-        <div className="mb-8 px-4 sm:px-0">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Mis Rutas</h1>
-          <p className="text-sm sm:text-base text-gray-600">Tu progreso y cursos guardados</p>
+      {/* Mobile hamburger menu - positioned like CoursePageHeader */}
+      {isMobile && (
+        <div className="mb-4 px-4 flex justify-end">
+          <SidebarTrigger />
         </div>
+      )}
 
-        {/* Mobile-first carousels */}
-        <div className="space-y-8 sm:space-y-12">
-          <TouchCarousel
-            title="Continúa escuchando"
-            courses={continueLearningCourses}
-            showProgress={true}
-            onPlayCourse={handlePlayCourse}
-            onToggleSave={handleToggleSave}
-            onCourseClick={handleCourseClick}
-          />
-
-          {/* Mobile-first saved courses */}
-          <div className="px-4 sm:px-0">
-            <h2 className="text-xl sm:text-2xl font-bold mb-6">Guardados</h2>
-            {savedCourses.length === 0 ? (
-              <div className="text-gray-500 text-center py-12 text-sm sm:text-base">
-                No tienes cursos guardados
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                {savedCourses.map(course => {
-                  const progress = userProgress.find(p => p.course_id === course.id);
-                  const progressPercentage = progress?.progress_percentage || 0;
-                  console.log(`DashboardMyRoutes Saved: Course ${course.id} progress: ${progressPercentage}%`);
-                  return (
-                    <div key={course.id} className="h-full">
-                      <CourseCardWithProgress
-                        podcast={course}
-                        progress={progressPercentage}
-                        isPlaying={false}
-                        isSaved={true}
-                        showProgress={progressPercentage > 0}
-                        onPlay={() => handlePlayCourse(course.id)}
-                        onToggleSave={() => handleToggleSave(course.id)}
-                        onClick={() => handleCourseClick(course.id)}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+      <div className="h-full overflow-y-auto pl-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Mobile-first header */}
+          <div className="mb-8 px-4 sm:px-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Mis Rutas</h1>
+            <p className="text-sm sm:text-base text-gray-600">Tu progreso y cursos guardados</p>
           </div>
 
-          {/* Mobile-first completed courses */}
-          <div className="px-4 sm:px-0">
-            <h2 className="text-xl sm:text-2xl font-bold mb-6">Terminados</h2>
-            {completedCourses.length === 0 ? (
-              <div className="text-gray-500 text-center py-12 text-sm sm:text-base">
-                No has completado ningún curso aún
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                {completedCourses.map(course => {
-                  const progress = userProgress.find(p => p.course_id === course.id);
-                  return (
-                    <div key={course.id} className="h-full">
-                      <CourseCardWithProgress
-                        podcast={course}
-                        progress={100}
-                        isPlaying={false}
-                        isSaved={progress?.is_saved || false}
-                        showProgress={true}
-                        onPlay={() => handlePlayCourse(course.id)}
-                        onToggleSave={() => handleToggleSave(course.id)}
-                        onClick={() => handleCourseClick(course.id)}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+          {/* Mobile-first carousels */}
+          <div className="space-y-8 sm:space-y-12">
+            <TouchCarousel
+              title="Continúa escuchando"
+              courses={continueLearningCourses}
+              showProgress={true}
+              onPlayCourse={handlePlayCourse}
+              onToggleSave={handleToggleSave}
+              onCourseClick={handleCourseClick}
+            />
+
+            {/* Mobile-first saved courses */}
+            <div className="px-4 sm:px-0">
+              <h2 className="text-xl sm:text-2xl font-bold mb-6">Guardados</h2>
+              {savedCourses.length === 0 ? (
+                <div className="text-gray-500 text-center py-12 text-sm sm:text-base">
+                  No tienes cursos guardados
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                  {savedCourses.map(course => {
+                    const progress = userProgress.find(p => p.course_id === course.id);
+                    const progressPercentage = progress?.progress_percentage || 0;
+                    console.log(`DashboardMyRoutes Saved: Course ${course.id} progress: ${progressPercentage}%`);
+                    return (
+                      <div key={course.id} className="h-full">
+                        <CourseCardWithProgress
+                          podcast={course}
+                          progress={progressPercentage}
+                          isPlaying={false}
+                          isSaved={true}
+                          showProgress={progressPercentage > 0}
+                          onPlay={() => handlePlayCourse(course.id)}
+                          onToggleSave={() => handleToggleSave(course.id)}
+                          onClick={() => handleCourseClick(course.id)}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Mobile-first completed courses */}
+            <div className="px-4 sm:px-0">
+              <h2 className="text-xl sm:text-2xl font-bold mb-6">Terminados</h2>
+              {completedCourses.length === 0 ? (
+                <div className="text-gray-500 text-center py-12 text-sm sm:text-base">
+                  No has completado ningún curso aún
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                  {completedCourses.map(course => {
+                    const progress = userProgress.find(p => p.course_id === course.id);
+                    return (
+                      <div key={course.id} className="h-full">
+                        <CourseCardWithProgress
+                          podcast={course}
+                          progress={100}
+                          isPlaying={false}
+                          isSaved={progress?.is_saved || false}
+                          showProgress={true}
+                          onPlay={() => handlePlayCourse(course.id)}
+                          onToggleSave={() => handleToggleSave(course.id)}
+                          onClick={() => handleCourseClick(course.id)}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

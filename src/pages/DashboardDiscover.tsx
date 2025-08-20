@@ -67,88 +67,90 @@ const DashboardDiscover = () => {
 
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto">
-        {/* Mobile hamburger menu - positioned like CoursePageHeader */}
-        {isMobile && (
-          <div className="mb-4 px-4 flex justify-end">
-            <SidebarTrigger />
-          </div>
-        )}
-
-        {/* Mobile-first header */}
-        <div className="mb-6 sm:mb-8 px-4 sm:px-0">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Descubrir</h1>
-          <p className="text-sm sm:text-base text-gray-600">Explora nuevos cursos y temas</p>
+      {/* Mobile hamburger menu - positioned like CoursePageHeader */}
+      {isMobile && (
+        <div className="mb-4 px-4 flex justify-end">
+          <SidebarTrigger />
         </div>
+      )}
 
-        {/* Mobile-first categories */}
-        <div className="mb-8 px-4 sm:px-0">
-          <h2 className="text-xl sm:text-2xl font-bold mb-4">Categorías</h2>
-          <div className="flex flex-wrap gap-2 mb-6">
-            <Button
-              variant={selectedCategory === null ? "default" : "outline"}
-              onClick={() => setSelectedCategory(null)}
-              className={`text-xs sm:text-sm ${selectedCategory === null ? "bg-miyo-800 hover:bg-miyo-900" : ""}`}
-              size="sm"
-            >
-              Todos
-            </Button>
-            {categories.map(category => (
+      <div className="h-full overflow-y-auto pl-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Mobile-first header */}
+          <div className="mb-6 sm:mb-8 px-4 sm:px-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Descubrir</h1>
+            <p className="text-sm sm:text-base text-gray-600">Explora nuevos cursos y temas</p>
+          </div>
+
+          {/* Mobile-first categories */}
+          <div className="mb-8 px-4 sm:px-0">
+            <h2 className="text-xl sm:text-2xl font-bold mb-4">Categorías</h2>
+            <div className="flex flex-wrap gap-2 mb-6">
               <Button
-                key={category.id}
-                variant={selectedCategory === category.id ? "default" : "outline"}
-                onClick={() => setSelectedCategory(category.id)}
-                className={`text-xs sm:text-sm ${selectedCategory === category.id ? "bg-miyo-800 hover:bg-miyo-900" : ""}`}
+                variant={selectedCategory === null ? "default" : "outline"}
+                onClick={() => setSelectedCategory(null)}
+                className={`text-xs sm:text-sm ${selectedCategory === null ? "bg-miyo-800 hover:bg-miyo-900" : ""}`}
                 size="sm"
               >
-                {category.nombre}
+                Todos
               </Button>
-            ))}
+              {categories.map(category => (
+                <Button
+                  key={category.id}
+                  variant={selectedCategory === category.id ? "default" : "outline"}
+                  onClick={() => setSelectedCategory(category.id)}
+                  className={`text-xs sm:text-sm ${selectedCategory === category.id ? "bg-miyo-800 hover:bg-miyo-900" : ""}`}
+                  size="sm"
+                >
+                  {category.nombre}
+                </Button>
+              ))}
+            </div>
+
+            {/* Mobile-first: Single column on mobile, grid on desktop */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+              {filteredCourses.map(course => {
+                const progress = userProgress.find(p => p.course_id === course.id);
+                return (
+                  <div key={course.id} className="h-full">
+                    <CourseCardWithProgress
+                      podcast={course}
+                      progress={progress?.progress_percentage || 0}
+                      isPlaying={false}
+                      isSaved={progress?.is_saved || false}
+                      showProgress={false}
+                      onPlay={() => handlePlayCourse(course.id)}
+                      onToggleSave={() => toggleSaveCourse(course.id)}
+                      onClick={() => handleCourseClick(course.id)}
+                    />
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Mobile-first: Single column on mobile, grid on desktop */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-            {filteredCourses.map(course => {
-              const progress = userProgress.find(p => p.course_id === course.id);
-              return (
-                <div key={course.id} className="h-full">
-                  <CourseCardWithProgress
-                    podcast={course}
-                    progress={progress?.progress_percentage || 0}
-                    isPlaying={false}
-                    isSaved={progress?.is_saved || false}
-                    showProgress={false}
-                    onPlay={() => handlePlayCourse(course.id)}
-                    onToggleSave={() => toggleSaveCourse(course.id)}
-                    onClick={() => handleCourseClick(course.id)}
-                  />
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Mobile-first new courses */}
-        <div className="mb-8 px-4 sm:px-0">
-          <h2 className="text-xl sm:text-2xl font-bold mb-4">Nuevos</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-            {newCourses.map(course => {
-              const progress = userProgress.find(p => p.course_id === course.id);
-              return (
-                <div key={course.id} className="h-full">
-                  <CourseCardWithProgress
-                    podcast={course}
-                    progress={progress?.progress_percentage || 0}
-                    isPlaying={false}
-                    isSaved={progress?.is_saved || false}
-                    showProgress={false}
-                    onPlay={() => handlePlayCourse(course.id)}
-                    onToggleSave={() => toggleSaveCourse(course.id)}
-                    onClick={() => handleCourseClick(course.id)}
-                  />
-                </div>
-              );
-            })}
+          {/* Mobile-first new courses */}
+          <div className="mb-8 px-4 sm:px-0">
+            <h2 className="text-xl sm:text-2xl font-bold mb-4">Nuevos</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+              {newCourses.map(course => {
+                const progress = userProgress.find(p => p.course_id === course.id);
+                return (
+                  <div key={course.id} className="h-full">
+                    <CourseCardWithProgress
+                      podcast={course}
+                      progress={progress?.progress_percentage || 0}
+                      isPlaying={false}
+                      isSaved={progress?.is_saved || false}
+                      showProgress={false}
+                      onPlay={() => handlePlayCourse(course.id)}
+                      onToggleSave={() => toggleSaveCourse(course.id)}
+                      onClick={() => handleCourseClick(course.id)}
+                    />
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>

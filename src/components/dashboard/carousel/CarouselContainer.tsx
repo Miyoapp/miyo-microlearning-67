@@ -89,7 +89,7 @@ const CarouselContainer: React.FC<CarouselContainerProps> = ({
   const showNav = shouldShowNavigation(displayCourses.length, isMobile);
 
   return (
-    <div className={`relative ${containerClassName}`}>
+    <div className={`relative overflow-x-hidden ${containerClassName}`}>
       <div 
         className="overflow-hidden" 
         ref={emblaRef}

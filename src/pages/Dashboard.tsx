@@ -71,40 +71,42 @@ const Dashboard = () => {
         </div>
       )}
       
-      <div className="max-w-7xl mx-auto pb-6">
-        <DashboardWelcomeHeader 
-          userName={userName}
-          isFirstTimeUser={isFirstTimeUser}
-        />
-
-        {/* Mobile-first course sections */}
-        <div className="space-y-8 sm:space-y-12">
-          <DashboardCourseSection
-            title="Continúa escuchando"
-            courses={continueLearningCourses}
-            showProgress={true}
-            onPlayCourse={handlePlayCourse}
-            onToggleSave={handleToggleSave}
-            onCourseClick={handleCourseClick}
+      <div className="h-full overflow-y-auto pl-6">
+        <div className="max-w-7xl mx-auto pb-6">
+          <DashboardWelcomeHeader 
+            userName={userName}
+            isFirstTimeUser={isFirstTimeUser}
           />
 
-          <DashboardCourseSection
-            title="Para ti"
-            courses={recommendedCourses}
-            showProgress={false}
-            onPlayCourse={handlePlayCourse}
-            onToggleSave={handleToggleSave}
-            onCourseClick={handleCourseClick}
-          />
+          {/* Mobile-first course sections */}
+          <div className="space-y-8 sm:space-y-12">
+            <DashboardCourseSection
+              title="Continúa escuchando"
+              courses={continueLearningCourses}
+              showProgress={true}
+              onPlayCourse={handlePlayCourse}
+              onToggleSave={handleToggleSave}
+              onCourseClick={handleCourseClick}
+            />
 
-          <DashboardCourseSection
-            title="Cursos Premium"
-            courses={premiumCourses}
-            showProgress={false}
-            onPlayCourse={handlePlayCourse}
-            onToggleSave={handleToggleSave}
-            onCourseClick={handleCourseClick}
-          />
+            <DashboardCourseSection
+              title="Para ti"
+              courses={recommendedCourses}
+              showProgress={false}
+              onPlayCourse={handlePlayCourse}
+              onToggleSave={handleToggleSave}
+              onCourseClick={handleCourseClick}
+            />
+
+            <DashboardCourseSection
+              title="Cursos Premium"
+              courses={premiumCourses}
+              showProgress={false}
+              onPlayCourse={handlePlayCourse}
+              onToggleSave={handleToggleSave}
+              onCourseClick={handleCourseClick}
+            />
+          </div>
         </div>
       </div>
     </DashboardLayout>
