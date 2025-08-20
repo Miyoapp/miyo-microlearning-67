@@ -555,6 +555,7 @@ export type Database = {
       }
       user_course_progress: {
         Row: {
+          completion_modal_shown: boolean | null
           course_id: string | null
           created_at: string | null
           id: string
@@ -566,6 +567,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          completion_modal_shown?: boolean | null
           course_id?: string | null
           created_at?: string | null
           id?: string
@@ -577,6 +579,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          completion_modal_shown?: boolean | null
           course_id?: string | null
           created_at?: string | null
           id?: string

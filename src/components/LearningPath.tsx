@@ -37,7 +37,7 @@ const LearningPath = React.memo(({
   podcast
 }: LearningPathProps) => {
   // Get user progress data for course completion detection
-  const { userProgress } = useUserProgress();
+  const { userProgress, markCompletionModalShown } = useUserProgress();
   const { lessonProgress } = useUserLessonProgress();
   const { fetchSummaries } = useSummaries();
 
@@ -49,7 +49,7 @@ const LearningPath = React.memo(({
   // Extract courseId from podcast
   const courseId = podcast?.id || null;
   
-  // Course completion functionality
+  // Course completion functionality - UPDATED: Pass markCompletionModalShown
   const {
     showCompletionModal,
     showSummaryModal,
@@ -62,7 +62,8 @@ const LearningPath = React.memo(({
   } = useCourseCompletion({
     podcast,
     userProgress,
-    lessonProgress
+    lessonProgress,
+    markCompletionModalShown // NEW: Pass the function to mark modal as shown
   });
 
   // Check if course is completed
