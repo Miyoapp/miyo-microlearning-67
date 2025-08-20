@@ -21,9 +21,31 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress }: U
 
   // Improved course completion detection
   const checkCourseCompletion = useCallback(async () => {
-    if (!podcast || !userProgress || hasShownCompletionRef.current) return;
+    console.log('🔍 Checking course completion:', {
+      hasPodcast: !!podcast,
+      hasUserProgress: !!userProgress,
+      hasShownBefore: hasShownCompletionRef.current,
+      podcastId: podcast?.id
+    });
+
+    if (!podcast || !userProgress || hasShownCompletionRef.current) {
+      console.log('⏹️ Skipping completion check:', {
+        noPodcast: !podcast,
+        noUserProgress: !userProgress,
+        alreadyShown: hasShownCompletionRef.current
+      });
+      return;
+    }
 
     const courseProgress = userProgress.find(p => p.course_id === podcast.id);
+    
+    console.log('📊 Course progress found:', {
+      courseId: podcast.id,
+      progressData: courseProgress,
+      isCompleted: courseProgress?.is_completed,
+      progressPercentage: courseProgress?.progress_percentage,
+      previousProgress: previousProgressRef.current
+    });
     
     // Check if course just became 100% complete
     if (courseProgress?.is_completed && courseProgress?.progress_percentage === 100) {
@@ -44,7 +66,10 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress }: U
           
           setShowCompletionModal(true);
           hasShownCompletionRef.current = true;
+          console.log('✅ Completion modal shown, hasShownCompletionRef set to true');
         }
+      } else {
+        console.log('🔄 Course was already at 100%, not showing modal again');
       }
     }
     
@@ -54,10 +79,11 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress }: U
     }
   }, [podcast, userProgress, getCourseStats]);
 
-  // Effect to check completion with proper dependencies
+  // FIXED: Effect to check completion with optimized dependencies - only depend on userProgress
   useEffect(() => {
+    console.log('🔄 useEffect triggered for course completion check');
     checkCourseCompletion();
-  }, [userProgress, lessonProgress, checkCourseCompletion]);
+  }, [userProgress, checkCourseCompletion]);
 
   // Handle creating summary with new structure
   const handleCreateSummary = useCallback(async (formData: {
@@ -84,14 +110,17 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress }: U
 
   // Handle opening summary modal
   const handleOpenSummaryModal = useCallback(() => {
+    console.log('📝 Opening summary modal, closing completion modal');
     setShowCompletionModal(false);
     setShowSummaryModal(true);
   }, []);
 
   // Handle closing completion modal definitively
   const handleCloseCompletionModal = useCallback(() => {
+    console.log('❌ DEFINITIVELY CLOSING completion modal - should not reopen');
     setShowCompletionModal(false);
     hasShownCompletionRef.current = true;
+    console.log('🔒 hasShownCompletionRef set to true permanently');
   }, []);
 
   // Check if course has summary for fallback button
