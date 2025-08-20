@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Podcast } from '@/types';
 import { CourseCompletionStats } from '@/types/notes';
 import { useSummaries } from '@/hooks/useSummaries';
@@ -14,47 +14,70 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress }: U
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [showSummaryModal, setShowSummaryModal] = useState(false);
   const [completionStats, setCompletionStats] = useState<CourseCompletionStats | null>(null);
-  const [hasShownCompletion, setHasShownCompletion] = useState(false);
+  const hasShownCompletionRef = useRef(false);
+  const previousProgressRef = useRef<number>(0);
   
-  const { getCourseStats, createSummary } = useSummaries();
+  const { getCourseStats, createSummary, hasSummary } = useSummaries();
 
-  // Check if course is completed
+  // Improved course completion detection
   const checkCourseCompletion = useCallback(async () => {
-    if (!podcast || !userProgress || hasShownCompletion) return;
+    if (!podcast || !userProgress || hasShownCompletionRef.current) return;
 
     const courseProgress = userProgress.find(p => p.course_id === podcast.id);
     
-    // Only show modal if course just became 100% complete
+    // Check if course just became 100% complete
     if (courseProgress?.is_completed && courseProgress?.progress_percentage === 100) {
-      console.log('🎉 Course completed! Showing congratulations modal');
-      
-      // Get course stats
-      const stats = await getCourseStats(podcast.id);
-      if (stats) {
-        setCompletionStats({
-          totalLessons: podcast.lessonCount,
-          completedLessons: stats.completedLessons,
-          totalNotes: stats.totalNotes,
-          totalTimeSpent: podcast.duration * 60,
-          courseDuration: podcast.duration * 60
-        });
+      // Only show if we haven't shown it before and this is a new completion
+      if (previousProgressRef.current < 100) {
+        console.log('🎉 Course just completed! Showing congratulations modal');
         
-        setShowCompletionModal(true);
-        setHasShownCompletion(true);
+        // Get course stats
+        const stats = await getCourseStats(podcast.id);
+        if (stats) {
+          setCompletionStats({
+            totalLessons: podcast.lessonCount,
+            completedLessons: stats.completedLessons,
+            totalNotes: stats.totalNotes,
+            totalTimeSpent: podcast.duration * 60,
+            courseDuration: podcast.duration * 60
+          });
+          
+          setShowCompletionModal(true);
+          hasShownCompletionRef.current = true;
+        }
       }
     }
-  }, [podcast, userProgress, hasShownCompletion, getCourseStats]);
+    
+    // Update previous progress
+    if (courseProgress?.progress_percentage !== undefined) {
+      previousProgressRef.current = courseProgress.progress_percentage;
+    }
+  }, [podcast, userProgress, getCourseStats]);
 
-  // Effect to check completion
+  // Effect to check completion with proper dependencies
   useEffect(() => {
     checkCourseCompletion();
-  }, [checkCourseCompletion]);
+  }, [userProgress, lessonProgress, checkCourseCompletion]);
 
-  // Handle creating summary
-  const handleCreateSummary = useCallback(async (title: string, content: string) => {
+  // Handle creating summary with new structure
+  const handleCreateSummary = useCallback(async (formData: {
+    title: string;
+    keyConcepts: string;
+    personalInsight: string;
+    actionPlans: string[];
+  }) => {
     if (!podcast) return;
     
-    await createSummary(podcast.id, title, content, 'personal');
+    await createSummary(
+      podcast.id, 
+      formData.title, 
+      '', // summary_content can be empty now
+      'personal',
+      formData.keyConcepts,
+      formData.personalInsight,
+      formData.actionPlans
+    );
+    
     setShowSummaryModal(false);
     setShowCompletionModal(false);
   }, [podcast, createSummary]);
@@ -65,13 +88,26 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress }: U
     setShowSummaryModal(true);
   }, []);
 
+  // Handle closing completion modal definitively
+  const handleCloseCompletionModal = useCallback(() => {
+    setShowCompletionModal(false);
+    hasShownCompletionRef.current = true;
+  }, []);
+
+  // Check if course has summary for fallback button
+  const checkHasSummary = useCallback(async () => {
+    if (!podcast) return false;
+    return await hasSummary(podcast.id);
+  }, [podcast, hasSummary]);
+
   return {
     showCompletionModal,
     showSummaryModal,
     completionStats,
-    setShowCompletionModal,
+    setShowCompletionModal: handleCloseCompletionModal,
     setShowSummaryModal,
     handleCreateSummary,
-    handleOpenSummaryModal
+    handleOpenSummaryModal,
+    checkHasSummary
   };
 }

@@ -7,13 +7,48 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
   }
   public: {
     Tables: {
+      action_plan_items: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_completed: boolean | null
+          summary_id: string | null
+          text: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_completed?: boolean | null
+          summary_id?: string | null
+          text: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_completed?: boolean | null
+          summary_id?: string | null
+          text?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "action_plan_items_summary_id_fkey"
+            columns: ["summary_id"]
+            isOneToOne: false
+            referencedRelation: "course_summaries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categoria_landing: {
         Row: {
           audio_preview_url: string | null
@@ -108,6 +143,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      course_summaries: {
+        Row: {
+          action_plans: Json | null
+          course_id: string
+          created_at: string
+          id: string
+          key_concepts: string | null
+          personal_insight: string | null
+          summary_content: string
+          summary_type: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          action_plans?: Json | null
+          course_id: string
+          created_at?: string
+          id?: string
+          key_concepts?: string | null
+          personal_insight?: string | null
+          summary_content: string
+          summary_type?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          action_plans?: Json | null
+          course_id?: string
+          created_at?: string
+          id?: string
+          key_concepts?: string | null
+          personal_insight?: string | null
+          summary_content?: string
+          summary_type?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       creador_social_media: {
         Row: {
@@ -219,6 +296,7 @@ export type Database = {
           imagen_portada: string
           likes: number
           moneda: string | null
+          nivel: string | null
           numero_lecciones: number
           precio: number | null
           show: boolean
@@ -237,6 +315,7 @@ export type Database = {
           imagen_portada: string
           likes?: number
           moneda?: string | null
+          nivel?: string | null
           numero_lecciones?: number
           precio?: number | null
           show?: boolean
@@ -255,6 +334,7 @@ export type Database = {
           imagen_portada?: string
           likes?: number
           moneda?: string | null
+          nivel?: string | null
           numero_lecciones?: number
           precio?: number | null
           show?: boolean
@@ -324,6 +404,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      lesson_notes: {
+        Row: {
+          course_id: string
+          created_at: string
+          id: string
+          lesson_id: string
+          note_text: string
+          timestamp_seconds: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          id?: string
+          lesson_id: string
+          note_text: string
+          timestamp_seconds?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          id?: string
+          lesson_id?: string
+          note_text?: string
+          timestamp_seconds?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       mercadopago_transactions: {
         Row: {
