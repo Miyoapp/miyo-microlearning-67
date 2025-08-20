@@ -28,21 +28,35 @@ export function useAllSummaries() {
     
     setLoading(true);
     try {
-      // Get summaries with course and category data
+      // Get summaries for the user
       const { data: summariesData, error: summariesError } = await supabase
         .from('course_summaries')
-        .select(`
-          *,
-          cursos!inner(titulo, categoria_id, categorias(nombre))
-        `)
+        .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (summariesError) throw summariesError;
 
-      if (!summariesData) {
+      if (!summariesData || summariesData.length === 0) {
         setSummaries([]);
+        setLoading(false);
         return;
+      }
+
+      // Get course data for all summaries
+      const courseIds = summariesData.map(s => s.course_id);
+      const { data: coursesData, error: coursesError } = await supabase
+        .from('cursos')
+        .select(`
+          id,
+          titulo,
+          categoria_id,
+          categorias!inner(nombre)
+        `)
+        .in('id', courseIds);
+
+      if (coursesError) {
+        console.error('Error fetching courses:', coursesError);
       }
 
       // Get action plan items for all summaries
@@ -64,8 +78,9 @@ export function useAllSummaries() {
 
       // Process and enrich summaries
       const enrichedSummaries: EnrichedSummary[] = summariesData.map(summary => {
-        const curso = summary.cursos;
-        const categoria = curso?.categorias;
+        // Find course data for this summary
+        const course = coursesData?.find(c => c.id === summary.course_id);
+        const categoria = course?.categorias;
         
         // Get action plans for this summary
         const summaryActions = actionPlansData.filter(action => action.summary_id === summary.id);
@@ -85,7 +100,7 @@ export function useAllSummaries() {
 
         return {
           ...summary,
-          course_title: curso?.titulo || 'Curso sin título',
+          course_title: course?.titulo || 'Curso sin título',
           category_name: categoria?.nombre || 'Sin categoría',
           category_icon: getCategoryIcon(categoria?.nombre || ''),
           insight_preview: insightPreview,
