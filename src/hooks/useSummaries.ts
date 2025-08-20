@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -88,32 +89,6 @@ export function useSummaries() {
     } catch (error) {
       console.error('Error creating summary:', error);
       toast.error('Error al crear el resumen');
-    }
-  }, [user]);
-
-  const updateSummary = useCallback(async (summaryId: string, updates: { key_concepts?: string; personal_insight?: string }) => {
-    if (!user) return;
-
-    try {
-      const { error } = await supabase
-        .from('course_summaries')
-        .update(updates)
-        .eq('id', summaryId)
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-
-      // Update local state
-      setSummaries(prev => prev.map(summary => 
-        summary.id === summaryId 
-          ? { ...summary, ...updates }
-          : summary
-      ));
-
-      toast.success('Resumen actualizado exitosamente');
-    } catch (error) {
-      console.error('Error updating summary:', error);
-      toast.error('Error al actualizar el resumen');
     }
   }, [user]);
 
@@ -226,7 +201,6 @@ export function useSummaries() {
     loading,
     fetchSummaries,
     createSummary,
-    updateSummary,
     getCourseStats,
     hasSummary,
     fetchActionPlanItems,
