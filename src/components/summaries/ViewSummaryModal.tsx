@@ -3,7 +3,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { X, Edit2, Plus, Trash2, Check } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Edit2, Plus, Trash2, Check, X } from 'lucide-react';
 import { CourseSummary, ActionPlanItem } from '@/types/notes';
 import { useSummaries } from '@/hooks/useSummaries';
 
@@ -22,7 +23,16 @@ const ViewSummaryModal: React.FC<ViewSummaryModalProps> = ({
   const [newActionPlan, setNewActionPlan] = useState('');
   const [editingItem, setEditingItem] = useState<string | null>(null);
   const [editingText, setEditingText] = useState('');
-  const { fetchActionPlanItems, updateActionPlanItem, deleteActionPlanItem } = useSummaries();
+  
+  // States for editing key concepts
+  const [editingKeyConcepts, setEditingKeyConcepts] = useState(false);
+  const [editingKeyConceptsText, setEditingKeyConceptsText] = useState('');
+  
+  // States for editing personal insight
+  const [editingPersonalInsight, setEditingPersonalInsight] = useState(false);
+  const [editingPersonalInsightText, setEditingPersonalInsightText] = useState('');
+
+  const { fetchActionPlanItems, updateActionPlanItem, deleteActionPlanItem, updateSummary } = useSummaries();
 
   useEffect(() => {
     if (isOpen && summary.id) {
@@ -33,6 +43,46 @@ const ViewSummaryModal: React.FC<ViewSummaryModalProps> = ({
   const loadActionPlans = async () => {
     const items = await fetchActionPlanItems(summary.id);
     setActionPlans(items);
+  };
+
+  // Key Concepts editing handlers
+  const handleStartEditKeyConcepts = () => {
+    setEditingKeyConcepts(true);
+    setEditingKeyConceptsText(summary.key_concepts || '');
+  };
+
+  const handleSaveKeyConcepts = async () => {
+    if (!editingKeyConceptsText.trim()) return;
+
+    await updateSummary(summary.id, { key_concepts: editingKeyConceptsText.trim() });
+    summary.key_concepts = editingKeyConceptsText.trim();
+    setEditingKeyConcepts(false);
+    setEditingKeyConceptsText('');
+  };
+
+  const handleCancelEditKeyConcepts = () => {
+    setEditingKeyConcepts(false);
+    setEditingKeyConceptsText('');
+  };
+
+  // Personal Insight editing handlers
+  const handleStartEditPersonalInsight = () => {
+    setEditingPersonalInsight(true);
+    setEditingPersonalInsightText(summary.personal_insight || '');
+  };
+
+  const handleSavePersonalInsight = async () => {
+    if (!editingPersonalInsightText.trim()) return;
+
+    await updateSummary(summary.id, { personal_insight: editingPersonalInsightText.trim() });
+    summary.personal_insight = editingPersonalInsightText.trim();
+    setEditingPersonalInsight(false);
+    setEditingPersonalInsightText('');
+  };
+
+  const handleCancelEditPersonalInsight = () => {
+    setEditingPersonalInsight(false);
+    setEditingPersonalInsightText('');
   };
 
   const handleToggleComplete = async (item: ActionPlanItem) => {
@@ -99,32 +149,94 @@ const ViewSummaryModal: React.FC<ViewSummaryModalProps> = ({
           <DialogTitle className="text-2xl font-bold text-center mb-2">
             {summary.title}
           </DialogTitle>
-          <button
-            onClick={onClose}
-            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100"
-          >
-            <X className="h-4 w-4" />
-          </button>
         </DialogHeader>
 
         <div className="space-y-6">
           {/* Key Concepts */}
           {summary.key_concepts && (
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Conceptos clave que aprendí</h3>
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-gray-700 whitespace-pre-wrap">{summary.key_concepts}</p>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Conceptos clave que aprendí</h3>
+                {!editingKeyConcepts && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleStartEditKeyConcepts}
+                  >
+                    <Edit2 size={14} />
+                  </Button>
+                )}
               </div>
+              
+              {editingKeyConcepts ? (
+                <div className="space-y-2">
+                  <Textarea
+                    value={editingKeyConceptsText}
+                    onChange={(e) => setEditingKeyConceptsText(e.target.value)}
+                    className="min-h-[100px]"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && e.ctrlKey) handleSaveKeyConcepts();
+                      if (e.key === 'Escape') handleCancelEditKeyConcepts();
+                    }}
+                  />
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={handleSaveKeyConcepts}>
+                      <Check size={14} />
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={handleCancelEditKeyConcepts}>
+                      <X size={14} />
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <p className="text-gray-700 whitespace-pre-wrap">{summary.key_concepts}</p>
+                </div>
+              )}
             </div>
           )}
 
           {/* Personal Insight */}
           {summary.personal_insight && (
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Mi gran insight personal</h3>
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-gray-700 whitespace-pre-wrap">{summary.personal_insight}</p>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Mi gran insight personal</h3>
+                {!editingPersonalInsight && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleStartEditPersonalInsight}
+                  >
+                    <Edit2 size={14} />
+                  </Button>
+                )}
               </div>
+              
+              {editingPersonalInsight ? (
+                <div className="space-y-2">
+                  <Textarea
+                    value={editingPersonalInsightText}
+                    onChange={(e) => setEditingPersonalInsightText(e.target.value)}
+                    className="min-h-[100px]"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && e.ctrlKey) handleSavePersonalInsight();
+                      if (e.key === 'Escape') handleCancelEditPersonalInsight();
+                    }}
+                  />
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={handleSavePersonalInsight}>
+                      <Check size={14} />
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={handleCancelEditPersonalInsight}>
+                      <X size={14} />
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <p className="text-gray-700 whitespace-pre-wrap">{summary.personal_insight}</p>
+                </div>
+              )}
             </div>
           )}
 
