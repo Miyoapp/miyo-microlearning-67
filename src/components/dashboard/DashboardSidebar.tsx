@@ -37,6 +37,11 @@ const DashboardSidebar = () => {
       title: 'Mis Rutas',
       url: '/dashboard/my-routes',
       icon: '📚'
+    },
+    {
+      title: 'Mis Resúmenes',
+      url: '/dashboard/mis-resumenes',
+      icon: '📋'
     }
   ];
 

@@ -15,6 +15,7 @@ import Dashboard from './pages/Dashboard';
 import DashboardCourse from './pages/DashboardCourse';
 import DashboardDiscover from './pages/DashboardDiscover';
 import DashboardMyRoutes from './pages/DashboardMyRoutes';
+import DashboardMisResumenes from './pages/DashboardMisResumenes';
 import NotFound from './pages/NotFound';
 
 import PaymentSuccess from './pages/PaymentSuccess';
@@ -39,6 +40,7 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/dashboard/discover" element={<DashboardDiscover />} />
             <Route path="/dashboard/my-routes" element={<DashboardMyRoutes />} />
+            <Route path="/dashboard/mis-resumenes" element={<DashboardMisResumenes />} />
             <Route path="/dashboard/course/:courseId" element={<DashboardCourse />} />
 
             {/* Payment result pages */}

@@ -1,0 +1,27 @@
+
+import React from 'react';
+import DashboardLayout from '@/components/dashboard/DashboardLayout';
+import { SidebarTrigger } from '@/components/ui/sidebar/SidebarTrigger';
+import { useIsMobile } from '@/hooks/use-mobile';
+import ResumesList from '@/components/summaries/ResumesList/ResumesList';
+
+const DashboardMisResumenes = () => {
+  const isMobile = useIsMobile();
+
+  return (
+    <DashboardLayout>
+      {/* Mobile hamburger menu */}
+      {isMobile && (
+        <div className="fixed top-4 right-4 z-50 bg-white rounded-full shadow-lg">
+          <SidebarTrigger />
+        </div>
+      )}
+      
+      <div className="max-w-7xl mx-auto pb-6">
+        <ResumesList />
+      </div>
+    </DashboardLayout>
+  );
+};
+
+export default DashboardMisResumenes;
