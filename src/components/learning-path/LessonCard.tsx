@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Lesson } from '@/types';
-import { Play, Pause, Lock, SkipBack, SkipForward, ChevronDown, Volume2, VolumeX, StickyNote } from 'lucide-react';
+import { Play, Pause, Lock, SkipBack, SkipForward, ChevronDown, Volume2, VolumeX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLessonCard } from '@/hooks/learning-path/useLessonCard';
 import { useMemo } from 'react';
@@ -240,7 +240,7 @@ const LessonCard = React.memo(({
                 )}
                 aria-label={`Notas (${notes.length})`}
               >
-                <StickyNote size={16} className="text-white" />
+                <span className="text-white text-base">📝</span>
                 {notes.length > 0 && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold text-[10px]">
                     {notes.length > 9 ? '9+' : notes.length}
