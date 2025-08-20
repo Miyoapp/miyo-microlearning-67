@@ -16,7 +16,7 @@ export function useAllNotes() {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('lesson_notes' as any)
+        .from('lesson_notes')
         .select(`
           *,
           lecciones:lesson_id (
@@ -61,7 +61,7 @@ export function useAllNotes() {
 
     try {
       const { data, error } = await supabase
-        .from('lesson_notes' as any)
+        .from('lesson_notes')
         .update(updates)
         .eq('id', noteId)
         .eq('user_id', user.id)
@@ -85,7 +85,7 @@ export function useAllNotes() {
 
     try {
       const { error } = await supabase
-        .from('lesson_notes' as any)
+        .from('lesson_notes')
         .delete()
         .eq('id', noteId)
         .eq('user_id', user.id);
