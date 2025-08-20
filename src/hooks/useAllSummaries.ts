@@ -98,8 +98,24 @@ export function useAllSummaries() {
           ? summary.key_concepts.split('\n').filter(concept => concept.trim()).length
           : 0;
 
+        // Handle action_plans type conversion from Json to any[]
+        let actionPlansArray: any[] = [];
+        if (summary.action_plans) {
+          try {
+            if (typeof summary.action_plans === 'string') {
+              actionPlansArray = JSON.parse(summary.action_plans);
+            } else if (Array.isArray(summary.action_plans)) {
+              actionPlansArray = summary.action_plans;
+            }
+          } catch (error) {
+            console.error('Error parsing action_plans:', error);
+            actionPlansArray = [];
+          }
+        }
+
         return {
           ...summary,
+          action_plans: actionPlansArray,
           course_title: course?.titulo || 'Curso sin título',
           category_name: categoria?.nombre || 'Sin categoría',
           category_icon: getCategoryIcon(categoria?.nombre || ''),
