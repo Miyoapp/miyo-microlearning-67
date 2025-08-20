@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -46,9 +45,7 @@ export function useNotes(lessonId?: string, courseId?: string) {
           lesson_id: lessonId,
           course_id: courseId,
           note_text: noteText,
-          timestamp_seconds: Math.floor(timestampSeconds), // Convert to integer
-          tags: [],
-          is_favorite: false
+          timestamp_seconds: Math.floor(timestampSeconds) // Convert to integer
         })
         .select()
         .single();
@@ -90,52 +87,6 @@ export function useNotes(lessonId?: string, courseId?: string) {
     }
   }, [user]);
 
-  const updateNoteTags = useCallback(async (noteId: string, tags: string[]) => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('lesson_notes' as any)
-        .update({ tags })
-        .eq('id', noteId)
-        .eq('user_id', user.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      
-      const updatedNote = data as unknown as LessonNote;
-      setNotes(prev => prev.map(note => note.id === noteId ? updatedNote : note));
-      toast.success('Etiquetas actualizadas');
-    } catch (error) {
-      console.error('Error updating note tags:', error);
-      toast.error('Error al actualizar las etiquetas');
-    }
-  }, [user]);
-
-  const toggleNoteFavorite = useCallback(async (noteId: string, isFavorite: boolean) => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('lesson_notes' as any)
-        .update({ is_favorite: isFavorite })
-        .eq('id', noteId)
-        .eq('user_id', user.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      
-      const updatedNote = data as unknown as LessonNote;
-      setNotes(prev => prev.map(note => note.id === noteId ? updatedNote : note));
-      toast.success(isFavorite ? 'Nota marcada como favorita' : 'Nota desmarcada como favorita');
-    } catch (error) {
-      console.error('Error updating note favorite:', error);
-      toast.error('Error al actualizar la nota');
-    }
-  }, [user]);
-
   const deleteNote = useCallback(async (noteId: string) => {
     if (!user) return;
 
@@ -162,8 +113,6 @@ export function useNotes(lessonId?: string, courseId?: string) {
     fetchNotes,
     addNote,
     updateNote,
-    updateNoteTags,
-    toggleNoteFavorite,
     deleteNote
   };
 }
