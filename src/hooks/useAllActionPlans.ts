@@ -24,47 +24,88 @@ export function useAllActionPlans() {
     console.log('Fetching action plans for user:', user.id);
     
     try {
-      const { data: actionPlansData, error } = await supabase
+      // First get action plan items with their summaries
+      const { data: actionPlansData, error: actionPlansError } = await supabase
         .from('action_plan_items')
         .select(`
           *,
           course_summaries (
+            id,
             title,
-            course_id,
-            cursos (
-              titulo,
-              categorias (
-                id,
-                nombre
-              )
-            )
+            course_id
           )
         `)
         .order('created_at', { ascending: false });
 
       console.log('Raw action plans data:', actionPlansData);
-      console.log('Query error (if any):', error);
+      console.log('Action plans query error (if any):', actionPlansError);
 
-      if (error) {
-        console.error('Supabase query error:', error);
-        throw error;
+      if (actionPlansError) {
+        console.error('Supabase query error:', actionPlansError);
+        throw actionPlansError;
       }
-      
-      const enrichedPlans: EnrichedActionPlan[] = (actionPlansData || [])
+
+      if (!actionPlansData || actionPlansData.length === 0) {
+        console.log('No action plans found');
+        setActionPlans([]);
+        return;
+      }
+
+      // Get all unique course IDs
+      const courseIds = [...new Set(
+        actionPlansData
+          .filter(plan => plan.course_summaries?.course_id)
+          .map(plan => plan.course_summaries!.course_id)
+      )];
+
+      if (courseIds.length === 0) {
+        console.log('No valid course IDs found');
+        setActionPlans([]);
+        return;
+      }
+
+      // Get course details with categories
+      const { data: coursesData, error: coursesError } = await supabase
+        .from('cursos')
+        .select(`
+          id,
+          titulo,
+          categoria_id,
+          categorias (
+            id,
+            nombre
+          )
+        `)
+        .in('id', courseIds);
+
+      console.log('Courses data:', coursesData);
+      console.log('Courses query error (if any):', coursesError);
+
+      if (coursesError) {
+        console.error('Error fetching courses:', coursesError);
+        throw coursesError;
+      }
+
+      // Create a map for quick course lookup
+      const coursesMap = new Map();
+      (coursesData || []).forEach(course => {
+        coursesMap.set(course.id, course);
+      });
+
+      // Enrich action plans with course and category data
+      const enrichedPlans: EnrichedActionPlan[] = actionPlansData
         .filter(plan => {
-          const hasValidSummary = plan.course_summaries && 
-                                  plan.course_summaries.cursos && 
-                                  plan.course_summaries.cursos.categorias;
+          const hasValidSummary = plan.course_summaries?.course_id;
           
           if (!hasValidSummary) {
-            console.warn('Filtered out plan due to missing related data:', plan);
+            console.warn('Filtered out plan due to missing course_summaries:', plan);
           }
           
           return hasValidSummary;
         })
         .map(plan => {
-          const summary = plan.course_summaries as any;
-          const course = summary.cursos;
+          const summary = plan.course_summaries!;
+          const course = coursesMap.get(summary.course_id);
           const category = course?.categorias;
           
           return {
@@ -79,13 +120,14 @@ export function useAllActionPlans() {
             category_icon: '📚', // Default icon, could be enhanced later
             summary_title: summary.title || 'Sin título'
           };
-        });
+        })
+        .filter(plan => plan.course_title !== 'Curso sin título'); // Filter out plans without valid course data
 
       console.log('Enriched plans:', enrichedPlans);
       setActionPlans(enrichedPlans);
       
       if (enrichedPlans.length === 0) {
-        console.log('No action plans found for user');
+        console.log('No valid action plans found after enrichment');
       }
       
     } catch (error) {
