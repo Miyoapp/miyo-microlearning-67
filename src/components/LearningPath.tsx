@@ -1,4 +1,3 @@
-
 import { useCallback, useMemo, useState, useEffect } from 'react';
 import { Lesson, Module } from '../types';
 import React from 'react';
@@ -52,7 +51,7 @@ const LearningPath = React.memo(({
   // Extract courseId from podcast
   const courseId = podcast?.id || null;
   
-  // Course completion functionality - FIXED: Call without argument
+  // Course completion functionality - FIXED: Pass markCompletionModalShown correctly
   const {
     showCompletionModal,
     showSummaryModal,
@@ -66,7 +65,7 @@ const LearningPath = React.memo(({
     podcast,
     userProgress,
     lessonProgress,
-    markCompletionModalShown: () => markCompletionModalShown() // FIXED: Call function without arguments
+    markCompletionModalShown // FIXED: Pass the function directly as expected
   });
 
   // NEW: Direct function to show completion modal
