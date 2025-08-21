@@ -34,7 +34,7 @@ export function useNotes(lessonId?: string, courseId?: string) {
     }
   }, [user, lessonId, courseId]);
 
-  const addNote = useCallback(async (noteText: string, timestampSeconds: number, noteTitle?: string, tags: string[] = []) => {
+  const addNote = useCallback(async (noteText: string, timestampSeconds: number, tags: string[] = []) => {
     if (!user || !lessonId || !courseId) return;
 
     try {
@@ -45,7 +45,6 @@ export function useNotes(lessonId?: string, courseId?: string) {
           lesson_id: lessonId,
           course_id: courseId,
           note_text: noteText,
-          note_title: noteTitle,
           timestamp_seconds: Math.floor(timestampSeconds),
           tags: tags,
           is_favorite: false
@@ -65,7 +64,7 @@ export function useNotes(lessonId?: string, courseId?: string) {
     }
   }, [user, lessonId, courseId]);
 
-  const updateNote = useCallback(async (noteId: string, updates: Partial<Pick<LessonNote, 'note_text' | 'note_title' | 'tags' | 'is_favorite'>>) => {
+  const updateNote = useCallback(async (noteId: string, updates: Partial<Pick<LessonNote, 'note_text' | 'tags' | 'is_favorite'>>) => {
     if (!user) return;
 
     try {

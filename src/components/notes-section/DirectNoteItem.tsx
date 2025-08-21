@@ -104,11 +104,6 @@ const DirectNoteItem: React.FC<DirectNoteItemProps> = ({ note, courseTitle }) =>
           </div>
         )}
 
-        {/* Note Title */}
-        {note.note_title && (
-          <h5 className="font-medium text-gray-900 mb-1 text-sm pr-16">{note.note_title}</h5>
-        )}
-
         {/* Note Content Preview */}
         <p className="text-sm text-gray-700 leading-relaxed mb-2 pr-16 line-clamp-2">
           {note.note_text}

@@ -9,7 +9,7 @@ interface NotesPanelProps {
   notes: LessonNote[];
   onAddNote: (noteText: string) => void;
   onDeleteNote: (noteId: string) => void;
-  onEditNote: (noteId: string, updates: Partial<Pick<LessonNote, 'note_text' | 'note_title' | 'tags' | 'is_favorite'>>) => void;
+  onEditNote: (noteId: string, updates: Partial<Pick<LessonNote, 'note_text' | 'tags' | 'is_favorite'>>) => void;
   onSeekToTime: (timeInSeconds: number) => void;
   currentTimeSeconds: number;
 }
@@ -24,9 +24,9 @@ const NotesPanel = ({
   currentTimeSeconds
 }: NotesPanelProps) => {
   const [newNoteText, setNewNoteText] = useState('');
+  const [showAddNoteArea, setShowAddNoteArea] = useState(false);
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
-  const [editTitle, setEditTitle] = useState('');
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -38,24 +38,22 @@ const NotesPanel = ({
     if (newNoteText.trim()) {
       onAddNote(newNoteText.trim());
       setNewNoteText('');
+      setShowAddNoteArea(false);
     }
   };
 
   const handleStartEdit = (note: LessonNote) => {
     setEditingNoteId(note.id);
     setEditText(note.note_text);
-    setEditTitle(note.note_title || '');
   };
 
   const handleSaveEdit = () => {
     if (editingNoteId) {
       onEditNote(editingNoteId, { 
-        note_text: editText, 
-        note_title: editTitle || undefined 
+        note_text: editText
       });
       setEditingNoteId(null);
       setEditText('');
-      setEditTitle('');
     }
   };
 
@@ -82,22 +80,45 @@ const NotesPanel = ({
             <Clock size={12} className="mr-1" />
             Tiempo actual: {formatTime(currentTimeSeconds)}
           </div>
-          <div className="flex space-x-2">
-            <textarea
-              value={newNoteText}
-              onChange={(e) => setNewNoteText(e.target.value)}
-              placeholder="Escribe tu nota aquí..."
-              className="flex-1 text-sm border border-yellow-200 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent resize-none"
-              rows={2}
-            />
+          
+          {!showAddNoteArea ? (
             <button
-              onClick={handleAddNote}
-              disabled={!newNoteText.trim()}
-              className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 text-white rounded-md hover:from-yellow-500 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md"
+              onClick={() => setShowAddNoteArea(true)}
+              className="flex items-center justify-center w-full py-3 px-4 bg-gradient-to-br from-yellow-400 to-orange-500 text-white rounded-md hover:from-yellow-500 hover:to-orange-600 transition-all duration-200 shadow-sm hover:shadow-md font-medium"
             >
-              <Plus size={16} />
+              <Plus size={16} className="mr-2" />
+              + Agregar nota
             </button>
-          </div>
+          ) : (
+            <div className="flex space-x-2">
+              <textarea
+                value={newNoteText}
+                onChange={(e) => setNewNoteText(e.target.value)}
+                placeholder="Escribe tu nota aquí..."
+                className="flex-1 text-sm border border-yellow-200 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent resize-none"
+                rows={2}
+                autoFocus
+              />
+              <div className="flex flex-col space-y-1">
+                <button
+                  onClick={handleAddNote}
+                  disabled={!newNoteText.trim()}
+                  className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 text-white rounded-md hover:from-yellow-500 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md"
+                >
+                  <Plus size={16} />
+                </button>
+                <button
+                  onClick={() => {
+                    setShowAddNoteArea(false);
+                    setNewNoteText('');
+                  }}
+                  className="flex items-center justify-center w-10 h-10 bg-gray-300 text-gray-600 rounded-md hover:bg-gray-400 transition-all duration-200"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Notes list */}
@@ -113,22 +134,6 @@ const NotesPanel = ({
                   {/* Note header */}
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
-                      {editingNoteId === note.id ? (
-                        <input
-                          type="text"
-                          value={editTitle}
-                          onChange={(e) => setEditTitle(e.target.value)}
-                          placeholder="Título (opcional)"
-                          className="w-full text-sm font-medium border border-gray-300 rounded px-2 py-1 mb-2"
-                        />
-                      ) : (
-                        note.note_title && (
-                          <h5 className="font-medium text-gray-900 text-sm mb-1">
-                            {note.note_title}
-                          </h5>
-                        )
-                      )}
-                      
                       <button
                         onClick={() => onSeekToTime(note.timestamp_seconds)}
                         className="flex items-center text-xs text-yellow-600 hover:text-yellow-700 transition-colors"

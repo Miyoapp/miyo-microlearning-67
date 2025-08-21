@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { LessonNote, NOTE_TAGS } from '@/types/notes';
 import { useNotes } from '@/hooks/useNotes';
@@ -23,14 +22,12 @@ const EditNoteModal: React.FC<EditNoteModalProps> = ({
   courseTitle
 }) => {
   const { updateNote } = useNotes(note.lesson_id, note.course_id);
-  const [noteTitle, setNoteTitle] = useState(note.note_title || '');
   const [noteText, setNoteText] = useState(note.note_text);
   const [selectedTags, setSelectedTags] = useState<string[]>(note.tags || []);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      setNoteTitle(note.note_title || '');
       setNoteText(note.note_text);
       setSelectedTags(note.tags || []);
     }
@@ -41,7 +38,6 @@ const EditNoteModal: React.FC<EditNoteModalProps> = ({
     
     setSaving(true);
     await updateNote(note.id, {
-      note_title: noteTitle.trim() || undefined,
       note_text: noteText.trim(),
       tags: selectedTags
     });
@@ -77,17 +73,6 @@ const EditNoteModal: React.FC<EditNoteModalProps> = ({
             <p className="text-gray-500">
               Tiempo: {formatTime(note.timestamp_seconds)} • Lección {note.lesson_id.slice(-1)}
             </p>
-          </div>
-
-          {/* Note Title */}
-          <div className="space-y-2">
-            <Label htmlFor="title">Título (opcional)</Label>
-            <Input
-              id="title"
-              placeholder="Título de la nota..."
-              value={noteTitle}
-              onChange={(e) => setNoteTitle(e.target.value)}
-            />
           </div>
           
           {/* Note Content */}

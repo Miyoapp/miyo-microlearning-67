@@ -13,7 +13,6 @@ const ExpandedNoteCard = ({ note }: ExpandedNoteCardProps) => {
   const { updateNote, deleteNote } = useNotes(note.lesson_id, note.course_id);
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(note.note_text);
-  const [editTitle, setEditTitle] = useState(note.note_title || '');
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -27,8 +26,7 @@ const ExpandedNoteCard = ({ note }: ExpandedNoteCardProps) => {
 
   const handleSaveEdit = () => {
     updateNote(note.id, { 
-      note_text: editText, 
-      note_title: editTitle || undefined 
+      note_text: editText
     });
     setIsEditing(false);
   };
@@ -44,20 +42,6 @@ const ExpandedNoteCard = ({ note }: ExpandedNoteCardProps) => {
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
-          {isEditing ? (
-            <input
-              type="text"
-              value={editTitle}
-              onChange={(e) => setEditTitle(e.target.value)}
-              placeholder="Título de la nota (opcional)"
-              className="w-full text-sm font-medium border border-gray-300 rounded px-2 py-1 mb-2"
-            />
-          ) : (
-            note.note_title && (
-              <h4 className="font-medium text-gray-900 mb-1">{note.note_title}</h4>
-            )
-          )}
-          
           <div className="flex items-center space-x-3 text-xs text-gray-500">
             <div className="flex items-center">
               <Clock size={12} className="mr-1" />
@@ -120,7 +104,6 @@ const ExpandedNoteCard = ({ note }: ExpandedNoteCardProps) => {
                 onClick={() => {
                   setIsEditing(false);
                   setEditText(note.note_text);
-                  setEditTitle(note.note_title || '');
                 }}
                 className="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
               >

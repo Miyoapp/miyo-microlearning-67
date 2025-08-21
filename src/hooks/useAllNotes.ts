@@ -79,7 +79,6 @@ export function useAllNotes() {
             course_id: note.course_id,
             user_id: note.user_id,
             note_text: note.note_text,
-            note_title: note.note_title,
             timestamp_seconds: note.timestamp_seconds,
             tags: note.tags || [],
             is_favorite: note.is_favorite || false,

@@ -18,7 +18,6 @@ export function useNotesFilters(coursesWithNotes: CourseWithNotes[]) {
         const search = filters.searchTerm.toLowerCase();
         filteredNotes = filteredNotes.filter(note => 
           note.note_text.toLowerCase().includes(search) ||
-          note.note_title?.toLowerCase().includes(search) ||
           course.courseTitle.toLowerCase().includes(search)
         );
       }
