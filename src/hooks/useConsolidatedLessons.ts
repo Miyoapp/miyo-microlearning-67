@@ -1,3 +1,4 @@
+
 import { useEffect, useCallback, useRef } from 'react';
 import { Podcast } from '@/types';
 import { useUserLessonProgress } from './useUserLessonProgress';
@@ -7,7 +8,11 @@ import { useLessonInitialization } from './consolidated-lessons/useLessonInitial
 import { useLessonPlayback } from './consolidated-lessons/useLessonPlayback';
 import { useLessonCompletion } from './consolidated-lessons/useLessonCompletion';
 
-export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (podcast: Podcast) => void) {
+export function useConsolidatedLessons(
+  podcast: Podcast | null, 
+  setPodcast: (podcast: Podcast) => void,
+  onShowCompletionModal?: () => void // NEW: Optional modal trigger callback
+) {
   const { user } = useAuth();
   
   const { 
@@ -46,7 +51,8 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
   } = useLessonPlayback(podcast, currentLesson, userProgress, user, updateLessonPosition);
 
   const {
-    handleLessonComplete
+    handleLessonComplete,
+    handleAudioComplete // NEW: Get audio completion handler
   } = useLessonCompletion(
     currentLesson,
     podcast,
@@ -59,7 +65,8 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     refetchLessonProgress,
     refetchCourseProgress,
     isAutoAdvanceAllowed,
-    updateCourseProgress
+    updateCourseProgress,
+    onShowCompletionModal // NEW: Pass modal callback
   );
 
   // SIMPLIFIED: Lesson selection focused only on changing lessons
@@ -161,6 +168,7 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     handleSelectLesson,
     handleTogglePlay,
     handleLessonComplete,
+    handleAudioComplete, // NEW: Export audio completion handler
     handleProgressUpdate,
     initializePodcastWithProgress
   };

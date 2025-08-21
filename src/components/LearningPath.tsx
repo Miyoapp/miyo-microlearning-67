@@ -23,6 +23,7 @@ interface LearningPathProps {
   isGloballyPlaying: boolean;
   onProgressUpdate?: (position: number) => void;
   onLessonComplete?: () => void;
+  onAudioComplete?: () => void;
   podcast?: any;
 }
 
@@ -34,6 +35,7 @@ const LearningPath = React.memo(({
   isGloballyPlaying,
   onProgressUpdate,
   onLessonComplete,
+  onAudioComplete,
   podcast
 }: LearningPathProps) => {
   // Get user progress data for course completion detection
@@ -65,6 +67,19 @@ const LearningPath = React.memo(({
     lessonProgress,
     markCompletionModalShown // NEW: Pass the function to mark modal as shown
   });
+
+  // NEW: Direct function to show completion modal
+  const handleShowCompletionModalDirect = useCallback(() => {
+    console.log('🎉 LearningPath - Direct modal trigger called');
+    setShowCompletionModal(true);
+  }, [setShowCompletionModal]);
+
+  // NEW: Connect audio completion to modal display
+  useEffect(() => {
+    if (onAudioComplete) {
+      console.log('🔗 LearningPath - Setting up audio completion callback');
+    }
+  }, [onAudioComplete]);
 
   // Check if course is completed
   const courseProgress = userProgress.find(p => p.course_id === courseId);
@@ -206,6 +221,8 @@ const LearningPath = React.memo(({
                 onLessonClick={handleLessonClick}
                 onProgressUpdate={onProgressUpdate}
                 onLessonComplete={onLessonComplete}
+                onAudioComplete={onAudioComplete}
+                onShowCompletionModal={handleShowCompletionModalDirect}
               />
             );
           })}

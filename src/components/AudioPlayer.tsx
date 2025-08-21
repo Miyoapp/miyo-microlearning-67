@@ -12,6 +12,7 @@ interface AudioPlayerProps {
   isPlaying: boolean;
   onTogglePlay: () => void;
   onComplete: () => void;
+  onAudioComplete?: () => void;
   onProgressUpdate?: (position: number) => void;
   onAudioDataUpdate?: (currentTime: number, duration: number) => void;
   onSeekRequest?: (handler: (value: number) => void) => void;
@@ -24,7 +25,8 @@ const AudioPlayer = ({
   lesson, 
   isPlaying, 
   onTogglePlay, 
-  onComplete, 
+  onComplete,
+  onAudioComplete,
   onProgressUpdate,
   onAudioDataUpdate,
   onSeekRequest,
@@ -50,7 +52,14 @@ const AudioPlayer = ({
     handleSkipBackwardFromCard,
     handleSkipForwardFromCard,
     handlePlaybackRateChangeFromCard
-  } = useAudioPlayer({ lesson, isPlaying, onTogglePlay, onComplete, onProgressUpdate });
+  } = useAudioPlayer({ 
+    lesson, 
+    isPlaying, 
+    onTogglePlay, 
+    onComplete, 
+    onProgressUpdate,
+    onAudioComplete
+  });
   
   // Expose audio data to parent components
   React.useEffect(() => {

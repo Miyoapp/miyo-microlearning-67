@@ -7,9 +7,10 @@ interface UseAudioPlayerProps {
   onTogglePlay: () => void;
   onComplete: () => void;
   onProgressUpdate?: (position: number) => void;
+  onAudioComplete?: () => void;
 }
 
-const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgressUpdate }: UseAudioPlayerProps) => {
+const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgressUpdate, onAudioComplete }: UseAudioPlayerProps) => {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
@@ -107,9 +108,17 @@ const useAudioPlayer = ({ lesson, isPlaying, onTogglePlay, onComplete, onProgres
     if (lesson) {
       console.log("🏁 Audio ended for lesson:", lesson.title);
       setCurrentTime(0);
+      
+      // NEW: Call onAudioComplete FIRST to trigger immediate modal if needed
+      if (onAudioComplete) {
+        console.log("🎵 Calling onAudioComplete for automatic modal trigger");
+        onAudioComplete();
+      }
+      
+      // Then call the regular onComplete
       onComplete();
     }
-  }, [lesson, onComplete]);
+  }, [lesson, onComplete, onAudioComplete]);
   
   // Handle seek from lesson cards
   const handleSeekFromCard = useCallback((value: number) => {

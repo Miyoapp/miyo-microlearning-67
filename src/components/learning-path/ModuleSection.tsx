@@ -1,89 +1,80 @@
 
 import React from 'react';
 import { Module, Lesson } from '@/types';
-import { UserLessonProgress } from '@/hooks/useUserLessonProgress';
 import LessonCard from './LessonCard';
 
 interface ModuleSectionProps {
   module: Module;
   moduleLessons: Lesson[];
   lessonStatusMap: Map<string, any>;
-  getLessonClasses: Map<string, any>;
+  getLessonClasses: (lesson: Lesson, status: any) => string;
   currentLessonId: string | null;
   isGloballyPlaying: boolean;
   courseId: string | null;
-  lessonProgress: UserLessonProgress[];
+  lessonProgress: any[];
   onLessonClick: (lesson: Lesson, shouldAutoPlay?: boolean) => void;
   onProgressUpdate?: (position: number) => void;
   onLessonComplete?: () => void;
+  onAudioComplete?: () => void; // NEW: Audio completion callback
+  onShowCompletionModal?: () => void; // NEW: Direct modal trigger
 }
 
-const ModuleSection = React.memo(({ 
-  module, 
-  moduleLessons, 
-  lessonStatusMap, 
-  getLessonClasses, 
+const ModuleSection = React.memo(({
+  module,
+  moduleLessons,
+  lessonStatusMap,
+  getLessonClasses,
   currentLessonId,
   isGloballyPlaying,
   courseId,
   lessonProgress,
   onLessonClick,
   onProgressUpdate,
-  onLessonComplete
+  onLessonComplete,
+  onAudioComplete, // NEW
+  onShowCompletionModal // NEW
 }: ModuleSectionProps) => {
-  if (moduleLessons.length === 0) return null;
-  
-  console.log('🏗️ ModuleSection render:', {
-    moduleTitle: module.title,
-    currentLessonId,
-    isGloballyPlaying,
-    lessonCount: moduleLessons.length,
-    courseId,
-    lessonProgressCount: lessonProgress.length
-  });
-  
   return (
-    <div className="mb-8">
-      {/* Título del módulo */}
-      <div className="text-center mb-4">
-        <h3 className="text-sm font-medium text-indigo-700 bg-indigo-50 inline-block py-2 px-4 rounded-full">
-          {module.title}
-        </h3>
+    <div key={module.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div className="bg-gradient-to-r from-purple-600 to-blue-600 px-6 py-4">
+        <h3 className="text-lg font-semibold text-white">{module.name}</h3>
+        {module.description && (
+          <p className="text-purple-100 text-sm mt-1">{module.description}</p>
+        )}
       </div>
       
-      {/* Lecciones como cards */}
-      <div className="space-y-4">
-        {moduleLessons.map((lesson, index) => {
+      <div className="p-6 space-y-4">
+        {moduleLessons.map((lesson) => {
           const status = lessonStatusMap.get(lesson.id);
           if (!status) return null;
-          
-          // Add isCurrent calculation and determine if this lesson is playing
-          const isCurrent = lesson.id === currentLessonId;
+
+          const isCurrent = currentLessonId === lesson.id;
           const isPlaying = isCurrent && isGloballyPlaying;
           
-          // Find saved progress for this specific lesson
-          const savedProgress = lessonProgress.find(p => p.lesson_id === lesson.id);
-          
-          const enhancedStatus = {
-            ...status,
-            isCurrent
-          };
-          
+          // Find saved progress for this lesson
+          const savedProgress = courseId 
+            ? lessonProgress.find(p => p.lesson_id === lesson.id && p.course_id === courseId)
+            : undefined;
+
           return (
             <LessonCard
               key={lesson.id}
               lesson={lesson}
-              index={index}
-              status={enhancedStatus}
+              canPlay={status.canPlay}
+              isCompleted={status.isCompleted}
+              isLocked={status.isLocked}
+              isCurrent={isCurrent}
               isPlaying={isPlaying}
-              courseId={courseId}
-              savedProgress={savedProgress ? {
-                current_position: savedProgress.current_position || 0,
-                is_completed: savedProgress.is_completed || false
-              } : undefined}
+              className={getLessonClasses(lesson, status)}
               onLessonClick={onLessonClick}
               onProgressUpdate={onProgressUpdate}
               onLessonComplete={onLessonComplete}
+              onAudioComplete={onAudioComplete} // NEW: Pass audio completion
+              onShowCompletionModal={onShowCompletionModal} // NEW: Pass modal trigger
+              savedProgress={savedProgress ? {
+                current_position: savedProgress.current_position,
+                is_completed: savedProgress.is_completed
+              } : undefined}
             />
           );
         })}
