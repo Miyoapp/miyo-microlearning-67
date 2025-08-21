@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -16,6 +17,7 @@ import DashboardDiscover from './pages/DashboardDiscover';
 import DashboardMyRoutes from './pages/DashboardMyRoutes';
 import DashboardMisResumenes from './pages/DashboardMisResumenes';
 import DashboardMisNotas from './pages/DashboardMisNotas';
+import DashboardMisPlanes from './pages/DashboardMisPlanes';
 import DashboardCourseNotes from './pages/DashboardCourseNotes';
 import NotFound from './pages/NotFound';
 
@@ -44,6 +46,7 @@ function App() {
             <Route path="/dashboard/mis-notas" element={<DashboardMisNotas />} />
             <Route path="/dashboard/mis-notas/curso/:courseId" element={<DashboardCourseNotes />} />
             <Route path="/dashboard/mis-resumenes" element={<DashboardMisResumenes />} />
+            <Route path="/dashboard/mis-planes" element={<DashboardMisPlanes />} />
             <Route path="/dashboard/course/:courseId" element={<DashboardCourse />} />
 
             {/* Payment result pages */}
