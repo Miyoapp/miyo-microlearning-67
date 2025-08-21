@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { Lesson } from '@/types';
 import { useIndividualAudio } from '@/hooks/audio/useIndividualAudio';
@@ -57,7 +56,6 @@ export function useLessonCard({
     }
   }, [isCurrent, lesson.title]);
 
-  // Use individual audio management when this is the current lesson
   const shouldUseAudio = isCurrent;
   const audioHook = useIndividualAudio({
     lesson,
@@ -65,9 +63,20 @@ export function useLessonCard({
     onTogglePlay: () => {
       console.log('🎵 Audio hook onTogglePlay called for:', lesson.title);
     },
-    onComplete: handleComplete,
+    onComplete: useCallback(() => {
+      console.log('🏁 Lesson completed:', lesson.title);
+      setLocalIsPlaying(false);
+      if (onLessonComplete) {
+        onLessonComplete();
+      }
+    }, [lesson.title, onLessonComplete]),
     onProgressUpdate,
-    onPlayStateChange: handlePlayStateChange,
+    onPlayStateChange: useCallback((newIsPlaying: boolean) => {
+      console.log('🔄 Audio state changed for:', lesson.title, 'new state:', newIsPlaying);
+      if (isCurrent) {
+        setLocalIsPlaying(newIsPlaying);
+      }
+    }, [isCurrent, lesson.title]),
     savedProgress
   });
 
@@ -102,17 +111,14 @@ export function useLessonCard({
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   }, []);
 
-  // FIXED: Properly display progress for current vs non-current lessons
+  // FIXED: Properly display progress during auto-advance transitions
   const currentTime = shouldUseAudio ? 
-    // For current lesson: use real audio time (which handles completion state correctly)
     audioHook.currentTime : 
-    // For non-current lessons: display based on saved progress
     (savedProgress?.is_completed ? (lesson.duracion * 60) : 
      savedProgress?.current_position ? (savedProgress.current_position / 100 * lesson.duracion * 60) : 0);
   
   const duration = shouldUseAudio ? audioHook.duration : (lesson.duracion * 60);
   
-  // Use actual audio state for current lesson, false for others
   const effectiveIsPlaying = isCurrent ? (audioHook.actualIsPlaying || localIsPlaying) : false;
 
   return {
@@ -122,15 +128,37 @@ export function useLessonCard({
     playbackRate: audioHook.playbackRate,
     volume: audioHook.volume,
     isMuted: audioHook.isMuted,
-    handlePlayPause: handleTogglePlay,
+    handlePlayPause: useCallback(() => {
+      console.log('🎵 handleTogglePlay clicked for:', lesson.title, { canPlay, isCurrent, isPlaying, localIsPlaying });
+      
+      if (!canPlay) {
+        console.log('🚫 Cannot play lesson:', lesson.title);
+        return;
+      }
+
+      if (!isCurrent) {
+        console.log('🎯 Selecting different lesson:', lesson.title);
+        onLessonClick(lesson, true);
+        return;
+      }
+
+      console.log('🎵 Direct toggle for current lesson:', lesson.title);
+      audioHook.handleDirectToggle();
+      
+    }, [canPlay, isCurrent, isPlaying, localIsPlaying, onLessonClick, lesson, audioHook]),
     handleSeek: audioHook.handleSeek,
     handleSkipBackward: audioHook.handleSkipBackward,
     handleSkipForward: audioHook.handleSkipForward,
     handlePlaybackRateChange: audioHook.handlePlaybackRateChange,
     handleVolumeChange: audioHook.handleVolumeChange,
     toggleMute: audioHook.toggleMute,
-    formatTime,
-    // Audio element and handlers for the current lesson
+    formatTime: useCallback((seconds: number) => {
+      if (!seconds || isNaN(seconds)) return '0:00';
+      
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = Math.floor(seconds % 60);
+      return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    }, []),
     audioRef: shouldUseAudio ? audioHook.audioRef : null,
     handleMetadata: audioHook.handleMetadata,
     updateTime: audioHook.updateTime,

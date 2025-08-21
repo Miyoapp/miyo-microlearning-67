@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Lesson } from '@/types';
 
@@ -31,8 +30,14 @@ export function useIndividualAudio({
   const [playbackRate, setPlaybackRate] = useState(1);
   const [actualIsPlaying, setActualIsPlaying] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
+  
+  // FIXED: Prevent reset during auto-advance transitions
+  const [wasCompletedBeforeChange, setWasCompletedBeforeChange] = useState(false);
+  const [isAutoAdvanceTransition, setIsAutoAdvanceTransition] = useState(false);
+  
   const audioRef = useRef<HTMLAudioElement>(null);
   const lastPlayingState = useRef(isPlaying);
+  const lastLessonId = useRef(lesson.id);
 
   console.log('🎵 useIndividualAudio for lesson:', lesson.title, {
     isPlaying,
@@ -42,30 +47,65 @@ export function useIndividualAudio({
     playbackRate,
     isCompleted: lesson.isCompleted,
     localIsCompleted: isCompleted,
-    savedProgress
+    savedProgress,
+    wasCompletedBeforeChange,
+    isAutoAdvanceTransition
   });
 
-  // FIXED: Initialize state correctly without resetting completion
+  // FIXED: Detect auto-advance transitions and preserve completion state
+  useEffect(() => {
+    // Check if lesson changed
+    if (lastLessonId.current !== lesson.id) {
+      console.log("🔄 Lesson change detected:", lastLessonId.current, "->", lesson.id);
+      
+      // Store current completion state before change
+      setWasCompletedBeforeChange(isCompleted);
+      
+      // Detect if this is an auto-advance transition (previous lesson was completed and playing)
+      const wasAutoAdvance = isCompleted && actualIsPlaying;
+      setIsAutoAdvanceTransition(wasAutoAdvance);
+      
+      console.log("🔄 Transition analysis:", {
+        wasCompleted: isCompleted,
+        wasPlaying: actualIsPlaying,
+        isAutoAdvance: wasAutoAdvance
+      });
+      
+      lastLessonId.current = lesson.id;
+    }
+  }, [lesson.id, isCompleted, actualIsPlaying]);
+
+  // FIXED: Initialize state correctly without resetting completion during auto-advance
   useEffect(() => {
     if (audioRef.current) {
       console.log("🎵 Initializing audio for lesson:", lesson.title, "savedProgress:", savedProgress);
       const audio = audioRef.current;
       
-      // FIXED: Initialize isCompleted based on saved progress, don't always reset to false
-      const shouldShowCompleted = savedProgress?.is_completed || false;
-      setIsCompleted(shouldShowCompleted);
+      // FIXED: Don't reset completion during auto-advance transitions
+      if (!isAutoAdvanceTransition) {
+        // Normal initialization - use saved progress
+        const shouldShowCompleted = savedProgress?.is_completed || false;
+        setIsCompleted(shouldShowCompleted);
+        console.log("✅ Normal init - set completion to:", shouldShowCompleted);
+      } else {
+        // Auto-advance transition - preserve previous lesson's completion visually
+        // But use new lesson's actual completion state for logic
+        const newLessonCompleted = savedProgress?.is_completed || false;
+        setIsCompleted(newLessonCompleted);
+        console.log("🔄 Auto-advance init - set completion to:", newLessonCompleted);
+        
+        // Reset the flag after handling
+        setIsAutoAdvanceTransition(false);
+      }
       
       // Initialize currentTime and audio position
       if (savedProgress?.is_completed) {
-        // For completed lessons, show as completed initially
         console.log("✅ Completed lesson loaded, showing 100%");
         setCurrentTime(0); // Will be set to duration after metadata loads
       } else if (savedProgress?.current_position && savedProgress.current_position > 0) {
-        // For lessons with partial progress
         console.log("📍 Lesson has partial progress:", savedProgress.current_position + "%");
         setCurrentTime(0); // Will be calculated after metadata loads
       } else {
-        // For new lessons, start from beginning
         console.log("🆕 New lesson, starting from 0");
         audio.currentTime = 0;
         setCurrentTime(0);
@@ -77,22 +117,32 @@ export function useIndividualAudio({
       setActualIsPlaying(false);
       audio.load();
     }
-  }, [lesson.id, savedProgress?.current_position, savedProgress?.is_completed]);
+  }, [lesson.id, savedProgress?.current_position, savedProgress?.is_completed, isAutoAdvanceTransition]);
 
-  // FIXED: Improved play/pause control - only reset completion when actively starting from beginning
+  // FIXED: Improved handleDirectToggle - preserve auto-advance capability
   const handleDirectToggle = useCallback(() => {
     if (!audioRef.current) return;
 
     const audio = audioRef.current;
     const newPlayingState = !actualIsPlaying;
 
-    console.log('🎵 Direct toggle:', lesson.title, 'new state:', newPlayingState);
+    console.log('🎵 Direct toggle:', lesson.title, 'new state:', newPlayingState, {
+      isCompleted,
+      currentTime,
+      duration,
+      savedProgressCompleted: savedProgress?.is_completed
+    });
 
     if (newPlayingState) {
-      // FIXED: Only reset completion if we're starting from a position that's not at the end
-      // This allows completed lessons to auto-advance while allowing replay from start
-      if (audio.currentTime < duration * 0.95) {
+      // FIXED: Don't automatically reset completion - be smarter about it
+      // Only reset if this is truly a replay from start, not a completed lesson continuing
+      const isReallyReplayingFromStart = audio.currentTime < 5 && !savedProgress?.is_completed;
+      
+      if (isReallyReplayingFromStart) {
+        console.log("🔄 Resetting completion - true replay from start");
         setIsCompleted(false);
+      } else {
+        console.log("▶️ Preserving completion state - continuing completed lesson or mid-play");
       }
       
       const playPromise = audio.play();
@@ -117,7 +167,7 @@ export function useIndividualAudio({
         onPlayStateChange(false);
       }
     }
-  }, [actualIsPlaying, lesson.title, onPlayStateChange, duration]);
+  }, [actualIsPlaying, lesson.title, onPlayStateChange, duration, isCompleted, savedProgress?.is_completed]);
 
   // Handle external play/pause state changes (from global state)
   useEffect(() => {
@@ -132,8 +182,10 @@ export function useIndividualAudio({
       if (isPlaying) {
         console.log("▶️ External trigger: Playing audio for lesson:", lesson.title);
         
-        // Only reset completion if starting from beginning or middle
-        if (audio.currentTime < duration * 0.95) {
+        // FIXED: Same logic as handleDirectToggle
+        const isReallyReplayingFromStart = audio.currentTime < 5 && !savedProgress?.is_completed;
+        
+        if (isReallyReplayingFromStart) {
           setIsCompleted(false);
         }
         
@@ -155,7 +207,7 @@ export function useIndividualAudio({
         setActualIsPlaying(false);
       }
     }
-  }, [isPlaying, lesson.id, lesson.title, actualIsPlaying, onPlayStateChange, duration]);
+  }, [isPlaying, lesson.id, lesson.title, actualIsPlaying, onPlayStateChange, duration, savedProgress?.is_completed]);
 
   // Listen to actual audio events to track real state
   useEffect(() => {
@@ -201,11 +253,9 @@ export function useIndividualAudio({
     if (audioRef.current && duration > 0) {
       const newCurrentTime = audioRef.current.currentTime;
       
-      // FIXED: Always update currentTime with real audio progress during playback
       if (actualIsPlaying) {
         setCurrentTime(newCurrentTime);
         
-        // Update progress during active playback
         if (onProgressUpdate) {
           const progressPercent = (newCurrentTime / duration) * 100;
           console.log('📊 Updating progress during playback:', lesson.title, 'progress:', progressPercent.toFixed(1) + '%');
@@ -232,12 +282,10 @@ export function useIndividualAudio({
       
       // Set initial position based on saved progress
       if (savedProgress?.is_completed) {
-        // For completed lessons, show as completed
         console.log("✅ Completed lesson loaded, setting to end");
         setCurrentTime(newDuration);
         audioRef.current.currentTime = newDuration;
       } else if (savedProgress?.current_position && savedProgress.current_position > 0) {
-        // For lessons with partial progress, set saved position
         const savedTime = (savedProgress.current_position / 100) * newDuration;
         console.log("📍 Setting partial progress to:", savedTime, "seconds (", savedProgress.current_position + "%)");
         setCurrentTime(savedTime);
@@ -246,9 +294,12 @@ export function useIndividualAudio({
     }
   }, [lesson.title, savedProgress]);
 
-  // FIXED: Handle audio ended - ensure auto-advance works
+  // FIXED: Improved handleAudioEnded - ensure auto-advance works for all cases
   const handleAudioEnded = useCallback(() => {
-    console.log("🏁 Audio ended for lesson:", lesson.title);
+    console.log("🏁 Audio ended for lesson:", lesson.title, {
+      wasOriginallyCompleted: savedProgress?.is_completed,
+      currentlyCompleted: isCompleted
+    });
     
     setActualIsPlaying(false);
     if (onPlayStateChange) {
@@ -259,19 +310,19 @@ export function useIndividualAudio({
     setIsCompleted(true);
     setCurrentTime(duration);
     
-    // FIXED: Ensure onProgressUpdate(100) is called BEFORE onComplete for auto-advance
+    // FIXED: Call progress update first, then onComplete for auto-advance
     if (onProgressUpdate) {
       console.log("🎯 Calling onProgressUpdate(100) before onComplete for:", lesson.title);
       onProgressUpdate(100);
     }
     
-    // FIXED: Always call onComplete to trigger auto-advance
+    // FIXED: Always call onComplete for auto-advance - whether first completion or replay
     console.log("🏁 Calling onComplete for auto-advance:", lesson.title);
     setTimeout(() => {
       onComplete();
     }, 100);
     
-  }, [lesson.title, duration, onComplete, onPlayStateChange, onProgressUpdate]);
+  }, [lesson.title, duration, onComplete, onPlayStateChange, onProgressUpdate, savedProgress?.is_completed, isCompleted]);
 
   // Handle seek - allow seeking anywhere
   const handleSeek = useCallback((value: number) => {
@@ -343,13 +394,75 @@ export function useIndividualAudio({
     playbackRate,
     actualIsPlaying,
     handleDirectToggle,
-    handleSeek,
-    handleSkipBackward,
-    handleSkipForward,
-    handleVolumeChange,
-    toggleMute,
-    handlePlaybackRateChange,
-    handleMetadata,
+    handleSeek: useCallback((value: number) => {
+      if (audioRef.current) {
+        console.log('🎯 Seeking to position:', value, 'for lesson:', lesson.title);
+        
+        if (value < duration * 0.95) {
+          setIsCompleted(false);
+        }
+        
+        setCurrentTime(value);
+        audioRef.current.currentTime = value;
+        
+        if (onProgressUpdate && duration > 0 && actualIsPlaying) {
+          const progressPercent = (value / duration) * 100;
+          console.log('📊 Updating seek progress during playback:', progressPercent.toFixed(1) + '%');
+          onProgressUpdate(progressPercent);
+        }
+      }
+    }, [duration, lesson.title, onProgressUpdate, actualIsPlaying]),
+    handleSkipBackward: useCallback(() => {
+      if (audioRef.current) {
+        console.log('⏪ Skip backward for lesson:', lesson.title);
+        const newTime = Math.max(0, audioRef.current.currentTime - 15);
+        
+        if (newTime < duration * 0.95) {
+          setIsCompleted(false);
+        }
+        
+        audioRef.current.currentTime = newTime;
+        setCurrentTime(newTime);
+      }
+    }, [lesson.title, duration]),
+    handleSkipForward: useCallback(() => {
+      if (audioRef.current) {
+        console.log('⏩ Skip forward for lesson:', lesson.title);
+        const newTime = Math.min(duration, audioRef.current.currentTime + 15);
+        audioRef.current.currentTime = newTime;
+        setCurrentTime(newTime);
+      }
+    }, [duration, lesson.title]),
+    handleVolumeChange: useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = parseFloat(e.target.value);
+      setVolume(value);
+      setIsMuted(value === 0);
+    }, []),
+    toggleMute: useCallback(() => {
+      setIsMuted(prev => !prev);
+    }, []),
+    handlePlaybackRateChange: useCallback((rate: number) => {
+      console.log("🎛️ Changing playback rate to", rate + "x", "for lesson:", lesson.title);
+      setPlaybackRate(rate);
+    }, [lesson.title]),
+    handleMetadata: useCallback(() => {
+      if (audioRef.current) {
+        const newDuration = audioRef.current.duration;
+        console.log("📋 Audio metadata loaded for", lesson.title, "duration:", newDuration, "savedProgress:", savedProgress);
+        setDuration(newDuration);
+        
+        if (savedProgress?.is_completed) {
+          console.log("✅ Completed lesson loaded, setting to end");
+          setCurrentTime(newDuration);
+          audioRef.current.currentTime = newDuration;
+        } else if (savedProgress?.current_position && savedProgress.current_position > 0) {
+          const savedTime = (savedProgress.current_position / 100) * newDuration;
+          console.log("📍 Setting partial progress to:", savedTime, "seconds (", savedProgress.current_position + "%)");
+          setCurrentTime(savedTime);
+          audioRef.current.currentTime = savedTime;
+        }
+      }
+    }, [lesson.title, savedProgress]),
     updateTime,
     handleAudioEnded
   };
