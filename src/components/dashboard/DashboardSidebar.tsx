@@ -7,6 +7,7 @@ import {
   SidebarContent, 
   SidebarGroup, 
   SidebarGroupContent, 
+  SidebarGroupLabel,
   SidebarMenu, 
   SidebarMenuButton, 
   SidebarMenuItem,
@@ -22,7 +23,7 @@ const DashboardSidebar = () => {
   const navigate = useNavigate();
   const { signOut, forceLogout } = useAuth();
 
-  const menuItems = [
+  const explorationItems = [
     {
       title: 'Inicio',
       url: '/dashboard',
@@ -37,7 +38,10 @@ const DashboardSidebar = () => {
       title: 'Mis Rutas',
       url: '/dashboard/my-routes',
       icon: '📚'
-    },
+    }
+  ];
+
+  const learningItems = [
     {
       title: 'Mis Notas',
       url: '/dashboard/mis-notas',
@@ -71,6 +75,28 @@ const DashboardSidebar = () => {
     }
   };
 
+  const renderMenuItems = (items: typeof explorationItems) => (
+    <SidebarMenu className="space-y-2">
+      {items.map((item) => (
+        <SidebarMenuItem key={item.title}>
+          <SidebarMenuButton 
+            asChild 
+            className={`w-full justify-start px-4 py-3 rounded-lg transition-colors bg-white hover:bg-gray-100 ${
+              location.pathname === item.url 
+                ? 'bg-miyo-100 text-miyo-800' 
+                : 'text-gray-700'
+            }`}
+          >
+            <Link to={item.url} className="flex items-center space-x-3">
+              <span className="text-lg">{item.icon}</span>
+              <span className="font-medium">{item.title}</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      ))}
+    </SidebarMenu>
+  );
+
   return (
     <Sidebar className="border-r border-gray-200 bg-white">
       <SidebarHeader className="p-6 bg-white">
@@ -78,27 +104,23 @@ const DashboardSidebar = () => {
       </SidebarHeader>
       
       <SidebarContent className="bg-white">
+        {/* Exploración Group */}
         <SidebarGroup>
+          <SidebarGroupLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-4">
+            EXPLORACIÓN
+          </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-2">
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    asChild 
-                    className={`w-full justify-start px-4 py-3 rounded-lg transition-colors bg-white hover:bg-gray-100 ${
-                      location.pathname === item.url 
-                        ? 'bg-miyo-100 text-miyo-800' 
-                        : 'text-gray-700'
-                    }`}
-                  >
-                    <Link to={item.url} className="flex items-center space-x-3">
-                      <span className="text-lg">{item.icon}</span>
-                      <span className="font-medium">{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
+            {renderMenuItems(explorationItems)}
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Mi Aprendizaje Group */}
+        <SidebarGroup className="mt-6">
+          <SidebarGroupLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-4">
+            MI APRENDIZAJE
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            {renderMenuItems(learningItems)}
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
