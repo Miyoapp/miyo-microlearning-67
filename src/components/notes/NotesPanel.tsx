@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { LessonNote, NOTE_TAGS } from '@/types/notes';
-import { X, Plus, Heart, Clock, Tag, Trash2, Edit3 } from 'lucide-react';
+import { Heart, Clock, Tag, Trash2, Edit3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface NotesPanelProps {
@@ -72,24 +72,22 @@ const NotesPanel = ({
             <span className="mr-2">📝</span>
             Notas de la lección ({notes.length})
           </h4>
+          <button
+            onClick={() => setShowAddNoteArea(true)}
+            className="px-3 py-1.5 bg-[#5e16ea] text-white text-sm rounded-md hover:bg-[#4a11ba] transition-colors"
+          >
+            + Agregar nota
+          </button>
         </div>
 
-        {/* Add new note */}
-        <div className="space-y-2">
-          <div className="flex items-center text-xs text-gray-500 mb-2">
-            <Clock size={12} className="mr-1" />
-            Tiempo actual: {formatTime(currentTimeSeconds)}
-          </div>
-          
-          {!showAddNoteArea ? (
-            <button
-              onClick={() => setShowAddNoteArea(true)}
-              className="flex items-center justify-center w-full py-3 px-4 bg-gradient-to-br from-yellow-400 to-orange-500 text-white rounded-md hover:from-yellow-500 hover:to-orange-600 transition-all duration-200 shadow-sm hover:shadow-md font-medium"
-            >
-              <Plus size={16} className="mr-2" />
-              + Agregar nota
-            </button>
-          ) : (
+        {/* Add new note area */}
+        {showAddNoteArea && (
+          <div className="space-y-2">
+            <div className="flex items-center text-xs text-gray-500 mb-2">
+              <Clock size={12} className="mr-1" />
+              Tiempo actual: {formatTime(currentTimeSeconds)}
+            </div>
+            
             <div className="flex space-x-2">
               <textarea
                 value={newNoteText}
@@ -103,23 +101,23 @@ const NotesPanel = ({
                 <button
                   onClick={handleAddNote}
                   disabled={!newNoteText.trim()}
-                  className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 text-white rounded-md hover:from-yellow-500 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md"
+                  className="px-3 py-2 bg-[#5e16ea] text-white text-xs rounded-md hover:bg-[#4a11ba] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  <Plus size={16} />
+                  Guardar
                 </button>
                 <button
                   onClick={() => {
                     setShowAddNoteArea(false);
                     setNewNoteText('');
                   }}
-                  className="flex items-center justify-center w-10 h-10 bg-gray-300 text-gray-600 rounded-md hover:bg-gray-400 transition-all duration-200"
+                  className="px-3 py-2 bg-gray-300 text-gray-600 text-xs rounded-md hover:bg-gray-400 transition-colors"
                 >
-                  <X size={16} />
+                  Cancelar
                 </button>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Notes list */}
         {notes.length > 0 && (
