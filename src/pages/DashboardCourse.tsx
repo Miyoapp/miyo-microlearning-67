@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
@@ -12,6 +13,7 @@ import CourseErrorState from '@/components/course/CourseErrorState';
 import CourseNotFoundState from '@/components/course/CourseNotFoundState';
 import CourseAccessHandler from '@/components/course/CourseAccessHandler';
 import MetaTags from '@/components/MetaTags';
+import { NotesProvider } from '@/contexts/NotesContext';
 
 const DashboardCourse = () => {
   const { courseId } = useParams<{ courseId: string }>();
@@ -205,39 +207,41 @@ const DashboardCourse = () => {
 
     return (
       <DashboardLayout>
-        {/* Dynamic Meta Tags for Course */}
-        <MetaTags
-          title={`${displayPodcast.title} - Miyo`}
-          description={displayPodcast.description}
-          image={displayPodcast.imageUrl}
-          url={`${window.location.origin}/dashboard/course/${courseId}`}
-        />
-        
-        <div className="max-w-7xl mx-auto pb-8">
-          <CoursePageHeader isReviewMode={isReviewMode} />
-          
-          <CourseAccessHandler
-            podcast={displayPodcast}
-            currentLesson={currentLesson}
-            hasStarted={hasStarted}
-            isSaved={isSaved}
-            progressPercentage={progressPercentage}
-            isCompleted={isCompleted}
-            isPremium={isPremium}
-            hasAccess={hasAccess}
-            isPlaying={isPlaying}
-            showCheckout={showCheckout}
-            onStartLearning={handleStartLearning}
-            onToggleSave={handleToggleSave}
-            onSelectLesson={handleLessonSelect}
-            onShowCheckout={() => setShowCheckout(true)}
-            onCloseCheckout={() => setShowCheckout(false)}
-            onTogglePlay={handleTogglePlay}
-            onLessonComplete={handleLessonComplete}
-            onProgressUpdate={handleProgressUpdate}
-            onPurchaseComplete={handlePurchaseComplete}
+        <NotesProvider>
+          {/* Dynamic Meta Tags for Course */}
+          <MetaTags
+            title={`${displayPodcast.title} - Miyo`}
+            description={displayPodcast.description}
+            image={displayPodcast.imageUrl}
+            url={`${window.location.origin}/dashboard/course/${courseId}`}
           />
-        </div>
+          
+          <div className="max-w-7xl mx-auto pb-8">
+            <CoursePageHeader isReviewMode={isReviewMode} />
+            
+            <CourseAccessHandler
+              podcast={displayPodcast}
+              currentLesson={currentLesson}
+              hasStarted={hasStarted}
+              isSaved={isSaved}
+              progressPercentage={progressPercentage}
+              isCompleted={isCompleted}
+              isPremium={isPremium}
+              hasAccess={hasAccess}
+              isPlaying={isPlaying}
+              showCheckout={showCheckout}
+              onStartLearning={handleStartLearning}
+              onToggleSave={handleToggleSave}
+              onSelectLesson={handleLessonSelect}
+              onShowCheckout={() => setShowCheckout(true)}
+              onCloseCheckout={() => setShowCheckout(false)}
+              onTogglePlay={handleTogglePlay}
+              onLessonComplete={handleLessonComplete}
+              onProgressUpdate={handleProgressUpdate}
+              onPurchaseComplete={handlePurchaseComplete}
+            />
+          </div>
+        </NotesProvider>
       </DashboardLayout>
     );
   }

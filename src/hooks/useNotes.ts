@@ -4,7 +4,25 @@ import { useNotesContext } from '@/contexts/NotesContext';
 import { LessonNote } from '@/types/notes';
 
 export function useNotes(lessonId?: string, courseId?: string) {
-  const { state, addNote, updateNote, toggleFavorite, deleteNote } = useNotesContext();
+  let context;
+  
+  try {
+    context = useNotesContext();
+  } catch (error) {
+    console.warn('useNotes called outside of NotesProvider context. Notes functionality will be disabled.');
+    // Return safe defaults when context is not available
+    return {
+      notes: [],
+      loading: false,
+      fetchNotes: () => {},
+      addNote: async () => undefined,
+      updateNote: async () => {},
+      toggleFavorite: async () => {},
+      deleteNote: async () => {}
+    };
+  }
+
+  const { state, addNote, updateNote, toggleFavorite, deleteNote } = context;
 
   // Filter notes for the specific lesson if lessonId and courseId are provided
   const notes = lessonId && courseId 
