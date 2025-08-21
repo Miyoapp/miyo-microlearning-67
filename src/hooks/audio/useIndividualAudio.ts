@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Lesson } from '@/types';
 
@@ -30,6 +29,7 @@ export function useIndividualAudio({
   const [isMuted, setIsMuted] = useState(false);
   const [playbackRate, setPlaybackRate] = useState(1);
   const [actualIsPlaying, setActualIsPlaying] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false); // Track completion state
   const audioRef = useRef<HTMLAudioElement>(null);
   const lastPlayingState = useRef(isPlaying);
 
@@ -40,6 +40,7 @@ export function useIndividualAudio({
     duration,
     playbackRate,
     isCompleted: lesson.isCompleted,
+    localIsCompleted: isCompleted,
     savedProgress
   });
 
@@ -49,11 +50,15 @@ export function useIndividualAudio({
       console.log("🎵 Initializing audio for lesson:", lesson.title, "savedProgress:", savedProgress);
       const audio = audioRef.current;
       
+      // Reset completion state for new lesson
+      setIsCompleted(false);
+      
       // FIXED: Initialize currentTime based on saved progress
       if (savedProgress?.is_completed) {
         // For completed lessons, show 100% progress
         console.log("✅ Lesson is completed, will set to 100% after metadata loads");
         setCurrentTime(0); // Will be set to duration after metadata loads
+        setIsCompleted(true); // Mark as completed locally
       } else if (savedProgress?.current_position && savedProgress.current_position > 0) {
         // For lessons with partial progress, calculate saved time
         const savedTimePercent = savedProgress.current_position / 100;
@@ -84,6 +89,9 @@ export function useIndividualAudio({
     console.log('🎵 Direct toggle:', lesson.title, 'new state:', newPlayingState);
 
     if (newPlayingState) {
+      // When starting playback, reset completion state to allow normal progress tracking
+      setIsCompleted(false);
+      
       const playPromise = audio.play();
       if (playPromise !== undefined) {
         playPromise.then(() => {
@@ -120,6 +128,9 @@ export function useIndividualAudio({
     if (stateChanged && isPlaying !== actualIsPlaying) {
       if (isPlaying) {
         console.log("▶️ External trigger: Playing audio for lesson:", lesson.title);
+        // Reset completion state when starting playback
+        setIsCompleted(false);
+        
         const playPromise = audio.play();
         if (playPromise !== undefined) {
           playPromise.then(() => {
@@ -179,11 +190,15 @@ export function useIndividualAudio({
     }
   }, [playbackRate]);
 
-  // Update time and progress - FIXED: Always update progress during playback
+  // Update time and progress - FIXED: Always update progress during playback, maintain completion state
   const updateTime = useCallback(() => {
     if (audioRef.current && duration > 0) {
       const newCurrentTime = audioRef.current.currentTime;
-      setCurrentTime(newCurrentTime);
+      
+      // Only update currentTime if not completed or if actively playing
+      if (!isCompleted || actualIsPlaying) {
+        setCurrentTime(newCurrentTime);
+      }
       
       // FIXED: Always update progress during active playback, regardless of completion status
       if (onProgressUpdate && actualIsPlaying) {
@@ -192,7 +207,7 @@ export function useIndividualAudio({
         onProgressUpdate(progressPercent);
       }
     }
-  }, [duration, lesson.title, onProgressUpdate, actualIsPlaying]);
+  }, [duration, lesson.title, onProgressUpdate, actualIsPlaying, isCompleted]);
 
   // Handle metadata loaded - FIXED: Initialize with saved progress after metadata loads
   const handleMetadata = useCallback(() => {
@@ -207,6 +222,7 @@ export function useIndividualAudio({
         console.log("✅ Setting completed lesson to 100%");
         setCurrentTime(newDuration);
         audioRef.current.currentTime = newDuration;
+        setIsCompleted(true);
       } else if (savedProgress?.current_position && savedProgress.current_position > 0) {
         // For lessons with partial progress, calculate saved time
         const savedTime = (savedProgress.current_position / 100) * newDuration;
@@ -217,7 +233,7 @@ export function useIndividualAudio({
     }
   }, [lesson.title, savedProgress]);
 
-  // Handle audio ended - FIXED: Ensure proper completion handling
+  // Handle audio ended - FIXED: Ensure proper completion handling with persistent state
   const handleAudioEnded = useCallback(() => {
     console.log("🏁 Audio ended for lesson:", lesson.title, "isCompleted:", lesson.isCompleted);
     
@@ -226,10 +242,8 @@ export function useIndividualAudio({
       onPlayStateChange(false);
     }
     
-    // FIXED: Always ensure 100% progress and completion, regardless of previous completion status
-    console.log("🎯 Audio ended - ensuring 100% progress BEFORE onComplete for:", lesson.title);
-    
-    // Update progress visual
+    // FIXED: Mark as completed and maintain currentTime at duration
+    setIsCompleted(true);
     setCurrentTime(duration);
     
     // Ensure onProgressUpdate(100) is called BEFORE onComplete
@@ -250,6 +264,12 @@ export function useIndividualAudio({
   const handleSeek = useCallback((value: number) => {
     if (audioRef.current) {
       console.log('🎯 Seeking to position:', value, 'for lesson:', lesson.title);
+      
+      // Reset completion state when seeking during playback
+      if (actualIsPlaying && value < duration) {
+        setIsCompleted(false);
+      }
+      
       setCurrentTime(value);
       audioRef.current.currentTime = value;
       
@@ -266,10 +286,16 @@ export function useIndividualAudio({
     if (audioRef.current) {
       console.log('⏪ Skip backward for lesson:', lesson.title);
       const newTime = Math.max(0, audioRef.current.currentTime - 15);
+      
+      // Reset completion state when skipping backward
+      if (newTime < duration) {
+        setIsCompleted(false);
+      }
+      
       audioRef.current.currentTime = newTime;
       setCurrentTime(newTime);
     }
-  }, [lesson.title]);
+  }, [lesson.title, duration]);
 
   const handleSkipForward = useCallback(() => {
     if (audioRef.current) {
