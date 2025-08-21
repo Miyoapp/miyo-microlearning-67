@@ -23,7 +23,6 @@ interface LearningPathProps {
   isGloballyPlaying: boolean;
   onProgressUpdate?: (position: number) => void;
   onLessonComplete?: () => void;
-  onAudioComplete?: () => void;
   podcast?: any;
 }
 
@@ -35,11 +34,10 @@ const LearningPath = React.memo(({
   isGloballyPlaying,
   onProgressUpdate,
   onLessonComplete,
-  onAudioComplete,
   podcast
 }: LearningPathProps) => {
   // Get user progress data for course completion detection
-  const { userProgress, markCompletionModalShown: markCompletionModalShownOriginal } = useUserProgress();
+  const { userProgress, markCompletionModalShown } = useUserProgress();
   const { lessonProgress } = useUserLessonProgress();
   const { fetchSummaries } = useSummaries();
 
@@ -51,14 +49,7 @@ const LearningPath = React.memo(({
   // Extract courseId from podcast
   const courseId = podcast?.id || null;
   
-  // Create wrapper function that doesn't need parameters
-  const markCompletionModalShown = useCallback(async () => {
-    if (courseId) {
-      await markCompletionModalShownOriginal(courseId);
-    }
-  }, [courseId, markCompletionModalShownOriginal]);
-  
-  // Course completion functionality
+  // Course completion functionality - UPDATED: Pass markCompletionModalShown
   const {
     showCompletionModal,
     showSummaryModal,
@@ -72,21 +63,8 @@ const LearningPath = React.memo(({
     podcast,
     userProgress,
     lessonProgress,
-    markCompletionModalShown
+    markCompletionModalShown // NEW: Pass the function to mark modal as shown
   });
-
-  // NEW: Direct function to show completion modal
-  const handleShowCompletionModalDirect = useCallback(() => {
-    console.log('🎉 LearningPath - Direct modal trigger called');
-    setShowCompletionModal(true);
-  }, [setShowCompletionModal]);
-
-  // NEW: Connect audio completion to modal display
-  useEffect(() => {
-    if (onAudioComplete) {
-      console.log('🔗 LearningPath - Setting up audio completion callback');
-    }
-  }, [onAudioComplete]);
 
   // Check if course is completed
   const courseProgress = userProgress.find(p => p.course_id === courseId);
@@ -115,7 +93,7 @@ const LearningPath = React.memo(({
 
   // Use custom hooks for status and classes
   const lessonStatusMap = useLessonStatus(lessons, modules, currentLessonId);
-  const lessonClassesMap = useLessonClasses(lessons, lessonStatusMap); // FIXED: Get the map
+  const getLessonClasses = useLessonClasses(lessons, lessonStatusMap);
 
   console.log('🛤️ LearningPath render:', {
     currentLessonId,
@@ -185,12 +163,6 @@ const LearningPath = React.memo(({
     onSelectLesson
   ]);
 
-  // FIXED: Create a function that uses the map to get lesson classes
-  const getLessonClasses = useCallback((lesson: Lesson, status: any) => {
-    const classData = lessonClassesMap.get(lesson.id);
-    return classData ? `${classData.nodeClasses} ${classData.textClasses}` : '';
-  }, [lessonClassesMap]);
-
   // OPTIMIZADO: Memoizar módulos ordenados
   const orderedModules = useMemo(() => {
     return modules.filter(module => {
@@ -234,8 +206,6 @@ const LearningPath = React.memo(({
                 onLessonClick={handleLessonClick}
                 onProgressUpdate={onProgressUpdate}
                 onLessonComplete={onLessonComplete}
-                onAudioComplete={onAudioComplete}
-                onShowCompletionModal={handleShowCompletionModalDirect}
               />
             );
           })}

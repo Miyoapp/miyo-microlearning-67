@@ -8,7 +8,7 @@ interface UseCourseCompletionProps {
   podcast: Podcast | null;  
   userProgress: any[];
   lessonProgress: any[];
-  markCompletionModalShown?: () => Promise<void>; // FIXED: No parameters expected
+  markCompletionModalShown?: (courseId: string) => Promise<void>;
 }
 
 export function useCourseCompletion({ podcast, userProgress, lessonProgress, markCompletionModalShown }: UseCourseCompletionProps) {
@@ -83,9 +83,9 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress, mar
           
           setShowCompletionModal(true);
           
-          // FIXED: Marcar el modal como mostrado en la base de datos - no parameters
+          // Marcar el modal como mostrado en la base de datos
           if (markCompletionModalShown) {
-            await markCompletionModalShown();
+            await markCompletionModalShown(podcast.id);
           }
           
           console.log('✅ DEFINITIVE MODAL SHOWN - Completion modal displayed and marked as shown in database');

@@ -16,54 +16,10 @@ export function useLessonCompletion(
   refetchLessonProgress: () => void,
   refetchCourseProgress: () => void,
   isAutoAdvanceAllowed: boolean,
-  updateCourseProgress?: (courseId: string, updates: any) => Promise<void>,
-  onShowCompletionModal?: () => void // NEW: Direct modal trigger
+  updateCourseProgress?: (courseId: string, updates: any) => Promise<void>
 ) {
   
   const isCompletingRef = useRef(false);
-  
-  // NEW: Handle audio completion specifically for modal triggering
-  const handleAudioComplete = useCallback(async () => {
-    if (!currentLesson || !podcast || !user) {
-      return;
-    }
-
-    console.log('🎵 Audio completed for lesson:', currentLesson.title);
-    
-    // Check if this is the last lesson
-    const nextLesson = getNextLesson(currentLesson, podcast.lessons, podcast.modules);
-    const isLastLesson = !nextLesson;
-    
-    console.log('🎯 Audio completion check:', { 
-      lessonTitle: currentLesson.title, 
-      isLastLesson,
-      hasModalCallback: !!onShowCompletionModal
-    });
-    
-    // If it's the last lesson and we have the modal callback, trigger it immediately
-    if (isLastLesson && onShowCompletionModal && !currentLesson.isCompleted) {
-      console.log('🎉 LAST LESSON AUDIO COMPLETED - SHOWING MODAL IMMEDIATELY!');
-      
-      // Show modal immediately
-      setTimeout(() => {
-        onShowCompletionModal();
-      }, 500);
-      
-      // Update course progress in background
-      if (updateCourseProgress) {
-        try {
-          await updateCourseProgress(podcast.id, {
-            progress_percentage: 100,
-            is_completed: true,
-            completion_modal_shown: false // Will be set to true when modal is closed
-          });
-          console.log('✅ Course progress updated to 100% after audio completion');
-        } catch (error) {
-          console.error('❌ Error updating course progress after audio completion:', error);
-        }
-      }
-    }
-  }, [currentLesson, podcast, user, onShowCompletionModal, updateCourseProgress]);
   
   const handleLessonComplete = useCallback(async () => {
     if (!currentLesson || !podcast || !user) {
@@ -128,21 +84,22 @@ export function useLessonCompletion(
           const updatedPodcast = { ...podcast, lessons: updatedLessons };
           setPodcast(updatedPodcast);
           
-          // For last lesson completion via manual means, also trigger modal if available
-          if (isLastLesson && updateCourseProgress && onShowCompletionModal) {
-            console.log('🎉 MANUAL LAST LESSON COMPLETION - Updating course progress');
+          // 🎉 NEW: Check if course is now complete and trigger congratulations modal
+          if (isLastLesson && updateCourseProgress) {
+            console.log('🎉 COURSE COMPLETED! Updating course progress to 100%');
             
+            // Update course progress to 100% completion
             await updateCourseProgress(podcast.id, {
               progress_percentage: 100,
               is_completed: true,
-              completion_modal_shown: false
+              completion_modal_shown: false // Important: Set to false to trigger modal
             });
             
-            // Trigger modal after a short delay
+            // Refetch course progress to trigger the completion modal
             setTimeout(() => {
-              console.log('🎉 Showing completion modal after manual completion');
-              onShowCompletionModal();
-            }, 800);
+              console.log('🔄 Refetching course progress to trigger completion modal');
+              refetchCourseProgress();
+            }, 500);
           }
         }
         
@@ -185,12 +142,8 @@ export function useLessonCompletion(
     isAutoAdvanceAllowed,
     updateCourseProgress,
     refetchLessonProgress,
-    refetchCourseProgress,
-    onShowCompletionModal
+    refetchCourseProgress
   ]);
 
-  return { 
-    handleLessonComplete,
-    handleAudioComplete // NEW: Export audio completion handler
-  };
+  return { handleLessonComplete };
 }
