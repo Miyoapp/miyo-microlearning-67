@@ -6,7 +6,7 @@ import { useNotesFilters } from '@/hooks/useNotesFilters';
 import NotesHeader from './NotesHeader';
 import NotesStats from './NotesStats';
 import NotesFilters from './NotesFilters';
-import CategoryGroup from './CategoryGroup';
+import NotesContentList from './NotesContentList';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const NotesSection = () => {
@@ -78,22 +78,9 @@ const NotesSection = () => {
         onTagsChange={updateSelectedTags}
       />
 
-      {Object.keys(coursesByCategory).length === 0 ? (
-        <div className="text-center py-8">
-          <div className="text-4xl mb-4">🔍</div>
-          <p className="text-gray-600">No se encontraron notas con los filtros aplicados</p>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {Object.entries(coursesByCategory).map(([categoryName, courses]) => (
-            <CategoryGroup
-              key={categoryName}
-              categoryName={categoryName}
-              courses={courses}
-            />
-          ))}
-        </div>
-      )}
+      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        <NotesContentList coursesByCategory={coursesByCategory} />
+      </div>
     </div>
   );
 };
