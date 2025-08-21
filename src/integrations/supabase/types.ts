@@ -410,8 +410,11 @@ export type Database = {
           course_id: string
           created_at: string
           id: string
+          is_favorite: boolean | null
           lesson_id: string
           note_text: string
+          note_title: string | null
+          tags: string[] | null
           timestamp_seconds: number
           updated_at: string
           user_id: string
@@ -420,8 +423,11 @@ export type Database = {
           course_id: string
           created_at?: string
           id?: string
+          is_favorite?: boolean | null
           lesson_id: string
           note_text: string
+          note_title?: string | null
+          tags?: string[] | null
           timestamp_seconds?: number
           updated_at?: string
           user_id: string
@@ -430,13 +436,31 @@ export type Database = {
           course_id?: string
           created_at?: string
           id?: string
+          is_favorite?: boolean | null
           lesson_id?: string
           note_text?: string
+          note_title?: string | null
+          tags?: string[] | null
           timestamp_seconds?: number
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_lesson_notes_course_id"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "cursos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_lesson_notes_lesson_id"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lecciones"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       mercadopago_transactions: {
         Row: {

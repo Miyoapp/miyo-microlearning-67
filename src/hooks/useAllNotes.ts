@@ -15,7 +15,7 @@ export function useAllNotes() {
     
     setLoading(true);
     try {
-      // Usar consulta directa con JOINs explícitos para obtener notas con información del curso
+      // Usar consulta con relaciones anidadas ahora que tenemos foreign keys
       const { data: notesData, error: notesError } = await supabase
         .from('lesson_notes')
         .select(`
