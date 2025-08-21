@@ -21,6 +21,8 @@ export function useAllActionPlans() {
     if (!user) return;
     
     setLoading(true);
+    console.log('Fetching action plans for user:', user.id);
+    
     try {
       const { data: actionPlansData, error } = await supabase
         .from('action_plan_items')
@@ -40,10 +42,26 @@ export function useAllActionPlans() {
         `)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      console.log('Raw action plans data:', actionPlansData);
+      console.log('Query error (if any):', error);
+
+      if (error) {
+        console.error('Supabase query error:', error);
+        throw error;
+      }
       
       const enrichedPlans: EnrichedActionPlan[] = (actionPlansData || [])
-        .filter(plan => plan.course_summaries) // Filter out plans without valid summaries
+        .filter(plan => {
+          const hasValidSummary = plan.course_summaries && 
+                                  plan.course_summaries.cursos && 
+                                  plan.course_summaries.cursos.categorias;
+          
+          if (!hasValidSummary) {
+            console.warn('Filtered out plan due to missing related data:', plan);
+          }
+          
+          return hasValidSummary;
+        })
         .map(plan => {
           const summary = plan.course_summaries as any;
           const course = summary.cursos;
@@ -59,11 +77,17 @@ export function useAllActionPlans() {
             course_title: course?.titulo || 'Curso sin título',
             category_name: category?.nombre || 'Sin categoría',
             category_icon: '📚', // Default icon, could be enhanced later
-            summary_title: summary.title
+            summary_title: summary.title || 'Sin título'
           };
         });
 
+      console.log('Enriched plans:', enrichedPlans);
       setActionPlans(enrichedPlans);
+      
+      if (enrichedPlans.length === 0) {
+        console.log('No action plans found for user');
+      }
+      
     } catch (error) {
       console.error('Error fetching action plans:', error);
       toast.error('Error al cargar los planes de acción');

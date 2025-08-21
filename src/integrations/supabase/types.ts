@@ -47,13 +47,6 @@ export type Database = {
             referencedRelation: "course_summaries"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "fk_action_plan_items_summary"
-            columns: ["summary_id"]
-            isOneToOne: false
-            referencedRelation: "course_summaries"
-            referencedColumns: ["id"]
-          },
         ]
       }
       categoria_landing: {
@@ -191,15 +184,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "fk_course_summaries_curso"
-            columns: ["course_id"]
-            isOneToOne: false
-            referencedRelation: "cursos"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       creador_social_media: {
         Row: {
@@ -369,13 +354,6 @@ export type Database = {
             columns: ["creador_id"]
             isOneToOne: false
             referencedRelation: "creadores"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_cursos_categoria"
-            columns: ["categoria_id"]
-            isOneToOne: false
-            referencedRelation: "categorias"
             referencedColumns: ["id"]
           },
         ]
