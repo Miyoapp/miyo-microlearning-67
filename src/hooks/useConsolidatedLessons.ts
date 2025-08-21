@@ -19,7 +19,8 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
   
   const { 
     userProgress,
-    refetch: refetchCourseProgress 
+    refetch: refetchCourseProgress,
+    updateCourseProgress
   } = useUserProgress();
 
   // Control más granular de la inicialización
@@ -57,7 +58,8 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     updateLessonPosition,
     refetchLessonProgress,
     refetchCourseProgress,
-    isAutoAdvanceAllowed
+    isAutoAdvanceAllowed,
+    updateCourseProgress
   );
 
   // SIMPLIFIED: Lesson selection focused only on changing lessons
