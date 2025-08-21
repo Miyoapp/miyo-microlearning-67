@@ -1,3 +1,4 @@
+
 import { useCallback, useMemo, useState, useEffect } from 'react';
 import { Lesson, Module } from '../types';
 import React from 'react';
@@ -51,7 +52,7 @@ const LearningPath = React.memo(({
   // Extract courseId from podcast
   const courseId = podcast?.id || null;
   
-  // Course completion functionality - UPDATED: Pass markCompletionModalShown
+  // Course completion functionality - FIXED: Call without argument
   const {
     showCompletionModal,
     showSummaryModal,
@@ -65,7 +66,7 @@ const LearningPath = React.memo(({
     podcast,
     userProgress,
     lessonProgress,
-    markCompletionModalShown // NEW: Pass the function to mark modal as shown
+    markCompletionModalShown: () => markCompletionModalShown() // FIXED: Call function without arguments
   });
 
   // NEW: Direct function to show completion modal
@@ -108,7 +109,7 @@ const LearningPath = React.memo(({
 
   // Use custom hooks for status and classes
   const lessonStatusMap = useLessonStatus(lessons, modules, currentLessonId);
-  const getLessonClasses = useLessonClasses(lessons, lessonStatusMap);
+  const lessonClassesMap = useLessonClasses(lessons, lessonStatusMap); // FIXED: Get the map
 
   console.log('🛤️ LearningPath render:', {
     currentLessonId,
@@ -177,6 +178,12 @@ const LearningPath = React.memo(({
     Array.from(lessonStatusMap.entries()).map(([id, status]) => `${id}:${status._hash || 'no-hash'}`).join('|'),
     onSelectLesson
   ]);
+
+  // FIXED: Create a function that uses the map to get lesson classes
+  const getLessonClasses = useCallback((lesson: Lesson, status: any) => {
+    const classData = lessonClassesMap.get(lesson.id);
+    return classData ? `${classData.nodeClasses} ${classData.textClasses}` : '';
+  }, [lessonClassesMap]);
 
   // OPTIMIZADO: Memoizar módulos ordenados
   const orderedModules = useMemo(() => {

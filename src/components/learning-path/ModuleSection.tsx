@@ -37,10 +37,7 @@ const ModuleSection = React.memo(({
   return (
     <div key={module.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
       <div className="bg-gradient-to-r from-purple-600 to-blue-600 px-6 py-4">
-        <h3 className="text-lg font-semibold text-white">{module.name}</h3>
-        {module.description && (
-          <p className="text-purple-100 text-sm mt-1">{module.description}</p>
-        )}
+        <h3 className="text-lg font-semibold text-white">{module.title}</h3>
       </div>
       
       <div className="p-6 space-y-4">
