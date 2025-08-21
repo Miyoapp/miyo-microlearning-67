@@ -29,7 +29,7 @@ export function useIndividualAudio({
   const [isMuted, setIsMuted] = useState(false);
   const [playbackRate, setPlaybackRate] = useState(1);
   const [actualIsPlaying, setActualIsPlaying] = useState(false);
-  const [isCompleted, setIsCompleted] = useState(false); // Track completion state
+  const [isCompleted, setIsCompleted] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const lastPlayingState = useRef(isPlaying);
 
@@ -44,27 +44,22 @@ export function useIndividualAudio({
     savedProgress
   });
 
-  // Reset audio when lesson changes - FIXED: Don't reset completion state if lesson is already completed
+  // Reset audio when lesson changes - FIXED: Always start fresh to allow replay
   useEffect(() => {
     if (audioRef.current) {
       console.log("🎵 Initializing audio for lesson:", lesson.title, "savedProgress:", savedProgress);
       const audio = audioRef.current;
       
-      // FIXED: Only reset completion state if the lesson is NOT already completed
-      if (savedProgress?.is_completed) {
-        // Lesson is completed - maintain completed state
-        console.log("✅ Lesson is completed, maintaining completed state");
-        setIsCompleted(true);
-      } else {
-        // Lesson is not completed - reset completion state for new lesson
-        setIsCompleted(false);
-      }
+      // FIXED: Always reset completion state to false to allow replay
+      // This ensures completed lessons can be played again from 0%
+      setIsCompleted(false);
       
-      // FIXED: Initialize currentTime based on saved progress
+      // FIXED: Initialize currentTime based on saved progress but don't lock it
       if (savedProgress?.is_completed) {
-        // For completed lessons, show 100% progress
-        console.log("✅ Lesson is completed, will set to 100% after metadata loads");
-        setCurrentTime(0); // Will be set to duration after metadata loads
+        // For completed lessons, start from 0 to allow replay
+        console.log("✅ Lesson is completed, but starting fresh for replay");
+        setCurrentTime(0);
+        audio.currentTime = 0;
       } else if (savedProgress?.current_position && savedProgress.current_position > 0) {
         // For lessons with partial progress, calculate saved time
         const savedTimePercent = savedProgress.current_position / 100;
@@ -85,7 +80,7 @@ export function useIndividualAudio({
     }
   }, [lesson.id, savedProgress?.current_position, savedProgress?.is_completed]);
 
-  // NEW: Direct play/pause control for immediate response
+  // FIXED: Direct play/pause control - always allow replay
   const handleDirectToggle = useCallback(() => {
     if (!audioRef.current) return;
 
@@ -95,11 +90,9 @@ export function useIndividualAudio({
     console.log('🎵 Direct toggle:', lesson.title, 'new state:', newPlayingState);
 
     if (newPlayingState) {
-      // When starting playback, reset completion state to allow normal progress tracking
-      // ONLY if not already at the end
-      if (duration > 0 && currentTime < duration) {
-        setIsCompleted(false);
-      }
+      // FIXED: Always reset completion state when starting playback
+      // This allows completed lessons to be replayed properly
+      setIsCompleted(false);
       
       const playPromise = audio.play();
       if (playPromise !== undefined) {
@@ -123,7 +116,7 @@ export function useIndividualAudio({
         onPlayStateChange(false);
       }
     }
-  }, [actualIsPlaying, lesson.title, onPlayStateChange, duration, currentTime]);
+  }, [actualIsPlaying, lesson.title, onPlayStateChange]);
 
   // Handle external play/pause state changes (from global state)
   useEffect(() => {
@@ -199,44 +192,39 @@ export function useIndividualAudio({
     }
   }, [playbackRate]);
 
-  // Update time and progress - FIXED: Respect completion state for display
+  // FIXED: Update time - always reflect real audio progress
   const updateTime = useCallback(() => {
     if (audioRef.current && duration > 0) {
       const newCurrentTime = audioRef.current.currentTime;
       
-      // FIXED: Only update currentTime if not completed OR if actively playing and not at the end
-      if (!isCompleted || (actualIsPlaying && newCurrentTime < duration)) {
-        setCurrentTime(newCurrentTime);
-      } else if (isCompleted && !actualIsPlaying) {
-        // Maintain currentTime at duration for completed lessons when not playing
-        setCurrentTime(duration);
-      }
+      // FIXED: Always update currentTime with real audio progress
+      // Never force it to duration based on completion state
+      setCurrentTime(newCurrentTime);
       
-      // FIXED: Always update progress during active playback, regardless of completion status
+      // Update progress during active playback
       if (onProgressUpdate && actualIsPlaying) {
         const progressPercent = (newCurrentTime / duration) * 100;
         console.log('📊 Updating progress during playback:', lesson.title, 'progress:', progressPercent.toFixed(1) + '%');
         onProgressUpdate(progressPercent);
       }
     }
-  }, [duration, lesson.title, onProgressUpdate, actualIsPlaying, isCompleted]);
+  }, [duration, lesson.title, onProgressUpdate, actualIsPlaying]);
 
-  // Handle metadata loaded - FIXED: Initialize with saved progress after metadata loads
+  // Handle metadata loaded - FIXED: Set initial position but don't lock currentTime
   const handleMetadata = useCallback(() => {
     if (audioRef.current) {
       const newDuration = audioRef.current.duration;
       console.log("📋 Audio metadata loaded for", lesson.title, "duration:", newDuration, "savedProgress:", savedProgress);
       setDuration(newDuration);
       
-      // FIXED: Set initial currentTime based on saved progress after metadata loads
+      // Set initial position based on saved progress
       if (savedProgress?.is_completed) {
-        // For completed lessons, show at 100%
-        console.log("✅ Setting completed lesson to 100%");
+        // For completed lessons, show as completed initially but allow replay
+        console.log("✅ Completed lesson loaded, showing 100% initially");
         setCurrentTime(newDuration);
         audioRef.current.currentTime = newDuration;
-        setIsCompleted(true);
       } else if (savedProgress?.current_position && savedProgress.current_position > 0) {
-        // For lessons with partial progress, calculate saved time
+        // For lessons with partial progress, set saved position
         const savedTime = (savedProgress.current_position / 100) * newDuration;
         console.log("📍 Setting partial progress to:", savedTime, "seconds (", savedProgress.current_position + "%)");
         setCurrentTime(savedTime);
@@ -245,16 +233,16 @@ export function useIndividualAudio({
     }
   }, [lesson.title, savedProgress]);
 
-  // Handle audio ended - FIXED: Ensure proper completion handling with persistent state
+  // Handle audio ended - mark as completed and call onComplete
   const handleAudioEnded = useCallback(() => {
-    console.log("🏁 Audio ended for lesson:", lesson.title, "isCompleted:", lesson.isCompleted);
+    console.log("🏁 Audio ended for lesson:", lesson.title);
     
     setActualIsPlaying(false);
     if (onPlayStateChange) {
       onPlayStateChange(false);
     }
     
-    // FIXED: Mark as completed and maintain currentTime at duration
+    // Mark as completed and set to end
     setIsCompleted(true);
     setCurrentTime(duration);
     
@@ -272,20 +260,20 @@ export function useIndividualAudio({
     
   }, [lesson.title, duration, onComplete, onPlayStateChange, onProgressUpdate]);
 
-  // Handle seek - FIXED: Always allow seeking and progress updates during playback
+  // Handle seek - allow seeking anywhere
   const handleSeek = useCallback((value: number) => {
     if (audioRef.current) {
       console.log('🎯 Seeking to position:', value, 'for lesson:', lesson.title);
       
-      // Reset completion state when seeking away from the end during playback
-      if (actualIsPlaying && value < duration) {
+      // Reset completion state when seeking away from the end
+      if (value < duration) {
         setIsCompleted(false);
       }
       
       setCurrentTime(value);
       audioRef.current.currentTime = value;
       
-      // FIXED: Update progress when seeking during active playback
+      // Update progress when seeking during active playback
       if (onProgressUpdate && duration > 0 && actualIsPlaying) {
         const progressPercent = (value / duration) * 100;
         console.log('📊 Updating seek progress during playback:', progressPercent.toFixed(1) + '%');

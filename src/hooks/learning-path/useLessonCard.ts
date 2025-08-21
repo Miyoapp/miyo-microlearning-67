@@ -49,7 +49,7 @@ export function useLessonCard({
     }
   }, [lesson.title, onLessonComplete]);
 
-  // NEW: Handle actual audio state changes for current lesson
+  // Handle actual audio state changes for current lesson
   const handlePlayStateChange = useCallback((newIsPlaying: boolean) => {
     console.log('🔄 Audio state changed for:', lesson.title, 'new state:', newIsPlaying);
     if (isCurrent) {
@@ -71,7 +71,7 @@ export function useLessonCard({
     savedProgress
   });
 
-  // SIMPLIFIED: Handle play/pause with clear separation of concerns
+  // Handle play/pause with clear separation of concerns
   const handleTogglePlay = useCallback(() => {
     console.log('🎵 handleTogglePlay clicked for:', lesson.title, { canPlay, isCurrent, isPlaying, localIsPlaying });
     
@@ -102,14 +102,17 @@ export function useLessonCard({
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   }, []);
 
-  // Use audio data when current, otherwise use lesson defaults and saved progress
-  const currentTime = shouldUseAudio ? audioHook.currentTime : 
+  // FIXED: Properly separate current vs non-current lesson display
+  const currentTime = shouldUseAudio ? 
+    // For current lesson: always use real audio time
+    audioHook.currentTime : 
+    // For non-current lessons: use saved progress for display
     (savedProgress?.is_completed ? (lesson.duracion * 60) : 
      savedProgress?.current_position ? (savedProgress.current_position / 100 * lesson.duracion * 60) : 0);
   
   const duration = shouldUseAudio ? audioHook.duration : (lesson.duracion * 60);
   
-  // FIXED: Use actual audio state for current lesson, global state for others
+  // Use actual audio state for current lesson, false for others
   const effectiveIsPlaying = isCurrent ? (audioHook.actualIsPlaying || localIsPlaying) : false;
 
   return {
