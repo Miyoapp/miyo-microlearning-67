@@ -88,33 +88,32 @@ const NotesPanel = ({
               Tiempo actual: {formatTime(currentTimeSeconds)}
             </div>
             
+            <textarea
+              value={newNoteText}
+              onChange={(e) => setNewNoteText(e.target.value)}
+              placeholder="Escribe tu nota aquí..."
+              className="w-full text-sm border border-yellow-200 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent resize-none"
+              rows={2}
+              autoFocus
+            />
+            
             <div className="flex space-x-2">
-              <textarea
-                value={newNoteText}
-                onChange={(e) => setNewNoteText(e.target.value)}
-                placeholder="Escribe tu nota aquí..."
-                className="flex-1 text-sm border border-yellow-200 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent resize-none"
-                rows={2}
-                autoFocus
-              />
-              <div className="flex flex-col space-y-1">
-                <button
-                  onClick={handleAddNote}
-                  disabled={!newNoteText.trim()}
-                  className="px-3 py-2 bg-[#5e16ea] text-white text-xs rounded-md hover:bg-[#4a11ba] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  Guardar
-                </button>
-                <button
-                  onClick={() => {
-                    setShowAddNoteArea(false);
-                    setNewNoteText('');
-                  }}
-                  className="px-3 py-2 bg-gray-300 text-gray-600 text-xs rounded-md hover:bg-gray-400 transition-colors"
-                >
-                  Cancelar
-                </button>
-              </div>
+              <button
+                onClick={handleAddNote}
+                disabled={!newNoteText.trim()}
+                className="px-2 py-1 text-xs bg-yellow-500 text-white rounded hover:bg-yellow-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Guardar
+              </button>
+              <button
+                onClick={() => {
+                  setShowAddNoteArea(false);
+                  setNewNoteText('');
+                }}
+                className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+              >
+                Cancelar
+              </button>
             </div>
           </div>
         )}
