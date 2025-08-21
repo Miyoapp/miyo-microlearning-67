@@ -102,11 +102,11 @@ export function useLessonCard({
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   }, []);
 
-  // FIXED: Properly separate current vs non-current lesson display
+  // FIXED: Properly display progress for current vs non-current lessons
   const currentTime = shouldUseAudio ? 
-    // For current lesson: always use real audio time
+    // For current lesson: use real audio time (which handles completion state correctly)
     audioHook.currentTime : 
-    // For non-current lessons: use saved progress for display
+    // For non-current lessons: display based on saved progress
     (savedProgress?.is_completed ? (lesson.duracion * 60) : 
      savedProgress?.current_position ? (savedProgress.current_position / 100 * lesson.duracion * 60) : 0);
   
