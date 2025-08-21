@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { LessonNote, NOTE_TAGS } from '@/types/notes';
-import { useNotes } from '@/hooks/useNotes';
+import { useNotesContext } from '@/contexts/NotesContext';
 import { cn } from '@/lib/utils';
 
 interface EditNoteModalProps {
@@ -21,7 +21,7 @@ const EditNoteModal: React.FC<EditNoteModalProps> = ({
   note,
   courseTitle
 }) => {
-  const { updateNote } = useNotes(note.lesson_id, note.course_id);
+  const { updateNote } = useNotesContext();
   const [noteText, setNoteText] = useState(note.note_text);
   const [selectedTags, setSelectedTags] = useState<string[]>(note.tags || []);
   const [saving, setSaving] = useState(false);
@@ -97,11 +97,11 @@ const EditNoteModal: React.FC<EditNoteModalProps> = ({
                   type="button"
                   onClick={() => handleTagToggle(tag.id)}
                   className={cn(
-                    "px-3 py-1.5 rounded-full text-xs font-medium border-2 transition-colors",
+                    "px-3 py-1.5 rounded-full text-xs font-medium border-2 transition-all duration-200",
                     "flex items-center gap-1",
                     selectedTags.includes(tag.id)
-                      ? "border-[#5e16ea] bg-purple-50 text-purple-700"
-                      : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                      ? "border-[#5e16ea] bg-purple-50 text-purple-700 scale-105"
+                      : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:scale-105"
                   )}
                 >
                   <span>{tag.icon}</span>

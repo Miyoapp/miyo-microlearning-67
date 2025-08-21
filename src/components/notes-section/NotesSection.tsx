@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useAllNotes } from '@/hooks/useAllNotes';
+import { useNotesContext } from '@/contexts/NotesContext';
 import { useNotesStats } from '@/hooks/useNotesStats';
 import { useNotesFilters } from '@/hooks/useNotesFilters';
 import NotesHeader from './NotesHeader';
@@ -10,7 +10,8 @@ import NotesContentList from './NotesContentList';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const NotesSection = () => {
-  const { coursesWithNotes, loading } = useAllNotes();
+  const { state } = useNotesContext();
+  const { coursesWithNotes, loading } = state;
   const stats = useNotesStats(coursesWithNotes);
   const {
     filters,

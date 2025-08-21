@@ -2,11 +2,12 @@
 import React, { useState } from 'react';
 import { LessonNote, NOTE_TAGS } from '@/types/notes';
 import { Heart, Edit3, Trash2, Clock } from 'lucide-react';
-import { useNotes } from '@/hooks/useNotes';
+import { useNotesContext } from '@/contexts/NotesContext';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import EditNoteModal from './EditNoteModal';
+import DeleteConfirmationDialog from '@/components/ui/delete-confirmation-dialog';
 
 interface DirectNoteItemProps {
   note: LessonNote;
@@ -14,13 +15,14 @@ interface DirectNoteItemProps {
 }
 
 const DirectNoteItem: React.FC<DirectNoteItemProps> = ({ note, courseTitle }) => {
-  const { updateNote, deleteNote } = useNotes(note.lesson_id, note.course_id);
+  const { toggleFavorite, deleteNote } = useNotesContext();
   const [showActions, setShowActions] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const handleToggleFavorite = (e: React.MouseEvent) => {
     e.stopPropagation();
-    updateNote(note.id, { is_favorite: !note.is_favorite });
+    toggleFavorite(note.id, note.is_favorite);
   };
 
   const handleEdit = (e: React.MouseEvent) => {
@@ -30,9 +32,11 @@ const DirectNoteItem: React.FC<DirectNoteItemProps> = ({ note, courseTitle }) =>
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (window.confirm('¿Estás seguro de que quieres eliminar esta nota?')) {
-      deleteNote(note.id);
-    }
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = () => {
+    deleteNote(note.id);
   };
 
   const formatTime = (seconds: number) => {
@@ -59,13 +63,17 @@ const DirectNoteItem: React.FC<DirectNoteItemProps> = ({ note, courseTitle }) =>
           <button
             onClick={handleToggleFavorite}
             className={cn(
-              "p-1 rounded bg-white shadow-sm border transition-colors",
+              "p-1 rounded bg-white shadow-sm border transition-all duration-200",
               note.is_favorite 
-                ? "text-yellow-500 hover:bg-yellow-50" 
-                : "text-gray-400 hover:text-yellow-500"
+                ? "text-yellow-500 hover:bg-yellow-50 scale-110" 
+                : "text-gray-400 hover:text-yellow-500 hover:scale-110"
             )}
           >
-            <Heart size={12} fill={note.is_favorite ? "currentColor" : "none"} />
+            <Heart 
+              size={12} 
+              fill={note.is_favorite ? "currentColor" : "none"} 
+              className={note.is_favorite ? "animate-pulse" : ""}
+            />
           </button>
           
           <button
@@ -131,6 +139,12 @@ const DirectNoteItem: React.FC<DirectNoteItemProps> = ({ note, courseTitle }) =>
         onClose={() => setIsEditModalOpen(false)}
         note={note}
         courseTitle={courseTitle}
+      />
+
+      <DeleteConfirmationDialog
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
       />
     </>
   );

@@ -3,6 +3,7 @@ import React from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { SidebarTrigger } from '@/components/ui/sidebar/SidebarTrigger';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { NotesProvider } from '@/contexts/NotesContext';
 import NotesSection from '@/components/notes-section/NotesSection';
 
 const DashboardMisNotas = () => {
@@ -19,7 +20,9 @@ const DashboardMisNotas = () => {
       
       <div className="h-full overflow-y-auto pl-6">
         <div className="max-w-7xl mx-auto pb-6">
-          <NotesSection />
+          <NotesProvider>
+            <NotesSection />
+          </NotesProvider>
         </div>
       </div>
     </DashboardLayout>
