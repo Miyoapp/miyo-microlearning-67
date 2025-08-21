@@ -24,6 +24,8 @@ export function useUserProgressUpdates(
           course_id: courseId,
           ...updates,
           updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id,course_id'
         });
 
       if (error) throw error;
