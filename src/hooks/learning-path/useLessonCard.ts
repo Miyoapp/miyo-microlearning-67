@@ -102,15 +102,35 @@ export function useLessonCard({
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   }, []);
 
-  // Use audio data when current, otherwise use lesson defaults and saved progress
-  // FIXED: Treat lesson.duracion as seconds (remove * 60 multiplication)
-  const currentTime = shouldUseAudio ? audioHook.currentTime : 
-    (savedProgress?.is_completed ? lesson.duracion : 
-     savedProgress?.current_position ? (savedProgress.current_position / 100 * lesson.duracion) : 0);
+  // IMPROVED: Visual state management with transition awareness
+  const getVisualCurrentTime = useCallback(() => {
+    if (shouldUseAudio) {
+      // For current lesson, use audio hook data (which handles transitions)
+      return audioHook.currentTime;
+    } else {
+      // For non-current lessons, show appropriate state
+      if (savedProgress?.is_completed) {
+        // Completed lessons always show 100%
+        return lesson.duracion;
+      } else if (savedProgress?.current_position && savedProgress.current_position > 0) {
+        // Lessons with partial progress
+        return (savedProgress.current_position / 100) * lesson.duracion;
+      } else {
+        // New lessons
+        return 0;
+      }
+    }
+  }, [shouldUseAudio, audioHook.currentTime, savedProgress, lesson.duracion]);
+
+  const getVisualDuration = useCallback(() => {
+    return shouldUseAudio ? audioHook.duration : lesson.duracion;
+  }, [shouldUseAudio, audioHook.duration, lesson.duracion]);
+
+  // IMPROVED: Use visual getters for consistent display
+  const currentTime = getVisualCurrentTime();
+  const duration = getVisualDuration();
   
-  const duration = shouldUseAudio ? audioHook.duration : lesson.duracion;
-  
-  // FIXED: Use actual audio state for current lesson, global state for others
+  // FIXED: Use actual audio state for current lesson, considering transitions
   const effectiveIsPlaying = isCurrent ? (audioHook.actualIsPlaying || localIsPlaying) : false;
 
   return {
@@ -120,6 +140,7 @@ export function useLessonCard({
     playbackRate: audioHook.playbackRate,
     volume: audioHook.volume,
     isMuted: audioHook.isMuted,
+    isTransitioning: audioHook.isTransitioning,
     handlePlayPause: handleTogglePlay,
     handleSeek: audioHook.handleSeek,
     handleSkipBackward: audioHook.handleSkipBackward,

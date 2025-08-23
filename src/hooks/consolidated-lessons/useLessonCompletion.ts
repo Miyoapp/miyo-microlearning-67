@@ -47,9 +47,19 @@ export function useLessonCompletion(
         wasAlreadyCompleted 
       });
       
-      // UNIFIED AUTO-ADVANCE LOGIC: Always advance if allowed and next lesson exists
+      // Handle database updates for first-time completions FIRST
+      if (!wasAlreadyCompleted) {
+        console.log('💾 First completion - updating database immediately');
+        await Promise.all([
+          markLessonCompleteInDB(currentLesson.id, podcast.id),
+          updateLessonPosition(currentLesson.id, podcast.id, 100)
+        ]);
+        console.log('✅ Database updates completed');
+      }
+      
+      // IMPROVED: Auto-advance with better coordination
       if (isAutoAdvanceAllowed && nextLesson) {
-        console.log('⏭️ AUTO-ADVANCE: Moving to next lesson:', nextLesson.title);
+        console.log('⏭️ AUTO-ADVANCE: Preparing to move to next lesson:', nextLesson.title);
         
         // Update podcast state to unlock next lesson if needed
         const updatedLessons = podcast.lessons.map(lesson => {
@@ -65,9 +75,16 @@ export function useLessonCompletion(
         const updatedPodcast = { ...podcast, lessons: updatedLessons };
         setPodcast(updatedPodcast);
         
-        // Set next lesson and start playing
-        setCurrentLesson({ ...nextLesson, isLocked: false });
-        setIsPlaying(true);
+        // IMPROVED: Better timing for auto-advance
+        setTimeout(() => {
+          console.log('⏭️ AUTO-ADVANCE: Now moving to next lesson:', nextLesson.title);
+          setCurrentLesson({ ...nextLesson, isLocked: false });
+          
+          setTimeout(() => {
+            console.log('▶️ AUTO-ADVANCE: Starting playback of next lesson:', nextLesson.title);
+            setIsPlaying(true);
+          }, 200);
+        }, 100);
         
       } else {
         console.log('⏹️ NO AUTO-ADVANCE: End of course or auto-advance disabled');
@@ -106,21 +123,12 @@ export function useLessonCompletion(
         setIsPlaying(false);
       }
       
-      // Handle database updates for first-time completions
+      // Refetch lesson progress after all updates
       if (!wasAlreadyCompleted) {
-        console.log('💾 First completion - updating database');
-        Promise.all([
-          markLessonCompleteInDB(currentLesson.id, podcast.id),
-          updateLessonPosition(currentLesson.id, podcast.id, 100)
-        ]).then(() => {
-          console.log('✅ Database updates completed');
-          // Refetch lesson progress after database updates
+        setTimeout(() => {
+          console.log('🔄 Refetching lesson progress after completion');
           refetchLessonProgress();
-        }).catch(dbError => {
-          console.error('❌ Database update failed:', dbError);
-        });
-      } else {
-        console.log('🔄 Replay completion - no database updates needed');
+        }, 200);
       }
       
     } catch (error) {
@@ -128,7 +136,7 @@ export function useLessonCompletion(
     } finally {
       setTimeout(() => {
         isCompletingRef.current = false;
-      }, 300);
+      }, 500);
     }
   }, [
     currentLesson,

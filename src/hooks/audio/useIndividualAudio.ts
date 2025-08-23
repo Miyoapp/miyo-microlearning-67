@@ -1,6 +1,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Lesson } from '@/types';
+import { useTransitionState } from './useTransitionState';
 
 interface UseIndividualAudioProps {
   lesson: Lesson;
@@ -33,46 +34,51 @@ export function useIndividualAudio({
   const audioRef = useRef<HTMLAudioElement>(null);
   const lastPlayingState = useRef(isPlaying);
 
+  // NEW: Transition state management
+  const { isTransitioning, preservedState, startTransition, endTransition } = useTransitionState();
+
   console.log('🎵 useIndividualAudio for lesson:', lesson.title, {
     isPlaying,
     actualIsPlaying,
     currentTime,
     duration,
     playbackRate,
+    isTransitioning,
+    preservedState,
     isCompleted: lesson.isCompleted,
     savedProgress
   });
 
-  // Reset audio when lesson changes - FIXED: Initialize with saved progress
+  // Reset audio when lesson changes - IMPROVED: Handle transitions
   useEffect(() => {
     if (audioRef.current) {
       console.log("🎵 Initializing audio for lesson:", lesson.title, "savedProgress:", savedProgress);
       const audio = audioRef.current;
       
-      // FIXED: Initialize currentTime based on saved progress
-      if (savedProgress?.is_completed) {
-        // For completed lessons, show 100% progress
-        console.log("✅ Lesson is completed, will set to 100% after metadata loads");
-        setCurrentTime(0); // Will be set to duration after metadata loads
-      } else if (savedProgress?.current_position && savedProgress.current_position > 0) {
-        // For lessons with partial progress, calculate saved time
-        const savedTimePercent = savedProgress.current_position / 100;
-        console.log("📍 Lesson has partial progress:", savedProgress.current_position + "%");
-        setCurrentTime(0); // Will be calculated after metadata loads
-      } else {
-        // For new lessons, start from beginning
-        console.log("🆕 New lesson, starting from 0");
-        audio.currentTime = 0;
-        setCurrentTime(0);
+      // If we're transitioning and this is a new lesson, preserve state briefly
+      if (!isTransitioning) {
+        // FIXED: Initialize currentTime based on saved progress
+        if (savedProgress?.is_completed) {
+          console.log("✅ Lesson is completed, will set to 100% after metadata loads");
+          setCurrentTime(0); // Will be set to duration after metadata loads
+        } else if (savedProgress?.current_position && savedProgress.current_position > 0) {
+          const savedTimePercent = savedProgress.current_position / 100;
+          console.log("📍 Lesson has partial progress:", savedProgress.current_position + "%");
+          setCurrentTime(0); // Will be calculated after metadata loads
+        } else {
+          console.log("🆕 New lesson, starting from 0");
+          audio.currentTime = 0;
+          setCurrentTime(0);
+        }
+        
+        audio.volume = isMuted ? 0 : volume;
+        audio.playbackRate = playbackRate;
+        setDuration(0);
+        setActualIsPlaying(false);
+        audio.load();
       }
-      
-      audio.volume = isMuted ? 0 : volume;
-      audio.playbackRate = playbackRate;
-      setDuration(0);
-      setActualIsPlaying(false);
-      audio.load();
     }
-  }, [lesson.id, savedProgress?.current_position, savedProgress?.is_completed]);
+  }, [lesson.id, savedProgress?.current_position, savedProgress?.is_completed, isTransitioning]);
 
   // NEW: Direct play/pause control for immediate response
   const handleDirectToggle = useCallback(() => {
@@ -217,7 +223,7 @@ export function useIndividualAudio({
     }
   }, [lesson.title, savedProgress]);
 
-  // Handle audio ended - FIXED: Ensure proper completion handling
+  // IMPROVED: Handle audio ended with better transition coordination
   const handleAudioEnded = useCallback(() => {
     console.log("🏁 Audio ended for lesson:", lesson.title, "isCompleted:", lesson.isCompleted);
     
@@ -226,11 +232,15 @@ export function useIndividualAudio({
       onPlayStateChange(false);
     }
     
-    // FIXED: Always ensure 100% progress and completion, regardless of previous completion status
-    console.log("🎯 Audio ended - ensuring 100% progress BEFORE onComplete for:", lesson.title);
+    // IMPROVED: Preserve state for visual continuity during auto-advance
+    const finalTime = duration;
+    console.log("🎯 Audio ended - preserving 100% state for transition:", lesson.title);
+    
+    // Start transition to preserve visual state
+    startTransition(finalTime, duration);
     
     // Update progress visual
-    setCurrentTime(duration);
+    setCurrentTime(finalTime);
     
     // Ensure onProgressUpdate(100) is called BEFORE onComplete
     if (onProgressUpdate) {
@@ -238,13 +248,18 @@ export function useIndividualAudio({
       onProgressUpdate(100);
     }
     
-    // Small delay to ensure DB update before onComplete
+    // IMPROVED: Reduced delay and better coordination
     setTimeout(() => {
       console.log("🏁 Now calling onComplete after progress update for:", lesson.title);
       onComplete();
-    }, 100);
+      
+      // End transition after a brief moment to allow UI update
+      setTimeout(() => {
+        endTransition();
+      }, 300);
+    }, 50);
     
-  }, [lesson.title, duration, onComplete, onPlayStateChange, onProgressUpdate]);
+  }, [lesson.title, duration, onComplete, onPlayStateChange, onProgressUpdate, startTransition, endTransition]);
 
   // Handle seek - FIXED: Always allow seeking and progress updates during playback
   const handleSeek = useCallback((value: number) => {
@@ -295,14 +310,19 @@ export function useIndividualAudio({
     setPlaybackRate(rate);
   }, [lesson.title]);
 
+  // IMPROVED: Return preserved or current state based on transition
+  const effectiveCurrentTime = isTransitioning && preservedState ? preservedState.currentTime : currentTime;
+  const effectiveDuration = isTransitioning && preservedState ? preservedState.duration : duration;
+
   return {
     audioRef,
-    currentTime,
-    duration,
+    currentTime: effectiveCurrentTime,
+    duration: effectiveDuration,
     volume,
     isMuted,
     playbackRate,
     actualIsPlaying,
+    isTransitioning,
     handleDirectToggle,
     handleSeek,
     handleSkipBackward,

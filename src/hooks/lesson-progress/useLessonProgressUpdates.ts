@@ -36,7 +36,7 @@ export function useLessonProgressUpdates(
     console.log('📊 UPDATING LESSON PROGRESS:', lessonId, 'with updates:', updates);
 
     try {
-      // OPTIMIZACIÓN: Actualizar estado local inmediatamente (optimistic update)
+      // OPTIMISTIC UPDATE: Update local state immediately
       setLessonProgress(prev => {
         const existing = prev.find(p => p.lesson_id === lessonId);
         const updatedProgress = {
@@ -51,11 +51,11 @@ export function useLessonProgressUpdates(
           ...updates
         };
 
-        // CRÍTICO: Validación defensiva robusta en estado local
+        // CRITICAL: Defensive validation in local state
         if (updatedProgress.current_position >= 100) {
           console.log('🛡️ DEFENSIVE VALIDATION (Local): Setting is_completed=true because current_position >= 100');
           updatedProgress.is_completed = true;
-          updatedProgress.current_position = 100; // Normalizar a exactamente 100
+          updatedProgress.current_position = 100; // Normalize to exactly 100
         }
         
         if (existing) {
@@ -69,7 +69,7 @@ export function useLessonProgressUpdates(
         }
       });
 
-      // BACKGROUND: Actualizar base de datos
+      // DATABASE UPDATE: Function to update database
       const updateDatabase = async () => {
         // First, get the existing progress to preserve important fields
         const { data: existingData, error: fetchError } = await supabase
@@ -107,11 +107,11 @@ export function useLessonProgressUpdates(
           ...updates
         };
 
-        // CRÍTICO: Validación defensiva robusta en BD
+        // CRITICAL: Defensive validation in database
         if (finalData.current_position >= 100) {
           console.log('🛡️ DEFENSIVE VALIDATION (DB): Setting is_completed=true because current_position >= 100');
           finalData.is_completed = true;
-          finalData.current_position = 100; // Normalizar a exactamente 100
+          finalData.current_position = 100; // Normalize to exactly 100
         }
 
         console.log('💾 Final data for database upsert:', finalData);
@@ -132,12 +132,15 @@ export function useLessonProgressUpdates(
         return data;
       };
 
-      // Ejecutar actualización de BD inmediatamente para completaciones críticas
-      if (updates.is_completed === true || (updates.current_position && updates.current_position >= 100)) {
+      // IMPROVED: Execute critical updates immediately
+      const isCriticalUpdate = updates.is_completed === true || 
+                             (updates.current_position && updates.current_position >= 100);
+
+      if (isCriticalUpdate) {
         console.log('🎯 CRITICAL UPDATE: Executing DB update immediately for completion');
         await updateDatabase();
       } else {
-        // Para otros updates, ejecutar en background
+        // For non-critical updates, execute in background
         updateDatabase().catch(error => {
           console.error('Background DB update failed:', error);
           toast.error('Error al actualizar el progreso de la lección');
