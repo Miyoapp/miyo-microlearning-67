@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { Lesson } from '@/types';
 import { useIndividualAudio } from '@/hooks/audio/useIndividualAudio';
@@ -49,7 +48,7 @@ export function useLessonCard({
     }
   }, [lesson.title, onLessonComplete]);
 
-  // NEW: Handle actual audio state changes for current lesson
+  // Handle audio state changes for current lesson
   const handlePlayStateChange = useCallback((newIsPlaying: boolean) => {
     console.log('🔄 Audio state changed for:', lesson.title, 'new state:', newIsPlaying);
     if (isCurrent) {
@@ -71,7 +70,7 @@ export function useLessonCard({
     savedProgress
   });
 
-  // SIMPLIFIED: Handle play/pause with clear separation of concerns
+  // Handle play/pause with clear separation of concerns
   const handleTogglePlay = useCallback(() => {
     console.log('🎵 handleTogglePlay clicked for:', lesson.title, { canPlay, isCurrent, isPlaying, localIsPlaying });
     
@@ -87,7 +86,7 @@ export function useLessonCard({
       return;
     }
 
-    // CURRENT LESSON: Handle play/pause directly without going through global state
+    // Current lesson - handle play/pause directly
     console.log('🎵 Direct toggle for current lesson:', lesson.title);
     audioHook.handleDirectToggle();
     
@@ -102,15 +101,15 @@ export function useLessonCard({
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   }, []);
 
-  // IMPROVED: Visual state management with transition awareness
+  // IMPROVED: Visual state management with better completion handling
   const getVisualCurrentTime = useCallback(() => {
     if (shouldUseAudio) {
-      // For current lesson, use audio hook data (which handles transitions)
+      // For current lesson, use audio hook data (handles transitions)
       return audioHook.currentTime;
     } else {
       // For non-current lessons, show appropriate state
       if (savedProgress?.is_completed) {
-        // Completed lessons always show 100%
+        // CRITICAL: Completed lessons always show 100% when not playing
         return lesson.duracion;
       } else if (savedProgress?.current_position && savedProgress.current_position > 0) {
         // Lessons with partial progress
@@ -126,11 +125,11 @@ export function useLessonCard({
     return shouldUseAudio ? audioHook.duration : lesson.duracion;
   }, [shouldUseAudio, audioHook.duration, lesson.duracion]);
 
-  // IMPROVED: Use visual getters for consistent display
+  // Use visual getters for consistent display
   const currentTime = getVisualCurrentTime();
   const duration = getVisualDuration();
   
-  // FIXED: Use actual audio state for current lesson, considering transitions
+  // Use actual audio state for current lesson
   const effectiveIsPlaying = isCurrent ? (audioHook.actualIsPlaying || localIsPlaying) : false;
 
   return {

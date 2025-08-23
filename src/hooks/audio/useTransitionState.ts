@@ -6,11 +6,12 @@ export function useTransitionState() {
   const [preservedState, setPreservedState] = useState<{
     currentTime: number;
     duration: number;
+    lessonId: string;
   } | null>(null);
 
-  const startTransition = useCallback((currentTime: number, duration: number) => {
-    console.log('🔄 Starting audio transition, preserving state:', { currentTime, duration });
-    setPreservedState({ currentTime, duration });
+  const startTransition = useCallback((currentTime: number, duration: number, lessonId: string) => {
+    console.log('🔄 Starting audio transition, preserving state:', { currentTime, duration, lessonId });
+    setPreservedState({ currentTime, duration, lessonId });
     setIsTransitioning(true);
   }, []);
 
@@ -20,10 +21,15 @@ export function useTransitionState() {
     setPreservedState(null);
   }, []);
 
+  const shouldPreserveState = useCallback((lessonId: string) => {
+    return isTransitioning && preservedState?.lessonId === lessonId;
+  }, [isTransitioning, preservedState]);
+
   return {
     isTransitioning,
     preservedState,
     startTransition,
-    endTransition
+    endTransition,
+    shouldPreserveState
   };
 }

@@ -38,30 +38,32 @@ export function useLessonCompletion(
     try {
       const wasAlreadyCompleted = currentLesson.isCompleted;
       const nextLesson = getNextLesson(currentLesson, podcast.lessons, podcast.modules);
-      
-      // Check if this is the last lesson of the course
       const isLastLesson = !nextLesson;
-      console.log('🎯 Is last lesson check:', { 
+      
+      console.log('🎯 Completion context:', { 
         lessonTitle: currentLesson.title, 
         isLastLesson, 
-        wasAlreadyCompleted 
+        wasAlreadyCompleted,
+        nextLessonTitle: nextLesson?.title || 'none'
       });
       
-      // Handle database updates for first-time completions FIRST
+      // CRITICAL: Execute database updates IMMEDIATELY for first-time completions
       if (!wasAlreadyCompleted) {
-        console.log('💾 First completion - updating database immediately');
+        console.log('💾 CRITICAL: First completion - executing immediate DB updates');
+        
         await Promise.all([
           markLessonCompleteInDB(currentLesson.id, podcast.id),
           updateLessonPosition(currentLesson.id, podcast.id, 100)
         ]);
-        console.log('✅ Database updates completed');
+        
+        console.log('✅ CRITICAL: Database updates completed immediately');
       }
       
-      // IMPROVED: Auto-advance with better coordination
+      // AUTO-ADVANCE: Improved timing and coordination
       if (isAutoAdvanceAllowed && nextLesson) {
-        console.log('⏭️ AUTO-ADVANCE: Preparing to move to next lesson:', nextLesson.title);
+        console.log('⏭️ AUTO-ADVANCE: Initiating transition to:', nextLesson.title);
         
-        // Update podcast state to unlock next lesson if needed
+        // Update podcast state first to unlock next lesson
         const updatedLessons = podcast.lessons.map(lesson => {
           if (lesson.id === currentLesson.id && !wasAlreadyCompleted) {
             return { ...lesson, isCompleted: true };
@@ -75,21 +77,22 @@ export function useLessonCompletion(
         const updatedPodcast = { ...podcast, lessons: updatedLessons };
         setPodcast(updatedPodcast);
         
-        // IMPROVED: Better timing for auto-advance
+        // IMPROVED: Better coordinated timing for smooth transitions
         setTimeout(() => {
-          console.log('⏭️ AUTO-ADVANCE: Now moving to next lesson:', nextLesson.title);
+          console.log('⏭️ AUTO-ADVANCE: Setting next lesson:', nextLesson.title);
           setCurrentLesson({ ...nextLesson, isLocked: false });
           
+          // Longer delay to allow UI state to settle
           setTimeout(() => {
-            console.log('▶️ AUTO-ADVANCE: Starting playback of next lesson:', nextLesson.title);
+            console.log('▶️ AUTO-ADVANCE: Starting playback of:', nextLesson.title);
             setIsPlaying(true);
-          }, 200);
-        }, 100);
+          }, 400);
+        }, 200);
         
       } else {
-        console.log('⏹️ NO AUTO-ADVANCE: End of course or auto-advance disabled');
+        console.log('⏹️ NO AUTO-ADVANCE: End of course or disabled');
         
-        // Update completion status if this was first completion
+        // Update completion status for non-auto-advance scenarios
         if (!wasAlreadyCompleted) {
           const updatedLessons = podcast.lessons.map(lesson => {
             if (lesson.id === currentLesson.id) {
@@ -101,20 +104,17 @@ export function useLessonCompletion(
           const updatedPodcast = { ...podcast, lessons: updatedLessons };
           setPodcast(updatedPodcast);
           
-          // 🎉 NEW: Check if course is now complete and trigger congratulations modal
+          // Check for course completion
           if (isLastLesson && updateCourseProgress) {
-            console.log('🎉 COURSE COMPLETED! Updating course progress to 100%');
+            console.log('🎉 COURSE COMPLETED! Updating course progress');
             
-            // Update course progress to 100% completion
             await updateCourseProgress(podcast.id, {
               progress_percentage: 100,
               is_completed: true,
-              completion_modal_shown: false // Important: Set to false to trigger modal
+              completion_modal_shown: false
             });
             
-            // Refetch course progress to trigger the completion modal
             setTimeout(() => {
-              console.log('🔄 Refetching course progress to trigger completion modal');
               refetchCourseProgress();
             }, 500);
           }
@@ -123,12 +123,12 @@ export function useLessonCompletion(
         setIsPlaying(false);
       }
       
-      // Refetch lesson progress after all updates
+      // Refetch progress after successful completion
       if (!wasAlreadyCompleted) {
         setTimeout(() => {
           console.log('🔄 Refetching lesson progress after completion');
           refetchLessonProgress();
-        }, 200);
+        }, 300);
       }
       
     } catch (error) {
@@ -136,7 +136,7 @@ export function useLessonCompletion(
     } finally {
       setTimeout(() => {
         isCompletingRef.current = false;
-      }, 500);
+      }, 800);
     }
   }, [
     currentLesson,
