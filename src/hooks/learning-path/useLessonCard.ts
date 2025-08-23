@@ -103,11 +103,12 @@ export function useLessonCard({
   }, []);
 
   // Use audio data when current, otherwise use lesson defaults and saved progress
+  // FIXED: Treat lesson.duracion as seconds (remove * 60 multiplication)
   const currentTime = shouldUseAudio ? audioHook.currentTime : 
-    (savedProgress?.is_completed ? (lesson.duracion * 60) : 
-     savedProgress?.current_position ? (savedProgress.current_position / 100 * lesson.duracion * 60) : 0);
+    (savedProgress?.is_completed ? lesson.duracion : 
+     savedProgress?.current_position ? (savedProgress.current_position / 100 * lesson.duracion) : 0);
   
-  const duration = shouldUseAudio ? audioHook.duration : (lesson.duracion * 60);
+  const duration = shouldUseAudio ? audioHook.duration : lesson.duracion;
   
   // FIXED: Use actual audio state for current lesson, global state for others
   const effectiveIsPlaying = isCurrent ? (audioHook.actualIsPlaying || localIsPlaying) : false;

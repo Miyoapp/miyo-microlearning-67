@@ -133,7 +133,8 @@ const LessonCard = React.memo(({
   const [showSpeedDropdown, setShowSpeedDropdown] = React.useState(false);
   const [showVolumeControl, setShowVolumeControl] = React.useState(false);
 
-  const validDuration = duration || (lesson.duracion * 60);
+  // FIXED: Treat lesson.duracion as seconds (remove * 60 multiplication)
+  const validDuration = duration || lesson.duracion;
   
   // Always show real progress - no special cases
   const validCurrentTime = useMemo(() => {
