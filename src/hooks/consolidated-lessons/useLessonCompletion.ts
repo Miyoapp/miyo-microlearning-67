@@ -59,9 +59,9 @@ export function useLessonCompletion(
         console.log('✅ CRITICAL: Database updates completed immediately');
       }
       
-      // AUTO-ADVANCE: Improved timing and coordination
+      // AUTO-ADVANCE: Improved timing coordination with transitions
       if (isAutoAdvanceAllowed && nextLesson) {
-        console.log('⏭️ AUTO-ADVANCE: Initiating transition to:', nextLesson.title);
+        console.log('⏭️ AUTO-ADVANCE: Initiating coordinated transition to:', nextLesson.title);
         
         // Update podcast state first to unlock next lesson
         const updatedLessons = podcast.lessons.map(lesson => {
@@ -77,17 +77,17 @@ export function useLessonCompletion(
         const updatedPodcast = { ...podcast, lessons: updatedLessons };
         setPodcast(updatedPodcast);
         
-        // IMPROVED: Better coordinated timing for smooth transitions
+        // CRITICAL FIX: Improved timing to coordinate with transition state
         setTimeout(() => {
-          console.log('⏭️ AUTO-ADVANCE: Setting next lesson:', nextLesson.title);
+          console.log('⏭️ AUTO-ADVANCE: Setting next lesson (transition-aware):', nextLesson.title);
           setCurrentLesson({ ...nextLesson, isLocked: false });
           
-          // Longer delay to allow UI state to settle
+          // CRITICAL FIX: Longer delay to ensure audio initialization completes
           setTimeout(() => {
-            console.log('▶️ AUTO-ADVANCE: Starting playback of:', nextLesson.title);
+            console.log('▶️ AUTO-ADVANCE: Starting playback after initialization:', nextLesson.title);
             setIsPlaying(true);
-          }, 400);
-        }, 200);
+          }, 600); // Increased from 400ms to allow full initialization
+        }, 300); // Increased from 200ms to allow state updates
         
       } else {
         console.log('⏹️ NO AUTO-ADVANCE: End of course or disabled');
@@ -128,7 +128,7 @@ export function useLessonCompletion(
         setTimeout(() => {
           console.log('🔄 Refetching lesson progress after completion');
           refetchLessonProgress();
-        }, 300);
+        }, 400); // Reduced from 300ms to coordinate better
       }
       
     } catch (error) {
@@ -136,7 +136,7 @@ export function useLessonCompletion(
     } finally {
       setTimeout(() => {
         isCompletingRef.current = false;
-      }, 800);
+      }, 1000); // Increased from 800ms to ensure full cycle completion
     }
   }, [
     currentLesson,
