@@ -77,17 +77,17 @@ export function useLessonCompletion(
         const updatedPodcast = { ...podcast, lessons: updatedLessons };
         setPodcast(updatedPodcast);
         
-        // CRITICAL FIX: Improved timing to coordinate with transition state
+        // CRITICAL FIX: Longer delays to coordinate with transition system
         setTimeout(() => {
-          console.log('⏭️ AUTO-ADVANCE: Setting next lesson (transition-aware):', nextLesson.title);
+          console.log('⏭️ AUTO-ADVANCE: Setting next lesson (transition-coordinated):', nextLesson.title);
           setCurrentLesson({ ...nextLesson, isLocked: false });
           
-          // CRITICAL FIX: Longer delay to ensure audio initialization completes
+          // CRITICAL FIX: Even longer delay to ensure full initialization and transition cleanup
           setTimeout(() => {
-            console.log('▶️ AUTO-ADVANCE: Starting playback after initialization:', nextLesson.title);
+            console.log('▶️ AUTO-ADVANCE: Starting playback after full initialization:', nextLesson.title);
             setIsPlaying(true);
-          }, 600); // Increased from 400ms to allow full initialization
-        }, 300); // Increased from 200ms to allow state updates
+          }, 800); // Increased from 600ms to allow full transition cycle
+        }, 500); // Increased from 300ms to coordinate with transition preservation
         
       } else {
         console.log('⏹️ NO AUTO-ADVANCE: End of course or disabled');
@@ -123,12 +123,12 @@ export function useLessonCompletion(
         setIsPlaying(false);
       }
       
-      // Refetch progress after successful completion
+      // Refetch progress after successful completion with coordinated timing
       if (!wasAlreadyCompleted) {
         setTimeout(() => {
           console.log('🔄 Refetching lesson progress after completion');
           refetchLessonProgress();
-        }, 400); // Reduced from 300ms to coordinate better
+        }, 600); // Increased from 400ms to coordinate with transition timing
       }
       
     } catch (error) {
@@ -136,7 +136,7 @@ export function useLessonCompletion(
     } finally {
       setTimeout(() => {
         isCompletingRef.current = false;
-      }, 1000); // Increased from 800ms to ensure full cycle completion
+      }, 1200); // Increased from 1000ms to ensure full cycle completion
     }
   }, [
     currentLesson,

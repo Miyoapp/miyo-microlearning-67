@@ -35,6 +35,7 @@ export function useIndividualAudio({
   const lastPlayingState = useRef(isPlaying);
   const lastLessonId = useRef(lesson.id);
   const isInitialized = useRef(false);
+  const isNewLessonInitializing = useRef(false);
 
   // Transition state management
   const { isTransitioning, preservedState, startTransition, endTransition, shouldPreserveState } = useTransitionState();
@@ -48,10 +49,11 @@ export function useIndividualAudio({
     isTransitioning,
     preservedState,
     isCompleted: savedProgress?.is_completed,
-    savedProgress
+    savedProgress,
+    isNewLessonInitializing: isNewLessonInitializing.current
   });
 
-  // FIXED: Smart lesson change detection with proper transition cleanup
+  // CRITICAL FIX: Smart lesson change detection WITHOUT immediate endTransition
   useEffect(() => {
     if (audioRef.current) {
       const audio = audioRef.current;
@@ -60,15 +62,11 @@ export function useIndividualAudio({
       if (isNewLesson) {
         console.log("🔄 Lesson changed from", lastLessonId.current, "to", lesson.id);
         
-        // CRITICAL FIX: End any existing transition when switching lessons
-        if (isTransitioning) {
-          console.log("🔚 Ending previous transition for lesson change");
-          endTransition();
-        }
-        
+        // CRITICAL FIX: Mark as initializing but DON'T end transition yet
+        isNewLessonInitializing.current = true;
         lastLessonId.current = lesson.id;
         
-        console.log("🎵 Initializing new lesson:", lesson.title);
+        console.log("🎵 Initializing new lesson:", lesson.title, "preserving transition state");
         
         // CRITICAL FIX: Always start completed lessons from beginning when replaying
         if (savedProgress?.is_completed) {
@@ -98,16 +96,23 @@ export function useIndividualAudio({
             if (audio.readyState >= 1) {
               console.log("✅ Metadata loaded for completed lesson");
               setDuration(audio.duration || lesson.duracion);
+              // Mark initialization as complete
+              isNewLessonInitializing.current = false;
             } else {
               setTimeout(forceLoad, 50);
             }
           };
           forceLoad();
+        } else {
+          // For non-completed lessons, mark as complete after a short delay
+          setTimeout(() => {
+            isNewLessonInitializing.current = false;
+          }, 200);
         }
       }
     }
     isInitialized.current = true;
-  }, [lesson.id, savedProgress?.current_position, savedProgress?.is_completed, volume, isMuted, playbackRate, isTransitioning, endTransition, lesson.duracion]);
+  }, [lesson.id, savedProgress?.current_position, savedProgress?.is_completed, volume, isMuted, playbackRate, lesson.duracion]);
 
   // Direct play/pause control for immediate response
   const handleDirectToggle = useCallback(() => {
@@ -228,15 +233,23 @@ export function useIndividualAudio({
     }
   }, [playbackRate]);
 
-  // FIXED: Update time with transition awareness and auto-cleanup
+  // CRITICAL FIX: Intelligent transition cleanup - only when new lesson is ready
+  const intelligentEndTransition = useCallback(() => {
+    if (isTransitioning && !isNewLessonInitializing.current && actualIsPlaying) {
+      console.log("🧠 INTELLIGENT CLEANUP: Ending transition - new lesson is ready and playing");
+      endTransition();
+    }
+  }, [isTransitioning, actualIsPlaying, endTransition]);
+
+  // FIXED: Update time with intelligent transition management
   const updateTime = useCallback(() => {
     if (audioRef.current && duration > 0) {
       const newCurrentTime = audioRef.current.currentTime;
       
-      // CRITICAL FIX: Auto-end transition when audio actually starts playing new content
-      if (isTransitioning && newCurrentTime > 0 && actualIsPlaying) {
-        console.log("🔚 Auto-ending transition - audio is playing new content");
-        endTransition();
+      // CRITICAL FIX: Intelligent auto-cleanup when audio starts playing new content
+      if (isTransitioning && newCurrentTime > 0 && actualIsPlaying && !isNewLessonInitializing.current) {
+        console.log("🔚 INTELLIGENT AUTO-CLEANUP: Audio is playing new content and lesson is ready");
+        intelligentEndTransition();
       }
       
       // During transitions, don't update time to preserve visual state
@@ -251,19 +264,22 @@ export function useIndividualAudio({
         onProgressUpdate(progressPercent);
       }
     }
-  }, [duration, lesson.title, onProgressUpdate, actualIsPlaying, isTransitioning, endTransition]);
+  }, [duration, lesson.title, onProgressUpdate, actualIsPlaying, isTransitioning, intelligentEndTransition]);
 
-  // Handle metadata loaded with immediate transition cleanup
+  // Handle metadata loaded with intelligent transition cleanup
   const handleMetadata = useCallback(() => {
     if (audioRef.current) {
       const newDuration = audioRef.current.duration;
       console.log("📋 Audio metadata loaded for", lesson.title, "duration:", newDuration, "savedProgress:", savedProgress);
       setDuration(newDuration);
       
-      // CRITICAL FIX: End transition when metadata is ready
-      if (isTransitioning) {
-        console.log("🔚 Ending transition - metadata loaded for new lesson");
-        endTransition();
+      // Mark initialization as complete
+      isNewLessonInitializing.current = false;
+      
+      // CRITICAL FIX: Intelligent cleanup - only if audio is ready and playing
+      if (isTransitioning && actualIsPlaying) {
+        console.log("🧠 INTELLIGENT CLEANUP: Metadata loaded and audio playing - ending transition");
+        intelligentEndTransition();
       }
       
       // Set initial position based on saved progress
@@ -274,7 +290,7 @@ export function useIndividualAudio({
         audioRef.current.currentTime = savedTime;
       }
     }
-  }, [lesson.title, savedProgress, isTransitioning, endTransition]);
+  }, [lesson.title, savedProgress, isTransitioning, intelligentEndTransition, actualIsPlaying]);
 
   // IMPROVED: Handle audio ended with better transition management
   const handleAudioEnded = useCallback(() => {
@@ -352,17 +368,21 @@ export function useIndividualAudio({
     setPlaybackRate(rate);
   }, [lesson.title]);
 
-  // IMPROVED: Return effective state considering transitions with completed lesson logic
+  // CRITICAL FIX: Improved effective state with prioritized preserved state
   const effectiveCurrentTime = () => {
-    if (isTransitioning && preservedState && preservedState.lessonId === lesson.id) {
+    // PRIORITY 1: If we have preserved state for ANY lesson during transition, use it
+    if (isTransitioning && preservedState) {
+      console.log("🔄 Using preserved state during transition:", preservedState.currentTime);
       return preservedState.currentTime;
     }
     
-    // For completed lessons that are not currently playing, show 100%
+    // PRIORITY 2: For completed lessons that are not currently playing, show 100%
     if (savedProgress?.is_completed && !actualIsPlaying && duration > 0) {
+      console.log("✅ Completed lesson not playing - showing 100%");
       return duration;
     }
     
+    // PRIORITY 3: Current time for active lessons
     return currentTime;
   };
     
