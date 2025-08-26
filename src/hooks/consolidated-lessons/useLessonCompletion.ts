@@ -59,7 +59,7 @@ export function useLessonCompletion(
         console.log('✅ CRITICAL: Database updates completed immediately');
       }
       
-      // AUTO-ADVANCE: Simplified without complex transition coordination
+      // AUTO-ADVANCE: FIXED - Properly signal auto-advance replay
       if (isAutoAdvanceAllowed && nextLesson) {
         console.log('⏭️ AUTO-ADVANCE: Initiating transition to:', nextLesson.title);
         
@@ -77,10 +77,19 @@ export function useLessonCompletion(
         const updatedPodcast = { ...podcast, lessons: updatedLessons };
         setPodcast(updatedPodcast);
         
-        // SIMPLIFIED: Direct transition without complex delays
+        // FIXED: Set lesson with proper auto-advance flag context
         setTimeout(() => {
-          console.log('⏭️ AUTO-ADVANCE: Setting next lesson:', nextLesson.title);
-          setCurrentLesson({ ...nextLesson, isLocked: false });
+          console.log('⏭️ AUTO-ADVANCE: Setting next lesson for auto-advance:', nextLesson.title);
+          
+          // Create lesson with auto-advance context
+          const nextLessonWithAutoAdvance = { 
+            ...nextLesson, 
+            isLocked: false,
+            // Add flag to indicate this is auto-advance
+            _isAutoAdvanceReplay: nextLesson.isCompleted || false
+          };
+          
+          setCurrentLesson(nextLessonWithAutoAdvance);
           
           // Start playback after brief initialization
           setTimeout(() => {

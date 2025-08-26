@@ -13,7 +13,7 @@ interface UseIndividualAudioProps {
     current_position: number;
     is_completed: boolean;
   };
-  isAutoAdvanceReplay?: boolean; // NEW: Flag to distinguish auto-advance from manual replay
+  isAutoAdvanceReplay?: boolean;
 }
 
 export function useIndividualAudio({
@@ -24,7 +24,7 @@ export function useIndividualAudio({
   onProgressUpdate,
   onPlayStateChange,
   savedProgress,
-  isAutoAdvanceReplay = false // NEW: Default to manual replay
+  isAutoAdvanceReplay = false
 }: UseIndividualAudioProps) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -44,7 +44,7 @@ export function useIndividualAudio({
     duration,
     playbackRate,
     isCompleted: savedProgress?.is_completed,
-    isAutoAdvanceReplay, // NEW: Log the replay type
+    isAutoAdvanceReplay,
     savedProgress
   });
 
@@ -59,24 +59,10 @@ export function useIndividualAudio({
         
         lastLessonId.current = lesson.id;
         
-        // FIXED: Distinguish between auto-advance and manual replay for completed lessons
-        if (savedProgress?.is_completed) {
-          if (isAutoAdvanceReplay) {
-            console.log("⏭️ Auto-advance replay - will start near end for quick completion");
-            setCurrentTime(0); // Will be set properly in metadata handler
-          } else {
-            console.log("🔁 Manual replay - will start from beginning for full playback");
-            audio.currentTime = 0;
-            setCurrentTime(0);
-          }
-        } else if (savedProgress?.current_position && savedProgress.current_position > 0) {
-          console.log("📍 Partial progress lesson - will set position after metadata");
-          setCurrentTime(0);
-        } else {
-          console.log("🆕 New lesson - starting from beginning");
-          audio.currentTime = 0;
-          setCurrentTime(0);
-        }
+        // FIXED: Always start from beginning for new lesson loads
+        console.log("🆕 New lesson load - starting from beginning");
+        audio.currentTime = 0;
+        setCurrentTime(0);
         
         audio.volume = isMuted ? 0 : volume;
         audio.playbackRate = playbackRate;
@@ -87,7 +73,7 @@ export function useIndividualAudio({
       }
     }
     isInitialized.current = true;
-  }, [lesson.id, savedProgress?.current_position, savedProgress?.is_completed, volume, isMuted, playbackRate, isAutoAdvanceReplay]);
+  }, [lesson.id, volume, isMuted, playbackRate]);
 
   // Direct play/pause control for immediate response
   const handleDirectToggle = useCallback(() => {
@@ -99,13 +85,14 @@ export function useIndividualAudio({
     console.log('🎵 Direct toggle:', lesson.title, 'new state:', newPlayingState);
 
     if (newPlayingState) {
-      // FIXED: Only start near end for auto-advance replays of completed lessons
+      // FIXED: Only apply auto-advance logic when explicitly requested AND lesson is completed
       if (savedProgress?.is_completed && isAutoAdvanceReplay && audio.duration > 0) {
-        const nearEndTime = Math.max(0, audio.duration - 2); // 2 seconds from end
+        const nearEndTime = Math.max(0, audio.duration - 2);
         console.log('⏭️ Auto-advance replay - starting near end for quick completion:', nearEndTime);
         audio.currentTime = nearEndTime;
         setCurrentTime(nearEndTime);
       }
+      // For all other cases (manual replay, new lessons), start where audio is positioned
       
       const playPromise = audio.play();
       if (playPromise !== undefined) {
@@ -143,9 +130,9 @@ export function useIndividualAudio({
       if (isPlaying) {
         console.log("▶️ External trigger: Playing audio for lesson:", lesson.title);
         
-        // FIXED: Only start near end for auto-advance replays of completed lessons
+        // FIXED: Only apply auto-advance logic when explicitly requested AND lesson is completed
         if (savedProgress?.is_completed && isAutoAdvanceReplay && audio.duration > 0) {
-          const nearEndTime = Math.max(0, audio.duration - 2); // 2 seconds from end
+          const nearEndTime = Math.max(0, audio.duration - 2);
           console.log('⏭️ External auto-advance replay - starting near end:', nearEndTime);
           audio.currentTime = nearEndTime;
           setCurrentTime(nearEndTime);
@@ -231,26 +218,21 @@ export function useIndividualAudio({
       console.log("📋 Audio metadata loaded for", lesson.title, "duration:", newDuration, "savedProgress:", savedProgress);
       setDuration(newDuration);
       
-      // FIXED: Set initial position based on saved progress and replay type
-      if (savedProgress?.is_completed) {
-        if (isAutoAdvanceReplay) {
-          const nearEndTime = Math.max(0, newDuration - 2); // 2 seconds from end for auto-advance
-          console.log("⏭️ Auto-advance replay - setting near end position:", nearEndTime);
-          setCurrentTime(nearEndTime);
-          audioRef.current.currentTime = nearEndTime;
-        } else {
-          console.log("🔁 Manual replay - starting from beginning for full playback");
-          setCurrentTime(0);
-          audioRef.current.currentTime = 0;
-        }
-      } else if (savedProgress?.current_position && savedProgress.current_position > 0) {
+      // FIXED: Set initial position based on saved progress but allow standard playback
+      if (savedProgress?.current_position && savedProgress.current_position > 0 && !savedProgress.is_completed) {
+        // Only restore position for incomplete lessons
         const savedTime = (savedProgress.current_position / 100) * newDuration;
         console.log("📍 Setting partial progress to:", savedTime, "seconds");
         setCurrentTime(savedTime);
         audioRef.current.currentTime = savedTime;
+      } else {
+        // For completed lessons or new lessons, start at beginning (standard behavior)
+        console.log("🆕 Setting to beginning for standard playback");
+        setCurrentTime(0);
+        audioRef.current.currentTime = 0;
       }
     }
-  }, [lesson.title, savedProgress, isAutoAdvanceReplay]);
+  }, [lesson.title, savedProgress]);
 
   // Handle audio ended
   const handleAudioEnded = useCallback(() => {
@@ -323,24 +305,10 @@ export function useIndividualAudio({
     setPlaybackRate(rate);
   }, [lesson.title]);
 
-  // FIXED: Show real-time progress during active playback, even for completed lessons
+  // FIXED: Standard player behavior - always show real currentTime
   const effectiveCurrentTime = () => {
-    // CRITICAL FIX: During active playback, ALWAYS show real currentTime
-    if (actualIsPlaying) {
-      console.log("🔄 Active playback - showing real-time progress:", currentTime);
-      return currentTime;
-    }
-    
-    // Only show 100% when NOT playing AND lesson is completed
-    if (savedProgress?.is_completed && !actualIsPlaying) {
-      const effectiveDuration = duration || lesson.duracion;
-      if (effectiveDuration > 0) {
-        console.log("✅ Completed lesson (not playing) - showing 100% progress");
-        return effectiveDuration;
-      }
-    }
-    
-    // For all other cases (partial progress, new lessons), show current time
+    // CRITICAL FIX: Always show real currentTime for standard player behavior
+    console.log("🔄 Standard player - showing real-time progress:", currentTime);
     return currentTime;
   };
     
@@ -354,7 +322,7 @@ export function useIndividualAudio({
     isMuted,
     playbackRate,
     actualIsPlaying,
-    isTransitioning: false, // Simplified - no more transitions
+    isTransitioning: false,
     handleDirectToggle,
     handleSeek,
     handleSkipBackward,
@@ -365,6 +333,6 @@ export function useIndividualAudio({
     handleMetadata,
     updateTime,
     handleAudioEnded,
-    endTransition: () => {} // No-op for backward compatibility
+    endTransition: () => {}
   };
 }

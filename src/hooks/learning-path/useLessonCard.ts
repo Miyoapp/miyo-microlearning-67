@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { Lesson } from '@/types';
 import { useIndividualAudio } from '@/hooks/audio/useIndividualAudio';
@@ -27,7 +26,7 @@ export function useLessonCard({
   onProgressUpdate,
   onLessonComplete,
   savedProgress,
-  isAutoAdvanceReplay = false // NEW: Default to manual playback
+  isAutoAdvanceReplay = false
 }: UseLessonCardProps) {
   const [localIsPlaying, setLocalIsPlaying] = useState(false);
   
@@ -36,12 +35,15 @@ export function useLessonCard({
     isCurrent,
     isPlaying,
     localIsPlaying,
-    isAutoAdvanceReplay, // NEW: Log the replay type
+    isAutoAdvanceReplay,
     savedProgress: savedProgress ? {
       current_position: savedProgress.current_position,
       is_completed: savedProgress.is_completed
     } : null
   });
+
+  // FIXED: Detect if this is an auto-advance scenario
+  const isActualAutoAdvanceReplay = isAutoAdvanceReplay || (lesson as any)?._isAutoAdvanceReplay || false;
 
   // Handle lesson completion
   const handleComplete = useCallback(() => {
@@ -60,7 +62,7 @@ export function useLessonCard({
     }
   }, [isCurrent, lesson.title]);
 
-  // Use individual audio management with the replay flag
+  // Use individual audio management with the corrected replay flag
   const audioHook = useIndividualAudio({
     lesson,
     isPlaying: isCurrent ? isPlaying : false,
@@ -71,7 +73,7 @@ export function useLessonCard({
     onProgressUpdate,
     onPlayStateChange: handlePlayStateChange,
     savedProgress,
-    isAutoAdvanceReplay // NEW: Pass the replay flag to the audio hook
+    isAutoAdvanceReplay: isActualAutoAdvanceReplay // FIXED: Pass corrected flag
   });
 
   // Handle play/pause with clear separation of concerns
