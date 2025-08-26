@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { Lesson } from '@/types';
 import { useIndividualAudio } from '@/hooks/audio/useIndividualAudio';
@@ -56,8 +57,7 @@ export function useLessonCard({
     }
   }, [isCurrent, lesson.title]);
 
-  // Use individual audio management when this is the current lesson
-  const shouldUseAudio = isCurrent;
+  // Use individual audio management
   const audioHook = useIndividualAudio({
     lesson,
     isPlaying: isCurrent ? isPlaying : false,
@@ -101,33 +101,9 @@ export function useLessonCard({
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   }, []);
 
-  // IMPROVED: Visual state management with better completion handling
-  const getVisualCurrentTime = useCallback(() => {
-    if (shouldUseAudio) {
-      // For current lesson, use audio hook data (handles transitions)
-      return audioHook.currentTime;
-    } else {
-      // For non-current lessons, show appropriate state
-      if (savedProgress?.is_completed) {
-        // CRITICAL: Completed lessons always show 100% when not playing
-        return lesson.duracion;
-      } else if (savedProgress?.current_position && savedProgress.current_position > 0) {
-        // Lessons with partial progress
-        return (savedProgress.current_position / 100) * lesson.duracion;
-      } else {
-        // New lessons
-        return 0;
-      }
-    }
-  }, [shouldUseAudio, audioHook.currentTime, savedProgress, lesson.duracion]);
-
-  const getVisualDuration = useCallback(() => {
-    return shouldUseAudio ? audioHook.duration : lesson.duracion;
-  }, [shouldUseAudio, audioHook.duration, lesson.duracion]);
-
-  // Use visual getters for consistent display
-  const currentTime = getVisualCurrentTime();
-  const duration = getVisualDuration();
+  // SIMPLIFIED: Always use audio hook data - it handles completed lessons internally
+  const currentTime = audioHook.currentTime;
+  const duration = audioHook.duration;
   
   // Use actual audio state for current lesson
   const effectiveIsPlaying = isCurrent ? (audioHook.actualIsPlaying || localIsPlaying) : false;
@@ -139,7 +115,7 @@ export function useLessonCard({
     playbackRate: audioHook.playbackRate,
     volume: audioHook.volume,
     isMuted: audioHook.isMuted,
-    isTransitioning: audioHook.isTransitioning,
+    isTransitioning: false, // Simplified - no more transitions
     handlePlayPause: handleTogglePlay,
     handleSeek: audioHook.handleSeek,
     handleSkipBackward: audioHook.handleSkipBackward,
@@ -149,7 +125,7 @@ export function useLessonCard({
     toggleMute: audioHook.toggleMute,
     formatTime,
     // Audio element and handlers for the current lesson
-    audioRef: shouldUseAudio ? audioHook.audioRef : null,
+    audioRef: isCurrent ? audioHook.audioRef : null,
     handleMetadata: audioHook.handleMetadata,
     updateTime: audioHook.updateTime,
     handleAudioEnded: audioHook.handleAudioEnded

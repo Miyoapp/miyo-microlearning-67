@@ -47,7 +47,7 @@ export function useLessonCompletion(
         nextLessonTitle: nextLesson?.title || 'none'
       });
       
-      // CRITICAL: Execute database updates IMMEDIATELY for first-time completions
+      // Execute database updates IMMEDIATELY for first-time completions
       if (!wasAlreadyCompleted) {
         console.log('💾 CRITICAL: First completion - executing immediate DB updates');
         
@@ -59,9 +59,9 @@ export function useLessonCompletion(
         console.log('✅ CRITICAL: Database updates completed immediately');
       }
       
-      // AUTO-ADVANCE: Improved timing coordination with transitions
+      // AUTO-ADVANCE: Simplified without complex transition coordination
       if (isAutoAdvanceAllowed && nextLesson) {
-        console.log('⏭️ AUTO-ADVANCE: Initiating coordinated transition to:', nextLesson.title);
+        console.log('⏭️ AUTO-ADVANCE: Initiating transition to:', nextLesson.title);
         
         // Update podcast state first to unlock next lesson
         const updatedLessons = podcast.lessons.map(lesson => {
@@ -77,17 +77,17 @@ export function useLessonCompletion(
         const updatedPodcast = { ...podcast, lessons: updatedLessons };
         setPodcast(updatedPodcast);
         
-        // CRITICAL FIX: Longer delays to coordinate with transition system
+        // SIMPLIFIED: Direct transition without complex delays
         setTimeout(() => {
-          console.log('⏭️ AUTO-ADVANCE: Setting next lesson (transition-coordinated):', nextLesson.title);
+          console.log('⏭️ AUTO-ADVANCE: Setting next lesson:', nextLesson.title);
           setCurrentLesson({ ...nextLesson, isLocked: false });
           
-          // CRITICAL FIX: Even longer delay to ensure full initialization and transition cleanup
+          // Start playback after brief initialization
           setTimeout(() => {
-            console.log('▶️ AUTO-ADVANCE: Starting playback after full initialization:', nextLesson.title);
+            console.log('▶️ AUTO-ADVANCE: Starting playback:', nextLesson.title);
             setIsPlaying(true);
-          }, 800); // Increased from 600ms to allow full transition cycle
-        }, 500); // Increased from 300ms to coordinate with transition preservation
+          }, 200);
+        }, 100);
         
       } else {
         console.log('⏹️ NO AUTO-ADVANCE: End of course or disabled');
@@ -116,19 +116,19 @@ export function useLessonCompletion(
             
             setTimeout(() => {
               refetchCourseProgress();
-            }, 500);
+            }, 200);
           }
         }
         
         setIsPlaying(false);
       }
       
-      // Refetch progress after successful completion with coordinated timing
+      // Refetch progress after successful completion
       if (!wasAlreadyCompleted) {
         setTimeout(() => {
           console.log('🔄 Refetching lesson progress after completion');
           refetchLessonProgress();
-        }, 600); // Increased from 400ms to coordinate with transition timing
+        }, 300);
       }
       
     } catch (error) {
@@ -136,7 +136,7 @@ export function useLessonCompletion(
     } finally {
       setTimeout(() => {
         isCompletingRef.current = false;
-      }, 1200); // Increased from 1000ms to ensure full cycle completion
+      }, 500);
     }
   }, [
     currentLesson,
