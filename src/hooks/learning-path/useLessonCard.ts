@@ -15,6 +15,7 @@ interface UseLessonCardProps {
     current_position: number;
     is_completed: boolean;
   };
+  isAutoAdvanceReplay?: boolean; // NEW: Flag to indicate if this is an auto-advance replay
 }
 
 export function useLessonCard({ 
@@ -25,7 +26,8 @@ export function useLessonCard({
   onLessonClick,
   onProgressUpdate,
   onLessonComplete,
-  savedProgress
+  savedProgress,
+  isAutoAdvanceReplay = false // NEW: Default to manual playback
 }: UseLessonCardProps) {
   const [localIsPlaying, setLocalIsPlaying] = useState(false);
   
@@ -34,6 +36,7 @@ export function useLessonCard({
     isCurrent,
     isPlaying,
     localIsPlaying,
+    isAutoAdvanceReplay, // NEW: Log the replay type
     savedProgress: savedProgress ? {
       current_position: savedProgress.current_position,
       is_completed: savedProgress.is_completed
@@ -57,7 +60,7 @@ export function useLessonCard({
     }
   }, [isCurrent, lesson.title]);
 
-  // Use individual audio management
+  // Use individual audio management with the replay flag
   const audioHook = useIndividualAudio({
     lesson,
     isPlaying: isCurrent ? isPlaying : false,
@@ -67,12 +70,19 @@ export function useLessonCard({
     onComplete: handleComplete,
     onProgressUpdate,
     onPlayStateChange: handlePlayStateChange,
-    savedProgress
+    savedProgress,
+    isAutoAdvanceReplay // NEW: Pass the replay flag to the audio hook
   });
 
   // Handle play/pause with clear separation of concerns
   const handleTogglePlay = useCallback(() => {
-    console.log('🎵 handleTogglePlay clicked for:', lesson.title, { canPlay, isCurrent, isPlaying, localIsPlaying });
+    console.log('🎵 handleTogglePlay clicked for:', lesson.title, { 
+      canPlay, 
+      isCurrent, 
+      isPlaying, 
+      localIsPlaying,
+      isAutoAdvanceReplay 
+    });
     
     if (!canPlay) {
       console.log('🚫 Cannot play lesson:', lesson.title);
@@ -80,17 +90,17 @@ export function useLessonCard({
     }
 
     if (!isCurrent) {
-      // Different lesson - select it with auto-play
-      console.log('🎯 Selecting different lesson:', lesson.title);
+      // Different lesson - select it with auto-play (this is manual selection)
+      console.log('🎯 Selecting different lesson:', lesson.title, '(manual selection)');
       onLessonClick(lesson, true);
       return;
     }
 
-    // Current lesson - handle play/pause directly
-    console.log('🎵 Direct toggle for current lesson:', lesson.title);
+    // Current lesson - handle play/pause directly (this is manual toggle)
+    console.log('🎵 Direct toggle for current lesson:', lesson.title, '(manual toggle)');
     audioHook.handleDirectToggle();
     
-  }, [canPlay, isCurrent, isPlaying, localIsPlaying, onLessonClick, lesson, audioHook]);
+  }, [canPlay, isCurrent, isPlaying, localIsPlaying, onLessonClick, lesson, audioHook, isAutoAdvanceReplay]);
 
   // Format time helper
   const formatTime = useCallback((seconds: number) => {
@@ -101,7 +111,7 @@ export function useLessonCard({
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   }, []);
 
-  // SIMPLIFIED: Always use audio hook data - it handles completed lessons internally
+  // Use audio hook data for current time and duration
   const currentTime = audioHook.currentTime;
   const duration = audioHook.duration;
   

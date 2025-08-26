@@ -70,6 +70,9 @@ const LessonCard = React.memo(({
     savedProgress
   });
   
+  // NEW: For lesson cards, this is always manual playback (not auto-advance)
+  const isAutoAdvanceReplay = false;
+  
   const {
     isPlaying,
     currentTime,
@@ -97,7 +100,8 @@ const LessonCard = React.memo(({
     onLessonClick,
     onProgressUpdate,
     onLessonComplete,
-    savedProgress
+    savedProgress,
+    isAutoAdvanceReplay // NEW: Pass the manual playback flag
   });
 
   // Fetch notes when lesson can play and courseId is available
