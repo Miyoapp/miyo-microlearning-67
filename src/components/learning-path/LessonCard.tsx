@@ -78,14 +78,19 @@ const LessonCard = React.memo(({
   const [isAudioReady, setIsAudioReady] = React.useState(false);
   const audioRef = React.useRef<HTMLAudioElement>(null);
 
-  // Handle play/pause
+  // FIXED: Handle play/pause with proper state management
   const handlePlayPause = () => {
-    console.log('🎵 LessonCard handlePlayPause clicked:', {
+    console.log('🎵🎵🎵 LessonCard handlePlayPause clicked:', {
       lessonTitle: lesson.title,
       currentIsPlaying: propIsPlaying,
       isCurrent,
-      canPlay
+      canPlay,
+      willToggleTo: !propIsPlaying
     });
+    
+    // CRITICAL: Pass the lesson with the correct auto-play state
+    // If currently playing, we want to pause (shouldAutoPlay = false)
+    // If currently paused, we want to play (shouldAutoPlay = true)
     onLessonClick(lesson, !propIsPlaying);
   };
 
@@ -162,7 +167,7 @@ const LessonCard = React.memo(({
     onLessonComplete?.();
   };
 
-  // FIXED: Improved audio synchronization with proper error handling
+  // CRITICAL FIX: Improved audio synchronization with better state tracking
   React.useEffect(() => {
     const syncAudioPlayback = async () => {
       if (!audioRef.current) {
@@ -170,36 +175,58 @@ const LessonCard = React.memo(({
         return;
       }
 
-      console.log('🔄 Syncing audio playback:', {
+      console.log('🔄🔄🔄 CRITICAL SYNC - Audio playback state:', {
         lessonTitle: lesson.title,
         isCurrent,
         propIsPlaying,
         isAudioReady,
-        readyState: audioRef.current.readyState
+        readyState: audioRef.current.readyState,
+        paused: audioRef.current.paused,
+        action: isCurrent && propIsPlaying ? 'SHOULD PLAY' : 'SHOULD PAUSE'
       });
 
       try {
         if (isCurrent && propIsPlaying) {
-          // Wait for audio to be ready before playing
-          if (audioRef.current.readyState >= 2 || isAudioReady) {
-            console.log('▶️ Playing audio for:', lesson.title);
+          // Only play if audio is paused and ready
+          if (audioRef.current.paused && (audioRef.current.readyState >= 2 || isAudioReady)) {
+            console.log('▶️▶️▶️ PLAYING audio for:', lesson.title);
             await audioRef.current.play();
-          } else {
-            console.log('⏳ Audio not ready yet, waiting...');
-            // Try again after a short delay
-            setTimeout(() => {
-              if (audioRef.current && audioRef.current.readyState >= 2) {
-                audioRef.current.play().catch(console.error);
+            console.log('✅ Successfully started playback for:', lesson.title);
+          } else if (audioRef.current.paused) {
+            console.log('⏳ Audio not ready yet, retrying...');
+            // Retry after a brief delay
+            setTimeout(async () => {
+              if (audioRef.current && audioRef.current.paused && audioRef.current.readyState >= 2) {
+                try {
+                  await audioRef.current.play();
+                  console.log('✅ Retry playback successful for:', lesson.title);
+                } catch (retryError) {
+                  console.error('🚨 Retry playback failed:', retryError);
+                }
               }
-            }, 100);
+            }, 200);
+          } else {
+            console.log('🎵 Audio already playing for:', lesson.title);
           }
-        } else {
-          console.log('⏸️ Pausing audio for:', lesson.title);
-          audioRef.current.pause();
+        } else if (isCurrent && !propIsPlaying) {
+          // Only pause if audio is currently playing
+          if (!audioRef.current.paused) {
+            console.log('⏸️⏸️⏸️ PAUSING audio for:', lesson.title);
+            audioRef.current.pause();
+            console.log('✅ Successfully paused playback for:', lesson.title);
+          } else {
+            console.log('⏸️ Audio already paused for:', lesson.title);
+          }
+        } else if (!isCurrent) {
+          // This lesson is not current, make sure it's paused
+          if (!audioRef.current.paused) {
+            console.log('🛑 Stopping non-current lesson:', lesson.title);
+            audioRef.current.pause();
+          }
         }
       } catch (error) {
-        console.error('🚨 Audio playback error:', error);
-        // Don't break the UI if audio fails
+        console.error('🚨🚨🚨 CRITICAL Audio playback error for', lesson.title, ':', error);
+        // Don't break the UI if audio fails, but log the error clearly
       }
     };
 
@@ -259,14 +286,20 @@ const LessonCard = React.memo(({
     setShowSpeedDropdown(false);
   };
 
-  // Get status icon based on playing state
+  // FIXED: Get status icon based on playing state - more explicit logic
   const getStatusIcon = () => {
     if (!canPlay) {
       return <Lock size={16} />;
     }
+    
+    // Show pause icon if this lesson is current AND playing
     if (isCurrent && propIsPlaying) {
+      console.log('🎵 Showing PAUSE icon for:', lesson.title);
       return <Pause size={16} />;
     }
+    
+    // Show play icon in all other cases
+    console.log('▶️ Showing PLAY icon for:', lesson.title);
     return <Play size={16} fill="white" />;
   };
 
@@ -299,7 +332,7 @@ const LessonCard = React.memo(({
         {/* Header with title and status */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-3">
-            {/* Functional Status/Play Button */}
+            {/* FIXED: Functional Status/Play Button with explicit behavior */}
             <button
               onClick={handlePlayPause}
               disabled={!canPlay}
@@ -314,7 +347,7 @@ const LessonCard = React.memo(({
               aria-label={
                 !canPlay 
                   ? "Lección bloqueada" 
-                  : propIsPlaying
+                  : (isCurrent && propIsPlaying)
                     ? "Pausar" 
                     : "Reproducir"
               }
