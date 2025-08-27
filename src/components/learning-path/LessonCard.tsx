@@ -75,10 +75,17 @@ const LessonCard = React.memo(({
   const [playbackRate, setPlaybackRate] = React.useState(1);
   const [volume, setVolume] = React.useState(1);
   const [isMuted, setIsMuted] = React.useState(false);
+  const [isAudioReady, setIsAudioReady] = React.useState(false);
   const audioRef = React.useRef<HTMLAudioElement>(null);
 
   // Handle play/pause
   const handlePlayPause = () => {
+    console.log('🎵 LessonCard handlePlayPause clicked:', {
+      lessonTitle: lesson.title,
+      currentIsPlaying: propIsPlaying,
+      isCurrent,
+      canPlay
+    });
     onLessonClick(lesson, !propIsPlaying);
   };
 
@@ -137,6 +144,7 @@ const LessonCard = React.memo(({
   const handleMetadata = () => {
     if (audioRef.current) {
       setDuration(audioRef.current.duration);
+      setIsAudioReady(true);
     }
   };
 
@@ -154,16 +162,49 @@ const LessonCard = React.memo(({
     onLessonComplete?.();
   };
 
-  // Effect to sync audio playback with prop
+  // FIXED: Improved audio synchronization with proper error handling
   React.useEffect(() => {
-    if (audioRef.current) {
-      if (isCurrent && propIsPlaying) {
-        audioRef.current.play();
-      } else {
-        audioRef.current.pause();
+    const syncAudioPlayback = async () => {
+      if (!audioRef.current) {
+        console.log('🚫 No audioRef available for sync');
+        return;
       }
-    }
-  }, [isCurrent, propIsPlaying]);
+
+      console.log('🔄 Syncing audio playback:', {
+        lessonTitle: lesson.title,
+        isCurrent,
+        propIsPlaying,
+        isAudioReady,
+        readyState: audioRef.current.readyState
+      });
+
+      try {
+        if (isCurrent && propIsPlaying) {
+          // Wait for audio to be ready before playing
+          if (audioRef.current.readyState >= 2 || isAudioReady) {
+            console.log('▶️ Playing audio for:', lesson.title);
+            await audioRef.current.play();
+          } else {
+            console.log('⏳ Audio not ready yet, waiting...');
+            // Try again after a short delay
+            setTimeout(() => {
+              if (audioRef.current && audioRef.current.readyState >= 2) {
+                audioRef.current.play().catch(console.error);
+              }
+            }, 100);
+          }
+        } else {
+          console.log('⏸️ Pausing audio for:', lesson.title);
+          audioRef.current.pause();
+        }
+      } catch (error) {
+        console.error('🚨 Audio playback error:', error);
+        // Don't break the UI if audio fails
+      }
+    };
+
+    syncAudioPlayback();
+  }, [isCurrent, propIsPlaying, lesson.title, isAudioReady]);
 
   // Fetch notes when lesson can play and courseId is available
   React.useEffect(() => {
@@ -250,6 +291,7 @@ const LessonCard = React.memo(({
             onLoadedMetadata={handleMetadata}
             onTimeUpdate={updateTime}
             onEnded={handleAudioEnded}
+            onCanPlay={() => setIsAudioReady(true)}
             preload="metadata"
           />
         )}
