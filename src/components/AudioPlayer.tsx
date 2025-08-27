@@ -18,6 +18,7 @@ interface AudioPlayerProps {
   onSkipBackwardRequest?: (handler: () => void) => void;
   onSkipForwardRequest?: (handler: () => void) => void;
   onPlaybackRateRequest?: (handler: (rate: number) => void) => void;
+  savedProgress?: { current_position: number; is_completed: boolean } | null;
 }
 
 const AudioPlayer = ({ 
@@ -30,7 +31,8 @@ const AudioPlayer = ({
   onSeekRequest,
   onSkipBackwardRequest,
   onSkipForwardRequest,
-  onPlaybackRateRequest
+  onPlaybackRateRequest,
+  savedProgress
 }: AudioPlayerProps) => {
   const {
     audioRef,
@@ -50,7 +52,14 @@ const AudioPlayer = ({
     handleSkipBackwardFromCard,
     handleSkipForwardFromCard,
     handlePlaybackRateChangeFromCard
-  } = useAudioPlayer({ lesson, isPlaying, onTogglePlay, onComplete, onProgressUpdate });
+  } = useAudioPlayer({ 
+    lesson, 
+    isPlaying, 
+    onTogglePlay, 
+    onComplete, 
+    onProgressUpdate, 
+    savedProgress 
+  });
   
   // Expose audio data to parent components
   React.useEffect(() => {

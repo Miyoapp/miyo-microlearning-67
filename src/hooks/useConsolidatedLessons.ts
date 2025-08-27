@@ -1,4 +1,3 @@
-
 import { useEffect, useCallback, useRef } from 'react';
 import { Podcast } from '@/types';
 import { useUserLessonProgress } from './useUserLessonProgress';
@@ -44,6 +43,19 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     handleProgressUpdate,
     isAutoAdvanceAllowed
   } = useLessonPlayback(podcast, currentLesson, userProgress, user, updateLessonPosition);
+
+  // Get saved progress for current lesson
+  const getSavedProgress = useCallback(() => {
+    if (!currentLesson || !lessonProgress) return null;
+    
+    const progress = lessonProgress.find(p => p.lesson_id === currentLesson.id);
+    if (!progress) return null;
+    
+    return {
+      current_position: progress.current_position,
+      is_completed: progress.is_completed
+    };
+  }, [currentLesson, lessonProgress]);
 
   // Inline lesson completion handling
   const handleLessonComplete = useCallback(() => {
@@ -206,6 +218,7 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     handleTogglePlay,
     handleLessonComplete,
     handleProgressUpdate,
-    initializePodcastWithProgress
+    initializePodcastWithProgress,
+    getSavedProgress
   };
 }
