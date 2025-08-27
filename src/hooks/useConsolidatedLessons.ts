@@ -106,9 +106,9 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     updateCourseProgress
   ]);
 
-  // FIXED: Lesson selection with proper play/pause handling
+  // FIXED: Improved lesson selection with clearer logic
   const handleSelectLesson = useCallback((lesson: any, shouldAutoPlay = false) => {
-    console.log('🚀🚀🚀 useConsolidatedLessons - handleSelectLesson RECEIVED:', {
+    console.log('🚀 useConsolidatedLessons - handleSelectLesson:', {
       lessonTitle: lesson.title,
       shouldAutoPlay,
       currentLessonId: currentLesson?.id,
@@ -121,30 +121,24 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     const isSameLesson = currentLesson?.id === lesson.id;
     
     if (isSameLesson) {
-      // SAME LESSON: Toggle play/pause state
-      console.log('🔄🔄🔄 SAME lesson - toggling play state from', isPlaying, 'to', shouldAutoPlay);
+      // SAME LESSON: Just toggle the play state
+      console.log('🔄 SAME lesson - toggling play state to:', shouldAutoPlay);
       setIsPlaying(shouldAutoPlay);
-      console.log('✅✅✅ Global isPlaying updated to:', shouldAutoPlay);
       return;
     }
     
     // DIFFERENT LESSON: Full lesson change workflow
     hasUserMadeSelection.current = true;
-    console.log('✅✅✅ DIFFERENT lesson selected - changing to:', lesson.title);
+    console.log('✅ DIFFERENT lesson selected - changing to:', lesson.title);
     
     // Set the new current lesson
-    console.log('📝 Setting currentLesson to:', lesson.title);
     setCurrentLesson(lesson);
     
     // Set playing state
-    console.log('🎵 Setting isPlaying to:', shouldAutoPlay);
     setIsPlaying(shouldAutoPlay);
     
     // Handle the lesson change through playback hook
-    console.log('🎯 Calling handleSelectLessonFromPlayback');
     handleSelectLessonFromPlayback(lesson, shouldAutoPlay);
-    
-    console.log('🏁 handleSelectLesson completed for:', lesson.title);
     
   }, [setCurrentLesson, handleSelectLessonFromPlayback, setIsPlaying, currentLesson?.id, isPlaying]);
 

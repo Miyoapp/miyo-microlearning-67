@@ -42,34 +42,22 @@ const LessonCard = React.memo(({
 }: LessonCardProps) => {
   const { isCompleted, isLocked, isCurrent, canPlay } = status;
   
-  console.log('🎴 LessonCard Debug:', {
+  console.log('🎴 LessonCard render:', {
     lessonTitle: lesson.title,
-    courseId,
-    canPlay,
     isCurrent,
-    shouldShowNotes: canPlay && courseId,
-    courseIdType: typeof courseId,
-    savedProgress
+    propIsPlaying,
+    canPlay,
+    timestamp: new Date().toLocaleTimeString()
   });
   
-  // Notes functionality - Only initialize when courseId exists
+  // Notes functionality
   const { notes, addNote, updateNote, deleteNote, fetchNotes } = useNotes(
     canPlay ? lesson.id : undefined, 
     canPlay ? courseId : undefined
   );
   const [showNotesPanel, setShowNotesPanel] = React.useState(false);
-
-  console.log('🎯 LessonCard render:', {
-    lessonTitle: lesson.title,
-    isCurrent,
-    propIsPlaying,
-    canPlay,
-    isCompleted,
-    courseId,
-    savedProgress
-  });
   
-  // Simple inline audio controls state
+  // Audio controls state
   const [currentTime, setCurrentTime] = React.useState(savedProgress?.current_position || 0);
   const [duration, setDuration] = React.useState(lesson.duracion || 0);
   const [playbackRate, setPlaybackRate] = React.useState(1);
@@ -78,19 +66,17 @@ const LessonCard = React.memo(({
   const [isAudioReady, setIsAudioReady] = React.useState(false);
   const audioRef = React.useRef<HTMLAudioElement>(null);
 
-  // FIXED: Handle play/pause with proper state management
+  // FIXED: Simplified play/pause handler with clear logic
   const handlePlayPause = () => {
     console.log('🎵🎵🎵 LessonCard handlePlayPause clicked:', {
       lessonTitle: lesson.title,
       currentIsPlaying: propIsPlaying,
       isCurrent,
       canPlay,
-      willToggleTo: !propIsPlaying
+      action: propIsPlaying ? 'WILL_PAUSE' : 'WILL_PLAY'
     });
     
-    // CRITICAL: Pass the lesson with the correct auto-play state
-    // If currently playing, we want to pause (shouldAutoPlay = false)
-    // If currently paused, we want to play (shouldAutoPlay = true)
+    // Call onLessonClick with the opposite of current playing state
     onLessonClick(lesson, !propIsPlaying);
   };
 
@@ -167,71 +153,45 @@ const LessonCard = React.memo(({
     onLessonComplete?.();
   };
 
-  // CRITICAL FIX: Improved audio synchronization with better state tracking
+  // CRITICAL FIX: Simplified and more reliable audio synchronization
   React.useEffect(() => {
-    const syncAudioPlayback = async () => {
-      if (!audioRef.current) {
-        console.log('🚫 No audioRef available for sync');
+    const syncAudio = async () => {
+      if (!audioRef.current || !isCurrent) {
         return;
       }
 
-      console.log('🔄🔄🔄 CRITICAL SYNC - Audio playback state:', {
+      console.log('🔄 SYNC AUDIO:', {
         lessonTitle: lesson.title,
-        isCurrent,
         propIsPlaying,
-        isAudioReady,
+        audioReady: isAudioReady,
         readyState: audioRef.current.readyState,
-        paused: audioRef.current.paused,
-        action: isCurrent && propIsPlaying ? 'SHOULD PLAY' : 'SHOULD PAUSE'
+        paused: audioRef.current.paused
       });
 
       try {
-        if (isCurrent && propIsPlaying) {
-          // Only play if audio is paused and ready
+        if (propIsPlaying) {
+          // Should be playing
           if (audioRef.current.paused && (audioRef.current.readyState >= 2 || isAudioReady)) {
-            console.log('▶️▶️▶️ PLAYING audio for:', lesson.title);
+            console.log('▶️ STARTING playback for:', lesson.title);
             await audioRef.current.play();
-            console.log('✅ Successfully started playback for:', lesson.title);
-          } else if (audioRef.current.paused) {
-            console.log('⏳ Audio not ready yet, retrying...');
-            // Retry after a brief delay
-            setTimeout(async () => {
-              if (audioRef.current && audioRef.current.paused && audioRef.current.readyState >= 2) {
-                try {
-                  await audioRef.current.play();
-                  console.log('✅ Retry playback successful for:', lesson.title);
-                } catch (retryError) {
-                  console.error('🚨 Retry playback failed:', retryError);
-                }
-              }
-            }, 200);
-          } else {
-            console.log('🎵 Audio already playing for:', lesson.title);
+            console.log('✅ Playback started successfully');
           }
-        } else if (isCurrent && !propIsPlaying) {
-          // Only pause if audio is currently playing
+        } else {
+          // Should be paused
           if (!audioRef.current.paused) {
-            console.log('⏸️⏸️⏸️ PAUSING audio for:', lesson.title);
+            console.log('⏸️ PAUSING playback for:', lesson.title);
             audioRef.current.pause();
-            console.log('✅ Successfully paused playback for:', lesson.title);
-          } else {
-            console.log('⏸️ Audio already paused for:', lesson.title);
-          }
-        } else if (!isCurrent) {
-          // This lesson is not current, make sure it's paused
-          if (!audioRef.current.paused) {
-            console.log('🛑 Stopping non-current lesson:', lesson.title);
-            audioRef.current.pause();
+            console.log('✅ Playback paused successfully');
           }
         }
       } catch (error) {
-        console.error('🚨🚨🚨 CRITICAL Audio playback error for', lesson.title, ':', error);
-        // Don't break the UI if audio fails, but log the error clearly
+        console.error('🚨 Audio sync error:', error);
+        // Don't break the UI on audio errors
       }
     };
 
-    syncAudioPlayback();
-  }, [isCurrent, propIsPlaying, lesson.title, isAudioReady]);
+    syncAudio();
+  }, [isCurrent, propIsPlaying, isAudioReady, lesson.title]);
 
   // Fetch notes when lesson can play and courseId is available
   React.useEffect(() => {
@@ -286,20 +246,18 @@ const LessonCard = React.memo(({
     setShowSpeedDropdown(false);
   };
 
-  // FIXED: Get status icon based on playing state - more explicit logic
+  // FIXED: Clearer status icon logic
   const getStatusIcon = () => {
     if (!canPlay) {
       return <Lock size={16} />;
     }
     
-    // Show pause icon if this lesson is current AND playing
+    // Show pause icon only if this lesson is current AND playing
     if (isCurrent && propIsPlaying) {
-      console.log('🎵 Showing PAUSE icon for:', lesson.title);
       return <Pause size={16} />;
     }
     
     // Show play icon in all other cases
-    console.log('▶️ Showing PLAY icon for:', lesson.title);
     return <Play size={16} fill="white" />;
   };
 
@@ -332,14 +290,14 @@ const LessonCard = React.memo(({
         {/* Header with title and status */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-3">
-            {/* FIXED: Functional Status/Play Button with explicit behavior */}
+            {/* FIXED: Functional Status/Play Button */}
             <button
               onClick={handlePlayPause}
               disabled={!canPlay}
               className={cn(
                 "flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200",
                 {
-                  "bg-[#5e16ea] text-white hover:bg-[#4a11ba]": canPlay && (isCompleted || !isCompleted),
+                  "bg-[#5e16ea] text-white hover:bg-[#4a11ba]": canPlay,
                   "bg-gray-300 text-gray-500 cursor-not-allowed": !canPlay,
                   "hover:scale-105": canPlay
                 }

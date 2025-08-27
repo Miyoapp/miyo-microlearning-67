@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useRef } from 'react';
 import { Podcast, Lesson } from '@/types';
 import { User } from '@supabase/supabase-js';
@@ -24,7 +25,7 @@ export function useLessonPlayback(
   }, [podcast, userProgress]);
 
   const handleSelectLesson = useCallback((lesson: Lesson, isManualSelection = false) => {
-    console.log('🎵🎵🎵 useLessonPlayback - handleSelectLesson RECIBIDO:', {
+    console.log('🎵 useLessonPlayback - handleSelectLesson:', {
       lessonTitle: lesson.title,
       manual: isManualSelection,
       isCompleted: lesson.isCompleted,
@@ -57,8 +58,7 @@ export function useLessonPlayback(
     
     // CORREGIDO: Auto-start playback para selecciones manuales desde la ruta de aprendizaje
     if (isManualSelection) {
-      console.log('▶️▶️▶️ SELECCIÓN MANUAL desde ruta de aprendizaje - iniciando reproducción automática');
-      console.log('🔊🔊🔊 ESTABLECIENDO isPlaying = TRUE para selección manual');
+      console.log('▶️ SELECCIÓN MANUAL desde ruta de aprendizaje - iniciando reproducción automática');
       setIsPlaying(true);
       setIsAutoAdvanceAllowed(true);
     } else {
@@ -71,18 +71,17 @@ export function useLessonPlayback(
     
     // OPTIMIZADO: Tracking de inicio para todas las lecciones en review mode o incompletas
     if (podcast && isManualSelection) {
-      console.log('📊📊📊 TRACKING inicio de lección para:', lesson.isCompleted ? 'lección completada (replay/secuencia)' : 'lección incompleta');
+      console.log('📊 TRACKING inicio de lección para:', lesson.isCompleted ? 'lección completada (replay/secuencia)' : 'lección incompleta');
       updateLessonPosition(lesson.id, podcast.id, 1);
     }
   }, [podcast, updateLessonPosition, userProgress, isInReviewMode]);
 
+  // FIXED: Simplified handleTogglePlay
   const handleTogglePlay = useCallback(() => {
     if (!currentLesson) return;
     
-    console.log('🎵🎵🎵 Toggle play - estado actual:', isPlaying, '→ nuevo estado:', !isPlaying);
+    console.log('🎵 Toggle play - estado actual:', isPlaying, '→ nuevo estado:', !isPlaying);
     setIsPlaying(!isPlaying);
-    
-    // FIXED: Always keep auto-advance allowed when toggling play
     setIsAutoAdvanceAllowed(true);
   }, [isPlaying, currentLesson]);
 
