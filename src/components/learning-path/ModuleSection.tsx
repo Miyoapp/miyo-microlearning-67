@@ -16,6 +16,19 @@ interface ModuleSectionProps {
   onLessonClick: (lesson: Lesson, shouldAutoPlay?: boolean) => void;
   onProgressUpdate?: (position: number) => void;
   onLessonComplete?: () => void;
+  // Nuevos props para controles centralizados
+  currentTime?: number;
+  duration?: number;
+  playbackRate?: number;
+  volume?: number;
+  isMuted?: boolean;
+  onSeek?: (time: number) => void;
+  onSkipBackward?: () => void;
+  onSkipForward?: () => void;
+  onPlaybackRateChange?: (rate: number) => void;
+  onVolumeChange?: (volume: number) => void;
+  onToggleMute?: () => void;
+  formatTime?: (time: number) => string;
 }
 
 const ModuleSection = React.memo(({ 
@@ -29,7 +42,20 @@ const ModuleSection = React.memo(({
   lessonProgress,
   onLessonClick,
   onProgressUpdate,
-  onLessonComplete
+  onLessonComplete,
+  // Nuevos props centralizados
+  currentTime = 0,
+  duration = 0,
+  playbackRate = 1,
+  volume = 1,
+  isMuted = false,
+  onSeek = () => {},
+  onSkipBackward = () => {},
+  onSkipForward = () => {},
+  onPlaybackRateChange = () => {},
+  onVolumeChange = () => {},
+  onToggleMute = () => {},
+  formatTime = (time: number) => `${Math.floor(time / 60)}:${Math.floor(time % 60).toString().padStart(2, '0')}`
 }: ModuleSectionProps) => {
   if (moduleLessons.length === 0) return null;
   
@@ -76,14 +102,24 @@ const ModuleSection = React.memo(({
               index={index}
               status={enhancedStatus}
               isPlaying={isPlaying}
+              currentTime={currentTime}
+              duration={duration}
+              playbackRate={playbackRate}
+              volume={volume}
+              isMuted={isMuted}
               courseId={courseId}
               savedProgress={savedProgress ? {
                 current_position: savedProgress.current_position || 0,
                 is_completed: savedProgress.is_completed || false
               } : undefined}
               onLessonClick={onLessonClick}
-              onProgressUpdate={onProgressUpdate}
-              onLessonComplete={onLessonComplete}
+              onSeek={onSeek}
+              onSkipBackward={onSkipBackward}
+              onSkipForward={onSkipForward}
+              onPlaybackRateChange={onPlaybackRateChange}
+              onVolumeChange={onVolumeChange}
+              onToggleMute={onToggleMute}
+              formatTime={formatTime}
             />
           );
         })}
