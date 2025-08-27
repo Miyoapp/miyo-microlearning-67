@@ -42,6 +42,7 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     currentLesson,
     userProgress,
     user,
+    lessonProgress,
     updateLessonPosition
   });
 
@@ -56,6 +57,7 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     isLoading,
     isAutoAdvanceAllowed,
     handleTogglePlay,
+    handleProgressUpdate,
     handleSeek,
     handleSkipBackward,
     handleSkipForward,
@@ -291,6 +293,7 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     
     // Funciones de control de reproducción
     handleTogglePlay,
+    handleProgressUpdate,
     handleSeek,
     handleSkipBackward,
     handleSkipForward,

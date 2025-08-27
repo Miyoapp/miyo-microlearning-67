@@ -2,6 +2,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Lesson, Podcast } from '@/types';
 import { UserCourseProgress } from '@/hooks/useUserProgress';
+import { UserLessonProgress } from '@/hooks/lesson-progress/types';
 import { User } from '@supabase/supabase-js';
 
 interface UseLessonPlaybackProps {
@@ -9,6 +10,7 @@ interface UseLessonPlaybackProps {
   currentLesson: Lesson | null;
   userProgress: UserCourseProgress[];
   user: User | null;
+  lessonProgress: UserLessonProgress[];
   updateLessonPosition: (lessonId: string, courseId: string, position: number) => Promise<void>;
 }
 
@@ -17,6 +19,7 @@ export function useLessonPlayback({
   currentLesson,
   userProgress,
   user,
+  lessonProgress,
   updateLessonPosition
 }: UseLessonPlaybackProps) {
   // Estado centralizado del reproductor
@@ -92,15 +95,16 @@ export function useLessonPlayback({
       const audioDuration = audioRef.current.duration;
       setDuration(audioDuration);
       
-      // Restaurar posición guardada si existe
-      const savedPosition = currentLesson.current_position || 0;
+      // Restaurar posición guardada si existe - buscar en lessonProgress
+      const lessonProgressData = lessonProgress.find(p => p.lesson_id === currentLesson.id);
+      const savedPosition = lessonProgressData?.current_position || 0;
       if (savedPosition > 0 && savedPosition < audioDuration) {
         audioRef.current.currentTime = savedPosition;
         setCurrentTime(savedPosition);
         console.log('🔄 Restored position:', savedPosition, 'for lesson:', currentLesson.title);
       }
     }
-  }, [currentLesson]);
+  }, [currentLesson, lessonProgress]);
 
   // Actualizar tiempo actual
   const handleTimeUpdate = useCallback(() => {

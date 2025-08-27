@@ -2,6 +2,7 @@
 import React from 'react';
 import { Lesson } from '@/types';
 import { LessonNote } from '@/types/notes';
+import { UserLessonProgress } from '@/hooks/lesson-progress/types';
 import { Play, Pause, Lock, SkipBack, SkipForward, ChevronDown, Volume2, VolumeX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNotes } from '@/hooks/useNotes';
@@ -25,10 +26,7 @@ interface LessonCardProps {
   volume: number;
   isMuted: boolean;
   courseId: string | null;
-  savedProgress?: {
-    current_position: number;
-    is_completed: boolean;
-  };
+  lessonProgress: UserLessonProgress[];
   // Callbacks del reproductor centralizado
   onLessonClick: (lesson: Lesson, shouldAutoPlay?: boolean) => void;
   onSeek: (time: number) => void;
@@ -51,7 +49,7 @@ const LessonCard = React.memo(({
   volume,
   isMuted,
   courseId,
-  savedProgress,
+  lessonProgress,
   onLessonClick,
   onSeek,
   onSkipBackward,
@@ -62,6 +60,9 @@ const LessonCard = React.memo(({
   formatTime
 }: LessonCardProps) => {
   const { isCompleted, isLocked, isCurrent, canPlay } = status;
+  
+  // Get saved progress for this lesson
+  const savedProgress = lessonProgress.find(p => p.lesson_id === lesson.id);
   
   // Notes functionality - Only initialize when courseId exists
   const { notes, addNote, updateNote, deleteNote, fetchNotes } = useNotes(
