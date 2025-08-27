@@ -60,7 +60,7 @@ export function useLessonCompletion(
         console.log('✅ CRITICAL: Database updates completed immediately');
       }
       
-      // UNIFIED: Auto-advance works the same for all lessons
+      // Auto-advance with improved handling
       if (isAutoAdvanceAllowed && nextLesson) {
         console.log('⏭️ AUTO-ADVANCE: Initiating transition to:', nextLesson.title);
         
@@ -78,11 +78,10 @@ export function useLessonCompletion(
         const updatedPodcast = { ...podcast, lessons: updatedLessons };
         setPodcast(updatedPodcast);
         
-        // Set next lesson and start playback
+        // Set next lesson
         setTimeout(() => {
           console.log('⏭️ AUTO-ADVANCE: Setting next lesson:', nextLesson.title);
           
-          // UNIFIED: Simple lesson setting without special flags
           const nextLessonUnlocked = { 
             ...nextLesson, 
             isLocked: false
@@ -90,11 +89,11 @@ export function useLessonCompletion(
           
           setCurrentLesson(nextLessonUnlocked);
           
-          // Start playback after brief initialization
-          setTimeout(() => {
-            console.log('▶️ AUTO-ADVANCE: Starting playback:', nextLesson.title);
+          // Start playback with requestAnimationFrame for proper timing
+          requestAnimationFrame(() => {
+            console.log('🚀 AUTO-ADVANCE: Starting playback with requestAnimationFrame:', nextLesson.title);
             setIsPlaying(true);
-          }, 200);
+          });
         }, 100);
         
       } else {

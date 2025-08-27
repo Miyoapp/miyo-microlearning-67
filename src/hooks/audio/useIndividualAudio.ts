@@ -24,6 +24,7 @@ export function useIndividualAudio({
   savedProgress
 }: UseIndividualAudioProps) {
   const [currentTime, setCurrentTime] = useState(0);
+  const [currentTimePercent, setCurrentTimePercent] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.7);
   const [isMuted, setIsMuted] = useState(false);
@@ -38,12 +39,23 @@ export function useIndividualAudio({
     isPlaying,
     actualIsPlaying,
     currentTime,
+    currentTimePercent,
     duration,
     playbackRate,
     savedProgress
   });
 
-  // Initialize lesson when it changes - UNIFIED: No special logic for completed lessons
+  // 1. Inicialización de la UI (progreso visual)
+  useEffect(() => {
+    if (savedProgress?.current_position >= 0) {
+      // La barra de progreso refleja SIEMPRE el progreso guardado
+      setCurrentTimePercent(savedProgress.current_position); 
+    } else {
+      setCurrentTimePercent(0);
+    }
+  }, [lesson.id, savedProgress]);
+
+  // Initialize lesson when it changes
   useEffect(() => {
     if (audioRef.current) {
       const audio = audioRef.current;
@@ -54,26 +66,17 @@ export function useIndividualAudio({
         
         lastLessonId.current = lesson.id;
         
-        // UNIFIED: Simple initialization for all lessons
+        // Reset audio settings
         audio.volume = isMuted ? 0 : volume;
         audio.playbackRate = playbackRate;
         setDuration(0);
         setActualIsPlaying(false);
         
-        // UNIFIED: Only set visual state to saved progress if available, otherwise start from beginning
-        if (savedProgress?.current_position && savedProgress.current_position > 0) {
-          // Keep visual state at saved progress during initialization
-          const savedTime = (savedProgress.current_position / 100) * (duration || lesson.duracion);
-          setCurrentTime(savedTime);
-        } else {
-          setCurrentTime(0);
-        }
-        
         audio.load();
       }
     }
     isInitialized.current = true;
-  }, [lesson.id, volume, isMuted, playbackRate, savedProgress, duration, lesson.duracion]);
+  }, [lesson.id, volume, isMuted, playbackRate]);
 
   // Direct play/pause control for immediate response
   const handleDirectToggle = useCallback(() => {
@@ -185,40 +188,47 @@ export function useIndividualAudio({
       const newCurrentTime = audioRef.current.currentTime;
       setCurrentTime(newCurrentTime);
       
+      // Update visual progress percentage
+      const progressPercent = (newCurrentTime / duration) * 100;
+      setCurrentTimePercent(progressPercent);
+      
       // Always update progress during active playback
       if (onProgressUpdate && actualIsPlaying) {
-        const progressPercent = (newCurrentTime / duration) * 100;
         console.log('📊 Updating progress during playback:', lesson.title, 'progress:', progressPercent.toFixed(1) + '%');
         onProgressUpdate(progressPercent);
       }
     }
   }, [duration, lesson.title, onProgressUpdate, actualIsPlaying]);
 
-  // UNIFIED: Simple metadata handling - same logic for all lessons
+  // 2. Metadatos cargados (cuando el audio ya tiene duration real)
   const handleMetadata = useCallback(() => {
     if (audioRef.current) {
       const newDuration = audioRef.current.duration;
       console.log("📋 Audio metadata loaded for", lesson.title, "duration:", newDuration, "savedProgress:", savedProgress);
       setDuration(newDuration);
-      
-      // UNIFIED: Same initialization logic for ALL lessons
-      if (savedProgress?.current_position && savedProgress.current_position > 0) {
-        const savedTime = (savedProgress.current_position / 100) * newDuration;
-        console.log("📍 Restoring progress to:", savedTime, "seconds (", savedProgress.current_position, "%)");
-        
-        // UNIFIED: Set both visual and audio time to saved progress
-        setCurrentTime(savedTime);
+
+      if (savedProgress?.current_position >= 0) {
+        let savedTime = (savedProgress.current_position / 100) * newDuration;
+
+        // 🚨 Caso especial: si está al 100%, el audio se reinicia en 0
+        if (savedProgress.current_position === 100) {
+          console.log("🔄 Completed lesson - restarting at 0 for proper playback");
+          savedTime = 0;
+        }
+
+        console.log("📍 Setting audio position to:", savedTime, "seconds");
         audioRef.current.currentTime = savedTime;
+        setCurrentTime(savedTime);
       } else {
-        // Start from beginning for new lessons
+        // Sin progreso previo → arrancamos en 0
         console.log("🆕 New lesson - starting at beginning");
-        setCurrentTime(0);
         audioRef.current.currentTime = 0;
+        setCurrentTime(0);
       }
     }
   }, [lesson.title, savedProgress]);
 
-  // UNIFIED: Same audio ended handler for all lessons
+  // 3. Auto-advance entre lecciones
   const handleAudioEnded = useCallback(() => {
     console.log("🏁 Audio ended for lesson:", lesson.title);
     
@@ -230,6 +240,7 @@ export function useIndividualAudio({
     // Update visual state to 100%
     const finalTime = duration;
     setCurrentTime(finalTime);
+    setCurrentTimePercent(100);
     
     // Update progress to 100% before completion
     if (onProgressUpdate) {
@@ -237,9 +248,9 @@ export function useIndividualAudio({
       onProgressUpdate(100);
     }
     
-    // Trigger completion after a brief delay
+    // Trigger completion with auto-advance handling
     setTimeout(() => {
-      console.log("🏁 Triggering lesson completion");
+      console.log("🏁 Triggering lesson completion with auto-advance");
       onComplete();
     }, 100);
     
@@ -251,9 +262,14 @@ export function useIndividualAudio({
       setCurrentTime(value);
       audioRef.current.currentTime = value;
       
-      if (onProgressUpdate && duration > 0 && actualIsPlaying) {
+      // Update visual progress
+      if (duration > 0) {
         const progressPercent = (value / duration) * 100;
-        onProgressUpdate(progressPercent);
+        setCurrentTimePercent(progressPercent);
+        
+        if (onProgressUpdate && actualIsPlaying) {
+          onProgressUpdate(progressPercent);
+        }
       }
     }
   }, [duration, lesson.title, onProgressUpdate, actualIsPlaying]);
@@ -289,8 +305,8 @@ export function useIndividualAudio({
     setPlaybackRate(rate);
   }, [lesson.title]);
 
-  // UNIFIED: Simple time display - no special logic
-  const effectiveCurrentTime = currentTime;
+  // Use visual time for display (based on progress percentage)
+  const effectiveCurrentTime = duration > 0 ? (currentTimePercent / 100) * duration : currentTime;
   const effectiveDuration = duration || lesson.duracion;
 
   return {
