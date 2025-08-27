@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { Lesson } from '@/types';
 import { useIndividualAudio } from '@/hooks/audio/useIndividualAudio';
 
@@ -27,13 +27,11 @@ export function useLessonCard({
   onLessonComplete,
   savedProgress
 }: UseLessonCardProps) {
-  const [localIsPlaying, setLocalIsPlaying] = useState(false);
   
   console.log('🎵 useLessonCard for:', lesson.title, {
     canPlay,
     isCurrent,
     isPlaying,
-    localIsPlaying,
     savedProgress: savedProgress ? {
       current_position: savedProgress.current_position,
       is_completed: savedProgress.is_completed
@@ -43,21 +41,18 @@ export function useLessonCard({
   // Handle lesson completion
   const handleComplete = useCallback(() => {
     console.log('🏁 Lesson completed:', lesson.title);
-    setLocalIsPlaying(false);
     if (onLessonComplete) {
       onLessonComplete();
     }
   }, [lesson.title, onLessonComplete]);
 
-  // Handle audio state changes for current lesson
+  // CORRECCIÓN 2: Eliminado localIsPlaying - solo usar actualIsPlaying del audio hook
   const handlePlayStateChange = useCallback((newIsPlaying: boolean) => {
     console.log('🔄 Audio state changed for:', lesson.title, 'new state:', newIsPlaying);
-    if (isCurrent) {
-      setLocalIsPlaying(newIsPlaying);
-    }
-  }, [isCurrent, lesson.title]);
+    // No hay estado local que actualizar - el hook de audio maneja todo
+  }, [lesson.title]);
 
-  // UNIFIED: Use individual audio management without special flags
+  // Use individual audio management
   const audioHook = useIndividualAudio({
     lesson,
     isPlaying: isCurrent ? isPlaying : false,
@@ -76,7 +71,7 @@ export function useLessonCard({
       canPlay, 
       isCurrent, 
       isPlaying, 
-      localIsPlaying
+      actualIsPlaying: audioHook.actualIsPlaying
     });
     
     if (!canPlay) {
@@ -95,7 +90,7 @@ export function useLessonCard({
     console.log('🎵 Direct toggle for current lesson:', lesson.title);
     audioHook.handleDirectToggle();
     
-  }, [canPlay, isCurrent, isPlaying, localIsPlaying, onLessonClick, lesson, audioHook]);
+  }, [canPlay, isCurrent, isPlaying, onLessonClick, lesson, audioHook]);
 
   // Format time helper
   const formatTime = useCallback((seconds: number) => {
@@ -110,8 +105,8 @@ export function useLessonCard({
   const currentTime = audioHook.currentTime;
   const duration = audioHook.duration;
   
-  // Use actual audio state for current lesson
-  const effectiveIsPlaying = isCurrent ? (audioHook.actualIsPlaying || localIsPlaying) : false;
+  // CORRECCIÓN 2: Usar solo actualIsPlaying del hook de audio - eliminada lógica compleja
+  const effectiveIsPlaying = isCurrent ? audioHook.actualIsPlaying : false;
 
   return {
     isPlaying: effectiveIsPlaying,

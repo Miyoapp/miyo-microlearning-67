@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Lesson } from '@/types';
 import { LessonNote } from '@/types/notes';
@@ -111,7 +112,7 @@ const LessonCard = React.memo(({
     await addNote(noteText, currentTime);
   };
 
-  // NUEVO: Adaptador para convertir la signature de updateNote a la esperada por NotesPanel
+  // Adaptador para convertir la signature de updateNote a la esperada por NotesPanel
   const handleEditNote = async (noteId: string, updates: Partial<Pick<LessonNote, 'note_text' | 'note_title' | 'tags' | 'is_favorite'>>) => {
     await updateNote(noteId, updates);
   };
@@ -132,10 +133,10 @@ const LessonCard = React.memo(({
   const [showSpeedDropdown, setShowSpeedDropdown] = React.useState(false);
   const [showVolumeControl, setShowVolumeControl] = React.useState(false);
 
-  // FIXED: Treat lesson.duracion as seconds (remove * 60 multiplication)
+  // CORRECCIÓN 3: Usar duración válida y tiempo actual sin lógica especial
   const validDuration = duration || lesson.duracion;
   
-  // Always show real progress - no special cases
+  // CORRECCIÓN 3: Mostrar siempre el progreso real sin saltos visuales
   const validCurrentTime = useMemo(() => {
     return Math.min(currentTime, validDuration);
   }, [currentTime, validDuration]);
@@ -152,11 +153,12 @@ const LessonCard = React.memo(({
     setShowSpeedDropdown(false);
   };
 
-  // Always show play/pause icon, never trophy
+  // CORRECCIÓN 2: Icono siempre basado en el estado real de reproducción
   const getStatusIcon = () => {
     if (!canPlay) {
       return <Lock size={16} />;
     }
+    // CRÍTICO: Usar solo isPlaying del hook (que viene de actualIsPlaying)
     if (isCurrent && isPlaying) {
       return <Pause size={16} />;
     }
@@ -382,7 +384,7 @@ const LessonCard = React.memo(({
         )}
       </div>
 
-      {/* Notes Panel - Integrated con el adaptador */}
+      {/* Notes Panel */}
       {canPlay && courseId && (
         <NotesPanel
           isOpen={showNotesPanel}

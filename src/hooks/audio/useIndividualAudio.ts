@@ -55,11 +55,9 @@ export function useIndividualAudio({
         
         lastLessonId.current = lesson.id;
         
-        // UNIFIED: Always start from beginning for new lesson loads
-        console.log("🆕 New lesson load - starting from beginning");
-        audio.currentTime = 0;
+        // Reset audio state for new lesson
         setCurrentTime(0);
-        
+        audio.currentTime = 0;
         audio.volume = isMuted ? 0 : volume;
         audio.playbackRate = playbackRate;
         setDuration(0);
@@ -190,23 +188,32 @@ export function useIndividualAudio({
     }
   }, [duration, lesson.title, onProgressUpdate, actualIsPlaying]);
 
-  // UNIFIED: Simple metadata handling with consistent initialization
+  // FIXED: Correct metadata handling with proper initialization for completed lessons
   const handleMetadata = useCallback(() => {
     if (audioRef.current) {
       const newDuration = audioRef.current.duration;
       console.log("📋 Audio metadata loaded for", lesson.title, "duration:", newDuration, "savedProgress:", savedProgress);
       setDuration(newDuration);
       
-      // UNIFIED: Simple initialization logic for all lessons
+      // CORRECCIÓN 1: Inicialización correcta para lecciones completadas
       if (savedProgress?.current_position && savedProgress.current_position > 0) {
-        // Restore saved progress for any lesson that has it
         const savedTime = (savedProgress.current_position / 100) * newDuration;
-        console.log("📍 Restoring progress to:", savedTime, "seconds");
-        setCurrentTime(savedTime);
-        audioRef.current.currentTime = savedTime;
+        console.log("📍 Restoring progress to:", savedTime, "seconds (", savedProgress.current_position, "%)");
+        
+        // CRÍTICO: Para lecciones completadas (100%), posicionar al final
+        if (savedProgress.current_position >= 100 || savedProgress.is_completed) {
+          console.log("🏁 Completed lesson - positioning at end");
+          setCurrentTime(newDuration);
+          audioRef.current.currentTime = newDuration;
+        } else {
+          // Para lecciones incompletas, usar progreso guardado
+          console.log("📍 Incomplete lesson - restoring saved progress");
+          setCurrentTime(savedTime);
+          audioRef.current.currentTime = savedTime;
+        }
       } else {
-        // Start at beginning for new lessons or lessons without saved progress
-        console.log("🆕 Starting at beginning");
+        // Comenzar desde el inicio para lecciones nuevas
+        console.log("🆕 New lesson - starting at beginning");
         setCurrentTime(0);
         audioRef.current.currentTime = 0;
       }
@@ -284,7 +291,7 @@ export function useIndividualAudio({
     setPlaybackRate(rate);
   }, [lesson.title]);
 
-  // UNIFIED: Always show real current time - no special logic
+  // CORRECCIÓN 3: Siempre mostrar el tiempo real del audio - sin lógica especial
   const effectiveCurrentTime = currentTime;
   const effectiveDuration = duration || lesson.duracion;
 
