@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { Lesson } from '@/types';
 import { useIndividualAudio } from '@/hooks/audio/useIndividualAudio';
@@ -14,7 +15,6 @@ interface UseLessonCardProps {
     current_position: number;
     is_completed: boolean;
   };
-  isAutoAdvanceReplay?: boolean; // NEW: Flag to indicate if this is an auto-advance replay
 }
 
 export function useLessonCard({ 
@@ -25,8 +25,7 @@ export function useLessonCard({
   onLessonClick,
   onProgressUpdate,
   onLessonComplete,
-  savedProgress,
-  isAutoAdvanceReplay = false
+  savedProgress
 }: UseLessonCardProps) {
   const [localIsPlaying, setLocalIsPlaying] = useState(false);
   
@@ -35,15 +34,11 @@ export function useLessonCard({
     isCurrent,
     isPlaying,
     localIsPlaying,
-    isAutoAdvanceReplay,
     savedProgress: savedProgress ? {
       current_position: savedProgress.current_position,
       is_completed: savedProgress.is_completed
     } : null
   });
-
-  // FIXED: Detect if this is an auto-advance scenario
-  const isActualAutoAdvanceReplay = isAutoAdvanceReplay || (lesson as any)?._isAutoAdvanceReplay || false;
 
   // Handle lesson completion
   const handleComplete = useCallback(() => {
@@ -62,7 +57,7 @@ export function useLessonCard({
     }
   }, [isCurrent, lesson.title]);
 
-  // Use individual audio management with the corrected replay flag
+  // UNIFIED: Use individual audio management without special flags
   const audioHook = useIndividualAudio({
     lesson,
     isPlaying: isCurrent ? isPlaying : false,
@@ -72,8 +67,7 @@ export function useLessonCard({
     onComplete: handleComplete,
     onProgressUpdate,
     onPlayStateChange: handlePlayStateChange,
-    savedProgress,
-    isAutoAdvanceReplay: isActualAutoAdvanceReplay // FIXED: Pass corrected flag
+    savedProgress
   });
 
   // Handle play/pause with clear separation of concerns
@@ -82,8 +76,7 @@ export function useLessonCard({
       canPlay, 
       isCurrent, 
       isPlaying, 
-      localIsPlaying,
-      isAutoAdvanceReplay 
+      localIsPlaying
     });
     
     if (!canPlay) {
@@ -92,17 +85,17 @@ export function useLessonCard({
     }
 
     if (!isCurrent) {
-      // Different lesson - select it with auto-play (this is manual selection)
-      console.log('🎯 Selecting different lesson:', lesson.title, '(manual selection)');
+      // Different lesson - select it with auto-play
+      console.log('🎯 Selecting different lesson:', lesson.title);
       onLessonClick(lesson, true);
       return;
     }
 
-    // Current lesson - handle play/pause directly (this is manual toggle)
-    console.log('🎵 Direct toggle for current lesson:', lesson.title, '(manual toggle)');
+    // Current lesson - handle play/pause directly
+    console.log('🎵 Direct toggle for current lesson:', lesson.title);
     audioHook.handleDirectToggle();
     
-  }, [canPlay, isCurrent, isPlaying, localIsPlaying, onLessonClick, lesson, audioHook, isAutoAdvanceReplay]);
+  }, [canPlay, isCurrent, isPlaying, localIsPlaying, onLessonClick, lesson, audioHook]);
 
   // Format time helper
   const formatTime = useCallback((seconds: number) => {
@@ -127,7 +120,7 @@ export function useLessonCard({
     playbackRate: audioHook.playbackRate,
     volume: audioHook.volume,
     isMuted: audioHook.isMuted,
-    isTransitioning: false, // Simplified - no more transitions
+    isTransitioning: false,
     handlePlayPause: handleTogglePlay,
     handleSeek: audioHook.handleSeek,
     handleSkipBackward: audioHook.handleSkipBackward,

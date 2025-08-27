@@ -13,7 +13,6 @@ interface UseIndividualAudioProps {
     current_position: number;
     is_completed: boolean;
   };
-  isAutoAdvanceReplay?: boolean;
 }
 
 export function useIndividualAudio({
@@ -23,8 +22,7 @@ export function useIndividualAudio({
   onComplete,
   onProgressUpdate,
   onPlayStateChange,
-  savedProgress,
-  isAutoAdvanceReplay = false
+  savedProgress
 }: UseIndividualAudioProps) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -43,8 +41,6 @@ export function useIndividualAudio({
     currentTime,
     duration,
     playbackRate,
-    isCompleted: savedProgress?.is_completed,
-    isAutoAdvanceReplay,
     savedProgress
   });
 
@@ -59,7 +55,7 @@ export function useIndividualAudio({
         
         lastLessonId.current = lesson.id;
         
-        // Always start from beginning for new lesson loads
+        // UNIFIED: Always start from beginning for new lesson loads
         console.log("🆕 New lesson load - starting from beginning");
         audio.currentTime = 0;
         setCurrentTime(0);
@@ -85,15 +81,6 @@ export function useIndividualAudio({
     console.log('🎵 Direct toggle:', lesson.title, 'new state:', newPlayingState);
 
     if (newPlayingState) {
-      // FIXED: Only apply auto-advance logic when explicitly requested AND lesson is completed
-      if (savedProgress?.is_completed && isAutoAdvanceReplay && audio.duration > 0) {
-        const nearEndTime = Math.max(0, audio.duration - 2);
-        console.log('⏭️ Auto-advance replay - starting near end for quick completion:', nearEndTime);
-        audio.currentTime = nearEndTime;
-        setCurrentTime(nearEndTime);
-      }
-      // For all other cases (manual replay, new lessons), start where audio is positioned
-      
       const playPromise = audio.play();
       if (playPromise !== undefined) {
         playPromise.then(() => {
@@ -116,7 +103,7 @@ export function useIndividualAudio({
         onPlayStateChange(false);
       }
     }
-  }, [actualIsPlaying, lesson.title, onPlayStateChange, savedProgress?.is_completed, isAutoAdvanceReplay]);
+  }, [actualIsPlaying, lesson.title, onPlayStateChange]);
 
   // Handle external play/pause state changes
   useEffect(() => {
@@ -129,14 +116,6 @@ export function useIndividualAudio({
     if (stateChanged && isPlaying !== actualIsPlaying) {
       if (isPlaying) {
         console.log("▶️ External trigger: Playing audio for lesson:", lesson.title);
-        
-        // FIXED: Only apply auto-advance logic when explicitly requested AND lesson is completed
-        if (savedProgress?.is_completed && isAutoAdvanceReplay && audio.duration > 0) {
-          const nearEndTime = Math.max(0, audio.duration - 2);
-          console.log('⏭️ External auto-advance replay - starting near end:', nearEndTime);
-          audio.currentTime = nearEndTime;
-          setCurrentTime(nearEndTime);
-        }
         
         const playPromise = audio.play();
         if (playPromise !== undefined) {
@@ -156,7 +135,7 @@ export function useIndividualAudio({
         setActualIsPlaying(false);
       }
     }
-  }, [isPlaying, lesson.id, lesson.title, actualIsPlaying, onPlayStateChange, savedProgress?.is_completed, isAutoAdvanceReplay]);
+  }, [isPlaying, lesson.id, lesson.title, actualIsPlaying, onPlayStateChange]);
 
   // Listen to actual audio events
   useEffect(() => {
@@ -211,28 +190,23 @@ export function useIndividualAudio({
     }
   }, [duration, lesson.title, onProgressUpdate, actualIsPlaying]);
 
-  // FIXED: Handle metadata loaded with correct initialization logic
+  // UNIFIED: Simple metadata handling with consistent initialization
   const handleMetadata = useCallback(() => {
     if (audioRef.current) {
       const newDuration = audioRef.current.duration;
       console.log("📋 Audio metadata loaded for", lesson.title, "duration:", newDuration, "savedProgress:", savedProgress);
       setDuration(newDuration);
       
-      // CRITICAL FIX: Correct initialization logic for different lesson states
-      if (savedProgress?.is_completed) {
-        // COMPLETED LESSONS: Initialize at 100% to show completion status
-        console.log("✅ Completed lesson - initializing at 100% progress");
-        setCurrentTime(newDuration);
-        audioRef.current.currentTime = newDuration;
-      } else if (savedProgress?.current_position && savedProgress.current_position > 0) {
-        // INCOMPLETE LESSONS: Restore saved progress
+      // UNIFIED: Simple initialization logic for all lessons
+      if (savedProgress?.current_position && savedProgress.current_position > 0) {
+        // Restore saved progress for any lesson that has it
         const savedTime = (savedProgress.current_position / 100) * newDuration;
-        console.log("📍 Incomplete lesson - restoring progress to:", savedTime, "seconds");
+        console.log("📍 Restoring progress to:", savedTime, "seconds");
         setCurrentTime(savedTime);
         audioRef.current.currentTime = savedTime;
       } else {
-        // NEW LESSONS: Start at beginning
-        console.log("🆕 New lesson - starting at beginning");
+        // Start at beginning for new lessons or lessons without saved progress
+        console.log("🆕 Starting at beginning");
         setCurrentTime(0);
         audioRef.current.currentTime = 0;
       }
@@ -310,24 +284,13 @@ export function useIndividualAudio({
     setPlaybackRate(rate);
   }, [lesson.title]);
 
-  // FIXED: Standard player behavior - always show real currentTime during active use
-  const effectiveCurrentTime = () => {
-    // CRITICAL FIX: Always show real-time progress for standard player behavior
-    // Only show completion state (100%) when audio is not actively being used
-    if (!actualIsPlaying && savedProgress?.is_completed && currentTime >= duration - 1) {
-      console.log("🏆 Showing completion state for completed lesson at rest");
-      return duration;
-    }
-    
-    console.log("🔄 Standard player - showing real-time progress:", currentTime);
-    return currentTime;
-  };
-    
+  // UNIFIED: Always show real current time - no special logic
+  const effectiveCurrentTime = currentTime;
   const effectiveDuration = duration || lesson.duracion;
 
   return {
     audioRef,
-    currentTime: effectiveCurrentTime(),
+    currentTime: effectiveCurrentTime,
     duration: effectiveDuration,
     volume,
     isMuted,

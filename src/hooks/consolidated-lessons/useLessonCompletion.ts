@@ -60,9 +60,9 @@ export function useLessonCompletion(
         console.log('✅ CRITICAL: Database updates completed immediately');
       }
       
-      // FIXED: AUTO-ADVANCE - Remove any blocking logic for completed lessons
+      // UNIFIED: Auto-advance works the same for all lessons
       if (isAutoAdvanceAllowed && nextLesson) {
-        console.log('⏭️ AUTO-ADVANCE: Initiating transition to:', nextLesson.title, '(works for any lesson state)');
+        console.log('⏭️ AUTO-ADVANCE: Initiating transition to:', nextLesson.title);
         
         // Update podcast state first to unlock next lesson
         const updatedLessons = podcast.lessons.map(lesson => {
@@ -78,19 +78,17 @@ export function useLessonCompletion(
         const updatedPodcast = { ...podcast, lessons: updatedLessons };
         setPodcast(updatedPodcast);
         
-        // CRITICAL FIX: Set lesson with proper auto-advance flag context
+        // Set next lesson and start playback
         setTimeout(() => {
-          console.log('⏭️ AUTO-ADVANCE: Setting next lesson for auto-advance:', nextLesson.title);
+          console.log('⏭️ AUTO-ADVANCE: Setting next lesson:', nextLesson.title);
           
-          // FIXED: Always mark as auto-advance replay when using auto-advance
-          const nextLessonWithAutoAdvance = { 
+          // UNIFIED: Simple lesson setting without special flags
+          const nextLessonUnlocked = { 
             ...nextLesson, 
-            isLocked: false,
-            // CRITICAL: Mark this as auto-advance replay for proper audio handling
-            _isAutoAdvanceReplay: true
+            isLocked: false
           };
           
-          setCurrentLesson(nextLessonWithAutoAdvance);
+          setCurrentLesson(nextLessonUnlocked);
           
           // Start playback after brief initialization
           setTimeout(() => {
