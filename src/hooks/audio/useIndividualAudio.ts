@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Lesson } from '@/types';
 
@@ -45,11 +46,10 @@ export function useIndividualAudio({
     savedProgress
   });
 
-  // 1. Inicialización de la UI (progreso visual)
+  // ✅ IMPROVED: UI initialization - visual progress reflects saved progress immediately
   useEffect(() => {
     if (savedProgress?.current_position >= 0) {
-      // La barra de progreso refleja SIEMPRE el progreso guardado
-      setCurrentTimePercent(savedProgress.current_position); 
+      setCurrentTimePercent(savedProgress.current_position);
     } else {
       setCurrentTimePercent(0);
     }
@@ -200,7 +200,7 @@ export function useIndividualAudio({
     }
   }, [duration, lesson.title, onProgressUpdate, actualIsPlaying]);
 
-  // 2. Metadatos cargados (cuando el audio ya tiene duration real)
+  // ✅ IMPROVED: Audio metadata handling with better completed lesson support
   const handleMetadata = useCallback(() => {
     if (audioRef.current) {
       const newDuration = audioRef.current.duration;
@@ -210,8 +210,8 @@ export function useIndividualAudio({
       if (savedProgress?.current_position >= 0) {
         let savedTime = (savedProgress.current_position / 100) * newDuration;
 
-        // 🚨 Caso especial: si está al 100%, el audio se reinicia en 0
-        if (savedProgress.current_position === 100) {
+        // ✅ IMPROVED: Completed lessons restart at 0 for proper playback
+        if (savedProgress.current_position >= 100) {
           console.log("🔄 Completed lesson - restarting at 0 for proper playback");
           savedTime = 0;
         }
@@ -220,7 +220,6 @@ export function useIndividualAudio({
         audioRef.current.currentTime = savedTime;
         setCurrentTime(savedTime);
       } else {
-        // Sin progreso previo → arrancamos en 0
         console.log("🆕 New lesson - starting at beginning");
         audioRef.current.currentTime = 0;
         setCurrentTime(0);
@@ -228,7 +227,7 @@ export function useIndividualAudio({
     }
   }, [lesson.title, savedProgress]);
 
-  // 3. Auto-advance entre lecciones
+  // ✅ IMPROVED: Better audio completion handling with requestAnimationFrame
   const handleAudioEnded = useCallback(() => {
     console.log("🏁 Audio ended for lesson:", lesson.title);
     
@@ -248,11 +247,11 @@ export function useIndividualAudio({
       onProgressUpdate(100);
     }
     
-    // Trigger completion with auto-advance handling
-    setTimeout(() => {
-      console.log("🏁 Triggering lesson completion with auto-advance");
+    // ✅ IMPROVED: Better timing with requestAnimationFrame for completion
+    requestAnimationFrame(() => {
+      console.log("🏁 Triggering lesson completion with improved timing");
       onComplete();
-    }, 100);
+    });
     
   }, [lesson.title, duration, onComplete, onPlayStateChange, onProgressUpdate]);
 
@@ -305,7 +304,7 @@ export function useIndividualAudio({
     setPlaybackRate(rate);
   }, [lesson.title]);
 
-  // Use visual time for display (based on progress percentage)
+  // ✅ IMPROVED: Use visual progress percentage for display consistency
   const effectiveCurrentTime = duration > 0 ? (currentTimePercent / 100) * duration : currentTime;
   const effectiveDuration = duration || lesson.duracion;
 
