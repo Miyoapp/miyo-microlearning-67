@@ -59,7 +59,7 @@ export function useIndividualAudio({
         
         lastLessonId.current = lesson.id;
         
-        // FIXED: Always start from beginning for new lesson loads
+        // Always start from beginning for new lesson loads
         console.log("🆕 New lesson load - starting from beginning");
         audio.currentTime = 0;
         setCurrentTime(0);
@@ -211,23 +211,28 @@ export function useIndividualAudio({
     }
   }, [duration, lesson.title, onProgressUpdate, actualIsPlaying]);
 
-  // Handle metadata loaded
+  // FIXED: Handle metadata loaded with correct initialization logic
   const handleMetadata = useCallback(() => {
     if (audioRef.current) {
       const newDuration = audioRef.current.duration;
       console.log("📋 Audio metadata loaded for", lesson.title, "duration:", newDuration, "savedProgress:", savedProgress);
       setDuration(newDuration);
       
-      // FIXED: Set initial position based on saved progress but allow standard playback
-      if (savedProgress?.current_position && savedProgress.current_position > 0 && !savedProgress.is_completed) {
-        // Only restore position for incomplete lessons
+      // CRITICAL FIX: Correct initialization logic for different lesson states
+      if (savedProgress?.is_completed) {
+        // COMPLETED LESSONS: Initialize at 100% to show completion status
+        console.log("✅ Completed lesson - initializing at 100% progress");
+        setCurrentTime(newDuration);
+        audioRef.current.currentTime = newDuration;
+      } else if (savedProgress?.current_position && savedProgress.current_position > 0) {
+        // INCOMPLETE LESSONS: Restore saved progress
         const savedTime = (savedProgress.current_position / 100) * newDuration;
-        console.log("📍 Setting partial progress to:", savedTime, "seconds");
+        console.log("📍 Incomplete lesson - restoring progress to:", savedTime, "seconds");
         setCurrentTime(savedTime);
         audioRef.current.currentTime = savedTime;
       } else {
-        // For completed lessons or new lessons, start at beginning (standard behavior)
-        console.log("🆕 Setting to beginning for standard playback");
+        // NEW LESSONS: Start at beginning
+        console.log("🆕 New lesson - starting at beginning");
         setCurrentTime(0);
         audioRef.current.currentTime = 0;
       }
@@ -305,9 +310,15 @@ export function useIndividualAudio({
     setPlaybackRate(rate);
   }, [lesson.title]);
 
-  // FIXED: Standard player behavior - always show real currentTime
+  // FIXED: Standard player behavior - always show real currentTime during active use
   const effectiveCurrentTime = () => {
-    // CRITICAL FIX: Always show real currentTime for standard player behavior
+    // CRITICAL FIX: Always show real-time progress for standard player behavior
+    // Only show completion state (100%) when audio is not actively being used
+    if (!actualIsPlaying && savedProgress?.is_completed && currentTime >= duration - 1) {
+      console.log("🏆 Showing completion state for completed lesson at rest");
+      return duration;
+    }
+    
     console.log("🔄 Standard player - showing real-time progress:", currentTime);
     return currentTime;
   };

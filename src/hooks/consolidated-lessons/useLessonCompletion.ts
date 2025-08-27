@@ -44,7 +44,8 @@ export function useLessonCompletion(
         lessonTitle: currentLesson.title, 
         isLastLesson, 
         wasAlreadyCompleted,
-        nextLessonTitle: nextLesson?.title || 'none'
+        nextLessonTitle: nextLesson?.title || 'none',
+        isAutoAdvanceAllowed
       });
       
       // Execute database updates IMMEDIATELY for first-time completions
@@ -59,9 +60,9 @@ export function useLessonCompletion(
         console.log('✅ CRITICAL: Database updates completed immediately');
       }
       
-      // AUTO-ADVANCE: FIXED - Properly signal auto-advance replay
+      // FIXED: AUTO-ADVANCE - Remove any blocking logic for completed lessons
       if (isAutoAdvanceAllowed && nextLesson) {
-        console.log('⏭️ AUTO-ADVANCE: Initiating transition to:', nextLesson.title);
+        console.log('⏭️ AUTO-ADVANCE: Initiating transition to:', nextLesson.title, '(works for any lesson state)');
         
         // Update podcast state first to unlock next lesson
         const updatedLessons = podcast.lessons.map(lesson => {
@@ -77,16 +78,16 @@ export function useLessonCompletion(
         const updatedPodcast = { ...podcast, lessons: updatedLessons };
         setPodcast(updatedPodcast);
         
-        // FIXED: Set lesson with proper auto-advance flag context
+        // CRITICAL FIX: Set lesson with proper auto-advance flag context
         setTimeout(() => {
           console.log('⏭️ AUTO-ADVANCE: Setting next lesson for auto-advance:', nextLesson.title);
           
-          // Create lesson with auto-advance context
+          // FIXED: Always mark as auto-advance replay when using auto-advance
           const nextLessonWithAutoAdvance = { 
             ...nextLesson, 
             isLocked: false,
-            // Add flag to indicate this is auto-advance
-            _isAutoAdvanceReplay: nextLesson.isCompleted || false
+            // CRITICAL: Mark this as auto-advance replay for proper audio handling
+            _isAutoAdvanceReplay: true
           };
           
           setCurrentLesson(nextLessonWithAutoAdvance);
