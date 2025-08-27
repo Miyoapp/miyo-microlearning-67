@@ -6,5 +6,4 @@ export interface UserCourseProgress {
   is_saved: boolean;
   last_listened_at: string;
   completion_modal_shown: boolean;
-  auto_advance?: boolean;
 }

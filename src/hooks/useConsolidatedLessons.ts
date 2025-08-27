@@ -36,48 +36,25 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     initializeCurrentLesson
   } = useLessonInitialization(podcast, lessonProgress, userProgress, user, setPodcast);
 
-  // Hook de reproducción centralizado con todos los controles
-  const playbackHook = useLessonPlayback({
-    podcast,
-    currentLesson,
-    userProgress,
-    user,
-    lessonProgress,
-    updateLessonPosition
-  });
-
   const {
     isPlaying,
     setIsPlaying,
-    currentTime,
-    duration,
-    playbackRate,
-    volume,
-    isMuted,
-    isLoading,
-    isAutoAdvanceAllowed,
+    handleSelectLesson: handleSelectLessonFromPlayback,
     handleTogglePlay,
     handleProgressUpdate,
-    handleSeek,
-    handleSkipBackward,
-    handleSkipForward,
-    handlePlaybackRateChange,
-    handleVolumeChange,
-    toggleMute,
-    formatTime,
-    audioRef
-  } = playbackHook;
+    isAutoAdvanceAllowed
+  } = useLessonPlayback(podcast, currentLesson, userProgress, user, updateLessonPosition);
 
-  // Manejar completación de lección
+  // Inline lesson completion handling
   const handleLessonComplete = useCallback(() => {
     if (!currentLesson || !podcast || !user) return;
     
-    console.log('🎉 Handling lesson complete for:', currentLesson.title);
+    console.log('Handling lesson complete for:', currentLesson.title);
     
-    // Marcar como completa en la base de datos
+    // Mark as complete in database
     markLessonCompleteInDB(currentLesson.id, podcast.id);
     
-    // Actualizar estado local del podcast
+    // Update local podcast state
     const updatedLessons = podcast.lessons.map(lesson => 
       lesson.id === currentLesson.id 
         ? { ...lesson, isCompleted: true }
@@ -85,38 +62,31 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     );
     setPodcast({ ...podcast, lessons: updatedLessons });
     
-    // Actualizar posición a 100%
-    updateLessonPosition(currentLesson.id, podcast.id, duration);
+    // Update lesson position to 100%
+    updateLessonPosition(currentLesson.id, podcast.id, currentLesson.duracion || 0);
     
     // Refetch progress data
     refetchLessonProgress();
     refetchCourseProgress();
     
-    // Auto-advance si está habilitado
+    // Auto-advance if allowed
     if (isAutoAdvanceAllowed) {
       const currentIndex = podcast.lessons.findIndex(l => l.id === currentLesson.id);
       const nextLesson = podcast.lessons[currentIndex + 1];
       
-      if (nextLesson && !nextLesson.isLocked) {
-        console.log('🔄 Auto-advancing to next lesson:', nextLesson.title);
-        setTimeout(() => {
-          setCurrentLesson(nextLesson);
-          // El audio se iniciará automáticamente cuando se cargue la nueva lección
-          setTimeout(() => {
-            setIsPlaying(true);
-          }, 500);
-        }, 1000);
-      } else if (!nextLesson) {
-        console.log('🏆 Course completed - no more lessons');
+      if (nextLesson) {
+        console.log('Auto-advancing to next lesson:', nextLesson.title);
+        setCurrentLesson(nextLesson);
+        setIsPlaying(true);
+        updateLessonPosition(nextLesson.id, podcast.id, 1);
+      } else {
+        console.log('Course completed - no more lessons');
         setIsPlaying(false);
-        // Actualizar progreso del curso si todas están completadas
+        // Update course progress if all lessons completed
         const allCompleted = updatedLessons.every(lesson => lesson.isCompleted);
         if (allCompleted) {
           updateCourseProgress(podcast.id, { progress_percentage: 100 });
         }
-      } else {
-        console.log('🔒 Next lesson is locked - stopping playback');
-        setIsPlaying(false);
       }
     } else {
       setIsPlaying(false);
@@ -133,11 +103,10 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     refetchLessonProgress,
     refetchCourseProgress,
     isAutoAdvanceAllowed,
-    updateCourseProgress,
-    duration
+    updateCourseProgress
   ]);
 
-  // Selección de lección simplificada y centralizada
+  // SIMPLIFIED: Lesson selection focused only on changing lessons
   const handleSelectLesson = useCallback((lesson: any, shouldAutoPlay = false) => {
     console.log('🚀 useConsolidatedLessons - handleSelectLesson:', {
       lessonTitle: lesson.title,
@@ -146,79 +115,30 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
       isSameLesson: currentLesson?.id === lesson.id,
     });
     
-    // Verificar si es la misma lección
+    // Check if this is the same lesson
     const isSameLesson = currentLesson?.id === lesson.id;
     
     if (isSameLesson) {
-      // MISMA LECCIÓN: Solo cambiar estado de reproducción
-      console.log('🔄 Same lesson - toggling playback:', shouldAutoPlay);
-      if (shouldAutoPlay !== isPlaying) {
-        handleTogglePlay();
-      }
+      // SAME LESSON: Only update global playing state for synchronization
+      console.log('🔄 Same lesson selected - updating global state only:', shouldAutoPlay);
+      setIsPlaying(shouldAutoPlay);
       return;
     }
     
-    // LECCIÓN DIFERENTE: Cambio completo
+    // DIFFERENT LESSON: Full lesson change workflow
     hasUserMadeSelection.current = true;
     console.log('✅ Changing to different lesson:', lesson.title);
     
-    // Cambiar la lección actual
+    // Set the new current lesson
     setCurrentLesson(lesson);
     
-    // El hook de playback manejará la carga y reproducción del nuevo audio
-    if (shouldAutoPlay) {
-      // Dar tiempo para que se establezca la nueva lección y se cargue el audio
-      setTimeout(() => {
-        setIsPlaying(true);
-      }, 200);
-    } else {
-      setIsPlaying(false);
-    }
+    // Set playing state
+    setIsPlaying(shouldAutoPlay);
     
-  }, [currentLesson, isPlaying, handleTogglePlay, setCurrentLesson, setIsPlaying]);
-
-  // Función para ir a la lección anterior
-  const handlePreviousLesson = useCallback(() => {
-    if (!podcast || !currentLesson) return;
+    // Handle the lesson change through playback hook
+    handleSelectLessonFromPlayback(lesson, shouldAutoPlay);
     
-    const currentIndex = podcast.lessons.findIndex(l => l.id === currentLesson.id);
-    if (currentIndex > 0) {
-      const previousLesson = podcast.lessons[currentIndex - 1];
-      if (previousLesson && !previousLesson.isLocked) {
-        handleSelectLesson(previousLesson, isPlaying);
-      }
-    }
-  }, [podcast, currentLesson, isPlaying, handleSelectLesson]);
-
-  // Función para ir a la siguiente lección
-  const handleNextLesson = useCallback(() => {
-    if (!podcast || !currentLesson) return;
-    
-    const currentIndex = podcast.lessons.findIndex(l => l.id === currentLesson.id);
-    if (currentIndex < podcast.lessons.length - 1) {
-      const nextLesson = podcast.lessons[currentIndex + 1];
-      if (nextLesson && !nextLesson.isLocked) {
-        handleSelectLesson(nextLesson, isPlaying);
-      }
-    }
-  }, [podcast, currentLesson, isPlaying, handleSelectLesson]);
-
-  // Configurar el callback de completación en el hook de reproducción
-  useEffect(() => {
-    if (audioRef.current) {
-      const handleEnded = () => {
-        handleLessonComplete();
-      };
-      
-      audioRef.current.addEventListener('ended', handleEnded);
-      
-      return () => {
-        if (audioRef.current) {
-          audioRef.current.removeEventListener('ended', handleEnded);
-        }
-      };
-    }
-  }, [audioRef.current, handleLessonComplete]);
+  }, [setCurrentLesson, handleSelectLessonFromPlayback, setIsPlaying, currentLesson?.id]);
 
   // CRÍTICO: Inicializar podcast cuando todos los datos estén disponibles
   useEffect(() => {
@@ -277,42 +197,15 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
   ]);
 
   return {
-    // Estado de lecciones
     currentLesson,
     setCurrentLesson,
-    
-    // Estado de reproducción
     isPlaying,
     setIsPlaying,
-    currentTime,
-    duration,
-    playbackRate,
-    volume,
-    isMuted,
-    isLoading,
-    
-    // Funciones de control de reproducción
-    handleTogglePlay,
-    handleProgressUpdate,
-    handleSeek,
-    handleSkipBackward,
-    handleSkipForward,
-    handlePlaybackRateChange,
-    handleVolumeChange,
-    toggleMute,
-    formatTime,
-    
-    // Funciones de lecciones
-    handleSelectLesson,
-    handlePreviousLesson,
-    handleNextLesson,
-    handleLessonComplete,
-    
-    // Funciones de inicialización
     initializeCurrentLesson,
-    initializePodcastWithProgress,
-    
-    // Referencias
-    audioRef
+    handleSelectLesson,
+    handleTogglePlay,
+    handleLessonComplete,
+    handleProgressUpdate,
+    initializePodcastWithProgress
   };
 }
