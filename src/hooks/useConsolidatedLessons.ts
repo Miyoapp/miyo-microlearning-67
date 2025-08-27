@@ -1,3 +1,4 @@
+
 import { useEffect, useCallback, useRef } from 'react';
 import { Podcast } from '@/types';
 import { useUserLessonProgress } from './useUserLessonProgress';
@@ -5,7 +6,6 @@ import { useUserProgress } from './useUserProgress';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useLessonInitialization } from './consolidated-lessons/useLessonInitialization';
 import { useLessonPlayback } from './consolidated-lessons/useLessonPlayback';
-import { useLessonCompletion } from './consolidated-lessons/useLessonCompletion';
 
 export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (podcast: Podcast) => void) {
   const { user } = useAuth();
@@ -45,9 +45,53 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     isAutoAdvanceAllowed
   } = useLessonPlayback(podcast, currentLesson, userProgress, user, updateLessonPosition);
 
-  const {
-    handleLessonComplete
-  } = useLessonCompletion(
+  // Inline lesson completion handling
+  const handleLessonComplete = useCallback(() => {
+    if (!currentLesson || !podcast || !user) return;
+    
+    console.log('Handling lesson complete for:', currentLesson.title);
+    
+    // Mark as complete in database
+    markLessonCompleteInDB(currentLesson.id, podcast.id);
+    
+    // Update local podcast state
+    const updatedLessons = podcast.lessons.map(lesson => 
+      lesson.id === currentLesson.id 
+        ? { ...lesson, completada: true }
+        : lesson
+    );
+    setPodcast({ ...podcast, lessons: updatedLessons });
+    
+    // Update lesson position to 100%
+    updateLessonPosition(currentLesson.id, podcast.id, currentLesson.duracion || 0);
+    
+    // Refetch progress data
+    refetchLessonProgress();
+    refetchCourseProgress();
+    
+    // Auto-advance if allowed
+    if (isAutoAdvanceAllowed) {
+      const currentIndex = podcast.lessons.findIndex(l => l.id === currentLesson.id);
+      const nextLesson = podcast.lessons[currentIndex + 1];
+      
+      if (nextLesson) {
+        console.log('Auto-advancing to next lesson:', nextLesson.title);
+        setCurrentLesson(nextLesson);
+        setIsPlaying(true);
+        updateLessonPosition(nextLesson.id, podcast.id, 1);
+      } else {
+        console.log('Course completed - no more lessons');
+        setIsPlaying(false);
+        // Update course progress if all lessons completed
+        const allCompleted = updatedLessons.every(lesson => lesson.completada);
+        if (allCompleted) {
+          updateCourseProgress(podcast.id, 100);
+        }
+      }
+    } else {
+      setIsPlaying(false);
+    }
+  }, [
     currentLesson,
     podcast,
     user,
@@ -60,7 +104,7 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     refetchCourseProgress,
     isAutoAdvanceAllowed,
     updateCourseProgress
-  );
+  ]);
 
   // SIMPLIFIED: Lesson selection focused only on changing lessons
   const handleSelectLesson = useCallback((lesson: any, shouldAutoPlay = false) => {

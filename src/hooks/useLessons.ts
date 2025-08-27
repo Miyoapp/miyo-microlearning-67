@@ -2,7 +2,6 @@
 import { Podcast, Lesson } from '@/types';
 import { useLessonSelection } from './lessons/useLessonSelection';
 import { useLessonPlayback } from './lessons/useLessonPlayback';
-import { useLessonProgress } from './lessons/useLessonProgress';
 import { useUserLessonProgress } from './useUserLessonProgress';
 import { useCallback } from 'react';
 
@@ -25,13 +24,29 @@ export function useLessons(podcast: Podcast | null, setPodcast: (podcast: Podcas
     podcast 
   });
   
-  const { handleLessonComplete } = useLessonProgress(podcast, setPodcast, currentLesson);
-  
   // Add user lesson progress tracking
   const { 
     markLessonComplete: markLessonCompleteInDB, 
     updateLessonPosition 
   } = useUserLessonProgress();
+  
+  // Inline lesson complete handler
+  const handleLessonComplete = useCallback(() => {
+    if (!currentLesson || !podcast) return;
+    
+    console.log('Handling lesson complete for:', currentLesson.title);
+    
+    // Update local podcast state
+    const updatedLessons = podcast.lessons.map(lesson => 
+      lesson.id === currentLesson.id 
+        ? { ...lesson, completada: true }
+        : lesson
+    );
+    setPodcast({ ...podcast, lessons: updatedLessons });
+    
+    // Mark as complete in database
+    markLessonCompleteInDB(currentLesson.id, podcast.id);
+  }, [currentLesson, podcast, setPodcast, markLessonCompleteInDB]);
   
   // Enhanced lesson complete handler
   const handleLessonCompleteEnhanced = useCallback(() => {

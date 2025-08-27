@@ -4,7 +4,6 @@ import { Lesson } from '@/types';
 import { LessonNote } from '@/types/notes';
 import { Play, Pause, Lock, SkipBack, SkipForward, ChevronDown, Volume2, VolumeX } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useLessonCard } from '@/hooks/learning-path/useLessonCard';
 import { useMemo } from 'react';
 import { useNotes } from '@/hooks/useNotes';
 import NotesPanel from '@/components/notes/NotesPanel';
@@ -70,35 +69,101 @@ const LessonCard = React.memo(({
     savedProgress
   });
   
-  const {
-    isPlaying,
-    currentTime,
-    duration,
-    playbackRate,
-    volume,
-    isMuted,
-    handlePlayPause,
-    handleSeek,
-    handleSkipBackward,
-    handleSkipForward,
-    handlePlaybackRateChange,
-    handleVolumeChange,
-    toggleMute,
-    formatTime,
-    audioRef,
-    handleMetadata,
-    updateTime,
-    handleAudioEnded
-  } = useLessonCard({
-    lesson,
-    canPlay,
-    isCurrent,
-    isPlaying: propIsPlaying,
-    onLessonClick,
-    onProgressUpdate,
-    onLessonComplete,
-    savedProgress
-  });
+  // Simple inline audio controls state
+  const [currentTime, setCurrentTime] = React.useState(savedProgress?.current_position || 0);
+  const [duration, setDuration] = React.useState(lesson.duracion || 0);
+  const [playbackRate, setPlaybackRate] = React.useState(1);
+  const [volume, setVolume] = React.useState(1);
+  const [isMuted, setIsMuted] = React.useState(false);
+  const audioRef = React.useRef<HTMLAudioElement>(null);
+
+  // Handle play/pause
+  const handlePlayPause = () => {
+    onLessonClick(lesson, !propIsPlaying);
+  };
+
+  // Handle seeking
+  const handleSeek = (time: number) => {
+    setCurrentTime(time);
+    if (audioRef.current) {
+      audioRef.current.currentTime = time;
+    }
+  };
+
+  // Handle skip backward/forward
+  const handleSkipBackward = () => {
+    const newTime = Math.max(0, currentTime - 15);
+    handleSeek(newTime);
+  };
+
+  const handleSkipForward = () => {
+    const newTime = Math.min(duration, currentTime + 15);
+    handleSeek(newTime);
+  };
+
+  // Handle playback rate change
+  const handlePlaybackRateChange = (rate: number) => {
+    setPlaybackRate(rate);
+    if (audioRef.current) {
+      audioRef.current.playbackRate = rate;
+    }
+  };
+
+  // Handle volume change
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVolume = parseFloat(e.target.value);
+    setVolume(newVolume);
+    if (audioRef.current) {
+      audioRef.current.volume = newVolume;
+    }
+  };
+
+  // Toggle mute
+  const toggleMute = () => {
+    setIsMuted(!isMuted);
+    if (audioRef.current) {
+      audioRef.current.muted = !isMuted;
+    }
+  };
+
+  // Format time display
+  const formatTime = (timeInSeconds: number) => {
+    const minutes = Math.floor(timeInSeconds / 60);
+    const seconds = Math.floor(timeInSeconds % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  // Handle metadata loaded
+  const handleMetadata = () => {
+    if (audioRef.current) {
+      setDuration(audioRef.current.duration);
+    }
+  };
+
+  // Update time during playback
+  const updateTime = () => {
+    if (audioRef.current) {
+      const time = audioRef.current.currentTime;
+      setCurrentTime(time);
+      onProgressUpdate?.(time);
+    }
+  };
+
+  // Handle audio ended
+  const handleAudioEnded = () => {
+    onLessonComplete?.();
+  };
+
+  // Effect to sync audio playback with prop
+  React.useEffect(() => {
+    if (audioRef.current) {
+      if (isCurrent && propIsPlaying) {
+        audioRef.current.play();
+      } else {
+        audioRef.current.pause();
+      }
+    }
+  }, [isCurrent, propIsPlaying]);
 
   // Fetch notes when lesson can play and courseId is available
   React.useEffect(() => {
@@ -112,7 +177,7 @@ const LessonCard = React.memo(({
     await addNote(noteText, currentTime);
   };
 
-  // Adaptador para convertir la signature de updateNote a la esperada por NotesPanel
+  // Handle editing note
   const handleEditNote = async (noteId: string, updates: Partial<Pick<LessonNote, 'note_text' | 'note_title' | 'tags' | 'is_favorite'>>) => {
     await updateNote(noteId, updates);
   };
@@ -133,33 +198,32 @@ const LessonCard = React.memo(({
   const [showSpeedDropdown, setShowSpeedDropdown] = React.useState(false);
   const [showVolumeControl, setShowVolumeControl] = React.useState(false);
 
-  // UNIFIED: Simple duration and current time handling for all lessons
+  // Simple duration and current time handling for all lessons
   const validDuration = duration || lesson.duracion;
   
-  // UNIFIED: Always show actual current time - no special logic
+  // Always show actual current time
   const validCurrentTime = useMemo(() => {
     return Math.min(currentTime, validDuration);
   }, [currentTime, validDuration]);
 
-  // Handle seek
+  // Handle seek change
   const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseFloat(e.target.value);
     handleSeek(value);
   };
 
-  // Handle playback rate change
+  // Handle playback rate change from dropdown
   const handleRateChange = (rate: number) => {
     handlePlaybackRateChange(rate);
     setShowSpeedDropdown(false);
   };
 
-  // UNIFIED: Play/pause icon based purely on actual playing state
+  // Get status icon based on playing state
   const getStatusIcon = () => {
     if (!canPlay) {
       return <Lock size={16} />;
     }
-    // UNIFIED: Simple logic - only check if currently playing
-    if (isCurrent && isPlaying) {
+    if (isCurrent && propIsPlaying) {
       return <Pause size={16} />;
     }
     return <Play size={16} fill="white" />;
@@ -179,7 +243,7 @@ const LessonCard = React.memo(({
       {/* Main Card Content */}
       <div className="p-4">
         {/* Audio element for current playing lesson */}
-        {audioRef && (
+        {isCurrent && (
           <audio
             ref={audioRef}
             src={lesson.urlAudio}
@@ -208,7 +272,7 @@ const LessonCard = React.memo(({
               aria-label={
                 !canPlay 
                   ? "Lección bloqueada" 
-                  : isPlaying
+                  : propIsPlaying
                     ? "Pausar" 
                     : "Reproducir"
               }
@@ -228,7 +292,7 @@ const LessonCard = React.memo(({
               )}>
                 {lesson.title}
               </h4>
-              {isCurrent && isPlaying && (
+              {isCurrent && propIsPlaying && (
                 <span className="text-xs text-green-600">● Reproduciendo</span>
               )}
             </div>
