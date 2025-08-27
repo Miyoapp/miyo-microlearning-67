@@ -57,7 +57,7 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     // Update local podcast state
     const updatedLessons = podcast.lessons.map(lesson => 
       lesson.id === currentLesson.id 
-        ? { ...lesson, completada: true }
+        ? { ...lesson, isCompleted: true }
         : lesson
     );
     setPodcast({ ...podcast, lessons: updatedLessons });
@@ -83,9 +83,9 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
         console.log('Course completed - no more lessons');
         setIsPlaying(false);
         // Update course progress if all lessons completed
-        const allCompleted = updatedLessons.every(lesson => lesson.completada);
+        const allCompleted = updatedLessons.every(lesson => lesson.isCompleted);
         if (allCompleted) {
-          updateCourseProgress(podcast.id, 100);
+          updateCourseProgress(podcast.id, { progress_percentage: 100 });
         }
       }
     } else {
