@@ -133,10 +133,10 @@ const LessonCard = React.memo(({
   const [showSpeedDropdown, setShowSpeedDropdown] = React.useState(false);
   const [showVolumeControl, setShowVolumeControl] = React.useState(false);
 
-  // CORRECCIÓN 3: Usar duración válida y tiempo actual sin lógica especial
+  // UNIFIED: Simple duration and current time handling for all lessons
   const validDuration = duration || lesson.duracion;
   
-  // CORRECCIÓN 3: Mostrar siempre el progreso real sin saltos visuales
+  // UNIFIED: Always show actual current time - no special logic
   const validCurrentTime = useMemo(() => {
     return Math.min(currentTime, validDuration);
   }, [currentTime, validDuration]);
@@ -153,12 +153,12 @@ const LessonCard = React.memo(({
     setShowSpeedDropdown(false);
   };
 
-  // CORRECCIÓN 2: Icono siempre basado en el estado real de reproducción
+  // UNIFIED: Play/pause icon based purely on actual playing state
   const getStatusIcon = () => {
     if (!canPlay) {
       return <Lock size={16} />;
     }
-    // CRÍTICO: Usar solo isPlaying del hook (que viene de actualIsPlaying)
+    // UNIFIED: Simple logic - only check if currently playing
     if (isCurrent && isPlaying) {
       return <Pause size={16} />;
     }

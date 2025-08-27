@@ -46,10 +46,10 @@ export function useLessonCard({
     }
   }, [lesson.title, onLessonComplete]);
 
-  // CORRECCIÓN 2: Eliminado localIsPlaying - solo usar actualIsPlaying del audio hook
+  // UNIFIED: Simple play state handling - no local state
   const handlePlayStateChange = useCallback((newIsPlaying: boolean) => {
     console.log('🔄 Audio state changed for:', lesson.title, 'new state:', newIsPlaying);
-    // No hay estado local que actualizar - el hook de audio maneja todo
+    // Let the audio hook handle all state management
   }, [lesson.title]);
 
   // Use individual audio management
@@ -65,7 +65,7 @@ export function useLessonCard({
     savedProgress
   });
 
-  // Handle play/pause with clear separation of concerns
+  // UNIFIED: Simple play/pause handling for all lessons
   const handleTogglePlay = useCallback(() => {
     console.log('🎵 handleTogglePlay clicked for:', lesson.title, { 
       canPlay, 
@@ -101,11 +101,11 @@ export function useLessonCard({
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   }, []);
 
-  // Use audio hook data for current time and duration
+  // UNIFIED: Use audio hook data directly - no special logic
   const currentTime = audioHook.currentTime;
   const duration = audioHook.duration;
   
-  // CORRECCIÓN 2: Usar solo actualIsPlaying del hook de audio - eliminada lógica compleja
+  // UNIFIED: Simple playing state - only actualIsPlaying from audio hook
   const effectiveIsPlaying = isCurrent ? audioHook.actualIsPlaying : false;
 
   return {

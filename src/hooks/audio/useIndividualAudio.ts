@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Lesson } from '@/types';
 
@@ -44,7 +43,7 @@ export function useIndividualAudio({
     savedProgress
   });
 
-  // Initialize lesson when it changes
+  // Initialize lesson when it changes - UNIFIED: No special logic for completed lessons
   useEffect(() => {
     if (audioRef.current) {
       const audio = audioRef.current;
@@ -55,19 +54,26 @@ export function useIndividualAudio({
         
         lastLessonId.current = lesson.id;
         
-        // Reset audio state for new lesson
-        setCurrentTime(0);
-        audio.currentTime = 0;
+        // UNIFIED: Simple initialization for all lessons
         audio.volume = isMuted ? 0 : volume;
         audio.playbackRate = playbackRate;
         setDuration(0);
         setActualIsPlaying(false);
         
+        // UNIFIED: Only set visual state to saved progress if available, otherwise start from beginning
+        if (savedProgress?.current_position && savedProgress.current_position > 0) {
+          // Keep visual state at saved progress during initialization
+          const savedTime = (savedProgress.current_position / 100) * (duration || lesson.duracion);
+          setCurrentTime(savedTime);
+        } else {
+          setCurrentTime(0);
+        }
+        
         audio.load();
       }
     }
     isInitialized.current = true;
-  }, [lesson.id, volume, isMuted, playbackRate]);
+  }, [lesson.id, volume, isMuted, playbackRate, savedProgress, duration, lesson.duracion]);
 
   // Direct play/pause control for immediate response
   const handleDirectToggle = useCallback(() => {
@@ -188,31 +194,23 @@ export function useIndividualAudio({
     }
   }, [duration, lesson.title, onProgressUpdate, actualIsPlaying]);
 
-  // FIXED: Correct metadata handling with proper initialization for completed lessons
+  // UNIFIED: Simple metadata handling - same logic for all lessons
   const handleMetadata = useCallback(() => {
     if (audioRef.current) {
       const newDuration = audioRef.current.duration;
       console.log("📋 Audio metadata loaded for", lesson.title, "duration:", newDuration, "savedProgress:", savedProgress);
       setDuration(newDuration);
       
-      // CORRECCIÓN 1: Inicialización correcta para lecciones completadas
+      // UNIFIED: Same initialization logic for ALL lessons
       if (savedProgress?.current_position && savedProgress.current_position > 0) {
         const savedTime = (savedProgress.current_position / 100) * newDuration;
         console.log("📍 Restoring progress to:", savedTime, "seconds (", savedProgress.current_position, "%)");
         
-        // CRÍTICO: Para lecciones completadas (100%), posicionar al final
-        if (savedProgress.current_position >= 100 || savedProgress.is_completed) {
-          console.log("🏁 Completed lesson - positioning at end");
-          setCurrentTime(newDuration);
-          audioRef.current.currentTime = newDuration;
-        } else {
-          // Para lecciones incompletas, usar progreso guardado
-          console.log("📍 Incomplete lesson - restoring saved progress");
-          setCurrentTime(savedTime);
-          audioRef.current.currentTime = savedTime;
-        }
+        // UNIFIED: Set both visual and audio time to saved progress
+        setCurrentTime(savedTime);
+        audioRef.current.currentTime = savedTime;
       } else {
-        // Comenzar desde el inicio para lecciones nuevas
+        // Start from beginning for new lessons
         console.log("🆕 New lesson - starting at beginning");
         setCurrentTime(0);
         audioRef.current.currentTime = 0;
@@ -220,7 +218,7 @@ export function useIndividualAudio({
     }
   }, [lesson.title, savedProgress]);
 
-  // Handle audio ended
+  // UNIFIED: Same audio ended handler for all lessons
   const handleAudioEnded = useCallback(() => {
     console.log("🏁 Audio ended for lesson:", lesson.title);
     
@@ -291,7 +289,7 @@ export function useIndividualAudio({
     setPlaybackRate(rate);
   }, [lesson.title]);
 
-  // CORRECCIÓN 3: Siempre mostrar el tiempo real del audio - sin lógica especial
+  // UNIFIED: Simple time display - no special logic
   const effectiveCurrentTime = currentTime;
   const effectiveDuration = duration || lesson.duracion;
 
