@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -85,7 +86,7 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-3 sm:p-6 mb-3 sm:mb-6 mx-2 sm:mx-0">
+    <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 mb-4 sm:mb-6 mx-4 sm:mx-0">
       {/* Course Image - Mobile optimized */}
       <div className="relative mb-4 sm:mb-6">
         <img

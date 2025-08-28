@@ -21,7 +21,7 @@ const CourseLearningPathSection: React.FC<CourseLearningPathSectionProps> = ({
   onLessonComplete
 }) => {
   return (
-    <div id="learning-path-section" className="bg-white rounded-2xl shadow-sm p-3 sm:p-6">
+    <div id="learning-path-section" className="bg-white rounded-2xl shadow-sm p-6">
       <LearningPath 
         lessons={podcast.lessons}
         modules={podcast.modules}

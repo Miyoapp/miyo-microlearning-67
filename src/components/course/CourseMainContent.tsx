@@ -54,7 +54,7 @@ const CourseMainContent: React.FC<CourseMainContentProps> = ({
           onToggleSave={onToggleSave}
         />
 
-        <div className="relative mx-2 sm:mx-0">
+        <div className="relative mx-4 sm:mx-0">
           <CourseLearningPathSection
             podcast={podcast}
             currentLessonId={currentLesson?.id || null}
