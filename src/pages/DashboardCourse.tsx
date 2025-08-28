@@ -1,5 +1,5 @@
 
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import CoursePageManager from '@/components/course/CoursePageManager';
 import MetaTags from '@/components/MetaTags';
 import { useCourseData } from '@/hooks/useCourseData';
@@ -8,9 +8,10 @@ import CourseErrorState from '@/components/course/CourseErrorState';
 
 export default function DashboardCourse() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const courseId = id || '';
   
-  const { podcast, isLoading, error } = useCourseData(courseId);
+  const { podcast, isLoading, error, retry } = useCourseData(courseId);
 
   if (!courseId) {
     return <div>Error: ID de curso no válido</div>;
@@ -21,7 +22,13 @@ export default function DashboardCourse() {
   }
 
   if (error || !podcast) {
-    return <CourseErrorState error={error} />;
+    return (
+      <CourseErrorState 
+        error={error} 
+        onRetry={retry}
+        onGoBack={() => navigate('/dashboard')}
+      />
+    );
   }
 
   return (
