@@ -6,9 +6,11 @@ import CourseCardWithProgress from '@/components/dashboard/CourseCardWithProgres
 import { Button } from '@/components/ui/button';
 import { obtenerCursos, obtenerCategorias } from '@/lib/api';
 import { useUserProgress } from '@/hooks/useUserProgress';
+import { useNewCourses } from '@/hooks/useNewCourses';
 import { Podcast, CategoryModel } from '@/types';
 import { SidebarTrigger } from '@/components/ui/sidebar/SidebarTrigger';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { CalendarDays, Sparkles } from 'lucide-react';
 
 const DashboardDiscover = () => {
   const navigate = useNavigate();
@@ -18,6 +20,7 @@ const DashboardDiscover = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { userProgress, toggleSaveCourse } = useUserProgress();
+  const { newCourses, loading: newCoursesLoading, error: newCoursesError } = useNewCourses();
 
   useEffect(() => {
     const loadData = async () => {
@@ -42,10 +45,6 @@ const DashboardDiscover = () => {
     ? allCourses.filter(course => course.category.id === selectedCategory)
     : allCourses;
 
-  // Get new courses (simulate last 30 days)
-  const newCourses = allCourses.slice(0, 6);
-
-  // CORREGIDO: Solo navegar al curso, no iniciar reproducción
   const handlePlayCourse = (courseId: string) => {
     console.log('DashboardDiscover: Navigating to course (maintaining current progress):', courseId);
     navigate(`/dashboard/course/${courseId}`);
@@ -82,7 +81,61 @@ const DashboardDiscover = () => {
             <p className="text-sm sm:text-base text-gray-600">Explora nuevos cursos y temas</p>
           </div>
 
-          {/* Mobile-first categories */}
+          {/* New Courses Section - NOW BASED ON REAL DATES */}
+          <div className="mb-8 px-4 sm:px-0">
+            <div className="flex items-center gap-2 mb-4">
+              <CalendarDays className="w-5 h-5 text-miyo-800" />
+              <h2 className="text-xl sm:text-2xl font-bold">Nuevos</h2>
+              <Sparkles className="w-4 h-4 text-yellow-500" />
+            </div>
+            
+            {newCoursesLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                {[...Array(4)].map((_, index) => (
+                  <div key={index} className="bg-white rounded-lg shadow animate-pulse">
+                    <div className="aspect-[4/3] bg-gray-200 rounded-t-lg"></div>
+                    <div className="p-4 space-y-3">
+                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : newCoursesError ? (
+              <div className="text-center py-8 text-gray-600">
+                <p>Error al cargar cursos nuevos</p>
+              </div>
+            ) : (
+              <>
+                <p className="text-sm text-gray-600 mb-4">
+                  {newCourses.length > 0 
+                    ? `${newCourses.length} cursos agregados recientemente` 
+                    : 'No hay cursos nuevos disponibles'}
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                  {newCourses.map(course => {
+                    const progress = userProgress.find(p => p.course_id === course.id);
+                    return (
+                      <div key={course.id} className="h-full">
+                        <CourseCardWithProgress
+                          podcast={course}
+                          progress={progress?.progress_percentage || 0}
+                          isPlaying={false}
+                          isSaved={progress?.is_saved || false}
+                          showProgress={false}
+                          onPlay={() => handlePlayCourse(course.id)}
+                          onToggleSave={() => toggleSaveCourse(course.id)}
+                          onClick={() => handleCourseClick(course.id)}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Categories Section */}
           <div className="mb-8 px-4 sm:px-0">
             <h2 className="text-xl sm:text-2xl font-bold mb-4">Categorías</h2>
             <div className="flex flex-wrap gap-2 mb-6">
@@ -107,33 +160,9 @@ const DashboardDiscover = () => {
               ))}
             </div>
 
-            {/* Mobile-first: Single column on mobile, grid on desktop */}
+            {/* All Courses Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
               {filteredCourses.map(course => {
-                const progress = userProgress.find(p => p.course_id === course.id);
-                return (
-                  <div key={course.id} className="h-full">
-                    <CourseCardWithProgress
-                      podcast={course}
-                      progress={progress?.progress_percentage || 0}
-                      isPlaying={false}
-                      isSaved={progress?.is_saved || false}
-                      showProgress={false}
-                      onPlay={() => handlePlayCourse(course.id)}
-                      onToggleSave={() => toggleSaveCourse(course.id)}
-                      onClick={() => handleCourseClick(course.id)}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Mobile-first new courses */}
-          <div className="mb-8 px-4 sm:px-0">
-            <h2 className="text-xl sm:text-2xl font-bold mb-4">Nuevos</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-              {newCourses.map(course => {
                 const progress = userProgress.find(p => p.course_id === course.id);
                 return (
                   <div key={course.id} className="h-full">
