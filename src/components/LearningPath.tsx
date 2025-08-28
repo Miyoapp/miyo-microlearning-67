@@ -1,3 +1,4 @@
+
 import { useCallback, useMemo, useState, useEffect } from 'react';
 import { Lesson, Module } from '../types';
 import React from 'react';
@@ -14,6 +15,7 @@ import CourseCompletionModal from '@/components/summaries/CourseCompletionModal'
 import CreateSummaryModal from '@/components/summaries/CreateSummaryModal';
 import ViewSummaryModal from '@/components/summaries/ViewSummaryModal';
 import { CourseSummary } from '@/types/notes';
+import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 
 interface LearningPathProps {
   lessons: Lesson[];
@@ -49,7 +51,25 @@ const LearningPath = React.memo(({
   // Extract courseId from podcast
   const courseId = podcast?.id || null;
   
-  // Course completion functionality - UPDATED: Pass markCompletionModalShown
+  // Initialize audio player
+  const audioPlayer = useAudioPlayer({
+    onLessonComplete: (lessonId: string) => {
+      console.log('🎯 Audio player lesson complete:', lessonId);
+      // Find the lesson object and call the original completion handler
+      const lesson = lessons.find(l => l.id === lessonId);
+      if (lesson && onLessonComplete) {
+        onLessonComplete();
+      }
+    },
+    onProgressUpdate: (lessonId: string, position: number) => {
+      console.log('📊 Audio player progress update:', lessonId, position);
+      if (onProgressUpdate) {
+        onProgressUpdate(position);
+      }
+    }
+  });
+  
+  // Course completion functionality
   const {
     showCompletionModal,
     showSummaryModal,
@@ -63,7 +83,7 @@ const LearningPath = React.memo(({
     podcast,
     userProgress,
     lessonProgress,
-    markCompletionModalShown // NEW: Pass the function to mark modal as shown
+    markCompletionModalShown
   });
 
   // Check if course is completed
@@ -103,7 +123,11 @@ const LearningPath = React.memo(({
     courseId,
     lessonProgressCount: lessonProgress.length,
     isCourseCompleted,
-    hasSummary
+    hasSummary,
+    audioPlayerState: {
+      currentLessonId: audioPlayer.currentLessonId,
+      isPlaying: audioPlayer.isPlaying
+    }
   });
 
   // OPTIMIZADO: Memoizar función de agrupación con hash estable
@@ -120,6 +144,13 @@ const LearningPath = React.memo(({
     modules.map(m => `${m.id}:${m.lessonIds.join(',')}`).join('|'),
     lessons.map(l => l.id).join('|')
   ]);
+
+  // Handle lesson play from audio player
+  const handleAudioPlay = useCallback((lesson: Lesson) => {
+    console.log('🎵 LearningPath: Audio play requested for:', lesson.title);
+    onSelectLesson(lesson, true);
+    audioPlayer.play(lesson);
+  }, [onSelectLesson, audioPlayer]);
 
   // HANDLER DE CLICK CON LOGS ESPECÍFICOS
   const handleLessonClick = useCallback((lesson: Lesson, shouldAutoPlay = true) => {
@@ -148,7 +179,15 @@ const LearningPath = React.memo(({
     
     if (canPlay) {
       console.log('✅✅✅ LEARNING PATH - ENVIANDO A onSelectLesson:', lesson.title);
+      
+      // Call the original selection handler
       onSelectLesson(lesson, shouldAutoPlay);
+      
+      // Handle audio playback through the audio player
+      if (shouldAutoPlay) {
+        audioPlayer.play(lesson);
+      }
+      
       console.log('✅✅✅ LEARNING PATH - onSelectLesson LLAMADO EXITOSAMENTE:', lesson.title);
     } else {
       console.log('🚫🚫🚫 LEARNING PATH - LECCIÓN BLOQUEADA:', {
@@ -160,7 +199,8 @@ const LearningPath = React.memo(({
   }, [
     // ESTABILIZADO: Solo incluir referencias estables
     Array.from(lessonStatusMap.entries()).map(([id, status]) => `${id}:${status._hash || 'no-hash'}`).join('|'),
-    onSelectLesson
+    onSelectLesson,
+    audioPlayer
   ]);
 
   // OPTIMIZADO: Memoizar módulos ordenados
@@ -206,6 +246,21 @@ const LearningPath = React.memo(({
                 onLessonClick={handleLessonClick}
                 onProgressUpdate={onProgressUpdate}
                 onLessonComplete={onLessonComplete}
+                audioCurrentLessonId={audioPlayer.currentLessonId}
+                audioIsPlaying={audioPlayer.isPlaying}
+                audioCurrentTime={audioPlayer.currentTime}
+                audioDuration={audioPlayer.duration}
+                audioIsReady={audioPlayer.isReady}
+                audioError={audioPlayer.error}
+                getDisplayProgress={audioPlayer.getDisplayProgress}
+                onPlay={handleAudioPlay}
+                onPause={audioPlayer.pause}
+                onSeek={audioPlayer.seek}
+                onSkipBackward={audioPlayer.skipBackward}
+                onSkipForward={audioPlayer.skipForward}
+                onSetPlaybackRate={audioPlayer.setPlaybackRate}
+                onSetVolume={audioPlayer.setVolume}
+                onSetMuted={audioPlayer.setMuted}
               />
             );
           })}

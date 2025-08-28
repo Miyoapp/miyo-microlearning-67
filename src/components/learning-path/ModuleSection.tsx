@@ -16,6 +16,22 @@ interface ModuleSectionProps {
   onLessonClick: (lesson: Lesson, shouldAutoPlay?: boolean) => void;
   onProgressUpdate?: (position: number) => void;
   onLessonComplete?: () => void;
+  // Audio player props
+  audioCurrentLessonId: string | null;
+  audioIsPlaying: boolean;
+  audioCurrentTime: number;
+  audioDuration: number;
+  audioIsReady: boolean;
+  audioError: boolean;
+  getDisplayProgress: (lessonId: string, validDuration?: number) => number;
+  onPlay: (lesson: Lesson) => void;
+  onPause: () => void;
+  onSeek: (time: number) => void;
+  onSkipBackward: () => void;
+  onSkipForward: () => void;
+  onSetPlaybackRate: (rate: number) => void;
+  onSetVolume: (volume: number) => void;
+  onSetMuted: (muted: boolean) => void;
 }
 
 const ModuleSection = React.memo(({ 
@@ -29,7 +45,22 @@ const ModuleSection = React.memo(({
   lessonProgress,
   onLessonClick,
   onProgressUpdate,
-  onLessonComplete
+  onLessonComplete,
+  audioCurrentLessonId,
+  audioIsPlaying,
+  audioCurrentTime,
+  audioDuration,
+  audioIsReady,
+  audioError,
+  getDisplayProgress,
+  onPlay,
+  onPause,
+  onSeek,
+  onSkipBackward,
+  onSkipForward,
+  onSetPlaybackRate,
+  onSetVolume,
+  onSetMuted
 }: ModuleSectionProps) => {
   if (moduleLessons.length === 0) return null;
   
@@ -59,7 +90,6 @@ const ModuleSection = React.memo(({
           
           // Add isCurrent calculation and determine if this lesson is playing
           const isCurrent = lesson.id === currentLessonId;
-          const isPlaying = isCurrent && isGloballyPlaying;
           
           // Find saved progress for this specific lesson
           const savedProgress = lessonProgress.find(p => p.lesson_id === lesson.id);
@@ -75,15 +105,26 @@ const ModuleSection = React.memo(({
               lesson={lesson}
               index={index}
               status={enhancedStatus}
-              isPlaying={isPlaying}
               courseId={courseId}
               savedProgress={savedProgress ? {
                 current_position: savedProgress.current_position || 0,
                 is_completed: savedProgress.is_completed || false
               } : undefined}
-              onLessonClick={onLessonClick}
-              onProgressUpdate={onProgressUpdate}
-              onLessonComplete={onLessonComplete}
+              currentLessonId={audioCurrentLessonId}
+              isPlaying={audioIsPlaying}
+              currentTime={audioCurrentTime}
+              duration={audioDuration}
+              isReady={audioIsReady}
+              audioError={audioError}
+              getDisplayProgress={getDisplayProgress}
+              onPlay={onPlay}
+              onPause={onPause}
+              onSeek={onSeek}
+              onSkipBackward={onSkipBackward}
+              onSkipForward={onSkipForward}
+              onSetPlaybackRate={onSetPlaybackRate}
+              onSetVolume={onSetVolume}
+              onSetMuted={onSetMuted}
             />
           );
         })}

@@ -1,4 +1,3 @@
-
 import { useEffect, useCallback, useRef } from 'react';
 import { Podcast } from '@/types';
 import { useUserLessonProgress } from './useUserLessonProgress';
@@ -106,48 +105,31 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     updateCourseProgress
   ]);
 
-  // DEFINITIVE FIX: Simplified lesson selection with immediate state updates
+  // SIMPLIFIED: Remove complex audio handling logic, keep only lesson selection logic
   const handleSelectLesson = useCallback((lesson: any, shouldAutoPlay = false) => {
-    console.log('🚀 DEFINITIVE handleSelectLesson:', {
+    console.log('🚀 CONSOLIDATED LESSONS handleSelectLesson:', {
       lessonTitle: lesson.title,
       shouldAutoPlay,
       currentLessonId: currentLesson?.id,
-      isSameLesson: currentLesson?.id === lesson.id,
-      currentPlayingState: isPlaying,
       timestamp: new Date().toLocaleTimeString()
     });
     
     // Mark user selection
     hasUserMadeSelection.current = true;
     
-    // Check if this is the same lesson
-    const isSameLesson = currentLesson?.id === lesson.id;
-    
-    if (isSameLesson) {
-      // SAME LESSON: Direct toggle of play state
-      console.log('🔄 SAME LESSON - Toggling from', isPlaying, 'to', shouldAutoPlay);
-      setIsPlaying(shouldAutoPlay);
-      console.log('✅ SAME LESSON - State updated immediately');
-      return;
-    }
-    
-    // DIFFERENT LESSON: Full lesson change workflow
-    console.log('🔀 DIFFERENT LESSON - Setting new lesson and state');
-    
-    // Set the new current lesson first
+    // Set the new current lesson
     setCurrentLesson(lesson);
     
-    // Then set the playing state
+    // Set the playing state (this is now mainly for UI state tracking)
     setIsPlaying(shouldAutoPlay);
     
     // Handle the lesson change through playback hook
     handleSelectLessonFromPlayback(lesson, shouldAutoPlay);
     
-    console.log('✅ DIFFERENT LESSON - Complete workflow finished');
+    console.log('✅ CONSOLIDATED LESSONS - Lesson selection complete');
     
   }, [
     currentLesson?.id, 
-    isPlaying, 
     setCurrentLesson, 
     setIsPlaying, 
     handleSelectLessonFromPlayback

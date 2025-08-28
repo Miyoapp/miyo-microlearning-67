@@ -18,34 +18,57 @@ interface LessonCardProps {
     canPlay: boolean;
     isFirstInSequence: boolean;
   };
-  isPlaying: boolean;
   courseId: string | null;
   savedProgress?: {
     current_position: number;
     is_completed: boolean;
   };
-  onLessonClick: (lesson: Lesson, shouldAutoPlay?: boolean) => void;
-  onProgressUpdate?: (position: number) => void;
-  onLessonComplete?: () => void;
+  // Audio player props
+  currentLessonId: string | null;
+  isPlaying: boolean;
+  currentTime: number;
+  duration: number;
+  isReady: boolean;
+  audioError: boolean;
+  getDisplayProgress: (lessonId: string, validDuration?: number) => number;
+  onPlay: (lesson: Lesson) => void;
+  onPause: () => void;
+  onSeek: (time: number) => void;
+  onSkipBackward: () => void;
+  onSkipForward: () => void;
+  onSetPlaybackRate: (rate: number) => void;
+  onSetVolume: (volume: number) => void;
+  onSetMuted: (muted: boolean) => void;
 }
 
 const LessonCard = React.memo(({ 
   lesson, 
   index, 
   status, 
-  isPlaying: propIsPlaying,
   courseId,
   savedProgress,
-  onLessonClick,
-  onProgressUpdate,
-  onLessonComplete
+  currentLessonId,
+  isPlaying: globalIsPlaying,
+  currentTime,
+  duration: audioDuration,
+  isReady,
+  audioError,
+  getDisplayProgress,
+  onPlay,
+  onPause,
+  onSeek,
+  onSkipBackward,
+  onSkipForward,
+  onSetPlaybackRate,
+  onSetVolume,
+  onSetMuted
 }: LessonCardProps) => {
   const { isCompleted, isLocked, isCurrent, canPlay } = status;
   
   console.log('🎴 LessonCard render:', {
     lessonTitle: lesson.title,
     isCurrent,
-    propIsPlaying,
+    globalIsPlaying,
     canPlay,
     isCompleted: savedProgress?.is_completed,
     timestamp: new Date().toLocaleTimeString()
@@ -58,22 +81,29 @@ const LessonCard = React.memo(({
   );
   const [showNotesPanel, setShowNotesPanel] = React.useState(false);
   
-  // Audio controls state
-  const [currentTime, setCurrentTime] = React.useState(savedProgress?.current_position || 0);
-  const [duration, setDuration] = React.useState(lesson.duracion || 0);
+  // UI-only state (not audio-related)
   const [playbackRate, setPlaybackRate] = React.useState(1);
   const [volume, setVolume] = React.useState(1);
   const [isMuted, setIsMuted] = React.useState(false);
-  const [isAudioReady, setIsAudioReady] = React.useState(false);
-  const [audioError, setAudioError] = React.useState(false);
-  const audioRef = React.useRef<HTMLAudioElement>(null);
+  const [showSpeedDropdown, setShowSpeedDropdown] = React.useState(false);
+  const [showVolumeControl, setShowVolumeControl] = React.useState(false);
 
-  // DEFINITIVE FIX: Simplified play/pause handler with immediate response
+  // Determine if this lesson is currently playing
+  const isThisLessonPlaying = isCurrent && currentLessonId === lesson.id && globalIsPlaying;
+
+  // Get the appropriate duration for this lesson
+  const validDuration = audioDuration || lesson.duracion || 0;
+  
+  // Get display progress using the centralized logic
+  const displayCurrentTime = useMemo(() => {
+    return getDisplayProgress(lesson.id, validDuration);
+  }, [getDisplayProgress, lesson.id, validDuration]);
+
+  // Handle play/pause click
   const handlePlayPause = () => {
-    console.log('🎵🎵🎵 DEFINITIVE PLAY/PAUSE CLICK:', {
+    console.log('🎵 LESSON CARD PLAY/PAUSE CLICK:', {
       lessonTitle: lesson.title,
-      currentState: propIsPlaying,
-      targetState: !propIsPlaying,
+      currentState: isThisLessonPlaying,
       canPlay,
       timestamp: new Date().toLocaleTimeString()
     });
@@ -83,52 +113,45 @@ const LessonCard = React.memo(({
       return;
     }
     
-    // CRITICAL: Call parent with new state immediately
-    onLessonClick(lesson, !propIsPlaying);
+    if (isThisLessonPlaying) {
+      onPause();
+    } else {
+      onPlay(lesson);
+    }
   };
 
   // Handle seeking
   const handleSeek = (time: number) => {
-    setCurrentTime(time);
-    if (audioRef.current) {
-      audioRef.current.currentTime = time;
+    if (isCurrent && currentLessonId === lesson.id) {
+      onSeek(time);
     }
   };
 
-  // Handle skip backward/forward
-  const handleSkipBackward = () => {
-    const newTime = Math.max(0, currentTime - 15);
-    handleSeek(newTime);
-  };
-
-  const handleSkipForward = () => {
-    const newTime = Math.min(duration, currentTime + 15);
-    handleSeek(newTime);
+  // Handle seek change from slider
+  const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseFloat(e.target.value);
+    handleSeek(value);
   };
 
   // Handle playback rate change
   const handlePlaybackRateChange = (rate: number) => {
     setPlaybackRate(rate);
-    if (audioRef.current) {
-      audioRef.current.playbackRate = rate;
-    }
+    onSetPlaybackRate(rate);
+    setShowSpeedDropdown(false);
   };
 
   // Handle volume change
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = parseFloat(e.target.value);
     setVolume(newVolume);
-    if (audioRef.current) {
-      audioRef.current.volume = newVolume;
-    }
+    onSetVolume(newVolume);
   };
 
   // Toggle mute
   const toggleMute = () => {
-    setIsMuted(!isMuted);
-    if (audioRef.current) {
-      audioRef.current.muted = !isMuted;
-    }
+    const newMuted = !isMuted;
+    setIsMuted(newMuted);
+    onSetMuted(newMuted);
   };
 
   // Format time display
@@ -137,70 +160,6 @@ const LessonCard = React.memo(({
     const seconds = Math.floor(timeInSeconds % 60);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
-
-  // Handle metadata loaded
-  const handleMetadata = () => {
-    if (audioRef.current) {
-      setDuration(audioRef.current.duration);
-      setIsAudioReady(true);
-      setAudioError(false);
-      console.log('🎵 Audio metadata loaded for:', lesson.title);
-    }
-  };
-
-  // Update time during playback
-  const updateTime = () => {
-    if (audioRef.current) {
-      const time = audioRef.current.currentTime;
-      setCurrentTime(time);
-      onProgressUpdate?.(time);
-    }
-  };
-
-  // Handle audio ended
-  const handleAudioEnded = () => {
-    onLessonComplete?.();
-  };
-
-  // Handle audio error
-  const handleAudioError = () => {
-    console.error('🚨 Audio error for lesson:', lesson.title);
-    setAudioError(true);
-    setIsAudioReady(false);
-  };
-
-  // DEFINITIVE FIX: Completely rewritten audio sync - simple and robust
-  React.useEffect(() => {
-    console.log('🔄 SIMPLIFIED AUDIO SYNC:', {
-      lessonTitle: lesson.title,
-      isCurrent,
-      shouldPlay: propIsPlaying,
-      hasAudio: !!audioRef.current,
-      isReady: isAudioReady,
-      hasError: audioError
-    });
-
-    // Only sync if this is the current lesson and we have audio
-    if (!isCurrent || !audioRef.current || audioError) {
-      return;
-    }
-
-    const audio = audioRef.current;
-    
-    // SIMPLIFIED: Direct sync without complex promises or timeouts
-    if (propIsPlaying && audio.paused) {
-      console.log('▶️ STARTING PLAYBACK (simplified)');
-      audio.play().catch(error => {
-        console.error('🚨 Play failed:', error);
-        setAudioError(true);
-        // Update parent state to reflect reality
-        onLessonClick(lesson, false);
-      });
-    } else if (!propIsPlaying && !audio.paused) {
-      console.log('⏸️ PAUSING PLAYBACK (simplified)');
-      audio.pause();
-    }
-  }, [isCurrent, propIsPlaying, lesson.id, audioError, isAudioReady]);
 
   // Fetch notes when lesson can play and courseId is available
   React.useEffect(() => {
@@ -232,46 +191,15 @@ const LessonCard = React.memo(({
 
   // Speed options for dropdown
   const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
-  const [showSpeedDropdown, setShowSpeedDropdown] = React.useState(false);
-  const [showVolumeControl, setShowVolumeControl] = React.useState(false);
 
-  // DEFINITIVE FIX: Progress display logic for completed vs active lessons
-  const validDuration = duration || lesson.duracion;
-  
-  // CRITICAL FIX: Show proper progress for completed lessons
-  const displayCurrentTime = useMemo(() => {
-    // If lesson is completed, always show full duration
-    if (savedProgress?.is_completed) {
-      console.log('📊 Completed lesson - showing full duration:', lesson.title);
-      return validDuration;
-    }
-    
-    // For active/incomplete lessons, show actual current time
-    const actualTime = Math.min(currentTime, validDuration);
-    console.log('📊 Active lesson - showing current time:', lesson.title, actualTime);
-    return actualTime;
-  }, [currentTime, validDuration, savedProgress?.is_completed, lesson.title]);
-
-  // Handle seek change
-  const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseFloat(e.target.value);
-    handleSeek(value);
-  };
-
-  // Handle playback rate change from dropdown
-  const handleRateChange = (rate: number) => {
-    handlePlaybackRateChange(rate);
-    setShowSpeedDropdown(false);
-  };
-
-  // DEFINITIVE: Clear status icon logic
+  // Status icon logic
   const getStatusIcon = () => {
     if (!canPlay) {
       return <Lock size={16} />;
     }
     
     // Show pause icon ONLY if this lesson is current AND global state is playing
-    if (isCurrent && propIsPlaying && !audioError) {
+    if (isThisLessonPlaying && !audioError) {
       return <Pause size={16} />;
     }
     
@@ -293,24 +221,10 @@ const LessonCard = React.memo(({
     )}>
       {/* Main Card Content */}
       <div className="p-4">
-        {/* Audio element for current playing lesson */}
-        {isCurrent && (
-          <audio
-            ref={audioRef}
-            src={lesson.urlAudio}
-            onLoadedMetadata={handleMetadata}
-            onTimeUpdate={updateTime}
-            onEnded={handleAudioEnded}
-            onCanPlay={() => setIsAudioReady(true)}
-            onError={handleAudioError}
-            preload="metadata"
-          />
-        )}
-        
         {/* Header with title and status */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-3">
-            {/* DEFINITIVE: Functional Status/Play Button */}
+            {/* Status/Play Button */}
             <button
               onClick={handlePlayPause}
               disabled={!canPlay || audioError}
@@ -328,7 +242,7 @@ const LessonCard = React.memo(({
                   ? "Lección bloqueada"
                   : audioError
                     ? "Error de audio"
-                    : (isCurrent && propIsPlaying)
+                    : isThisLessonPlaying
                       ? "Pausar" 
                       : "Reproducir"
               }
@@ -349,7 +263,7 @@ const LessonCard = React.memo(({
               )}>
                 {lesson.title}
               </h4>
-              {isCurrent && propIsPlaying && !audioError && (
+              {isThisLessonPlaying && !audioError && (
                 <span className="text-xs text-green-600">● Reproduciendo</span>
               )}
               {audioError && isCurrent && (
@@ -381,7 +295,7 @@ const LessonCard = React.memo(({
               </button>
             )}
             
-            {/* DEFINITIVE FIX: Duration display with proper completed lesson handling */}
+            {/* Duration display */}
             <div className={cn(
               "text-xs",
               {
@@ -406,95 +320,98 @@ const LessonCard = React.memo(({
                 max={validDuration}
                 value={displayCurrentTime}
                 onChange={handleSeekChange}
-                className="w-full accent-[#5e16ea] h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer"
+                disabled={!isCurrent || currentLessonId !== lesson.id}
+                className="w-full accent-[#5e16ea] h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer disabled:cursor-not-allowed"
                 style={{
                   background: `linear-gradient(to right, #5e16ea 0%, #5e16ea ${(displayCurrentTime / validDuration) * 100}%, #e5e7eb ${(displayCurrentTime / validDuration) * 100}%, #e5e7eb 100%)`
                 }}
               />
             </div>
 
-            {/* Control Buttons */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                {/* Skip Backward */}
-                <button
-                  onClick={handleSkipBackward}
-                  className="p-1 text-gray-600 hover:text-[#5e16ea] transition-colors"
-                  aria-label="Retroceder 15 segundos"
-                >
-                  <SkipBack size={16} />
-                </button>
-
-                {/* Skip Forward */}
-                <button
-                  onClick={handleSkipForward}
-                  className="p-1 text-gray-600 hover:text-[#5e16ea] transition-colors"
-                  aria-label="Avanzar 15 segundos"
-                >
-                  <SkipForward size={16} />
-                </button>
-
-                {/* Volume Control */}
-                <div className="relative">
+            {/* Control Buttons - Only show for current lesson */}
+            {isCurrent && currentLessonId === lesson.id && (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  {/* Skip Backward */}
                   <button
-                    onClick={() => setShowVolumeControl(!showVolumeControl)}
+                    onClick={onSkipBackward}
                     className="p-1 text-gray-600 hover:text-[#5e16ea] transition-colors"
-                    aria-label={isMuted ? "Activar sonido" : "Silenciar"}
+                    aria-label="Retroceder 15 segundos"
                   >
-                    {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                    <SkipBack size={16} />
                   </button>
 
-                  {showVolumeControl && (
-                    <div className="absolute bottom-full left-0 mb-2 bg-white rounded-md shadow-lg p-3 z-10 min-w-32">
-                      <div className="flex items-center space-x-2">
-                        <button onClick={toggleMute} className="text-gray-600 hover:text-[#5e16ea]">
-                          {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
-                        </button>
-                        <input
-                          type="range"
-                          min={0}
-                          max={1}
-                          step={0.01}
-                          value={volume}
-                          onChange={handleVolumeChange}
-                          className="flex-1 accent-[#5e16ea] h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer"
-                        />
+                  {/* Skip Forward */}
+                  <button
+                    onClick={onSkipForward}
+                    className="p-1 text-gray-600 hover:text-[#5e16ea] transition-colors"
+                    aria-label="Avanzar 15 segundos"
+                  >
+                    <SkipForward size={16} />
+                  </button>
+
+                  {/* Volume Control */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowVolumeControl(!showVolumeControl)}
+                      className="p-1 text-gray-600 hover:text-[#5e16ea] transition-colors"
+                      aria-label={isMuted ? "Activar sonido" : "Silenciar"}
+                    >
+                      {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                    </button>
+
+                    {showVolumeControl && (
+                      <div className="absolute bottom-full left-0 mb-2 bg-white rounded-md shadow-lg p-3 z-10 min-w-32">
+                        <div className="flex items-center space-x-2">
+                          <button onClick={toggleMute} className="text-gray-600 hover:text-[#5e16ea]">
+                            {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+                          </button>
+                          <input
+                            type="range"
+                            min={0}
+                            max={1}
+                            step={0.01}
+                            value={volume}
+                            onChange={handleVolumeChange}
+                            className="flex-1 accent-[#5e16ea] h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer"
+                          />
+                        </div>
                       </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Speed Control */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowSpeedDropdown(!showSpeedDropdown)}
+                    className="flex items-center text-gray-600 hover:text-[#5e16ea] transition-colors px-2 py-1 text-xs rounded-md bg-gray-100 hover:bg-gray-200"
+                  >
+                    <span>{playbackRate}x</span>
+                    <ChevronDown size={12} className="ml-1" />
+                  </button>
+
+                  {showSpeedDropdown && (
+                    <div className="absolute bottom-full right-0 mb-2 bg-white rounded-md shadow-lg py-1 z-10 min-w-16">
+                      {speeds.map(speed => (
+                        <button
+                          key={speed}
+                          onClick={() => handlePlaybackRateChange(speed)}
+                          className={cn(
+                            "block w-full text-left px-3 py-1 text-xs",
+                            speed === playbackRate 
+                              ? "bg-[#5e16ea] bg-opacity-10 text-[#5e16ea]" 
+                              : "hover:bg-gray-100"
+                          )}
+                        >
+                          {speed}x
+                        </button>
+                      ))}
                     </div>
                   )}
                 </div>
               </div>
-
-              {/* Speed Control */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowSpeedDropdown(!showSpeedDropdown)}
-                  className="flex items-center text-gray-600 hover:text-[#5e16ea] transition-colors px-2 py-1 text-xs rounded-md bg-gray-100 hover:bg-gray-200"
-                >
-                  <span>{playbackRate}x</span>
-                  <ChevronDown size={12} className="ml-1" />
-                </button>
-
-                {showSpeedDropdown && (
-                  <div className="absolute bottom-full right-0 mb-2 bg-white rounded-md shadow-lg py-1 z-10 min-w-16">
-                    {speeds.map(speed => (
-                      <button
-                        key={speed}
-                        onClick={() => handleRateChange(speed)}
-                        className={cn(
-                          "block w-full text-left px-3 py-1 text-xs",
-                          speed === playbackRate 
-                            ? "bg-[#5e16ea] bg-opacity-10 text-[#5e16ea]" 
-                            : "hover:bg-gray-100"
-                        )}
-                      >
-                        {speed}x
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
+            )}
           </div>
         )}
 
