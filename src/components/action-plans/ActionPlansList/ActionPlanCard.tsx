@@ -36,7 +36,7 @@ const ActionPlanCard: React.FC<ActionPlanCardProps> = ({
             <Checkbox
               checked={actionPlan.is_completed}
               onCheckedChange={() => onToggleComplete(actionPlan.id, actionPlan.is_completed)}
-              className="mt-1 h-5 w-5"
+              className="mt-1"
             />
             
             <div className="flex-1 space-y-3">
@@ -47,7 +47,7 @@ const ActionPlanCard: React.FC<ActionPlanCardProps> = ({
               <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
                 <div className="flex items-center space-x-1">
                   <span>📚</span>
-                  <span>{actionPlan.course_title}</span>
+                  <span>{actionPlan.course_title}</span>            
                 </div>
                 <span>•</span>
                 <div className="flex items-center space-x-1">

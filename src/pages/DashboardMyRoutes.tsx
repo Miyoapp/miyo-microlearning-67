@@ -100,9 +100,9 @@ const DashboardMyRoutes = () => {
 
   return (
     <DashboardLayout>
-      {/* Mobile hamburger menu - positioned like CoursePageHeader */}
+      {/* Mobile hamburger menu - CORREGIDO: fondo circular blanco consistente */}
       {isMobile && (
-        <div className="mb-4 px-4 flex justify-end">
+        <div className="fixed top-4 right-4 z-50 bg-white rounded-full shadow-lg">
           <SidebarTrigger />
         </div>
       )}
