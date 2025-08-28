@@ -6,7 +6,7 @@ import { Podcast, Lesson } from '@/types';
 interface CourseLearningPathSectionProps {
   podcast: Podcast;
   currentLessonId: string | null;
-  audioState: any; // Changed from isGloballyPlaying to audioState
+  isGloballyPlaying: boolean;
   onSelectLesson: (lesson: Lesson) => void;
   onProgressUpdate?: (position: number) => void;
   onLessonComplete?: () => void;
@@ -15,7 +15,7 @@ interface CourseLearningPathSectionProps {
 const CourseLearningPathSection: React.FC<CourseLearningPathSectionProps> = ({
   podcast,
   currentLessonId,
-  audioState,
+  isGloballyPlaying,
   onSelectLesson,
   onProgressUpdate,
   onLessonComplete
@@ -27,7 +27,7 @@ const CourseLearningPathSection: React.FC<CourseLearningPathSectionProps> = ({
         modules={podcast.modules}
         onSelectLesson={onSelectLesson}
         currentLessonId={currentLessonId}
-        audioState={audioState}
+        isGloballyPlaying={isGloballyPlaying}
         onProgressUpdate={onProgressUpdate}
         onLessonComplete={onLessonComplete}
         podcast={podcast}
