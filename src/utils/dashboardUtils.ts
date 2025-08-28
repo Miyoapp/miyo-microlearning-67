@@ -1,3 +1,4 @@
+
 import { Podcast } from '@/types';
 
 interface UserProgress {
@@ -31,22 +32,22 @@ export const getContinueLearningCourses = (
     .filter(course => course.progress > 0 && course.progress < 100);
 };
 
-export const getRecommendedCourses = (
+export const getFreeCourses = (
   allCourses: Podcast[],
   userProgress: UserProgress[]
 ): CourseWithProgress[] => {
   return allCourses
-    .filter(course => {
+    .filter(course => course.tipo_curso === 'libre')
+    .slice(0, 4)
+    .map(course => {
       const progress = userProgress.find(p => p.course_id === course.id);
-      return !progress || progress.progress_percentage === 0;
-    })
-    .slice(0, 6)
-    .map(course => ({
-      podcast: course,
-      progress: 0,
-      isPlaying: false,
-      isSaved: userProgress.find(p => p.course_id === course.id)?.is_saved || false
-    }));
+      return {
+        podcast: course,
+        progress: progress?.progress_percentage || 0,
+        isPlaying: false,
+        isSaved: progress?.is_saved || false
+      };
+    });
 };
 
 export const getPremiumCourses = (

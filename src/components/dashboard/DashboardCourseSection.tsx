@@ -1,3 +1,4 @@
+
 import React from 'react';
 import TouchCarousel from './TouchCarousel';
 import { Podcast } from '@/types';
@@ -11,6 +12,7 @@ interface CourseWithProgress {
 
 interface DashboardCourseSectionProps {
   title: string;
+  subtitle?: string;
   courses: CourseWithProgress[];
   showProgress: boolean;
   onPlayCourse: (courseId: string) => void;
@@ -20,6 +22,7 @@ interface DashboardCourseSectionProps {
 
 const DashboardCourseSection: React.FC<DashboardCourseSectionProps> = ({
   title,
+  subtitle,
   courses,
   showProgress,
   onPlayCourse,
@@ -31,14 +34,23 @@ const DashboardCourseSection: React.FC<DashboardCourseSectionProps> = ({
   }
 
   return (
-    <TouchCarousel
-      title={title}
-      courses={courses}
-      showProgress={showProgress}
-      onPlayCourse={onPlayCourse}
-      onToggleSave={onToggleSave}
-      onCourseClick={onCourseClick}
-    />
+    <div className="mb-8 sm:mb-12">
+      <div className="mb-6 px-4 sm:px-0">
+        <h2 className="text-xl sm:text-2xl font-bold mb-2">{title}</h2>
+        {subtitle && (
+          <p className="text-sm sm:text-base text-gray-600">{subtitle}</p>
+        )}
+      </div>
+      
+      <TouchCarousel
+        title=""
+        courses={courses}
+        showProgress={showProgress}
+        onPlayCourse={onPlayCourse}
+        onToggleSave={onToggleSave}
+        onCourseClick={onCourseClick}
+      />
+    </div>
   );
 };
 

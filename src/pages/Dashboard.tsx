@@ -9,7 +9,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useDashboardData } from '@/hooks/dashboard/useDashboardData';
 import { 
   getContinueLearningCourses, 
-  getRecommendedCourses, 
+  getFreeCourses, 
   getPremiumCourses 
 } from '@/utils/dashboardUtils';
 
@@ -30,8 +30,8 @@ const Dashboard = () => {
   // Get courses in progress
   const continueLearningCourses = getContinueLearningCourses(allCourses, userProgress);
 
-  // Get recommended courses (courses not started)
-  const recommendedCourses = getRecommendedCourses(allCourses, userProgress);
+  // Get free courses for "Comienza Aquí" section
+  const freeCourses = getFreeCourses(allCourses, userProgress);
 
   // Get premium courses
   const premiumCourses = getPremiumCourses(allCourses, userProgress);
@@ -90,8 +90,9 @@ const Dashboard = () => {
             />
 
             <DashboardCourseSection
-              title="Para ti"
-              courses={recommendedCourses}
+              title="⭐ Comienza Aquí"
+              subtitle="Cursos perfectos para dar tus primeros pasos"
+              courses={freeCourses}
               showProgress={false}
               onPlayCourse={handlePlayCourse}
               onToggleSave={handleToggleSave}
