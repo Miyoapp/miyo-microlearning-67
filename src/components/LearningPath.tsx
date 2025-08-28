@@ -174,10 +174,10 @@ const LearningPath = React.memo(({
       
       // Obtener lecciones en el orden definido por lessonIds del módulo
       return module.lessonIds
-        .map(id => lessons.find(lesson => lesson.id === id))
+        .map(lessonId => lessons.find(lesson => lesson.id === lessonId))
         .filter((lesson): lesson is Lesson => {
           if (!lesson) {
-            console.warn('⚠️ Lesson not found for ID:', id);
+            console.warn('⚠️ Lesson not found for ID:', lessonId);
           }
           return lesson !== undefined;
         });

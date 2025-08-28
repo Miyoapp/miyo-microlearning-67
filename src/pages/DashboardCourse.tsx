@@ -63,7 +63,7 @@ const DashboardCourse = () => {
   // Use consolidated lessons hook
   const { 
     currentLesson, 
-    isPlaying, 
+    isPlaying,
     initializeCurrentLesson,
     handleSelectLesson, 
     handleTogglePlay, 

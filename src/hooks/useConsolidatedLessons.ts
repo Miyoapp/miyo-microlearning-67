@@ -5,6 +5,7 @@ import { useUserLessonProgress } from './useUserLessonProgress';
 import { useUserProgress } from './useUserProgress';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useLessonInitialization } from './consolidated-lessons/useLessonInitialization';
+import { useAudioPlayer } from './useAudioPlayer';
 import React from 'react';
 
 export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (podcast: Podcast) => void) {
@@ -36,8 +37,22 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     initializeCurrentLesson
   } = useLessonInitialization(podcast, lessonProgress, userProgress, user, setPodcast);
 
-  // ELIMINADO: Estados de audio duplicados - ahora se manejan solo en useAudioPlayer
-  // const [isPlaying, setIsPlaying] = React.useState(false);
+  // Initialize audio player with lessons
+  const audioPlayer = useAudioPlayer({
+    lessons: podcast?.lessons || [],
+    onLessonComplete: (lessonId: string) => {
+      console.log('🎯 Audio player lesson complete:', lessonId);
+      if (currentLesson?.id === lessonId) {
+        handleLessonComplete();
+      }
+    },
+    onProgressUpdate: (lessonId: string, position: number) => {
+      console.log('📊 Audio player progress update:', lessonId, position);
+      if (currentLesson?.id === lessonId) {
+        handleProgressUpdate(position);
+      }
+    }
+  });
 
   // Auto-advance allowed logic
   const isAutoAdvanceAllowed = React.useMemo(() => {
@@ -45,7 +60,7 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     return true;
   }, [user, podcast]);
 
-  // Lesson completion handler - sin conflictos de audio
+  // Lesson completion handler
   const handleLessonComplete = useCallback(() => {
     if (!currentLesson || !podcast || !user) return;
     
@@ -114,7 +129,7 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     updateLessonPosition(currentLesson.id, podcast.id, position);
   }, [currentLesson, podcast, user, updateLessonPosition]);
 
-  // SIMPLIFICADO: Solo manejo de selección de lección, sin estados de audio
+  // Lesson selection handler
   const handleSelectLesson = useCallback((lesson: any, shouldAutoPlay = false) => {
     console.log('🎯 Consolidated Lessons - handleSelectLesson:', {
       lessonTitle: lesson.title,
@@ -141,6 +156,17 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     currentLesson?.id, 
     setCurrentLesson
   ]);
+
+  // Toggle play/pause handler
+  const handleTogglePlay = useCallback(() => {
+    if (!currentLesson) return;
+    
+    if (audioPlayer.isPlaying) {
+      audioPlayer.pause();
+    } else {
+      audioPlayer.play(currentLesson);
+    }
+  }, [currentLesson, audioPlayer]);
 
   // Inicializar podcast cuando todos los datos estén disponibles
   useEffect(() => {
@@ -213,6 +239,9 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     handleSelectLesson,
     handleLessonComplete,
     handleProgressUpdate,
-    initializePodcastWithProgress
+    initializePodcastWithProgress,
+    // Add missing properties
+    isPlaying: audioPlayer.isPlaying,
+    handleTogglePlay
   };
 }
