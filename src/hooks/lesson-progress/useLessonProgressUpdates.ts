@@ -77,9 +77,9 @@ export function useLessonProgressUpdates(
           .select('*')
           .eq('user_id', user.id)
           .eq('lesson_id', lessonId)
-          .single();
+          .maybeSingle();
 
-        if (fetchError && fetchError.code !== 'PGRST116') {
+        if (fetchError) {
           console.error('Error fetching existing progress:', fetchError);
           throw fetchError;
         }
