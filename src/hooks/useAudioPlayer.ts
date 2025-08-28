@@ -13,11 +13,12 @@ interface AudioPlayerState {
 }
 
 interface UseAudioPlayerProps {
+  lessons?: Lesson[];
   onLessonComplete?: (lessonId: string) => void;
   onProgressUpdate?: (lessonId: string, position: number) => void;
 }
 
-export function useAudioPlayer({ onLessonComplete, onProgressUpdate }: UseAudioPlayerProps = {}) {
+export function useAudioPlayer({ lessons = [], onLessonComplete, onProgressUpdate }: UseAudioPlayerProps = {}) {
   const [state, setState] = useState<AudioPlayerState>({
     currentLessonId: null,
     currentTime: 0,
@@ -37,9 +38,10 @@ export function useAudioPlayer({ onLessonComplete, onProgressUpdate }: UseAudioP
   }, [lessonProgress]);
 
   // Calculate display progress for a lesson
-  const getDisplayProgress = useCallback((lessonId: string, validDuration?: number) => {
+  const getDisplayProgress = useCallback((lessonId: string) => {
     const savedProgress = getSavedProgress(lessonId);
-    const lessonDuration = validDuration || savedProgress?.duration || 0;
+    const lesson = lessons.find(l => l.id === lessonId);
+    const lessonDuration = lesson?.duracion || 0;
     
     // If this is the current lesson and it's playing, show real-time progress
     if (lessonId === state.currentLessonId && state.isPlaying) {
@@ -53,7 +55,7 @@ export function useAudioPlayer({ onLessonComplete, onProgressUpdate }: UseAudioP
     
     // Show saved progress or 0
     return savedProgress?.current_position || 0;
-  }, [state.currentLessonId, state.isPlaying, state.currentTime, getSavedProgress]);
+  }, [state.currentLessonId, state.isPlaying, state.currentTime, getSavedProgress, lessons]);
 
   // Update audio time and handle progress
   const updateTime = useCallback(() => {
