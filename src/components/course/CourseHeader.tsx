@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -85,12 +86,13 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-3 sm:p-6 mb-3 sm:mb-6 sm:mx-0">
-      <div className="relative mb-3 sm:mb-6">
+    <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 mb-4 sm:mb-6 mx-4 sm:mx-0">
+      {/* Course Image - Mobile optimized */}
+      <div className="relative mb-4 sm:mb-6">
         <img
           src={podcast.imageUrl}
           alt={podcast.title}
-          className="w-full h-32 sm:h-48 object-cover rounded-lg sm:rounded-xl"
+          className="w-full h-40 sm:h-48 object-cover rounded-lg sm:rounded-xl"
         />
         {isPremium && (
           <div className="absolute top-2 sm:top-4 left-2 sm:left-4">
@@ -102,7 +104,8 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
         )}
       </div>
 
-      <div className="flex items-start justify-between mb-2 sm:mb-4 gap-3">
+      {/* Title and Save Button - Mobile layout */}
+      <div className="flex items-start justify-between mb-3 sm:mb-4 gap-3">
         <h1 className="text-lg sm:text-2xl font-bold flex-1 leading-tight">{podcast.title}</h1>
         <Button
           variant="outline"
@@ -118,7 +121,8 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
         </Button>
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-2 sm:mb-4">
+      {/* Creator Info and Category - Mobile optimized */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-3 sm:mb-4">
         <div
           className={cn(
             "flex items-center gap-2",
@@ -141,11 +145,13 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
         <Badge variant="outline" className="text-xs sm:text-sm w-fit">{podcast.category.nombre}</Badge>
       </div>
 
-      <p className="text-sm sm:text-base text-gray-600 mb-3 leading-relaxed line-clamp-3 sm:line-clamp-none">
+      {/* Course Description - Mobile optimized */}
+      <p className="text-sm sm:text-base text-gray-600 mb-4 leading-relaxed line-clamp-3 sm:line-clamp-none">
         {podcast.description}
       </p>
 
-      <div className="flex flex-wrap items-center gap-3 sm:gap-6 mb-3 sm:mb-4">
+      {/* Course Stats - Mobile responsive layout */}
+      <div className="flex flex-wrap items-center gap-3 sm:gap-6 mb-4 sm:mb-4">
         {isPremium ? (
           <>
             <span className="text-lg sm:text-2xl font-bold text-green-600">
@@ -192,15 +198,17 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
         )}
       </div>
 
+      {/* Action Button - Mobile optimized */}
       <Button 
         onClick={handleStartLearning} 
         size="lg" 
-        className="w-full h-10 sm:h-11 text-sm sm:text-base font-medium"
+        className="w-full h-12 sm:h-11 text-sm sm:text-base font-medium"
       >
         <Play className="w-4 h-4 mr-2" />
         {getButtonText()}
       </Button>
 
+      {/* Checkout Modal */}
       {isPremium && (
         <CheckoutModal
           isOpen={showCheckout}

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,45 +20,27 @@ export const useDashboardData = () => {
 
   useEffect(() => {
     const loadUserData = async () => {
-      if (!user) {
-        console.log('👤 No user found for dashboard data');
-        setUserName('Usuario');
-        setIsFirstTimeUser(false);
-        return;
-      }
-
-      try {
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('name, created_at')
-          .eq('id', user.id)
-          .maybeSingle();
-        
-        if (error) {
+      if (user) {
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('name, created_at')
+            .eq('id', user.id)
+            .single();
+          
+          if (profile) {
+            setUserName(profile.name || user.email || 'Usuario');
+            
+            // Determinar si es primera vez basado en si se creó hoy
+            const createdDate = new Date(profile.created_at);
+            const today = new Date();
+            const isToday = createdDate.toDateString() === today.toDateString();
+            setIsFirstTimeUser(isToday);
+          }
+        } catch (error) {
           console.error('Error loading user profile:', error);
           setUserName(user.email || 'Usuario');
-          setIsFirstTimeUser(false);
-          return;
         }
-        
-        if (profile) {
-          setUserName(profile.name || user.email || 'Usuario');
-          
-          // Determinar si es primera vez basado en si se creó hoy
-          const createdDate = new Date(profile.created_at);
-          const today = new Date();
-          const isToday = createdDate.toDateString() === today.toDateString();
-          setIsFirstTimeUser(isToday);
-        } else {
-          // No profile found - might be a new user
-          console.log('📝 No profile found for user, using defaults');
-          setUserName(user.email || 'Usuario');
-          setIsFirstTimeUser(true);
-        }
-      } catch (error) {
-        console.error('Error loading user profile:', error);
-        setUserName(user.email || 'Usuario');
-        setIsFirstTimeUser(false);
       }
     };
 

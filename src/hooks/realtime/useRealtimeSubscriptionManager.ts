@@ -29,8 +29,7 @@ export function useRealtimeSubscriptionManager() {
 
     const channel = supabase.channel(channelName);
     
-    // FIXED: Configure the channel with the postgres_changes listener
-    channel.on(
+    const subscription = channel.on(
       'postgres_changes',
       {
         event: '*',
@@ -44,8 +43,7 @@ export function useRealtimeSubscriptionManager() {
       }
     );
 
-    // CRITICAL FIX: Call subscribe on the channel, not on the subscription object
-    channel.subscribe((status) => {
+    subscription.subscribe((status) => {
       console.log(`📡 REALTIME STATUS [${subscriptionKey}]:`, status);
     });
 

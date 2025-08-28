@@ -41,29 +41,8 @@ const CourseMainContent: React.FC<CourseMainContentProps> = ({
   onProgressUpdate,
   onLessonComplete
 }) => {
-  console.log('🔍 CourseMainContent: Render iniciado con props:', {
-    podcastTitle: podcast?.title,
-    currentLessonTitle: currentLesson?.title,
-    hasStarted,
-    isSaved,
-    progressPercentage,
-    isCompleted,
-    isPremium,
-    hasAccess,
-    isGloballyPlaying,
-    timestamp: new Date().toISOString()
-  });
-
-  // Verificar que el podcast sea válido
-  if (!podcast) {
-    console.error('❌ CourseMainContent: podcast es null o undefined');
-    return <div>Error: No se pudo cargar el curso</div>;
-  }
-
-  console.log('✅ CourseMainContent: Podcast válido, renderizando componentes');
-
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-8">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
       {/* Main Content - Full width on mobile */}
       <div className="lg:col-span-2">
         <CourseHeader
@@ -75,7 +54,7 @@ const CourseMainContent: React.FC<CourseMainContentProps> = ({
           onToggleSave={onToggleSave}
         />
 
-        <div className="relative sm:mx-0">
+        <div className="relative mx-4 sm:mx-0">
           <CourseLearningPathSection
             podcast={podcast}
             currentLessonId={currentLesson?.id || null}
