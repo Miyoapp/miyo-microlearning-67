@@ -24,7 +24,22 @@ interface CourseAccessHandlerProps {
   onLessonComplete: () => void;
   onProgressUpdate: (position: number) => void;
   onPurchaseComplete: () => void;
-  // Removed global audio control props as they're no longer needed
+  // Add audio player props from consolidated hook
+  audioCurrentLessonId: string | null;
+  audioIsPlaying: boolean;
+  audioCurrentTime: number;
+  audioDuration: number;
+  audioIsReady: boolean;
+  audioError: boolean;
+  getDisplayProgress: (lessonId: string, validDuration?: number) => number;
+  onPlay: (lesson: Lesson) => void;
+  onPause: () => void;
+  onSeek: (time: number) => void;
+  onSkipBackward: () => void;
+  onSkipForward: () => void;
+  onSetPlaybackRate: (rate: number) => void;
+  onSetVolume: (volume: number) => void;
+  onSetMuted: (muted: boolean) => void;
 }
 
 const CourseAccessHandler: React.FC<CourseAccessHandlerProps> = ({
@@ -46,7 +61,23 @@ const CourseAccessHandler: React.FC<CourseAccessHandlerProps> = ({
   onTogglePlay,
   onLessonComplete,
   onProgressUpdate,
-  onPurchaseComplete
+  onPurchaseComplete,
+  // Audio player props
+  audioCurrentLessonId,
+  audioIsPlaying,
+  audioCurrentTime,
+  audioDuration,
+  audioIsReady,
+  audioError,
+  getDisplayProgress,
+  onPlay,
+  onPause,
+  onSeek,
+  onSkipBackward,
+  onSkipForward,
+  onSetPlaybackRate,
+  onSetVolume,
+  onSetMuted
 }) => {
   return (
     <>
@@ -66,6 +97,22 @@ const CourseAccessHandler: React.FC<CourseAccessHandlerProps> = ({
         onShowCheckout={onShowCheckout}
         onProgressUpdate={onProgressUpdate}
         onLessonComplete={onLessonComplete}
+        // Pass audio player props
+        audioCurrentLessonId={audioCurrentLessonId}
+        audioIsPlaying={audioIsPlaying}
+        audioCurrentTime={audioCurrentTime}
+        audioDuration={audioDuration}
+        audioIsReady={audioIsReady}
+        audioError={audioError}
+        getDisplayProgress={getDisplayProgress}
+        onPlay={onPlay}
+        onPause={onPause}
+        onSeek={onSeek}
+        onSkipBackward={onSkipBackward}
+        onSkipForward={onSkipForward}
+        onSetPlaybackRate={onSetPlaybackRate}
+        onSetVolume={onSetVolume}
+        onSetMuted={onSetMuted}
       />
 
       {showCheckout && (
