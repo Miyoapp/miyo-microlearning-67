@@ -60,7 +60,7 @@ const DashboardCourse = () => {
   // Course access and premium status
   const { isPremium, hasAccess, isLoading: accessLoading, error: accessError, refetchPurchases } = useCourseAccess(podcast);
   
-  // Use consolidated lessons hook
+  // Use consolidated lessons hook with all audio functionality
   const { 
     currentLesson, 
     isPlaying,
@@ -69,7 +69,23 @@ const DashboardCourse = () => {
     handleTogglePlay, 
     handleLessonComplete,
     handleProgressUpdate,
-    initializePodcastWithProgress
+    initializePodcastWithProgress,
+    // Audio player state and controls
+    audioCurrentLessonId,
+    audioIsPlaying,
+    audioCurrentTime,
+    audioDuration,
+    audioIsReady,
+    audioError,
+    getDisplayProgress,
+    onPlay,
+    onPause,
+    onSeek,
+    onSkipBackward,
+    onSkipForward,
+    onSetPlaybackRate,
+    onSetVolume,
+    onSetMuted
   } = useConsolidatedLessons(podcast, setPodcast);
   
   // Set up realtime sync
@@ -105,6 +121,11 @@ const DashboardCourse = () => {
       hasDisplayPodcast: !!displayPodcast,
       userProgressCount: userProgress.length,
       timeoutActive: !!podcastClearTimeout.current
+    },
+    audioPlayerStates: {
+      currentLessonId: audioCurrentLessonId,
+      isPlaying: audioIsPlaying,
+      hasError: audioError
     },
     realtimeInfo: {
       componentsWithSubscriptions: ['useCoursePurchases', 'useRealtimeProgress', 'useLessonProgressData'],
@@ -194,7 +215,7 @@ const DashboardCourse = () => {
   };
 
   // PRIORITY 1: Show content if we have valid data (NEVER BLANK SCREEN)
-  if (shouldShowContent) {
+  if (displayPodcast) {
     console.log('✅ RENDERING CONTENT - Guaranteed non-blank screen with realtime protection:', {
       courseTitle: displayPodcast.title,
       isCurrentData: !!podcast,
@@ -239,6 +260,22 @@ const DashboardCourse = () => {
               onLessonComplete={handleLessonComplete}
               onProgressUpdate={handleProgressUpdate}
               onPurchaseComplete={handlePurchaseComplete}
+              // Pass all audio player props
+              audioCurrentLessonId={audioCurrentLessonId}
+              audioIsPlaying={audioIsPlaying}
+              audioCurrentTime={audioCurrentTime}
+              audioDuration={audioDuration}
+              audioIsReady={audioIsReady}
+              audioError={audioError}
+              getDisplayProgress={getDisplayProgress}
+              onPlay={onPlay}
+              onPause={onPause}
+              onSeek={onSeek}
+              onSkipBackward={onSkipBackward}
+              onSkipForward={onSkipForward}
+              onSetPlaybackRate={onSetPlaybackRate}
+              onSetVolume={onSetVolume}
+              onSetMuted={onSetMuted}
             />
           </div>
         </NotesProvider>

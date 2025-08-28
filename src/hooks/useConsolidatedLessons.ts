@@ -150,11 +150,17 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     // Set the new current lesson
     setCurrentLesson(lesson);
     
+    // Handle audio playback if requested
+    if (shouldAutoPlay) {
+      audioPlayer.play(lesson);
+    }
+    
     console.log('✅ Consolidated Lessons - Lesson selection complete:', lesson.title);
     
   }, [
     currentLesson?.id, 
-    setCurrentLesson
+    setCurrentLesson,
+    audioPlayer
   ]);
 
   // Toggle play/pause handler
@@ -240,8 +246,24 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     handleLessonComplete,
     handleProgressUpdate,
     initializePodcastWithProgress,
-    // Add missing properties
+    // Audio player state and controls
     isPlaying: audioPlayer.isPlaying,
-    handleTogglePlay
+    handleTogglePlay,
+    // Expose all audio player functionality
+    audioCurrentLessonId: audioPlayer.currentLessonId,
+    audioIsPlaying: audioPlayer.isPlaying,
+    audioCurrentTime: audioPlayer.currentTime,
+    audioDuration: audioPlayer.duration,
+    audioIsReady: audioPlayer.isReady,
+    audioError: audioPlayer.error,
+    getDisplayProgress: audioPlayer.getDisplayProgress,
+    onPlay: audioPlayer.play,
+    onPause: audioPlayer.pause,
+    onSeek: audioPlayer.seek,
+    onSkipBackward: audioPlayer.skipBackward,
+    onSkipForward: audioPlayer.skipForward,
+    onSetPlaybackRate: audioPlayer.setPlaybackRate,
+    onSetVolume: audioPlayer.setVolume,
+    onSetMuted: audioPlayer.setMuted
   };
 }
