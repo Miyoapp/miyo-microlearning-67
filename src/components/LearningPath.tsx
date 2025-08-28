@@ -1,4 +1,3 @@
-
 import { useCallback, useMemo, useState, useEffect } from 'react';
 import { Lesson, Module } from '../types';
 import React from 'react';
@@ -174,13 +173,14 @@ const LearningPath = React.memo(({
       
       // Obtener lecciones en el orden definido por lessonIds del módulo
       return module.lessonIds
-        .map(lessonId => lessons.find(lesson => lesson.id === lessonId))
-        .filter((lesson): lesson is Lesson => {
+        .map(lessonId => {
+          const lesson = lessons.find(lesson => lesson.id === lessonId);
           if (!lesson) {
             console.warn('⚠️ Lesson not found for ID:', lessonId);
           }
-          return lesson !== undefined;
-        });
+          return lesson;
+        })
+        .filter((lesson): lesson is Lesson => lesson !== undefined);
     } catch (error) {
       console.error('❌ Error getting lessons for module:', moduleId, error);
       return [];
