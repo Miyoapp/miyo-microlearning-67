@@ -13,7 +13,7 @@ interface CourseAccessHandlerProps {
   isCompleted: boolean;
   isPremium: boolean;
   hasAccess: boolean;
-  isPlaying: boolean;
+  audioState: any; // Changed from isPlaying to audioState
   showCheckout: boolean;
   onStartLearning: () => void;
   onToggleSave: () => void;
@@ -24,7 +24,6 @@ interface CourseAccessHandlerProps {
   onLessonComplete: () => void;
   onProgressUpdate: (position: number) => void;
   onPurchaseComplete: () => void;
-  // Removed global audio control props as they're no longer needed
 }
 
 const CourseAccessHandler: React.FC<CourseAccessHandlerProps> = ({
@@ -36,7 +35,7 @@ const CourseAccessHandler: React.FC<CourseAccessHandlerProps> = ({
   isCompleted,
   isPremium,
   hasAccess,
-  isPlaying,
+  audioState, // Changed from isPlaying to audioState
   showCheckout,
   onStartLearning,
   onToggleSave,
@@ -59,7 +58,7 @@ const CourseAccessHandler: React.FC<CourseAccessHandlerProps> = ({
         isCompleted={isCompleted}
         isPremium={isPremium}
         hasAccess={hasAccess}
-        isGloballyPlaying={isPlaying}
+        audioState={audioState} // Changed from isGloballyPlaying to audioState
         onStartLearning={onStartLearning}
         onToggleSave={onToggleSave}
         onSelectLesson={onSelectLesson}

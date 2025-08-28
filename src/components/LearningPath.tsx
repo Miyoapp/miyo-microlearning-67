@@ -22,6 +22,8 @@ interface LearningPathProps {
   onSelectLesson: (lesson: Lesson, shouldAutoPlay?: boolean) => void;
   currentLessonId: string | null;
   audioState: any;
+  onProgressUpdate?: (position: number) => void;
+  onLessonComplete?: () => void;
   podcast?: any;
 }
 
@@ -31,6 +33,8 @@ const LearningPath = React.memo(({
   onSelectLesson, 
   currentLessonId, 
   audioState,
+  onProgressUpdate,
+  onLessonComplete,
   podcast
 }: LearningPathProps) => {
   // Get user progress data for course completion detection
