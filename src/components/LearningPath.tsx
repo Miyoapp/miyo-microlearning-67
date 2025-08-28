@@ -185,10 +185,10 @@ const LearningPath = React.memo(({
   
   return (
     <>
-      <div className="py-3">
+      <div className="py-2 sm:py-3">
         <h2 className="text-2xl font-bold mb-6 text-center">Tu Ruta de Aprendizaje</h2>
         
-        <div className="max-w-2xl mx-auto space-y-8">
+        <div className="max-w-2xl mx-auto space-y-4 sm:space-y-8">
           {orderedModules.map((module) => {
             const moduleLessons = getLessonsForModule(module.id);
             

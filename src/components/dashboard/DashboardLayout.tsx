@@ -15,7 +15,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gray-50 overflow-hidden">
         <DashboardSidebar />
-        <main className="flex-1 overflow-hidden pt-6 pr-6 pb-6">
+        <main className="flex-1 overflow-hidden pt-2 pr-2 pb-2 lg:pt-6 lg:pr-6 lg:pb-6">
           {children}
         </main>
       </div>
