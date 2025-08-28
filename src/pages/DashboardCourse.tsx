@@ -8,7 +8,7 @@ export default function DashboardCourse() {
   const { id } = useParams<{ id: string }>();
   const courseId = id || '';
   
-  const { data: podcast, isLoading, error } = useCourseData(courseId);
+  const { podcast, isLoading, error } = useCourseData(courseId);
 
   if (!courseId) {
     return <div>Error: ID de curso no válido</div>;
@@ -19,11 +19,10 @@ export default function DashboardCourse() {
       <MetaTags
         title={podcast?.title ? `${podcast.title} - Ruta de Aprendizaje` : 'Curso - Ruta de Aprendizaje'}
         description={podcast?.description || 'Descubre contenido de calidad en nuestra plataforma de cursos'}
-        path={`/courses/${courseId}`}
+        url={`${window.location.origin}/courses/${courseId}`}
       />
       
       <CourseAccessHandler 
-        courseId={courseId}
         podcast={podcast}
         isLoading={isLoading}
         error={error}
