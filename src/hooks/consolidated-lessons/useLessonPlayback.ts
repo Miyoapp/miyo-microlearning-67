@@ -76,13 +76,25 @@ export function useLessonPlayback(
     }
   }, [podcast, updateLessonPosition, userProgress, isInReviewMode]);
 
-  // FIXED: Simplified handleTogglePlay
+  // DEFINITIVE FIX: Simplified and reliable handleTogglePlay
   const handleTogglePlay = useCallback(() => {
-    if (!currentLesson) return;
+    if (!currentLesson) {
+      console.log('🚫 No current lesson for toggle play');
+      return;
+    }
     
-    console.log('🎵 Toggle play - estado actual:', isPlaying, '→ nuevo estado:', !isPlaying);
+    console.log('🎵🎵🎵 DEFINITIVE TOGGLE PLAY:', {
+      lessonTitle: currentLesson.title,
+      currentState: isPlaying,
+      newState: !isPlaying,
+      timestamp: new Date().toLocaleTimeString()
+    });
+    
+    // Simple state toggle
     setIsPlaying(!isPlaying);
     setIsAutoAdvanceAllowed(true);
+    
+    console.log('✅✅✅ TOGGLE PLAY - State updated to:', !isPlaying);
   }, [isPlaying, currentLesson]);
 
   const handleProgressUpdate = useCallback((position: number) => {

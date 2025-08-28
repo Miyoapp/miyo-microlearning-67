@@ -106,14 +106,14 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     updateCourseProgress
   ]);
 
-  // FIXED: Improved lesson selection with clearer logic
+  // DEFINITIVE FIX: Simplified lesson selection with clear logging
   const handleSelectLesson = useCallback((lesson: any, shouldAutoPlay = false) => {
-    console.log('🚀 useConsolidatedLessons - handleSelectLesson:', {
+    console.log('🚀🚀🚀 DEFINITIVE handleSelectLesson:', {
       lessonTitle: lesson.title,
       shouldAutoPlay,
       currentLessonId: currentLesson?.id,
       isSameLesson: currentLesson?.id === lesson.id,
-      currentGlobalPlayingState: isPlaying,
+      currentGlobalState: isPlaying,
       timestamp: new Date().toLocaleTimeString()
     });
     
@@ -121,26 +121,40 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     const isSameLesson = currentLesson?.id === lesson.id;
     
     if (isSameLesson) {
-      // SAME LESSON: Just toggle the play state
-      console.log('🔄 SAME lesson - toggling play state to:', shouldAutoPlay);
+      // SAME LESSON: Direct toggle of play state
+      console.log('🔄🔄🔄 SAME LESSON - Direct state toggle from', isPlaying, 'to', shouldAutoPlay);
+      
+      // Force re-render by calling setIsPlaying with explicit value
       setIsPlaying(shouldAutoPlay);
+      
+      console.log('✅✅✅ SAME LESSON - State updated to:', shouldAutoPlay);
       return;
     }
     
     // DIFFERENT LESSON: Full lesson change workflow
     hasUserMadeSelection.current = true;
-    console.log('✅ DIFFERENT lesson selected - changing to:', lesson.title);
+    console.log('🔀🔀🔀 DIFFERENT LESSON - Full change workflow');
+    console.log('📍 Setting current lesson to:', lesson.title);
+    console.log('📍 Setting playing state to:', shouldAutoPlay);
     
-    // Set the new current lesson
+    // Set the new current lesson first
     setCurrentLesson(lesson);
     
-    // Set playing state
+    // Then set the playing state
     setIsPlaying(shouldAutoPlay);
     
     // Handle the lesson change through playback hook
     handleSelectLessonFromPlayback(lesson, shouldAutoPlay);
     
-  }, [setCurrentLesson, handleSelectLessonFromPlayback, setIsPlaying, currentLesson?.id, isPlaying]);
+    console.log('✅✅✅ DIFFERENT LESSON - Complete workflow finished');
+    
+  }, [
+    currentLesson?.id, 
+    isPlaying, 
+    setCurrentLesson, 
+    setIsPlaying, 
+    handleSelectLessonFromPlayback
+  ]);
 
   // CRÍTICO: Inicializar podcast cuando todos los datos estén disponibles
   useEffect(() => {

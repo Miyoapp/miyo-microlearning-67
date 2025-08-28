@@ -64,19 +64,26 @@ const LessonCard = React.memo(({
   const [volume, setVolume] = React.useState(1);
   const [isMuted, setIsMuted] = React.useState(false);
   const [isAudioReady, setIsAudioReady] = React.useState(false);
+  const [audioError, setAudioError] = React.useState(false);
   const audioRef = React.useRef<HTMLAudioElement>(null);
 
-  // FIXED: Simplified play/pause handler with clear logic
+  // SIMPLIFIED: Direct play/pause handler
   const handlePlayPause = () => {
-    console.log('🎵🎵🎵 LessonCard handlePlayPause clicked:', {
+    console.log('🎵🎵🎵 LESSONCARD BUTTON CLICK:', {
       lessonTitle: lesson.title,
       currentIsPlaying: propIsPlaying,
       isCurrent,
       canPlay,
-      action: propIsPlaying ? 'WILL_PAUSE' : 'WILL_PLAY'
+      action: propIsPlaying ? 'WILL_PAUSE' : 'WILL_PLAY',
+      timestamp: new Date().toLocaleTimeString()
     });
     
-    // Call onLessonClick with the opposite of current playing state
+    if (!canPlay) {
+      console.log('🚫 Cannot play - lesson is locked');
+      return;
+    }
+    
+    // Always call with opposite of current state
     onLessonClick(lesson, !propIsPlaying);
   };
 
@@ -136,6 +143,8 @@ const LessonCard = React.memo(({
     if (audioRef.current) {
       setDuration(audioRef.current.duration);
       setIsAudioReady(true);
+      setAudioError(false);
+      console.log('🎵 Audio metadata loaded for:', lesson.title);
     }
   };
 
@@ -153,45 +162,101 @@ const LessonCard = React.memo(({
     onLessonComplete?.();
   };
 
-  // CRITICAL FIX: Simplified and more reliable audio synchronization
+  // Handle audio error
+  const handleAudioError = () => {
+    console.error('🚨 Audio error for lesson:', lesson.title);
+    setAudioError(true);
+    setIsAudioReady(false);
+  };
+
+  // DEFINITIVE FIX: Simplified and robust audio synchronization
   React.useEffect(() => {
-    const syncAudio = async () => {
-      if (!audioRef.current || !isCurrent) {
-        return;
-      }
+    console.log('🔄 AUDIO SYNC EFFECT TRIGGERED:', {
+      lessonTitle: lesson.title,
+      isCurrent,
+      propIsPlaying,
+      hasAudioRef: !!audioRef.current,
+      isAudioReady,
+      audioError,
+      readyState: audioRef.current?.readyState,
+      paused: audioRef.current?.paused
+    });
 
-      console.log('🔄 SYNC AUDIO:', {
-        lessonTitle: lesson.title,
-        propIsPlaying,
-        audioReady: isAudioReady,
-        readyState: audioRef.current.readyState,
-        paused: audioRef.current.paused
-      });
+    // Only sync audio if this is the current lesson
+    if (!isCurrent || !audioRef.current) {
+      console.log('⏭️ Skipping audio sync - not current lesson or no audio ref');
+      return;
+    }
 
+    const audio = audioRef.current;
+    
+    // Definitive sync function
+    const syncAudioState = async () => {
       try {
+        console.log('🎵 SYNC AUDIO STATE:', {
+          lessonTitle: lesson.title,
+          shouldPlay: propIsPlaying,
+          currentlyPaused: audio.paused,
+          readyState: audio.readyState,
+          audioError
+        });
+
+        if (audioError) {
+          console.log('🚨 Audio has error, skipping sync');
+          return;
+        }
+
         if (propIsPlaying) {
           // Should be playing
-          if (audioRef.current.paused && (audioRef.current.readyState >= 2 || isAudioReady)) {
-            console.log('▶️ STARTING playback for:', lesson.title);
-            await audioRef.current.play();
-            console.log('✅ Playback started successfully');
+          if (audio.paused) {
+            console.log('▶️ STARTING PLAYBACK for:', lesson.title);
+            
+            // Ensure audio is ready
+            if (audio.readyState < 2) {
+              console.log('⏳ Audio not ready, waiting...');
+              await new Promise(resolve => {
+                const onCanPlay = () => {
+                  audio.removeEventListener('canplay', onCanPlay);
+                  resolve(void 0);
+                };
+                audio.addEventListener('canplay', onCanPlay);
+              });
+            }
+            
+            await audio.play();
+            console.log('✅ PLAYBACK STARTED for:', lesson.title);
+          } else {
+            console.log('🔄 Already playing:', lesson.title);
           }
         } else {
           // Should be paused
-          if (!audioRef.current.paused) {
-            console.log('⏸️ PAUSING playback for:', lesson.title);
-            audioRef.current.pause();
-            console.log('✅ Playback paused successfully');
+          if (!audio.paused) {
+            console.log('⏸️ PAUSING PLAYBACK for:', lesson.title);
+            audio.pause();
+            console.log('✅ PLAYBACK PAUSED for:', lesson.title);
+          } else {
+            console.log('🔄 Already paused:', lesson.title);
           }
         }
       } catch (error) {
-        console.error('🚨 Audio sync error:', error);
-        // Don't break the UI on audio errors
+        console.error('🚨 Audio sync error for', lesson.title, ':', error);
+        setAudioError(true);
+        
+        // If play failed, update the global state to reflect reality
+        if (propIsPlaying && error.name === 'NotAllowedError') {
+          console.log('🚫 Play blocked by browser, updating state');
+          onLessonClick(lesson, false);
+        }
       }
     };
 
-    syncAudio();
-  }, [isCurrent, propIsPlaying, isAudioReady, lesson.title]);
+    // Execute sync with a small delay to avoid race conditions
+    const timeoutId = setTimeout(syncAudioState, 50);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [isCurrent, propIsPlaying, lesson.title, lesson.id, audioError]);
 
   // Fetch notes when lesson can play and courseId is available
   React.useEffect(() => {
@@ -246,14 +311,14 @@ const LessonCard = React.memo(({
     setShowSpeedDropdown(false);
   };
 
-  // FIXED: Clearer status icon logic
+  // DEFINITIVE: Clear status icon logic
   const getStatusIcon = () => {
     if (!canPlay) {
       return <Lock size={16} />;
     }
     
-    // Show pause icon only if this lesson is current AND playing
-    if (isCurrent && propIsPlaying) {
+    // Show pause icon ONLY if this lesson is current AND global state is playing
+    if (isCurrent && propIsPlaying && !audioError) {
       return <Pause size={16} />;
     }
     
@@ -269,7 +334,8 @@ const LessonCard = React.memo(({
         "border-gray-200": !isCurrent && !isCompleted && canPlay,
         "border-gray-100 bg-gray-50": !canPlay,
         "hover:shadow-md": canPlay,
-        "cursor-not-allowed": !canPlay
+        "cursor-not-allowed": !canPlay,
+        "border-red-200 bg-red-50": audioError && isCurrent
       }
     )}>
       {/* Main Card Content */}
@@ -283,6 +349,7 @@ const LessonCard = React.memo(({
             onTimeUpdate={updateTime}
             onEnded={handleAudioEnded}
             onCanPlay={() => setIsAudioReady(true)}
+            onError={handleAudioError}
             preload="metadata"
           />
         )}
@@ -290,24 +357,27 @@ const LessonCard = React.memo(({
         {/* Header with title and status */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-3">
-            {/* FIXED: Functional Status/Play Button */}
+            {/* DEFINITIVE: Functional Status/Play Button */}
             <button
               onClick={handlePlayPause}
-              disabled={!canPlay}
+              disabled={!canPlay || audioError}
               className={cn(
                 "flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200",
                 {
-                  "bg-[#5e16ea] text-white hover:bg-[#4a11ba]": canPlay,
-                  "bg-gray-300 text-gray-500 cursor-not-allowed": !canPlay,
-                  "hover:scale-105": canPlay
+                  "bg-[#5e16ea] text-white hover:bg-[#4a11ba]": canPlay && !audioError,
+                  "bg-gray-300 text-gray-500 cursor-not-allowed": !canPlay || audioError,
+                  "hover:scale-105": canPlay && !audioError,
+                  "bg-red-400": audioError && isCurrent
                 }
               )}
               aria-label={
                 !canPlay 
-                  ? "Lección bloqueada" 
-                  : (isCurrent && propIsPlaying)
-                    ? "Pausar" 
-                    : "Reproducir"
+                  ? "Lección bloqueada"
+                  : audioError
+                    ? "Error de audio"
+                    : (isCurrent && propIsPlaying)
+                      ? "Pausar" 
+                      : "Reproducir"
               }
             >
               {getStatusIcon()}
@@ -320,13 +390,17 @@ const LessonCard = React.memo(({
                 {
                   "text-[#5e16ea]": isCompleted || (isCurrent && !isCompleted),
                   "text-gray-900": canPlay && !isCurrent && !isCompleted,
-                  "text-gray-400": !canPlay
+                  "text-gray-400": !canPlay,
+                  "text-red-600": audioError && isCurrent
                 }
               )}>
                 {lesson.title}
               </h4>
-              {isCurrent && propIsPlaying && (
+              {isCurrent && propIsPlaying && !audioError && (
                 <span className="text-xs text-green-600">● Reproduciendo</span>
+              )}
+              {audioError && isCurrent && (
+                <span className="text-xs text-red-600">⚠ Error de audio</span>
               )}
             </div>
           </div>
@@ -368,8 +442,8 @@ const LessonCard = React.memo(({
           </div>
         </div>
 
-        {/* Audio Controls - Only show if can play */}
-        {canPlay && (
+        {/* Audio Controls - Only show if can play and no error */}
+        {canPlay && !audioError && (
           <div className="space-y-3">
             {/* Progress Bar */}
             <div className="relative">
@@ -476,6 +550,15 @@ const LessonCard = React.memo(({
           <div className="text-center py-2">
             <p className="text-xs text-gray-400">
               Completa las lecciones anteriores para desbloquear
+            </p>
+          </div>
+        )}
+
+        {/* Audio error message */}
+        {audioError && isCurrent && (
+          <div className="text-center py-2">
+            <p className="text-xs text-red-500">
+              Error al cargar el audio. Intenta recargar la página.
             </p>
           </div>
         )}
