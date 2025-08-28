@@ -16,9 +16,21 @@ import { NotesProvider } from '@/contexts/NotesContext';
 
 const DashboardCourse = () => {
   const { courseId } = useParams<{ courseId: string }>();
+  console.log('🔍 DashboardCourse: Iniciando render con courseId:', courseId);
+  
   const { podcast, setPodcast, isLoading: courseLoading, error: courseError, retry: retryCourse } = useCourseData(courseId);
   const { userProgress, loading: progressLoading, refetch, startCourse, toggleSaveCourse } = useUserProgress();
   const [showCheckout, setShowCheckout] = useState(false);
+  
+  console.log('🔍 DashboardCourse: Estado de datos:', {
+    podcast: !!podcast,
+    podcastTitle: podcast?.title,
+    courseLoading,
+    progressLoading,
+    courseError,
+    userProgressCount: userProgress.length,
+    timestamp: new Date().toISOString()
+  });
   
   // ENHANCED STABLE REFERENCE: Keep last valid podcast with timeout-based cleanup
   const lastValidPodcast = useRef(podcast);
@@ -59,6 +71,14 @@ const DashboardCourse = () => {
   // Course access and premium status
   const { isPremium, hasAccess, isLoading: accessLoading, error: accessError, refetchPurchases } = useCourseAccess(podcast);
   
+  console.log('🔍 DashboardCourse: Estado de acceso:', {
+    isPremium,
+    hasAccess,
+    accessLoading,
+    accessError,
+    timestamp: new Date().toISOString()
+  });
+  
   // Use consolidated lessons hook
   const { 
     currentLesson, 
@@ -70,6 +90,13 @@ const DashboardCourse = () => {
     handleProgressUpdate,
     initializePodcastWithProgress
   } = useConsolidatedLessons(podcast, setPodcast);
+  
+  console.log('🔍 DashboardCourse: Estado de lecciones consolidadas:', {
+    currentLesson: !!currentLesson,
+    currentLessonTitle: currentLesson?.title,
+    isPlaying,
+    timestamp: new Date().toISOString()
+  });
   
   // Set up realtime sync
   useCourseRealtimeSync({
@@ -86,8 +113,26 @@ const DashboardCourse = () => {
   const isCompleted = courseProgress?.is_completed || false;
   const isReviewMode = isCompleted && progressPercentage === 100;
 
+  console.log('🔍 DashboardCourse: Estado de progreso:', {
+    courseProgress: !!courseProgress,
+    isSaved,
+    hasStarted,
+    progressPercentage,
+    isCompleted,
+    isReviewMode,
+    timestamp: new Date().toISOString()
+  });
+
   // DEFINITIVE DISPLAY PODCAST: Always prefer current, with stable fallback
   const displayPodcast = podcast || lastValidPodcast.current;
+
+  console.log('🔍 DashboardCourse: Podcast para mostrar:', {
+    displayPodcast: !!displayPodcast,
+    displayPodcastTitle: displayPodcast?.title,
+    hasLessons: displayPodcast?.lessons?.length || 0,
+    hasModules: displayPodcast?.modules?.length || 0,
+    timestamp: new Date().toISOString()
+  });
 
   // TAB SWITCH DETECTION: Enhanced logging for realtime subscription tracking
   console.log('🎭 TAB SWITCH & REALTIME DIAGNOSTIC - DASHBOARD COURSE STATE:', {
@@ -138,6 +183,7 @@ const DashboardCourse = () => {
   });
 
   const handleStartLearning = async () => {
+    console.log('🎯 DashboardCourse: handleStartLearning llamado');
     if (displayPodcast) {
       if (isPremium && !hasAccess) {
         console.log('🔒 Premium course without access - showing checkout');
@@ -158,6 +204,7 @@ const DashboardCourse = () => {
   };
 
   const handleToggleSave = () => {
+    console.log('🎯 DashboardCourse: handleToggleSave llamado');
     if (displayPodcast) {
       toggleSaveCourse(displayPodcast.id);
     }
@@ -169,6 +216,7 @@ const DashboardCourse = () => {
   };
 
   const handleLessonSelect = (lesson: any) => {
+    console.log('🎯 DashboardCourse: handleLessonSelect llamado:', lesson?.title);
     // Check if user has access to this lesson
     if (isPremium && !hasAccess) {
       console.log('🔒 Lesson access denied - showing checkout');
@@ -215,7 +263,6 @@ const DashboardCourse = () => {
             url={`${window.location.origin}/dashboard/course/${courseId}`}
           />
           
-          {/* COMPACTO: Reducir padding inferior para mobile */}
           <div className="max-w-7xl mx-auto pb-4 sm:pb-8">
             <CoursePageHeader isReviewMode={isReviewMode} />
             

@@ -41,6 +41,27 @@ const CourseMainContent: React.FC<CourseMainContentProps> = ({
   onProgressUpdate,
   onLessonComplete
 }) => {
+  console.log('🔍 CourseMainContent: Render iniciado con props:', {
+    podcastTitle: podcast?.title,
+    currentLessonTitle: currentLesson?.title,
+    hasStarted,
+    isSaved,
+    progressPercentage,
+    isCompleted,
+    isPremium,
+    hasAccess,
+    isGloballyPlaying,
+    timestamp: new Date().toISOString()
+  });
+
+  // Verificar que el podcast sea válido
+  if (!podcast) {
+    console.error('❌ CourseMainContent: podcast es null o undefined');
+    return <div>Error: No se pudo cargar el curso</div>;
+  }
+
+  console.log('✅ CourseMainContent: Podcast válido, renderizando componentes');
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-8">
       {/* Main Content - Full width on mobile */}

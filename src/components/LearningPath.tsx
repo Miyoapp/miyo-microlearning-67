@@ -1,3 +1,4 @@
+
 import { useCallback, useMemo, useState, useEffect } from 'react';
 import { Lesson, Module } from '../types';
 import React from 'react';
@@ -36,6 +37,26 @@ const LearningPath = React.memo(({
   onLessonComplete,
   podcast
 }: LearningPathProps) => {
+  console.log('🔍 LearningPath: Render iniciado con props:', {
+    lessonsCount: lessons?.length || 0,
+    modulesCount: modules?.length || 0,
+    currentLessonId,
+    isGloballyPlaying,
+    podcastTitle: podcast?.title,
+    timestamp: new Date().toISOString()
+  });
+
+  // Verificar que los props sean válidos
+  if (!lessons || !Array.isArray(lessons)) {
+    console.error('❌ LearningPath: lessons no es válido:', lessons);
+    return <div>Error: Las lecciones no están disponibles</div>;
+  }
+
+  if (!modules || !Array.isArray(modules)) {
+    console.error('❌ LearningPath: modules no es válido:', modules);
+    return <div>Error: Los módulos no están disponibles</div>;
+  }
+
   const { userProgress, markCompletionModalShown } = useUserProgress();
   const { lessonProgress } = useUserLessonProgress();
   const { fetchSummaries } = useSummaries();
@@ -167,6 +188,8 @@ const LearningPath = React.memo(({
       setShowViewSummaryModal(true);
     }
   };
+
+  console.log('✅ LearningPath: Renderizando con', orderedModules.length, 'módulos ordenados');
   
   return (
     <>
@@ -176,6 +199,12 @@ const LearningPath = React.memo(({
         <div className="max-w-2xl mx-auto space-y-4 sm:space-y-8">
           {orderedModules.map((module) => {
             const moduleLessons = getLessonsForModule(module.id);
+            
+            console.log('🔍 LearningPath: Renderizando módulo:', {
+              moduleTitle: module.title,
+              moduleId: module.id,
+              lessonsCount: moduleLessons.length
+            });
             
             return (
               <ModuleSection

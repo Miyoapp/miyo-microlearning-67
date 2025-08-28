@@ -48,12 +48,45 @@ const CourseAccessHandler: React.FC<CourseAccessHandlerProps> = ({
   onProgressUpdate,
   onPurchaseComplete
 }) => {
+  console.log('🔍 CourseAccessHandler: Render iniciado con props:', {
+    podcastTitle: podcast?.title,
+    currentLessonTitle: currentLesson?.title,
+    hasStarted,
+    isSaved,
+    progressPercentage,
+    isCompleted,
+    isPremium,
+    hasAccess,
+    isPlaying,
+    showCheckout,
+    timestamp: new Date().toISOString()
+  });
+
   const { refetch } = useCoursePurchases();
 
   const handlePurchaseComplete = () => {
+    console.log('🎯 CourseAccessHandler: handlePurchaseComplete llamado');
     refetch();
     onPurchaseComplete();
   };
+
+  // Verificar que el podcast tenga los datos necesarios
+  if (!podcast) {
+    console.error('❌ CourseAccessHandler: podcast es null o undefined');
+    return null;
+  }
+
+  if (!podcast.lessons || !Array.isArray(podcast.lessons)) {
+    console.error('❌ CourseAccessHandler: podcast.lessons no es válido:', podcast.lessons);
+    return null;
+  }
+
+  if (!podcast.modules || !Array.isArray(podcast.modules)) {
+    console.error('❌ CourseAccessHandler: podcast.modules no es válido:', podcast.modules);
+    return null;
+  }
+
+  console.log('✅ CourseAccessHandler: Todos los datos válidos, renderizando CourseMainContent');
 
   return (
     <>
