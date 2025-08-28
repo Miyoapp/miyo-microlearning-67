@@ -1,4 +1,3 @@
-
 import { useCallback, useMemo, useState, useEffect } from 'react';
 import { Lesson, Module } from '../types';
 import React from 'react';
@@ -51,8 +50,9 @@ const LearningPath = React.memo(({
   // Extract courseId from podcast
   const courseId = podcast?.id || null;
   
-  // Initialize audio player
+  // Initialize audio player with lessons array
   const audioPlayer = useAudioPlayer({
+    lessons,
     onLessonComplete: (lessonId: string) => {
       console.log('🎯 Audio player lesson complete:', lessonId);
       // Find the lesson object and call the original completion handler
