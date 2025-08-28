@@ -11,7 +11,7 @@ export const getNewCoursesCriteria = (options: NewCoursesOptions = {}) => {
   const {
     daysThreshold = 30,
     fallbackDays = 60,
-    maxResults = 6
+    maxResults = 4
   } = options;
 
   const primaryDate = new Date();

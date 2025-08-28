@@ -27,7 +27,7 @@ export const useNewCourses = () => {
         .eq('show', true)
         .gte('fecha_creacion', thirtyDaysAgo.toISOString())
         .order('fecha_creacion', { ascending: false })
-        .limit(6);
+        .limit(4);
 
       if (recentError) {
         throw recentError;
@@ -36,7 +36,7 @@ export const useNewCourses = () => {
       let coursesToShow = recentCourses || [];
       
       // Si no hay suficientes cursos nuevos, expandir a 60 días
-      if (coursesToShow.length < 6) {
+      if (coursesToShow.length < 4) {
         console.log(`📅 Only ${coursesToShow.length} courses in last 30 days, expanding to 60 days`);
         
         const sixtyDaysAgo = new Date();
@@ -48,7 +48,7 @@ export const useNewCourses = () => {
           .eq('show', true)
           .gte('fecha_creacion', sixtyDaysAgo.toISOString())
           .order('fecha_creacion', { ascending: false })
-          .limit(6);
+          .limit(4);
 
         if (olderError) {
           throw olderError;
@@ -58,7 +58,7 @@ export const useNewCourses = () => {
       }
 
       // Si aún no hay suficientes, usar criterio de fallback
-      if (coursesToShow.length < 6) {
+      if (coursesToShow.length < 4) {
         console.log(`📊 Still only ${coursesToShow.length} courses, using fallback strategy`);
         
         // Fallback: cursos con menos interacciones (más "nuevos" para descubrir)
@@ -68,7 +68,7 @@ export const useNewCourses = () => {
           .eq('show', true)
           .order('likes', { ascending: true }) // Menos likes = menos descubiertos
           .order('fecha_creacion', { ascending: false })
-          .limit(6);
+          .limit(4);
 
         if (fallbackError) {
           throw fallbackError;
