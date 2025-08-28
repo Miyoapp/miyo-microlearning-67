@@ -3,11 +3,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import CourseCardWithProgress from '../CourseCardWithProgress';
-import PlaceholderCourseCard from '../PlaceholderCourseCard';
 import CarouselNavigation from './CarouselNavigation';
 import {
-  DisplayItem,
-  isPlaceholderItem,
   getDisplayCourses,
   getEmblaOptions,
   getMobileCardWidth,
@@ -94,7 +91,7 @@ const CarouselContainer: React.FC<CarouselContainerProps> = ({
         className="overflow-hidden" 
         ref={emblaRef}
         style={{ 
-          touchAction: 'pan-x',
+          touchAction: 'pan-y pan-x pinch-zoom',
           overscrollBehaviorX: 'contain',
           scrollSnapType: 'x mandatory',
           scrollBehavior: 'smooth'
@@ -103,7 +100,7 @@ const CarouselContainer: React.FC<CarouselContainerProps> = ({
         <div className="flex">
           {displayCourses.map((item, index) => (
             <div 
-              key={isPlaceholderItem(item) ? item.id : item.podcast.id}
+              key={item.podcast.id}
               className={`flex-none ${
                 isMobile 
                   ? `${getMobileCardWidth(courses.length)} px-2` 
@@ -114,20 +111,16 @@ const CarouselContainer: React.FC<CarouselContainerProps> = ({
                 scrollSnapStop: 'always'
               } : {}}
             >
-              {isPlaceholderItem(item) ? (
-                <PlaceholderCourseCard />
-              ) : (
-                <CourseCardWithProgress
-                  podcast={item.podcast}
-                  progress={item.progress}
-                  isPlaying={item.isPlaying}
-                  isSaved={item.isSaved}
-                  showProgress={showProgress}
-                  onPlay={() => onPlayCourse?.(item.podcast.id)}
-                  onToggleSave={() => onToggleSave?.(item.podcast.id)}
-                  onClick={() => onCourseClick?.(item.podcast.id)}
-                />
-              )}
+              <CourseCardWithProgress
+                podcast={item.podcast}
+                progress={item.progress}
+                isPlaying={item.isPlaying}
+                isSaved={item.isSaved}
+                showProgress={showProgress}
+                onPlay={() => onPlayCourse?.(item.podcast.id)}
+                onToggleSave={() => onToggleSave?.(item.podcast.id)}
+                onClick={() => onCourseClick?.(item.podcast.id)}
+              />
             </div>
           ))}
         </div>
