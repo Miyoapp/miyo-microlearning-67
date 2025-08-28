@@ -22,6 +22,22 @@ interface CourseMainContentProps {
   onShowCheckout: () => void;
   onProgressUpdate: (position: number) => void;
   onLessonComplete: () => void;
+  // Add audio player props from consolidated hook
+  audioCurrentLessonId: string | null;
+  audioIsPlaying: boolean;
+  audioCurrentTime: number;
+  audioDuration: number;
+  audioIsReady: boolean;
+  audioError: boolean;
+  getDisplayProgress: (lessonId: string, validDuration?: number) => number;
+  onPlay: (lesson: Lesson) => void;
+  onPause: () => void;
+  onSeek: (time: number) => void;
+  onSkipBackward: () => void;
+  onSkipForward: () => void;
+  onSetPlaybackRate: (rate: number) => void;
+  onSetVolume: (volume: number) => void;
+  onSetMuted: (muted: boolean) => void;
 }
 
 const CourseMainContent: React.FC<CourseMainContentProps> = ({
@@ -39,7 +55,23 @@ const CourseMainContent: React.FC<CourseMainContentProps> = ({
   onSelectLesson,
   onShowCheckout,
   onProgressUpdate,
-  onLessonComplete
+  onLessonComplete,
+  // Audio player props
+  audioCurrentLessonId,
+  audioIsPlaying,
+  audioCurrentTime,
+  audioDuration,
+  audioIsReady,
+  audioError,
+  getDisplayProgress,
+  onPlay,
+  onPause,
+  onSeek,
+  onSkipBackward,
+  onSkipForward,
+  onSetPlaybackRate,
+  onSetVolume,
+  onSetMuted
 }) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
@@ -62,6 +94,22 @@ const CourseMainContent: React.FC<CourseMainContentProps> = ({
             onSelectLesson={onSelectLesson}
             onProgressUpdate={onProgressUpdate}
             onLessonComplete={onLessonComplete}
+            // Pass through all audio player props
+            audioCurrentLessonId={audioCurrentLessonId}
+            audioIsPlaying={audioIsPlaying}
+            audioCurrentTime={audioCurrentTime}
+            audioDuration={audioDuration}
+            audioIsReady={audioIsReady}
+            audioError={audioError}
+            getDisplayProgress={getDisplayProgress}
+            onPlay={onPlay}
+            onPause={onPause}
+            onSeek={onSeek}
+            onSkipBackward={onSkipBackward}
+            onSkipForward={onSkipForward}
+            onSetPlaybackRate={onSetPlaybackRate}
+            onSetVolume={onSetVolume}
+            onSetMuted={onSetMuted}
           />
           
           {/* Premium overlay for learning path */}
