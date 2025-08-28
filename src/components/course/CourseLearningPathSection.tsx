@@ -1,6 +1,7 @@
 
 import React from 'react';
 import LearningPath from '@/components/LearningPath';
+import LearningPathErrorBoundary from '@/components/learning-path/LearningPathErrorBoundary';
 import { Podcast, Lesson } from '@/types';
 
 interface CourseLearningPathSectionProps {
@@ -10,7 +11,7 @@ interface CourseLearningPathSectionProps {
   onSelectLesson: (lesson: Lesson) => void;
   onProgressUpdate?: (position: number) => void;
   onLessonComplete?: () => void;
-  // Add audio player props from consolidated hook
+  // UNIFIED AUDIO PROPS
   audioCurrentLessonId: string | null;
   audioIsPlaying: boolean;
   audioCurrentTime: number;
@@ -35,7 +36,7 @@ const CourseLearningPathSection: React.FC<CourseLearningPathSectionProps> = ({
   onSelectLesson,
   onProgressUpdate,
   onLessonComplete,
-  // Audio player props
+  // UNIFIED AUDIO PROPS
   audioCurrentLessonId,
   audioIsPlaying,
   audioCurrentTime,
@@ -52,33 +53,42 @@ const CourseLearningPathSection: React.FC<CourseLearningPathSectionProps> = ({
   onSetVolume,
   onSetMuted
 }) => {
+  console.log('🎓 CourseLearningPathSection render:', {
+    courseTitle: podcast.title,
+    hasLessons: podcast.lessons?.length > 0,
+    hasModules: podcast.modules?.length > 0,
+    audioCurrentLessonId,
+    audioIsPlaying
+  });
+
   return (
     <div id="learning-path-section" className="bg-white rounded-2xl shadow-sm p-6">
-      <LearningPath 
-        lessons={podcast.lessons}
-        modules={podcast.modules}
-        onSelectLesson={onSelectLesson}
-        currentLessonId={currentLessonId}
-        isGloballyPlaying={isGloballyPlaying}
-        onProgressUpdate={onProgressUpdate}
-        onLessonComplete={onLessonComplete}
-        podcast={podcast}
-        audioCurrentLessonId={audioCurrentLessonId}
-        audioIsPlaying={audioIsPlaying}
-        audioCurrentTime={audioCurrentTime}
-        audioDuration={audioDuration}
-        audioIsReady={audioIsReady}
-        audioError={audioError}
-        getDisplayProgress={getDisplayProgress}
-        onPlay={onPlay}
-        onPause={onPause}
-        onSeek={onSeek}
-        onSkipBackward={onSkipBackward}
-        onSkipForward={onSkipForward}
-        onSetPlaybackRate={onSetPlaybackRate}
-        onSetVolume={onSetVolume}
-        onSetMuted={onSetMuted}
-      />
+      <LearningPathErrorBoundary>
+        <LearningPath 
+          lessons={podcast.lessons}
+          modules={podcast.modules}
+          onSelectLesson={onSelectLesson}
+          onProgressUpdate={onProgressUpdate}
+          onLessonComplete={onLessonComplete}
+          podcast={podcast}
+          // UNIFIED AUDIO PROPS - pass all audio state
+          audioCurrentLessonId={audioCurrentLessonId}
+          audioIsPlaying={audioIsPlaying}
+          audioCurrentTime={audioCurrentTime}
+          audioDuration={audioDuration}
+          audioIsReady={audioIsReady}
+          audioError={audioError}
+          getDisplayProgress={getDisplayProgress}
+          onPlay={onPlay}
+          onPause={onPause}
+          onSeek={onSeek}
+          onSkipBackward={onSkipBackward}
+          onSkipForward={onSkipForward}
+          onSetPlaybackRate={onSetPlaybackRate}
+          onSetVolume={onSetVolume}
+          onSetMuted={onSetMuted}
+        />
+      </LearningPathErrorBoundary>
     </div>
   );
 };

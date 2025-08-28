@@ -24,12 +24,8 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     updateCourseProgress
   } = useUserProgress();
 
-  // SIMPLIFIED: Reduce complex state tracking
-  const initializationState = useRef({
-    hasAutoInitialized: false,
-    hasUserSelection: false,
-    hasAutoPositioned: false
-  });
+  // SIMPLIFIED: Single initialization state
+  const hasInitialized = useRef(false);
 
   // Use specialized hook for initialization
   const {
@@ -44,67 +40,63 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     lessons: podcast?.lessons || [],
     onLessonComplete: (lessonId: string) => {
       console.log('🎯 Audio player lesson complete:', lessonId);
-      if (currentLesson?.id === lessonId) {
+      if (audioPlayer.currentLessonId === lessonId) {
         handleLessonComplete();
       }
     },
     onProgressUpdate: (lessonId: string, position: number) => {
       console.log('📊 Audio player progress update:', lessonId, position);
-      if (currentLesson?.id === lessonId) {
+      if (audioPlayer.currentLessonId === lessonId) {
         handleProgressUpdate(position);
       }
     }
   });
 
-  // SIMPLIFIED: Auto-advance logic
-  const isAutoAdvanceAllowed = React.useMemo(() => {
-    return !!(user && podcast);
-  }, [user, podcast]);
-
   // Lesson completion handler
   const handleLessonComplete = useCallback(() => {
-    if (!currentLesson || !podcast || !user) return;
+    const activeLessonId = audioPlayer.currentLessonId;
+    if (!activeLessonId || !podcast || !user) return;
     
-    console.log('🎯 Consolidated Lessons - Handling lesson complete:', currentLesson.title);
+    const activeLesson = podcast.lessons.find(l => l.id === activeLessonId);
+    if (!activeLesson) return;
+    
+    console.log('🎯 Consolidated Lessons - Handling lesson complete:', activeLesson.title);
     
     // Mark as complete in database
-    markLessonCompleteInDB(currentLesson.id, podcast.id);
+    markLessonCompleteInDB(activeLesson.id, podcast.id);
     
     // Update local podcast state
     const updatedLessons = podcast.lessons.map(lesson => 
-      lesson.id === currentLesson.id 
+      lesson.id === activeLesson.id 
         ? { ...lesson, isCompleted: true }
         : lesson
     );
     setPodcast({ ...podcast, lessons: updatedLessons });
     
     // Update lesson position to 100%
-    updateLessonPosition(currentLesson.id, podcast.id, currentLesson.duracion || 0);
+    updateLessonPosition(activeLesson.id, podcast.id, activeLesson.duracion || 0);
     
     // Refetch progress data
     refetchLessonProgress();
     refetchCourseProgress();
     
     // Auto-advance logic
-    if (isAutoAdvanceAllowed) {
-      const currentIndex = podcast.lessons.findIndex(l => l.id === currentLesson.id);
-      const nextLesson = podcast.lessons[currentIndex + 1];
-      
-      if (nextLesson) {
-        console.log('🔄 Auto-advancing to next lesson:', nextLesson.title);
-        setCurrentLesson(nextLesson);
-        updateLessonPosition(nextLesson.id, podcast.id, 1);
-      } else {
-        console.log('✅ Course completed - no more lessons');
-        // Update course progress if all lessons completed
-        const allCompleted = updatedLessons.every(lesson => lesson.isCompleted);
-        if (allCompleted) {
-          updateCourseProgress(podcast.id, { progress_percentage: 100 });
-        }
+    const currentIndex = podcast.lessons.findIndex(l => l.id === activeLesson.id);
+    const nextLesson = podcast.lessons[currentIndex + 1];
+    
+    if (nextLesson) {
+      console.log('🔄 Auto-advancing to next lesson:', nextLesson.title);
+      setCurrentLesson(nextLesson);
+      updateLessonPosition(nextLesson.id, podcast.id, 1);
+    } else {
+      console.log('✅ Course completed - no more lessons');
+      const allCompleted = updatedLessons.every(lesson => lesson.isCompleted);
+      if (allCompleted) {
+        updateCourseProgress(podcast.id, { progress_percentage: 100 });
       }
     }
   }, [
-    currentLesson,
+    audioPlayer.currentLessonId,
     podcast,
     user,
     setPodcast,
@@ -113,29 +105,29 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     updateLessonPosition,
     refetchLessonProgress,
     refetchCourseProgress,
-    isAutoAdvanceAllowed,
     updateCourseProgress
   ]);
 
   // Progress update handler
   const handleProgressUpdate = useCallback((position: number) => {
-    if (!currentLesson || !podcast || !user) return;
+    const activeLessonId = audioPlayer.currentLessonId;
+    if (!activeLessonId || !podcast || !user) return;
     
     console.log('📊 Consolidated Lessons - Progress update:', {
-      lessonId: currentLesson.id,
+      lessonId: activeLessonId,
       position,
       timestamp: new Date().toLocaleTimeString()
     });
     
-    updateLessonPosition(currentLesson.id, podcast.id, position);
-  }, [currentLesson, podcast, user, updateLessonPosition]);
+    updateLessonPosition(activeLessonId, podcast.id, position);
+  }, [audioPlayer.currentLessonId, podcast, user, updateLessonPosition]);
 
   // SIMPLIFIED: Lesson selection handler
   const handleSelectLesson = useCallback((lesson: any, shouldAutoPlay = false) => {
     console.log('🎯 Consolidated Lessons - handleSelectLesson:', {
       lessonTitle: lesson.title,
       shouldAutoPlay,
-      currentLessonId: currentLesson?.id,
+      audioCurrentLessonId: audioPlayer.currentLessonId,
       timestamp: new Date().toLocaleTimeString()
     });
     
@@ -144,9 +136,6 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
       console.error('❌ Invalid lesson data:', lesson);
       return;
     }
-    
-    // Mark user selection to prevent auto-initialization conflicts
-    initializationState.current.hasUserSelection = true;
     
     // Set the new current lesson
     setCurrentLesson(lesson);
@@ -159,9 +148,9 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     console.log('✅ Consolidated Lessons - Lesson selection complete:', lesson.title);
     
   }, [
-    currentLesson?.id, 
+    audioPlayer.currentLessonId, 
     setCurrentLesson,
-    audioPlayer
+    audioPlayer.play
   ]);
 
   // Toggle play/pause handler
@@ -173,80 +162,41 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     } else {
       audioPlayer.play(currentLesson);
     }
-  }, [currentLesson, audioPlayer]);
+  }, [currentLesson, audioPlayer.isPlaying, audioPlayer.play, audioPlayer.pause]);
 
-  // SIMPLIFIED: Initialize podcast when data is available
+  // SIMPLIFIED: Single initialization effect
   useEffect(() => {
-    const canInitialize = (
+    // Only initialize once when all data is available
+    if (
       podcast && 
       user && 
       lessonProgress !== undefined && 
       userProgress !== undefined && 
-      !initializationState.current.hasAutoInitialized
-    );
-
-    console.log('🔄 Consolidated Lessons - PODCAST INITIALIZATION EFFECT:', {
-      canInitialize,
-      hasPodcast: !!podcast,
-      hasUser: !!user,
-      lessonProgressDefined: lessonProgress !== undefined,
-      userProgressDefined: userProgress !== undefined,
-      hasAutoInitialized: initializationState.current.hasAutoInitialized
-    });
-
-    if (canInitialize) {
-      console.log('📊 ALL DATA AVAILABLE - INITIALIZING PODCAST WITH PROGRESS...');
+      !hasInitialized.current
+    ) {
+      console.log('📊 Initializing podcast with progress...');
       try {
         initializePodcastWithProgress();
-        initializationState.current.hasAutoInitialized = true;
+        
+        // Auto-position current lesson if no lesson selected
+        if (!currentLesson) {
+          setTimeout(() => {
+            initializeCurrentLesson();
+          }, 100); // Small delay to ensure state is set
+        }
+        
+        hasInitialized.current = true;
       } catch (error) {
         console.error('❌ Error initializing podcast:', error);
       }
     }
   }, [
-    // SIMPLIFIED: Use stable IDs only
     podcast?.id, 
     user?.id, 
-    lessonProgress !== undefined ? 'defined' : 'undefined',
-    userProgress !== undefined ? 'defined' : 'undefined',
-    initializePodcastWithProgress
-  ]);
-
-  // SIMPLIFIED: Auto-position current lesson
-  useEffect(() => {
-    const canAutoPosition = (
-      podcast?.lessons?.length > 0 &&
-      user && 
-      !currentLesson && 
-      initializationState.current.hasAutoInitialized && 
-      !initializationState.current.hasUserSelection &&
-      !initializationState.current.hasAutoPositioned
-    );
-
-    console.log('🎯 Consolidated Lessons - CURRENT LESSON AUTO-POSITIONING EFFECT:', {
-      canAutoPosition,
-      hasLessons: podcast?.lessons?.length > 0,
-      hasUser: !!user,
-      currentLessonExists: !!currentLesson,
-      hasAutoInitialized: initializationState.current.hasAutoInitialized,
-      hasUserSelection: initializationState.current.hasUserSelection,
-      hasAutoPositioned: initializationState.current.hasAutoPositioned
-    });
-
-    if (canAutoPosition) {
-      console.log('🎯 AUTO-POSITIONING on next lesson to continue...');
-      try {
-        initializeCurrentLesson();
-        initializationState.current.hasAutoPositioned = true;
-      } catch (error) {
-        console.error('❌ Error auto-positioning lesson:', error);
-      }
-    }
-  }, [
-    // SIMPLIFIED: Use minimal dependencies
-    podcast?.lessons?.length,
-    user?.id,
+    lessonProgress !== undefined,
+    userProgress !== undefined,
     currentLesson?.id,
+    initializePodcastWithProgress,
     initializeCurrentLesson
   ]);
 
@@ -259,9 +209,8 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     handleProgressUpdate,
     initializePodcastWithProgress,
     // UNIFIED AUDIO PLAYER STATE - single source of truth
-    isPlaying: audioPlayer.isPlaying,
     handleTogglePlay,
-    // Expose all audio player functionality with unified naming
+    // Expose all audio player functionality with unified naming (audio prefix)
     audioCurrentLessonId: audioPlayer.currentLessonId,
     audioIsPlaying: audioPlayer.isPlaying,
     audioCurrentTime: audioPlayer.currentTime,

@@ -28,14 +28,14 @@ const DashboardCourse = () => {
   
   // Track component lifecycle for debugging
   useEffect(() => {
-    console.log('🎭 DASHBOARD COURSE (UNIFIED): Component mounted/updated', {
+    console.log('🎭 DASHBOARD COURSE: Component mounted/updated', {
       courseId,
       timestamp: new Date().toISOString(),
       documentVisibilityState: document.visibilityState
     });
 
     return () => {
-      console.log('🎭 DASHBOARD COURSE (UNIFIED): Component cleanup initiated', {
+      console.log('🎭 DASHBOARD COURSE: Component cleanup initiated', {
         courseId,
         timestamp: new Date().toISOString()
       });
@@ -62,7 +62,6 @@ const DashboardCourse = () => {
   // UNIFIED: Use consolidated lessons hook with single source of truth
   const { 
     currentLesson, 
-    isPlaying, // This is now the unified playing state
     initializeCurrentLesson,
     handleSelectLesson, 
     handleTogglePlay, 
@@ -122,10 +121,10 @@ const DashboardCourse = () => {
       timeoutActive: !!podcastClearTimeout.current
     },
     unifiedAudioStates: {
-      currentLessonId: audioCurrentLessonId,
-      isPlaying: audioIsPlaying,
-      hasError: audioError,
-      isReady: audioIsReady
+      audioCurrentLessonId,
+      audioIsPlaying,
+      audioError,
+      audioIsReady
     }
   });
 
@@ -134,7 +133,7 @@ const DashboardCourse = () => {
   const hasError = courseError || accessError;
   const shouldShowContent = !!displayPodcast;
 
-  console.log('🔒 FINAL RENDER DECISION (UNIFIED):', {
+  console.log('🔒 FINAL RENDER DECISION:', {
     shouldShowContent,
     isActuallyLoading,
     hasError: !!hasError,
@@ -198,7 +197,7 @@ const DashboardCourse = () => {
 
   // PRIORITY 1: Show content if we have valid data
   if (displayPodcast) {
-    console.log('✅ RENDERING CONTENT (UNIFIED) - Guaranteed non-blank screen:', {
+    console.log('✅ RENDERING CONTENT - Guaranteed non-blank screen:', {
       courseTitle: displayPodcast.title,
       isCurrentData: !!podcast,
       isStableReference: !podcast && !!lastValidPodcast.current,
@@ -230,7 +229,6 @@ const DashboardCourse = () => {
                 isCompleted={isCompleted}
                 isPremium={isPremium}
                 hasAccess={hasAccess}
-                isPlaying={isPlaying} // Unified playing state
                 showCheckout={showCheckout}
                 onStartLearning={handleStartLearning}
                 onToggleSave={handleToggleSave}

@@ -5,7 +5,7 @@ import { LessonNote } from '@/types/notes';
 import { Play, Pause, Lock, SkipBack, SkipForward, ChevronDown, Volume2, VolumeX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useMemo } from 'react';
-import { useNotes } from '@/hooks/useNotes';
+import { useNotesConditional } from '@/hooks/useNotesConditional';
 import NotesPanel from '@/components/notes/NotesPanel';
 
 interface LessonCardProps {
@@ -23,12 +23,12 @@ interface LessonCardProps {
     current_position: number;
     is_completed: boolean;
   };
-  // UNIFIED AUDIO PROPS - only from centralized hook
-  currentLessonId: string | null;
-  isPlaying: boolean;
-  currentTime: number;
-  duration: number;
-  isReady: boolean;
+  // UNIFIED AUDIO PROPS - single source of truth
+  audioCurrentLessonId: string | null;
+  audioIsPlaying: boolean;
+  audioCurrentTime: number;
+  audioDuration: number;
+  audioIsReady: boolean;
   audioError: boolean;
   getDisplayProgress: (lessonId: string, validDuration?: number) => number;
   onPlay: (lesson: Lesson) => void;
@@ -47,12 +47,12 @@ const LessonCard = React.memo(({
   status, 
   courseId,
   savedProgress,
-  // UNIFIED PROPS - no more confusion between multiple currentLessonId props
-  currentLessonId,
-  isPlaying,
-  currentTime,
-  duration: audioDuration,
-  isReady,
+  // UNIFIED PROPS - consistent naming throughout
+  audioCurrentLessonId,
+  audioIsPlaying,
+  audioCurrentTime,
+  audioDuration,
+  audioIsReady,
   audioError,
   getDisplayProgress,
   onPlay,
@@ -69,24 +69,20 @@ const LessonCard = React.memo(({
   console.log('🎴 LessonCard render (UNIFIED):', {
     lessonTitle: lesson.title,
     isCurrent,
-    isPlayingUnified: isPlaying,
+    audioIsPlaying,
     canPlay,
-    currentLessonId,
+    audioCurrentLessonId,
     timestamp: new Date().toLocaleTimeString()
   });
   
-  // FIXED: Conditional hook usage - move condition outside
+  // FIXED: Always call hook, handle conditions inside
   const shouldLoadNotes = canPlay && courseId;
-  
-  // Always call hooks unconditionally, then handle the conditional logic inside
-  const { notes, addNote, updateNote, deleteNote, fetchNotes } = useNotes(
+  const { notes, addNote, updateNote, deleteNote, fetchNotes } = useNotesConditional(
     shouldLoadNotes ? lesson.id : undefined,
     shouldLoadNotes ? courseId : undefined
   );
   
   const [showNotesPanel, setShowNotesPanel] = React.useState(false);
-  
-  // SIMPLIFIED: Remove all local state for audio controls - use only callbacks
   const [playbackRate, setPlaybackRate] = React.useState(1);
   const [volume, setVolume] = React.useState(1);
   const [isMuted, setIsMuted] = React.useState(false);
@@ -94,18 +90,18 @@ const LessonCard = React.memo(({
   const [showVolumeControl, setShowVolumeControl] = React.useState(false);
 
   // UNIFIED: Single source of truth for active lesson
-  const isThisLessonActive = currentLessonId === lesson.id;
-  const isThisLessonPlaying = isThisLessonActive && isPlaying;
+  const isThisLessonActive = audioCurrentLessonId === lesson.id;
+  const isThisLessonPlaying = isThisLessonActive && audioIsPlaying;
 
   // Get the appropriate duration for this lesson
   const validDuration = audioDuration || lesson.duracion || 0;
   
-  // SIMPLIFIED: Get display progress using the centralized logic
+  // Get display progress using the centralized logic
   const displayCurrentTime = useMemo(() => {
     return getDisplayProgress(lesson.id, validDuration);
   }, [getDisplayProgress, lesson.id, validDuration]);
 
-  // SIMPLIFIED: Handle play/pause click
+  // Handle play/pause click
   const handlePlayPause = () => {
     console.log('🎵 LESSON CARD PLAY/PAUSE (UNIFIED):', {
       lessonTitle: lesson.title,
@@ -167,7 +163,7 @@ const LessonCard = React.memo(({
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  // FIXED: Only fetch notes when conditions are met
+  // Fetch notes when component mounts and conditions are met
   React.useEffect(() => {
     if (shouldLoadNotes) {
       fetchNotes();
@@ -177,7 +173,7 @@ const LessonCard = React.memo(({
   // Handle adding note
   const handleAddNote = async (noteText: string) => {
     if (!shouldLoadNotes) return;
-    await addNote(noteText, currentTime);
+    await addNote(noteText, audioCurrentTime);
   };
 
   // Handle editing note
@@ -200,7 +196,7 @@ const LessonCard = React.memo(({
   // Speed options for dropdown
   const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
-  // SIMPLIFIED: Status icon logic
+  // Status icon logic
   const getStatusIcon = () => {
     if (!canPlay) {
       return <Lock size={16} />;
@@ -449,7 +445,7 @@ const LessonCard = React.memo(({
           onDeleteNote={deleteNote}
           onEditNote={handleEditNote}
           onSeekToTime={handleSeekToNote}
-          currentTimeSeconds={currentTime}
+          currentTimeSeconds={audioCurrentTime}
         />
       )}
     </div>

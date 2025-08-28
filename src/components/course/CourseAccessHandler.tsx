@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { Podcast, Lesson } from '@/types';
-import CourseMainContent from './CourseMainContent';
+import CourseHero from './CourseHero';
+import CourseLearningPathSection from './CourseLearningPathSection';
 import CheckoutModal from './CheckoutModal';
 
 interface CourseAccessHandlerProps {
@@ -13,7 +14,6 @@ interface CourseAccessHandlerProps {
   isCompleted: boolean;
   isPremium: boolean;
   hasAccess: boolean;
-  isPlaying: boolean;
   showCheckout: boolean;
   onStartLearning: () => void;
   onToggleSave: () => void;
@@ -21,10 +21,10 @@ interface CourseAccessHandlerProps {
   onShowCheckout: () => void;
   onCloseCheckout: () => void;
   onTogglePlay: () => void;
-  onLessonComplete: () => void;
-  onProgressUpdate: (position: number) => void;
+  onLessonComplete?: () => void;
+  onProgressUpdate?: (position: number) => void;
   onPurchaseComplete: () => void;
-  // Add audio player props from consolidated hook
+  // UNIFIED AUDIO PROPS - single source of truth
   audioCurrentLessonId: string | null;
   audioIsPlaying: boolean;
   audioCurrentTime: number;
@@ -42,7 +42,7 @@ interface CourseAccessHandlerProps {
   onSetMuted: (muted: boolean) => void;
 }
 
-const CourseAccessHandler: React.FC<CourseAccessHandlerProps> = ({
+const CourseAccessHandler = ({
   podcast,
   currentLesson,
   hasStarted,
@@ -51,7 +51,6 @@ const CourseAccessHandler: React.FC<CourseAccessHandlerProps> = ({
   isCompleted,
   isPremium,
   hasAccess,
-  isPlaying,
   showCheckout,
   onStartLearning,
   onToggleSave,
@@ -62,7 +61,7 @@ const CourseAccessHandler: React.FC<CourseAccessHandlerProps> = ({
   onLessonComplete,
   onProgressUpdate,
   onPurchaseComplete,
-  // Audio player props
+  // UNIFIED AUDIO PROPS
   audioCurrentLessonId,
   audioIsPlaying,
   audioCurrentTime,
@@ -78,10 +77,20 @@ const CourseAccessHandler: React.FC<CourseAccessHandlerProps> = ({
   onSetPlaybackRate,
   onSetVolume,
   onSetMuted
-}) => {
+}: CourseAccessHandlerProps) => {
+  console.log('🔒 CourseAccessHandler render:', {
+    courseTitle: podcast.title,
+    isPremium,
+    hasAccess,
+    hasStarted,
+    audioCurrentLessonId,
+    audioIsPlaying
+  });
+
   return (
     <>
-      <CourseMainContent
+      {/* Course Hero Section */}
+      <CourseHero
         podcast={podcast}
         currentLesson={currentLesson}
         hasStarted={hasStarted}
@@ -90,14 +99,11 @@ const CourseAccessHandler: React.FC<CourseAccessHandlerProps> = ({
         isCompleted={isCompleted}
         isPremium={isPremium}
         hasAccess={hasAccess}
-        isGloballyPlaying={isPlaying}
         onStartLearning={onStartLearning}
         onToggleSave={onToggleSave}
-        onSelectLesson={onSelectLesson}
         onShowCheckout={onShowCheckout}
-        onProgressUpdate={onProgressUpdate}
-        onLessonComplete={onLessonComplete}
-        // Pass audio player props
+        onTogglePlay={onTogglePlay}
+        // UNIFIED AUDIO PROPS
         audioCurrentLessonId={audioCurrentLessonId}
         audioIsPlaying={audioIsPlaying}
         audioCurrentTime={audioCurrentTime}
@@ -115,20 +121,41 @@ const CourseAccessHandler: React.FC<CourseAccessHandlerProps> = ({
         onSetMuted={onSetMuted}
       />
 
-      {showCheckout && (
-        <CheckoutModal
-          isOpen={showCheckout}
-          course={{
-            id: podcast.id,
-            title: podcast.title,
-            precio: podcast.precio || 0,
-            imageUrl: podcast.imageUrl,
-            moneda: podcast.moneda
-          }}
-          onClose={onCloseCheckout}
-          onPurchaseComplete={onPurchaseComplete}
+      {/* Learning Path Section - Only show if course has started */}
+      {hasStarted && (
+        <CourseLearningPathSection
+          podcast={podcast}
+          currentLessonId={audioCurrentLessonId}
+          isGloballyPlaying={audioIsPlaying}
+          onSelectLesson={onSelectLesson}
+          onProgressUpdate={onProgressUpdate}
+          onLessonComplete={onLessonComplete}
+          // UNIFIED AUDIO PROPS
+          audioCurrentLessonId={audioCurrentLessonId}
+          audioIsPlaying={audioIsPlaying}
+          audioCurrentTime={audioCurrentTime}
+          audioDuration={audioDuration}
+          audioIsReady={audioIsReady}
+          audioError={audioError}
+          getDisplayProgress={getDisplayProgress}
+          onPlay={onPlay}
+          onPause={onPause}
+          onSeek={onSeek}
+          onSkipBackward={onSkipBackward}
+          onSkipForward={onSkipForward}
+          onSetPlaybackRate={onSetPlaybackRate}
+          onSetVolume={onSetVolume}
+          onSetMuted={onSetMuted}
         />
       )}
+
+      {/* Checkout Modal */}
+      <CheckoutModal
+        isOpen={showCheckout}
+        onClose={onCloseCheckout}
+        course={podcast}
+        onPurchaseComplete={onPurchaseComplete}
+      />
     </>
   );
 };

@@ -1,3 +1,4 @@
+
 import { useCallback, useMemo, useState, useEffect } from 'react';
 import { Lesson, Module } from '../types';
 import React from 'react';
@@ -19,12 +20,10 @@ interface LearningPathProps {
   lessons: Lesson[];
   modules: Module[];
   onSelectLesson: (lesson: Lesson, shouldAutoPlay?: boolean) => void;
-  currentLessonId: string | null;
-  isGloballyPlaying: boolean;
   onProgressUpdate?: (position: number) => void;
   onLessonComplete?: () => void;
   podcast?: any;
-  // Audio player state from consolidated hook
+  // UNIFIED AUDIO PROPS - single source of truth
   audioCurrentLessonId: string | null;
   audioIsPlaying: boolean;
   audioCurrentTime: number;
@@ -46,12 +45,10 @@ const LearningPath = React.memo(({
   lessons, 
   modules, 
   onSelectLesson, 
-  currentLessonId, 
-  isGloballyPlaying,
   onProgressUpdate,
   onLessonComplete,
   podcast,
-  // Audio player props from consolidated hook
+  // UNIFIED AUDIO PROPS - use only these
   audioCurrentLessonId,
   audioIsPlaying,
   audioCurrentTime,
@@ -68,12 +65,10 @@ const LearningPath = React.memo(({
   onSetVolume,
   onSetMuted
 }: LearningPathProps) => {
-  // Validación temprana de datos requeridos
+  // Early validation
   console.log('🛤️ LearningPath render validation:', {
     hasLessons: !!lessons && lessons.length > 0,
     hasModules: !!modules && modules.length > 0,
-    currentLessonId,
-    isGloballyPlaying,
     podcastId: podcast?.id,
     audioCurrentLessonId,
     audioIsPlaying,
@@ -157,13 +152,11 @@ const LearningPath = React.memo(({
     }
   };
 
-  // Use custom hooks for status and classes
-  const lessonStatusMap = useLessonStatus(lessons, modules, currentLessonId);
+  // UNIFIED: Use only audioCurrentLessonId for all lesson status calculations
+  const lessonStatusMap = useLessonStatus(lessons, modules, audioCurrentLessonId);
   const getLessonClasses = useLessonClasses(lessons, lessonStatusMap);
 
   console.log('🛤️ LearningPath final render state:', {
-    currentLessonId,
-    isGloballyPlaying,
     lessonCount: lessons.length,
     moduleCount: modules.length,
     courseId,
@@ -177,7 +170,7 @@ const LearningPath = React.memo(({
     }
   });
 
-  // Memoizar función de agrupación con validación
+  // Get lessons for module with validation
   const getLessonsForModule = useCallback((moduleId: string) => {
     try {
       const module = modules.find(m => m.id === moduleId);
@@ -186,7 +179,6 @@ const LearningPath = React.memo(({
         return [];
       }
       
-      // Obtener lecciones en el orden definido por lessonIds del módulo
       return module.lessonIds
         .map(lessonId => {
           const lesson = lessons.find(lesson => lesson.id === lessonId);
@@ -233,10 +225,7 @@ const LearningPath = React.memo(({
       
       if (canPlay) {
         console.log('✅ LEARNING PATH - ENVIANDO A onSelectLesson:', lesson.title);
-        
-        // Call the original selection handler
         onSelectLesson(lesson, shouldAutoPlay);
-        
         console.log('✅ LEARNING PATH - onSelectLesson LLAMADO EXITOSAMENTE:', lesson.title);
       } else {
         console.log('🚫 LEARNING PATH - LECCIÓN BLOQUEADA:', {
@@ -253,7 +242,7 @@ const LearningPath = React.memo(({
     onSelectLesson
   ]);
 
-  // Memoizar módulos ordenados con validación
+  // Get ordered modules with validation
   const orderedModules = useMemo(() => {
     try {
       return modules.filter(module => {
@@ -300,13 +289,12 @@ const LearningPath = React.memo(({
                   moduleLessons={moduleLessons}
                   lessonStatusMap={lessonStatusMap}
                   getLessonClasses={getLessonClasses}
-                  currentLessonId={currentLessonId}
-                  isGloballyPlaying={isGloballyPlaying}
                   courseId={courseId}
                   lessonProgress={lessonProgress}
                   onLessonClick={handleLessonClick}
                   onProgressUpdate={onProgressUpdate}
                   onLessonComplete={onLessonComplete}
+                  // UNIFIED PROPS - pass only unified audio state
                   audioCurrentLessonId={audioCurrentLessonId}
                   audioIsPlaying={audioIsPlaying}
                   audioCurrentTime={audioCurrentTime}

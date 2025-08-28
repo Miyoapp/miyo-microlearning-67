@@ -9,14 +9,12 @@ interface ModuleSectionProps {
   moduleLessons: Lesson[];
   lessonStatusMap: Map<string, any>;
   getLessonClasses: Map<string, any>;
-  currentLessonId: string | null;
-  isGloballyPlaying: boolean;
   courseId: string | null;
   lessonProgress: UserLessonProgress[];
   onLessonClick: (lesson: Lesson, shouldAutoPlay?: boolean) => void;
   onProgressUpdate?: (position: number) => void;
   onLessonComplete?: () => void;
-  // UNIFIED AUDIO PROPS - no more duplicate naming
+  // UNIFIED AUDIO PROPS - consistent naming
   audioCurrentLessonId: string | null;
   audioIsPlaying: boolean;
   audioCurrentTime: number;
@@ -39,8 +37,6 @@ const ModuleSection = React.memo(({
   moduleLessons, 
   lessonStatusMap, 
   getLessonClasses, 
-  currentLessonId,
-  isGloballyPlaying,
   courseId,
   lessonProgress,
   onLessonClick,
@@ -67,8 +63,6 @@ const ModuleSection = React.memo(({
   
   console.log('🏗️ ModuleSection render (UNIFIED):', {
     moduleTitle: module.title,
-    currentLessonId,
-    isGloballyPlaying,
     lessonCount: moduleLessons.length,
     courseId,
     lessonProgressCount: lessonProgress.length,
@@ -91,15 +85,12 @@ const ModuleSection = React.memo(({
           const status = lessonStatusMap.get(lesson.id);
           if (!status) return null;
           
-          // SIMPLIFIED: Use unified current lesson logic
-          const isCurrent = lesson.id === currentLessonId;
-          
           // Find saved progress for this specific lesson
           const savedProgress = lessonProgress.find(p => p.lesson_id === lesson.id);
           
           const enhancedStatus = {
             ...status,
-            isCurrent
+            isCurrent: lesson.id === audioCurrentLessonId
           };
           
           return (
@@ -114,11 +105,11 @@ const ModuleSection = React.memo(({
                 is_completed: savedProgress.is_completed || false
               } : undefined}
               // UNIFIED PROPS - pass only unified audio state
-              currentLessonId={audioCurrentLessonId}
-              isPlaying={audioIsPlaying}
-              currentTime={audioCurrentTime}
-              duration={audioDuration}
-              isReady={audioIsReady}
+              audioCurrentLessonId={audioCurrentLessonId}
+              audioIsPlaying={audioIsPlaying}
+              audioCurrentTime={audioCurrentTime}
+              audioDuration={audioDuration}
+              audioIsReady={audioIsReady}
               audioError={audioError}
               getDisplayProgress={getDisplayProgress}
               onPlay={onPlay}
