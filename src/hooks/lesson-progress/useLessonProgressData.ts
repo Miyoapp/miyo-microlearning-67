@@ -15,6 +15,7 @@ export function useLessonProgressData() {
   // Stable references to prevent re-subscriptions
   const userIdRef = useRef<string | null>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
+  const isInitializedRef = useRef<boolean>(false);
 
   const fetchLessonProgress = useCallback(async () => {
     if (!user) {
@@ -58,16 +59,18 @@ export function useLessonProgressData() {
     if (!user) {
       // Clean up any existing subscription when no user
       if (cleanupRef.current) {
+        console.log('🔌 LESSON PROGRESS: Cleaning up subscription - no user');
         cleanupRef.current();
         cleanupRef.current = null;
       }
       userIdRef.current = null;
+      isInitializedRef.current = false;
       return;
     }
 
-    // Only create new subscription if user changed
-    if (userIdRef.current === user.id && cleanupRef.current) {
-      console.log('🔒 LESSON PROGRESS: User unchanged, keeping existing subscription');
+    // Only create new subscription if user changed or not yet initialized
+    if (userIdRef.current === user.id && isInitializedRef.current && cleanupRef.current) {
+      console.log('🔒 LESSON PROGRESS: User unchanged and subscription active, keeping existing subscription');
       return;
     }
 
@@ -75,11 +78,13 @@ export function useLessonProgressData() {
     if (cleanupRef.current) {
       console.log('🔌 LESSON PROGRESS: Cleaning up previous subscription');
       cleanupRef.current();
+      cleanupRef.current = null;
     }
 
     // Create new subscription with protection
     console.log('🔄 LESSON PROGRESS: Setting up real-time subscription for user:', user.id);
     userIdRef.current = user.id;
+    isInitializedRef.current = true;
     
     const stableCallback = () => {
       console.log('🔄 LESSON PROGRESS: Real-time update detected, refetching...');
@@ -87,7 +92,7 @@ export function useLessonProgressData() {
     };
 
     cleanupRef.current = createSubscription({
-      channelName: `lesson-progress-data-${user.id}`,
+      channelName: `lesson-progress-data-${user.id}-${Date.now()}`,
       table: 'user_lesson_progress',
       filter: `user_id=eq.${user.id}`,
       callback: stableCallback
@@ -99,6 +104,7 @@ export function useLessonProgressData() {
         cleanupRef.current();
         cleanupRef.current = null;
       }
+      isInitializedRef.current = false;
     };
   }, [user?.id, createSubscription, fetchLessonProgress]);
 

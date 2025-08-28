@@ -20,15 +20,6 @@ const CourseLearningPathSection: React.FC<CourseLearningPathSectionProps> = ({
   onProgressUpdate,
   onLessonComplete
 }) => {
-  console.log('🔍 CourseLearningPathSection: Render iniciado con props:', {
-    podcastTitle: podcast?.title,
-    currentLessonId,
-    isGloballyPlaying,
-    lessonsCount: podcast?.lessons?.length || 0,
-    modulesCount: podcast?.modules?.length || 0,
-    timestamp: new Date().toISOString()
-  });
-
   // Verificar que el podcast sea válido
   if (!podcast) {
     console.error('❌ CourseLearningPathSection: podcast es null o undefined');
@@ -44,8 +35,6 @@ const CourseLearningPathSection: React.FC<CourseLearningPathSectionProps> = ({
     console.error('❌ CourseLearningPathSection: podcast.modules no es válido:', podcast.modules);
     return <div>Error: Los módulos del curso no están disponibles</div>;
   }
-
-  console.log('✅ CourseLearningPathSection: Todos los datos válidos, renderizando LearningPath');
 
   return (
     <div id="learning-path-section" className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6">
