@@ -23,7 +23,7 @@ interface LessonCardProps {
     current_position: number;
     is_completed: boolean;
   };
-  // Audio player props
+  // UNIFIED AUDIO PROPS - only from centralized hook
   currentLessonId: string | null;
   isPlaying: boolean;
   currentTime: number;
@@ -47,8 +47,9 @@ const LessonCard = React.memo(({
   status, 
   courseId,
   savedProgress,
+  // UNIFIED PROPS - no more confusion between multiple currentLessonId props
   currentLessonId,
-  isPlaying: globalIsPlaying,
+  isPlaying,
   currentTime,
   duration: audioDuration,
   isReady,
@@ -65,45 +66,50 @@ const LessonCard = React.memo(({
 }: LessonCardProps) => {
   const { isCompleted, isLocked, isCurrent, canPlay } = status;
   
-  console.log('🎴 LessonCard render:', {
+  console.log('🎴 LessonCard render (UNIFIED):', {
     lessonTitle: lesson.title,
     isCurrent,
-    globalIsPlaying,
+    isPlayingUnified: isPlaying,
     canPlay,
-    isCompleted: savedProgress?.is_completed,
+    currentLessonId,
     timestamp: new Date().toLocaleTimeString()
   });
   
-  // Notes functionality
+  // FIXED: Conditional hook usage - move condition outside
+  const shouldLoadNotes = canPlay && courseId;
+  
+  // Always call hooks unconditionally, then handle the conditional logic inside
   const { notes, addNote, updateNote, deleteNote, fetchNotes } = useNotes(
-    canPlay ? lesson.id : undefined, 
-    canPlay ? courseId : undefined
+    shouldLoadNotes ? lesson.id : undefined,
+    shouldLoadNotes ? courseId : undefined
   );
+  
   const [showNotesPanel, setShowNotesPanel] = React.useState(false);
   
-  // UI-only state (not audio-related)
+  // SIMPLIFIED: Remove all local state for audio controls - use only callbacks
   const [playbackRate, setPlaybackRate] = React.useState(1);
   const [volume, setVolume] = React.useState(1);
   const [isMuted, setIsMuted] = React.useState(false);
   const [showSpeedDropdown, setShowSpeedDropdown] = React.useState(false);
   const [showVolumeControl, setShowVolumeControl] = React.useState(false);
 
-  // Determine if this lesson is currently playing
-  const isThisLessonPlaying = isCurrent && currentLessonId === lesson.id && globalIsPlaying;
+  // UNIFIED: Single source of truth for active lesson
+  const isThisLessonActive = currentLessonId === lesson.id;
+  const isThisLessonPlaying = isThisLessonActive && isPlaying;
 
   // Get the appropriate duration for this lesson
   const validDuration = audioDuration || lesson.duracion || 0;
   
-  // Get display progress using the centralized logic
+  // SIMPLIFIED: Get display progress using the centralized logic
   const displayCurrentTime = useMemo(() => {
     return getDisplayProgress(lesson.id, validDuration);
   }, [getDisplayProgress, lesson.id, validDuration]);
 
-  // Handle play/pause click
+  // SIMPLIFIED: Handle play/pause click
   const handlePlayPause = () => {
-    console.log('🎵 LESSON CARD PLAY/PAUSE CLICK:', {
+    console.log('🎵 LESSON CARD PLAY/PAUSE (UNIFIED):', {
       lessonTitle: lesson.title,
-      currentState: isThisLessonPlaying,
+      isThisLessonPlaying,
       canPlay,
       timestamp: new Date().toLocaleTimeString()
     });
@@ -122,7 +128,7 @@ const LessonCard = React.memo(({
 
   // Handle seeking
   const handleSeek = (time: number) => {
-    if (isCurrent && currentLessonId === lesson.id) {
+    if (isThisLessonActive) {
       onSeek(time);
     }
   };
@@ -161,20 +167,22 @@ const LessonCard = React.memo(({
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  // Fetch notes when lesson can play and courseId is available
+  // FIXED: Only fetch notes when conditions are met
   React.useEffect(() => {
-    if (canPlay && courseId) {
+    if (shouldLoadNotes) {
       fetchNotes();
     }
-  }, [canPlay, courseId, fetchNotes]);
+  }, [shouldLoadNotes, fetchNotes]);
 
   // Handle adding note
   const handleAddNote = async (noteText: string) => {
+    if (!shouldLoadNotes) return;
     await addNote(noteText, currentTime);
   };
 
   // Handle editing note
   const handleEditNote = async (noteId: string, updates: Partial<Pick<LessonNote, 'note_text' | 'note_title' | 'tags' | 'is_favorite'>>) => {
+    if (!shouldLoadNotes) return;
     await updateNote(noteId, updates);
   };
 
@@ -192,18 +200,16 @@ const LessonCard = React.memo(({
   // Speed options for dropdown
   const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
-  // Status icon logic
+  // SIMPLIFIED: Status icon logic
   const getStatusIcon = () => {
     if (!canPlay) {
       return <Lock size={16} />;
     }
     
-    // Show pause icon ONLY if this lesson is current AND global state is playing
     if (isThisLessonPlaying && !audioError) {
       return <Pause size={16} />;
     }
     
-    // Show play icon in all other cases
     return <Play size={16} fill="white" />;
   };
 
@@ -216,7 +222,7 @@ const LessonCard = React.memo(({
         "border-gray-100 bg-gray-50": !canPlay,
         "hover:shadow-md": canPlay,
         "cursor-not-allowed": !canPlay,
-        "border-red-200 bg-red-50": audioError && isCurrent
+        "border-red-200 bg-red-50": audioError && isThisLessonActive
       }
     )}>
       {/* Main Card Content */}
@@ -234,7 +240,7 @@ const LessonCard = React.memo(({
                   "bg-[#5e16ea] text-white hover:bg-[#4a11ba]": canPlay && !audioError,
                   "bg-gray-300 text-gray-500 cursor-not-allowed": !canPlay || audioError,
                   "hover:scale-105": canPlay && !audioError,
-                  "bg-red-400": audioError && isCurrent
+                  "bg-red-400": audioError && isThisLessonActive
                 }
               )}
               aria-label={
@@ -258,7 +264,7 @@ const LessonCard = React.memo(({
                   "text-[#5e16ea]": isCompleted || (isCurrent && !isCompleted),
                   "text-gray-900": canPlay && !isCurrent && !isCompleted,
                   "text-gray-400": !canPlay,
-                  "text-red-600": audioError && isCurrent
+                  "text-red-600": audioError && isThisLessonActive
                 }
               )}>
                 {lesson.title}
@@ -266,7 +272,7 @@ const LessonCard = React.memo(({
               {isThisLessonPlaying && !audioError && (
                 <span className="text-xs text-green-600">● Reproduciendo</span>
               )}
-              {audioError && isCurrent && (
+              {audioError && isThisLessonActive && (
                 <span className="text-xs text-red-600">⚠ Error de audio</span>
               )}
             </div>
@@ -275,7 +281,7 @@ const LessonCard = React.memo(({
           {/* Duration and Notes Icon */}
           <div className="flex items-center gap-2">
             {/* Notes Icon with Badge */}
-            {canPlay && courseId && (
+            {shouldLoadNotes && (
               <button
                 onClick={handleNotesToggle}
                 className={cn(
@@ -320,7 +326,7 @@ const LessonCard = React.memo(({
                 max={validDuration}
                 value={displayCurrentTime}
                 onChange={handleSeekChange}
-                disabled={!isCurrent || currentLessonId !== lesson.id}
+                disabled={!isThisLessonActive}
                 className="w-full accent-[#5e16ea] h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer disabled:cursor-not-allowed"
                 style={{
                   background: `linear-gradient(to right, #5e16ea 0%, #5e16ea ${(displayCurrentTime / validDuration) * 100}%, #e5e7eb ${(displayCurrentTime / validDuration) * 100}%, #e5e7eb 100%)`
@@ -328,8 +334,8 @@ const LessonCard = React.memo(({
               />
             </div>
 
-            {/* Control Buttons - Only show for current lesson */}
-            {isCurrent && currentLessonId === lesson.id && (
+            {/* Control Buttons - Only show for active lesson */}
+            {isThisLessonActive && (
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   {/* Skip Backward */}
@@ -425,7 +431,7 @@ const LessonCard = React.memo(({
         )}
 
         {/* Audio error message */}
-        {audioError && isCurrent && (
+        {audioError && isThisLessonActive && (
           <div className="text-center py-2">
             <p className="text-xs text-red-500">
               Error al cargar el audio. Intenta recargar la página.
@@ -434,8 +440,8 @@ const LessonCard = React.memo(({
         )}
       </div>
 
-      {/* Notes Panel */}
-      {canPlay && courseId && (
+      {/* Notes Panel - only show if conditions are met */}
+      {shouldLoadNotes && (
         <NotesPanel
           isOpen={showNotesPanel}
           notes={notes}

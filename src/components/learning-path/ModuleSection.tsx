@@ -16,7 +16,7 @@ interface ModuleSectionProps {
   onLessonClick: (lesson: Lesson, shouldAutoPlay?: boolean) => void;
   onProgressUpdate?: (position: number) => void;
   onLessonComplete?: () => void;
-  // Audio player props
+  // UNIFIED AUDIO PROPS - no more duplicate naming
   audioCurrentLessonId: string | null;
   audioIsPlaying: boolean;
   audioCurrentTime: number;
@@ -46,6 +46,7 @@ const ModuleSection = React.memo(({
   onLessonClick,
   onProgressUpdate,
   onLessonComplete,
+  // UNIFIED AUDIO PROPS - use consistent naming
   audioCurrentLessonId,
   audioIsPlaying,
   audioCurrentTime,
@@ -64,13 +65,15 @@ const ModuleSection = React.memo(({
 }: ModuleSectionProps) => {
   if (moduleLessons.length === 0) return null;
   
-  console.log('🏗️ ModuleSection render:', {
+  console.log('🏗️ ModuleSection render (UNIFIED):', {
     moduleTitle: module.title,
     currentLessonId,
     isGloballyPlaying,
     lessonCount: moduleLessons.length,
     courseId,
-    lessonProgressCount: lessonProgress.length
+    lessonProgressCount: lessonProgress.length,
+    audioCurrentLessonId,
+    audioIsPlaying
   });
   
   return (
@@ -88,7 +91,7 @@ const ModuleSection = React.memo(({
           const status = lessonStatusMap.get(lesson.id);
           if (!status) return null;
           
-          // Add isCurrent calculation and determine if this lesson is playing
+          // SIMPLIFIED: Use unified current lesson logic
           const isCurrent = lesson.id === currentLessonId;
           
           // Find saved progress for this specific lesson
@@ -110,6 +113,7 @@ const ModuleSection = React.memo(({
                 current_position: savedProgress.current_position || 0,
                 is_completed: savedProgress.is_completed || false
               } : undefined}
+              // UNIFIED PROPS - pass only unified audio state
               currentLessonId={audioCurrentLessonId}
               isPlaying={audioIsPlaying}
               currentTime={audioCurrentTime}

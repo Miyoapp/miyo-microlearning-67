@@ -24,12 +24,14 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     updateCourseProgress
   } = useUserProgress();
 
-  // Control más granular de la inicialización
-  const hasAutoInitialized = useRef(false);
-  const hasUserMadeSelection = useRef(false);
-  const hasAutoPositioned = useRef(false);
+  // SIMPLIFIED: Reduce complex state tracking
+  const initializationState = useRef({
+    hasAutoInitialized: false,
+    hasUserSelection: false,
+    hasAutoPositioned: false
+  });
 
-  // Usar hook especializado solo para inicialización
+  // Use specialized hook for initialization
   const {
     currentLesson,
     setCurrentLesson,
@@ -54,10 +56,9 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     }
   });
 
-  // Auto-advance allowed logic
+  // SIMPLIFIED: Auto-advance logic
   const isAutoAdvanceAllowed = React.useMemo(() => {
-    if (!user || !podcast) return false;
-    return true;
+    return !!(user && podcast);
   }, [user, podcast]);
 
   // Lesson completion handler
@@ -129,7 +130,7 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     updateLessonPosition(currentLesson.id, podcast.id, position);
   }, [currentLesson, podcast, user, updateLessonPosition]);
 
-  // Lesson selection handler
+  // SIMPLIFIED: Lesson selection handler
   const handleSelectLesson = useCallback((lesson: any, shouldAutoPlay = false) => {
     console.log('🎯 Consolidated Lessons - handleSelectLesson:', {
       lessonTitle: lesson.title,
@@ -138,14 +139,14 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
       timestamp: new Date().toLocaleTimeString()
     });
     
-    // Validación de datos
-    if (!lesson || !lesson.id) {
+    // Validation
+    if (!lesson?.id) {
       console.error('❌ Invalid lesson data:', lesson);
       return;
     }
     
-    // Mark user selection
-    hasUserMadeSelection.current = true;
+    // Mark user selection to prevent auto-initialization conflicts
+    initializationState.current.hasUserSelection = true;
     
     // Set the new current lesson
     setCurrentLesson(lesson);
@@ -174,67 +175,78 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     }
   }, [currentLesson, audioPlayer]);
 
-  // Inicializar podcast cuando todos los datos estén disponibles
+  // SIMPLIFIED: Initialize podcast when data is available
   useEffect(() => {
-    console.log('🔄 Consolidated Lessons - PODCAST INITIALIZATION EFFECT');
-    console.log('🔍 Conditions:', {
+    const canInitialize = (
+      podcast && 
+      user && 
+      lessonProgress !== undefined && 
+      userProgress !== undefined && 
+      !initializationState.current.hasAutoInitialized
+    );
+
+    console.log('🔄 Consolidated Lessons - PODCAST INITIALIZATION EFFECT:', {
+      canInitialize,
       hasPodcast: !!podcast,
       hasUser: !!user,
       lessonProgressDefined: lessonProgress !== undefined,
       userProgressDefined: userProgress !== undefined,
-      hasAutoInitialized: hasAutoInitialized.current
+      hasAutoInitialized: initializationState.current.hasAutoInitialized
     });
 
-    if (podcast && user && lessonProgress !== undefined && userProgress !== undefined && !hasAutoInitialized.current) {
+    if (canInitialize) {
       console.log('📊 ALL DATA AVAILABLE - INITIALIZING PODCAST WITH PROGRESS...');
       try {
         initializePodcastWithProgress();
-        hasAutoInitialized.current = true;
+        initializationState.current.hasAutoInitialized = true;
       } catch (error) {
         console.error('❌ Error initializing podcast:', error);
       }
     }
-  }, [podcast?.id, user?.id, lessonProgress, userProgress, initializePodcastWithProgress]);
+  }, [
+    // SIMPLIFIED: Use stable IDs only
+    podcast?.id, 
+    user?.id, 
+    lessonProgress !== undefined ? 'defined' : 'undefined',
+    userProgress !== undefined ? 'defined' : 'undefined',
+    initializePodcastWithProgress
+  ]);
 
-  // Auto-inicialización inteligente que respeta el progreso del curso
+  // SIMPLIFIED: Auto-position current lesson
   useEffect(() => {
-    console.log('🎯 Consolidated Lessons - CURRENT LESSON AUTO-POSITIONING EFFECT');
-    console.log('🔍 Conditions:', {
-      hasPodcast: !!podcast,
+    const canAutoPosition = (
+      podcast?.lessons?.length > 0 &&
+      user && 
+      !currentLesson && 
+      initializationState.current.hasAutoInitialized && 
+      !initializationState.current.hasUserSelection &&
+      !initializationState.current.hasAutoPositioned
+    );
+
+    console.log('🎯 Consolidated Lessons - CURRENT LESSON AUTO-POSITIONING EFFECT:', {
+      canAutoPosition,
       hasLessons: podcast?.lessons?.length > 0,
       hasUser: !!user,
       currentLessonExists: !!currentLesson,
-      hasAutoInitialized: hasAutoInitialized.current,
-      hasUserMadeSelection: hasUserMadeSelection.current,
-      hasAutoPositioned: hasAutoPositioned.current
+      hasAutoInitialized: initializationState.current.hasAutoInitialized,
+      hasUserSelection: initializationState.current.hasUserSelection,
+      hasAutoPositioned: initializationState.current.hasAutoPositioned
     });
 
-    if (
-      podcast && 
-      podcast.lessons && 
-      podcast.lessons.length > 0 && 
-      user && 
-      !currentLesson && 
-      hasAutoInitialized.current && 
-      !hasUserMadeSelection.current &&
-      !hasAutoPositioned.current
-    ) {
+    if (canAutoPosition) {
       console.log('🎯 AUTO-POSITIONING on next lesson to continue...');
       try {
         initializeCurrentLesson();
-        hasAutoPositioned.current = true;
+        initializationState.current.hasAutoPositioned = true;
       } catch (error) {
         console.error('❌ Error auto-positioning lesson:', error);
       }
-    } else if (hasUserMadeSelection.current) {
-      console.log('👤 User has made manual selection - skipping auto-initialization');
     }
   }, [
-    podcast?.id,
+    // SIMPLIFIED: Use minimal dependencies
     podcast?.lessons?.length,
     user?.id,
     currentLesson?.id,
-    hasAutoInitialized.current,
     initializeCurrentLesson
   ]);
 
@@ -246,10 +258,10 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     handleLessonComplete,
     handleProgressUpdate,
     initializePodcastWithProgress,
-    // Audio player state and controls
+    // UNIFIED AUDIO PLAYER STATE - single source of truth
     isPlaying: audioPlayer.isPlaying,
     handleTogglePlay,
-    // Expose all audio player functionality
+    // Expose all audio player functionality with unified naming
     audioCurrentLessonId: audioPlayer.currentLessonId,
     audioIsPlaying: audioPlayer.isPlaying,
     audioCurrentTime: audioPlayer.currentTime,
