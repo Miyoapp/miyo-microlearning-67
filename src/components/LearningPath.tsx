@@ -1,3 +1,4 @@
+
 import { useCallback, useMemo, useState, useEffect } from 'react';
 import { Lesson, Module } from '../types';
 import React from 'react';
@@ -20,9 +21,7 @@ interface LearningPathProps {
   modules: Module[];
   onSelectLesson: (lesson: Lesson, shouldAutoPlay?: boolean) => void;
   currentLessonId: string | null;
-  isGloballyPlaying: boolean;
-  onProgressUpdate?: (position: number) => void;
-  onLessonComplete?: () => void;
+  audioState: any;
   podcast?: any;
 }
 
@@ -31,9 +30,7 @@ const LearningPath = React.memo(({
   modules, 
   onSelectLesson, 
   currentLessonId, 
-  isGloballyPlaying,
-  onProgressUpdate,
-  onLessonComplete,
+  audioState,
   podcast
 }: LearningPathProps) => {
   // Get user progress data for course completion detection
@@ -49,7 +46,7 @@ const LearningPath = React.memo(({
   // Extract courseId from podcast
   const courseId = podcast?.id || null;
   
-  // Course completion functionality - UPDATED: Pass markCompletionModalShown
+  // Course completion functionality
   const {
     showCompletionModal,
     showSummaryModal,
@@ -63,7 +60,7 @@ const LearningPath = React.memo(({
     podcast,
     userProgress,
     lessonProgress,
-    markCompletionModalShown // NEW: Pass the function to mark modal as shown
+    markCompletionModalShown
   });
 
   // Check if course is completed
@@ -97,7 +94,7 @@ const LearningPath = React.memo(({
 
   console.log('🛤️ LearningPath render:', {
     currentLessonId,
-    isGloballyPlaying,
+    isPlaying: audioState.isPlaying,
     lessonCount: lessons.length,
     moduleCount: modules.length,
     courseId,
@@ -106,64 +103,46 @@ const LearningPath = React.memo(({
     hasSummary
   });
 
-  // OPTIMIZADO: Memoizar función de agrupación con hash estable
+  // Get lessons for module
   const getLessonsForModule = useCallback((moduleId: string) => {
     const module = modules.find(m => m.id === moduleId);
     if (!module) return [];
     
-    // Obtener lecciones en el orden definido por lessonIds del módulo
     return module.lessonIds
       .map(id => lessons.find(lesson => lesson.id === id))
       .filter((lesson): lesson is Lesson => lesson !== undefined);
   }, [
-    // ESTABILIZADO: Hash más específico para evitar recálculos
     modules.map(m => `${m.id}:${m.lessonIds.join(',')}`).join('|'),
     lessons.map(l => l.id).join('|')
   ]);
 
-  // HANDLER DE CLICK CON LOGS ESPECÍFICOS
+  // Handle lesson click
   const handleLessonClick = useCallback((lesson: Lesson, shouldAutoPlay = true) => {
-    console.log('🎯🎯🎯 LEARNING PATH - CLICK RECIBIDO:', {
+    console.log('🎯 LEARNING PATH - Click received:', {
       lessonTitle: lesson.title,
-      shouldAutoPlay,
-      timestamp: new Date().toLocaleTimeString()
+      shouldAutoPlay
     });
     
     const status = lessonStatusMap.get(lesson.id);
     if (!status) {
-      console.log('🚫🚫🚫 LEARNING PATH - NO STATUS FOUND:', lesson.title);
+      console.log('🚫 LEARNING PATH - No status found:', lesson.title);
       return;
     }
     
-    const { canPlay, isCompleted, isLocked, isFirstInSequence } = status;
-    
-    console.log('🎯🎯🎯 LEARNING PATH - VALIDACIÓN CLICK:', {
-      lessonTitle: lesson.title,
-      canPlay,
-      isCompleted,
-      isLocked,
-      isFirstInSequence,
-      action: canPlay ? 'PERMITIR REPRODUCCIÓN' : 'BLOQUEAR'
-    });
+    const { canPlay } = status;
     
     if (canPlay) {
-      console.log('✅✅✅ LEARNING PATH - ENVIANDO A onSelectLesson:', lesson.title);
+      console.log('✅ LEARNING PATH - Calling onSelectLesson:', lesson.title);
       onSelectLesson(lesson, shouldAutoPlay);
-      console.log('✅✅✅ LEARNING PATH - onSelectLesson LLAMADO EXITOSAMENTE:', lesson.title);
     } else {
-      console.log('🚫🚫🚫 LEARNING PATH - LECCIÓN BLOQUEADA:', {
-        lessonTitle: lesson.title,
-        isLocked,
-        reason: 'lección anterior no completada'
-      });
+      console.log('🚫 LEARNING PATH - Lesson blocked:', lesson.title);
     }
   }, [
-    // ESTABILIZADO: Solo incluir referencias estables
     Array.from(lessonStatusMap.entries()).map(([id, status]) => `${id}:${status._hash || 'no-hash'}`).join('|'),
     onSelectLesson
   ]);
 
-  // OPTIMIZADO: Memoizar módulos ordenados
+  // Get ordered modules
   const orderedModules = useMemo(() => {
     return modules.filter(module => {
       const moduleLessons = getLessonsForModule(module.id);
@@ -171,12 +150,11 @@ const LearningPath = React.memo(({
     });
   }, [modules, getLessonsForModule]);
 
-  // Handle fallback summary creation
+  // Handle summary actions
   const handleFallbackSummaryClick = () => {
     setShowSummaryModal(true);
   };
 
-  // Handle viewing existing summary
   const handleViewSummaryClick = () => {
     if (existingSummary) {
       setShowViewSummaryModal(true);
@@ -200,17 +178,15 @@ const LearningPath = React.memo(({
                 lessonStatusMap={lessonStatusMap}
                 getLessonClasses={getLessonClasses}
                 currentLessonId={currentLessonId}
-                isGloballyPlaying={isGloballyPlaying}
                 courseId={courseId}
                 lessonProgress={lessonProgress}
+                audioState={audioState}
                 onLessonClick={handleLessonClick}
-                onProgressUpdate={onProgressUpdate}
-                onLessonComplete={onLessonComplete}
               />
             );
           })}
           
-          {/* Fallback Summary Button - only show if course is completed */}
+          {/* Summary section */}
           {isCourseCompleted && (
             <div className="text-center pt-8 border-t border-gray-200">
               {hasSummary && existingSummary ? (
@@ -238,7 +214,7 @@ const LearningPath = React.memo(({
         </div>
       </div>
 
-      {/* Course Completion Modal */}
+      {/* Modals */}
       {podcast && completionStats && (
         <CourseCompletionModal
           isOpen={showCompletionModal}
@@ -249,7 +225,6 @@ const LearningPath = React.memo(({
         />
       )}
 
-      {/* Create Summary Modal */}
       {podcast && (
         <CreateSummaryModal
           isOpen={showSummaryModal}
@@ -259,7 +234,6 @@ const LearningPath = React.memo(({
         />
       )}
 
-      {/* View Summary Modal */}
       {existingSummary && (
         <ViewSummaryModal
           isOpen={showViewSummaryModal}
