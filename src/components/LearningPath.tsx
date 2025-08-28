@@ -1,3 +1,4 @@
+
 import { useCallback, useMemo, useState, useEffect } from 'react';
 import { Lesson, Module } from '../types';
 import React from 'react';
@@ -37,6 +38,34 @@ const LearningPath = React.memo(({
   onLessonComplete,
   podcast
 }: LearningPathProps) => {
+  // Validación temprana de datos requeridos
+  console.log('🛤️ LearningPath render validation:', {
+    hasLessons: !!lessons && lessons.length > 0,
+    hasModules: !!modules && modules.length > 0,
+    currentLessonId,
+    isGloballyPlaying,
+    podcastId: podcast?.id,
+    timestamp: new Date().toLocaleTimeString()
+  });
+
+  // Early return si no hay datos básicos
+  if (!lessons || !modules || lessons.length === 0 || modules.length === 0) {
+    console.log('⚠️ LearningPath - Missing required data, showing loading...');
+    return (
+      <div className="py-3">
+        <h2 className="text-2xl font-bold mb-6 text-center">Tu Ruta de Aprendizaje</h2>
+        <div className="max-w-2xl mx-auto space-y-8">
+          <div className="flex items-center justify-center py-8">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5e16ea] mx-auto mb-2"></div>
+              <p className="text-gray-500 text-sm">Cargando lecciones...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Get user progress data for course completion detection
   const { userProgress, markCompletionModalShown } = useUserProgress();
   const { lessonProgress } = useUserLessonProgress();
@@ -50,15 +79,11 @@ const LearningPath = React.memo(({
   // Extract courseId from podcast
   const courseId = podcast?.id || null;
   
-  // SOLUCIÓN 3: Agregar estado de carga para evitar renderizado prematuro
-  const [isInitialized, setIsInitialized] = useState(false);
-  
   // Initialize audio player with lessons array
   const audioPlayer = useAudioPlayer({
     lessons,
     onLessonComplete: (lessonId: string) => {
       console.log('🎯 Audio player lesson complete:', lessonId);
-      // Find the lesson object and call the original completion handler
       const lesson = lessons.find(l => l.id === lessonId);
       if (lesson && onLessonComplete) {
         onLessonComplete();
@@ -93,17 +118,6 @@ const LearningPath = React.memo(({
   const courseProgress = userProgress.find(p => p.course_id === courseId);
   const isCourseCompleted = courseProgress?.is_completed && courseProgress?.progress_percentage === 100;
 
-  // SOLUCIÓN 3: Inicialización controlada
-  useEffect(() => {
-    if (lessons && lessons.length > 0 && modules && modules.length > 0) {
-      console.log('📚 LearningPath initialized with data:', {
-        lessonCount: lessons.length,
-        moduleCount: modules.length
-      });
-      setIsInitialized(true);
-    }
-  }, [lessons, modules]);
-
   // Check for existing summary
   useEffect(() => {
     if (courseId && isCourseCompleted) {
@@ -114,14 +128,18 @@ const LearningPath = React.memo(({
   const checkExistingSummary = async () => {
     if (!courseId) return;
     
-    const hasExisting = await checkHasSummary();
-    setHasSummary(hasExisting);
-    
-    if (hasExisting) {
-      const summaries = await fetchSummaries(courseId);
-      if (summaries && summaries.length > 0) {
-        setExistingSummary(summaries[0]);
+    try {
+      const hasExisting = await checkHasSummary();
+      setHasSummary(hasExisting);
+      
+      if (hasExisting) {
+        const summaries = await fetchSummaries(courseId);
+        if (summaries && summaries.length > 0) {
+          setExistingSummary(summaries[0]);
+        }
       }
+    } catch (error) {
+      console.error('❌ Error checking existing summary:', error);
     }
   };
 
@@ -129,7 +147,7 @@ const LearningPath = React.memo(({
   const lessonStatusMap = useLessonStatus(lessons, modules, currentLessonId);
   const getLessonClasses = useLessonClasses(lessons, lessonStatusMap);
 
-  console.log('🛤️ LearningPath render:', {
+  console.log('🛤️ LearningPath final render state:', {
     currentLessonId,
     isGloballyPlaying,
     lessonCount: lessons.length,
@@ -138,41 +156,36 @@ const LearningPath = React.memo(({
     lessonProgressCount: lessonProgress.length,
     isCourseCompleted,
     hasSummary,
-    isInitialized,
     audioPlayerState: {
       currentLessonId: audioPlayer.currentLessonId,
-      isPlaying: audioPlayer.isPlaying
+      isPlaying: audioPlayer.isPlaying,
+      error: audioPlayer.error
     }
   });
 
-  // SOLUCIÓN 3: Mostrar loading mientras se inicializa
-  if (!isInitialized) {
-    return (
-      <div className="py-3">
-        <h2 className="text-2xl font-bold mb-6 text-center">Tu Ruta de Aprendizaje</h2>
-        <div className="max-w-2xl mx-auto space-y-8">
-          <div className="flex items-center justify-center py-8">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5e16ea] mx-auto mb-2"></div>
-              <p className="text-gray-500 text-sm">Cargando lecciones...</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // OPTIMIZADO: Memoizar función de agrupación con hash estable
+  // Memoizar función de agrupación con validación
   const getLessonsForModule = useCallback((moduleId: string) => {
-    const module = modules.find(m => m.id === moduleId);
-    if (!module) return [];
-    
-    // Obtener lecciones en el orden definido por lessonIds del módulo
-    return module.lessonIds
-      .map(id => lessons.find(lesson => lesson.id === id))
-      .filter((lesson): lesson is Lesson => lesson !== undefined);
+    try {
+      const module = modules.find(m => m.id === moduleId);
+      if (!module) {
+        console.warn('⚠️ Module not found:', moduleId);
+        return [];
+      }
+      
+      // Obtener lecciones en el orden definido por lessonIds del módulo
+      return module.lessonIds
+        .map(id => lessons.find(lesson => lesson.id === id))
+        .filter((lesson): lesson is Lesson => {
+          if (!lesson) {
+            console.warn('⚠️ Lesson not found for ID:', id);
+          }
+          return lesson !== undefined;
+        });
+    } catch (error) {
+      console.error('❌ Error getting lessons for module:', moduleId, error);
+      return [];
+    }
   }, [
-    // ESTABILIZADO: Hash más específico para evitar recálculos
     modules.map(m => `${m.id}:${m.lessonIds.join(',')}`).join('|'),
     lessons.map(l => l.id).join('|')
   ]);
@@ -180,67 +193,79 @@ const LearningPath = React.memo(({
   // Handle lesson play from audio player
   const handleAudioPlay = useCallback((lesson: Lesson) => {
     console.log('🎵 LearningPath: Audio play requested for:', lesson.title);
-    onSelectLesson(lesson, true);
-    audioPlayer.play(lesson);
+    try {
+      onSelectLesson(lesson, true);
+      audioPlayer.play(lesson);
+    } catch (error) {
+      console.error('❌ Error playing lesson:', error);
+    }
   }, [onSelectLesson, audioPlayer]);
 
-  // HANDLER DE CLICK CON LOGS ESPECÍFICOS
+  // Handle lesson click with validation
   const handleLessonClick = useCallback((lesson: Lesson, shouldAutoPlay = true) => {
-    console.log('🎯🎯🎯 LEARNING PATH - CLICK RECIBIDO:', {
+    console.log('🎯 LEARNING PATH - CLICK RECIBIDO:', {
       lessonTitle: lesson.title,
       shouldAutoPlay,
       timestamp: new Date().toLocaleTimeString()
     });
     
-    const status = lessonStatusMap.get(lesson.id);
-    if (!status) {
-      console.log('🚫🚫🚫 LEARNING PATH - NO STATUS FOUND:', lesson.title);
-      return;
-    }
-    
-    const { canPlay, isCompleted, isLocked, isFirstInSequence } = status;
-    
-    console.log('🎯🎯🎯 LEARNING PATH - VALIDACIÓN CLICK:', {
-      lessonTitle: lesson.title,
-      canPlay,
-      isCompleted,
-      isLocked,
-      isFirstInSequence,
-      action: canPlay ? 'PERMITIR REPRODUCCIÓN' : 'BLOQUEAR'
-    });
-    
-    if (canPlay) {
-      console.log('✅✅✅ LEARNING PATH - ENVIANDO A onSelectLesson:', lesson.title);
-      
-      // Call the original selection handler
-      onSelectLesson(lesson, shouldAutoPlay);
-      
-      // Handle audio playback through the audio player
-      if (shouldAutoPlay) {
-        audioPlayer.play(lesson);
+    try {
+      const status = lessonStatusMap.get(lesson.id);
+      if (!status) {
+        console.log('🚫 LEARNING PATH - NO STATUS FOUND:', lesson.title);
+        return;
       }
       
-      console.log('✅✅✅ LEARNING PATH - onSelectLesson LLAMADO EXITOSAMENTE:', lesson.title);
-    } else {
-      console.log('🚫🚫🚫 LEARNING PATH - LECCIÓN BLOQUEADA:', {
+      const { canPlay, isCompleted, isLocked, isFirstInSequence } = status;
+      
+      console.log('🎯 LEARNING PATH - VALIDACIÓN CLICK:', {
         lessonTitle: lesson.title,
+        canPlay,
+        isCompleted,
         isLocked,
-        reason: 'lección anterior no completada'
+        isFirstInSequence,
+        action: canPlay ? 'PERMITIR REPRODUCCIÓN' : 'BLOQUEAR'
       });
+      
+      if (canPlay) {
+        console.log('✅ LEARNING PATH - ENVIANDO A onSelectLesson:', lesson.title);
+        
+        // Call the original selection handler
+        onSelectLesson(lesson, shouldAutoPlay);
+        
+        // Handle audio playback through the audio player
+        if (shouldAutoPlay) {
+          audioPlayer.play(lesson);
+        }
+        
+        console.log('✅ LEARNING PATH - onSelectLesson LLAMADO EXITOSAMENTE:', lesson.title);
+      } else {
+        console.log('🚫 LEARNING PATH - LECCIÓN BLOQUEADA:', {
+          lessonTitle: lesson.title,
+          isLocked,
+          reason: 'lección anterior no completada'
+        });
+      }
+    } catch (error) {
+      console.error('❌ Error handling lesson click:', error);
     }
   }, [
-    // ESTABILIZADO: Solo incluir referencias estables
     Array.from(lessonStatusMap.entries()).map(([id, status]) => `${id}:${status._hash || 'no-hash'}`).join('|'),
     onSelectLesson,
     audioPlayer
   ]);
 
-  // OPTIMIZADO: Memoizar módulos ordenados
+  // Memoizar módulos ordenados con validación
   const orderedModules = useMemo(() => {
-    return modules.filter(module => {
-      const moduleLessons = getLessonsForModule(module.id);
-      return moduleLessons.length > 0;
-    });
+    try {
+      return modules.filter(module => {
+        const moduleLessons = getLessonsForModule(module.id);
+        return moduleLessons.length > 0;
+      });
+    } catch (error) {
+      console.error('❌ Error filtering modules:', error);
+      return [];
+    }
   }, [modules, getLessonsForModule]);
 
   // Handle fallback summary creation
@@ -261,41 +286,52 @@ const LearningPath = React.memo(({
         <h2 className="text-2xl font-bold mb-6 text-center">Tu Ruta de Aprendizaje</h2>
         
         <div className="max-w-2xl mx-auto space-y-8">
-          {orderedModules.map((module) => {
-            const moduleLessons = getLessonsForModule(module.id);
-            
-            return (
-              <ModuleSection
-                key={module.id}
-                module={module}
-                moduleLessons={moduleLessons}
-                lessonStatusMap={lessonStatusMap}
-                getLessonClasses={getLessonClasses}
-                currentLessonId={currentLessonId}
-                isGloballyPlaying={isGloballyPlaying}
-                courseId={courseId}
-                lessonProgress={lessonProgress}
-                onLessonClick={handleLessonClick}
-                onProgressUpdate={onProgressUpdate}
-                onLessonComplete={onLessonComplete}
-                audioCurrentLessonId={audioPlayer.currentLessonId}
-                audioIsPlaying={audioPlayer.isPlaying}
-                audioCurrentTime={audioPlayer.currentTime}
-                audioDuration={audioPlayer.duration}
-                audioIsReady={audioPlayer.isReady}
-                audioError={audioPlayer.error}
-                getDisplayProgress={audioPlayer.getDisplayProgress}
-                onPlay={handleAudioPlay}
-                onPause={audioPlayer.pause}
-                onSeek={audioPlayer.seek}
-                onSkipBackward={audioPlayer.skipBackward}
-                onSkipForward={audioPlayer.skipForward}
-                onSetPlaybackRate={audioPlayer.setPlaybackRate}
-                onSetVolume={audioPlayer.setVolume}
-                onSetMuted={audioPlayer.setMuted}
-              />
-            );
-          })}
+          {orderedModules.length > 0 ? (
+            orderedModules.map((module) => {
+              const moduleLessons = getLessonsForModule(module.id);
+              
+              if (moduleLessons.length === 0) {
+                console.warn('⚠️ No lessons found for module:', module.title);
+                return null;
+              }
+              
+              return (
+                <ModuleSection
+                  key={module.id}
+                  module={module}
+                  moduleLessons={moduleLessons}
+                  lessonStatusMap={lessonStatusMap}
+                  getLessonClasses={getLessonClasses}
+                  currentLessonId={currentLessonId}
+                  isGloballyPlaying={isGloballyPlaying}
+                  courseId={courseId}
+                  lessonProgress={lessonProgress}
+                  onLessonClick={handleLessonClick}
+                  onProgressUpdate={onProgressUpdate}
+                  onLessonComplete={onLessonComplete}
+                  audioCurrentLessonId={audioPlayer.currentLessonId}
+                  audioIsPlaying={audioPlayer.isPlaying}
+                  audioCurrentTime={audioPlayer.currentTime}
+                  audioDuration={audioPlayer.duration}
+                  audioIsReady={audioPlayer.isReady}
+                  audioError={audioPlayer.error}
+                  getDisplayProgress={audioPlayer.getDisplayProgress}
+                  onPlay={handleAudioPlay}
+                  onPause={audioPlayer.pause}
+                  onSeek={audioPlayer.seek}
+                  onSkipBackward={audioPlayer.skipBackward}
+                  onSkipForward={audioPlayer.skipForward}
+                  onSetPlaybackRate={audioPlayer.setPlaybackRate}
+                  onSetVolume={audioPlayer.setVolume}
+                  onSetMuted={audioPlayer.setMuted}
+                />
+              );
+            })
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-500">No hay módulos disponibles en este curso.</p>
+            </div>
+          )}
           
           {/* Fallback Summary Button - only show if course is completed */}
           {isCourseCompleted && (
