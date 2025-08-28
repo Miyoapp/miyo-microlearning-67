@@ -42,7 +42,8 @@ const CourseMainContent: React.FC<CourseMainContentProps> = ({
   onLessonComplete
 }) => {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
+    {/* COMPACTO: Reducir gap en mobile */}
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-8">
       {/* Main Content - Full width on mobile */}
       <div className="lg:col-span-2">
         <CourseHeader
@@ -54,7 +55,8 @@ const CourseMainContent: React.FC<CourseMainContentProps> = ({
           onToggleSave={onToggleSave}
         />
 
-        <div className="relative mx-4 sm:mx-0">
+        {/* COMPACTO: Eliminar margen lateral en mobile */}
+        <div className="relative sm:mx-0">
           <CourseLearningPathSection
             podcast={podcast}
             currentLessonId={currentLesson?.id || null}

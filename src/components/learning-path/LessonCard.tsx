@@ -291,8 +291,8 @@ const LessonCard = React.memo(({
         "border-red-200 bg-red-50": audioError && isCurrent
       }
     )}>
-      {/* Main Card Content */}
-      <div className="p-4">
+      {/* Main Card Content - COMPACTO: Reducir padding */}
+      <div className="p-3 sm:p-4">
         {/* Audio element for current playing lesson */}
         {isCurrent && (
           <audio
@@ -307,15 +307,15 @@ const LessonCard = React.memo(({
           />
         )}
         
-        {/* Header with title and status */}
-        <div className="flex items-center justify-between mb-3">
+        {/* Header with title and status - COMPACTO: Reducir margen */}
+        <div className="flex items-center justify-between mb-2 sm:mb-3">
           <div className="flex items-center space-x-3">
-            {/* DEFINITIVE: Functional Status/Play Button */}
+            {/* DEFINITIVE: Functional Status/Play Button - COMPACTO: Reducir tamaño en mobile */}
             <button
               onClick={handlePlayPause}
               disabled={!canPlay || audioError}
               className={cn(
-                "flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200",
+                "flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full transition-all duration-200",
                 {
                   "bg-[#5e16ea] text-white hover:bg-[#4a11ba]": canPlay && !audioError,
                   "bg-gray-300 text-gray-500 cursor-not-allowed": !canPlay || audioError,
@@ -360,12 +360,12 @@ const LessonCard = React.memo(({
 
           {/* Duration and Notes Icon */}
           <div className="flex items-center gap-2">
-            {/* Notes Icon with Badge */}
+            {/* Notes Icon with Badge - COMPACTO: Reducir tamaño en mobile */}
             {canPlay && courseId && (
               <button
                 onClick={handleNotesToggle}
                 className={cn(
-                  "relative flex items-center justify-center w-8 h-8 rounded-full hover:scale-105 transition-all duration-200 shadow-sm hover:shadow-md",
+                  "relative flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full hover:scale-105 transition-all duration-200 shadow-sm hover:shadow-md",
                   showNotesPanel 
                     ? "bg-gradient-to-br from-yellow-500 to-orange-600" 
                     : "bg-gradient-to-br from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600"
@@ -395,9 +395,9 @@ const LessonCard = React.memo(({
           </div>
         </div>
 
-        {/* Audio Controls - Only show if can play and no error */}
+        {/* Audio Controls - Only show if can play and no error - COMPACTO: Reducir espaciado */}
         {canPlay && !audioError && (
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             {/* Progress Bar */}
             <div className="relative">
               <input

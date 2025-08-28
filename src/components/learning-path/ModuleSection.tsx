@@ -43,16 +43,17 @@ const ModuleSection = React.memo(({
   });
   
   return (
-    <div className="mb-8">
-      {/* Título del módulo */}
-      <div className="text-center mb-4">
+    {/* COMPACTO: Reducir margen inferior en mobile */}
+    <div className="mb-6 sm:mb-8">
+      {/* Título del módulo - COMPACTO: Reducir margen inferior */}
+      <div className="text-center mb-3 sm:mb-4">
         <h3 className="text-sm font-medium text-indigo-700 bg-indigo-50 inline-block py-2 px-4 rounded-full">
           {module.title}
         </h3>
       </div>
       
-      {/* Lecciones como cards */}
-      <div className="space-y-4">
+      {/* Lecciones como cards - COMPACTO: Reducir espaciado en mobile */}
+      <div className="space-y-3 sm:space-y-4">
         {moduleLessons.map((lesson, index) => {
           const status = lessonStatusMap.get(lesson.id);
           if (!status) return null;

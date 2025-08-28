@@ -21,7 +21,8 @@ const CourseLearningPathSection: React.FC<CourseLearningPathSectionProps> = ({
   onLessonComplete
 }) => {
   return (
-    <div id="learning-path-section" className="bg-white rounded-2xl shadow-sm p-6">
+    {/* COMPACTO: Reducir padding y usar border radius más compacto en mobile */}
+    <div id="learning-path-section" className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6">
       <LearningPath 
         lessons={podcast.lessons}
         modules={podcast.modules}

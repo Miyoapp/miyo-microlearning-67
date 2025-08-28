@@ -1,8 +1,9 @@
 
 import React from 'react';
-import { Podcast, Lesson } from '@/types';
+import { Lesson, Podcast } from '../../types';
 import CourseMainContent from './CourseMainContent';
 import CheckoutModal from './CheckoutModal';
+import { useCoursePurchases } from '@/hooks/useCoursePurchases';
 
 interface CourseAccessHandlerProps {
   podcast: Podcast;
@@ -24,7 +25,6 @@ interface CourseAccessHandlerProps {
   onLessonComplete: () => void;
   onProgressUpdate: (position: number) => void;
   onPurchaseComplete: () => void;
-  // Removed global audio control props as they're no longer needed
 }
 
 const CourseAccessHandler: React.FC<CourseAccessHandlerProps> = ({
@@ -48,6 +48,13 @@ const CourseAccessHandler: React.FC<CourseAccessHandlerProps> = ({
   onProgressUpdate,
   onPurchaseComplete
 }) => {
+  const { refetch } = useCoursePurchases();
+
+  const handlePurchaseComplete = () => {
+    refetch();
+    onPurchaseComplete();
+  };
+
   return (
     <>
       <CourseMainContent
@@ -68,18 +75,19 @@ const CourseAccessHandler: React.FC<CourseAccessHandlerProps> = ({
         onLessonComplete={onLessonComplete}
       />
 
-      {showCheckout && (
+      {/* Checkout Modal */}
+      {isPremium && (
         <CheckoutModal
           isOpen={showCheckout}
+          onClose={onCloseCheckout}
           course={{
             id: podcast.id,
             title: podcast.title,
             precio: podcast.precio || 0,
             imageUrl: podcast.imageUrl,
-            moneda: podcast.moneda
+            moneda: podcast.moneda || 'USD'
           }}
-          onClose={onCloseCheckout}
-          onPurchaseComplete={onPurchaseComplete}
+          onPurchaseComplete={handlePurchaseComplete}
         />
       )}
     </>
