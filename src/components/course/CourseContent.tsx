@@ -6,11 +6,11 @@ import CourseStats from './CourseStats';
 interface CourseContentProps {
   podcast: Podcast;
   currentLessonId: string | null;
-  isGloballyPlaying: boolean;
+  audioState: any; // Changed from isGloballyPlaying to audioState
   onSelectLesson: (lesson: Lesson, shouldAutoPlay?: boolean) => void;
 }
 
-const CourseContent = ({ podcast, currentLessonId, isGloballyPlaying, onSelectLesson }: CourseContentProps) => {
+const CourseContent = ({ podcast, currentLessonId, audioState, onSelectLesson }: CourseContentProps) => {
   return (
     <section className="py-4 px-4 sm:px-6 lg:px-8" id="learning-path">
       <div className="miyo-container">
@@ -21,7 +21,7 @@ const CourseContent = ({ podcast, currentLessonId, isGloballyPlaying, onSelectLe
               modules={podcast.modules}
               onSelectLesson={onSelectLesson}
               currentLessonId={currentLessonId}
-              isGloballyPlaying={isGloballyPlaying}
+              audioState={audioState}
               podcast={podcast}
             />
           </div>

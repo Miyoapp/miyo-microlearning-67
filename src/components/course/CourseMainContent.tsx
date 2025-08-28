@@ -15,7 +15,7 @@ interface CourseMainContentProps {
   isCompleted: boolean;
   isPremium: boolean;
   hasAccess: boolean;
-  isGloballyPlaying: boolean;
+  audioState: any; // Changed from isGloballyPlaying to audioState
   onStartLearning: () => void;
   onToggleSave: () => void;
   onSelectLesson: (lesson: Lesson) => void;
@@ -33,7 +33,7 @@ const CourseMainContent: React.FC<CourseMainContentProps> = ({
   isCompleted,
   isPremium,
   hasAccess,
-  isGloballyPlaying,
+  audioState,
   onStartLearning,
   onToggleSave,
   onSelectLesson,
@@ -58,7 +58,7 @@ const CourseMainContent: React.FC<CourseMainContentProps> = ({
           <CourseLearningPathSection
             podcast={podcast}
             currentLessonId={currentLesson?.id || null}
-            isGloballyPlaying={isGloballyPlaying}
+            audioState={audioState}
             onSelectLesson={onSelectLesson}
             onProgressUpdate={onProgressUpdate}
             onLessonComplete={onLessonComplete}
