@@ -63,7 +63,7 @@ const DashboardCourse = () => {
   // Use consolidated lessons hook
   const { 
     currentLesson, 
-    isPlaying, 
+    audioState, // Changed from isPlaying to audioState
     initializeCurrentLesson,
     handleSelectLesson, 
     handleTogglePlay, 
@@ -228,7 +228,7 @@ const DashboardCourse = () => {
               isCompleted={isCompleted}
               isPremium={isPremium}
               hasAccess={hasAccess}
-              isPlaying={isPlaying}
+              audioState={audioState}
               showCheckout={showCheckout}
               onStartLearning={handleStartLearning}
               onToggleSave={handleToggleSave}
