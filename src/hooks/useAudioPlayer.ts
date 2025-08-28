@@ -37,11 +37,11 @@ export function useAudioPlayer({ lessons = [], onLessonComplete, onProgressUpdat
     return lessonProgress.find(p => p.lesson_id === lessonId);
   }, [lessonProgress]);
 
-  // Calculate display progress for a lesson
-  const getDisplayProgress = useCallback((lessonId: string) => {
+  // Calculate display progress for a lesson - FIXED: Accept validDuration parameter
+  const getDisplayProgress = useCallback((lessonId: string, validDuration?: number) => {
     const savedProgress = getSavedProgress(lessonId);
     const lesson = lessons.find(l => l.id === lessonId);
-    const lessonDuration = lesson?.duracion || 0;
+    const lessonDuration = validDuration || lesson?.duracion || 0;
     
     // If this is the current lesson and it's playing, show real-time progress
     if (lessonId === state.currentLessonId && state.isPlaying) {

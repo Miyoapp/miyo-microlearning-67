@@ -50,6 +50,9 @@ const LearningPath = React.memo(({
   // Extract courseId from podcast
   const courseId = podcast?.id || null;
   
+  // SOLUCIÓN 3: Agregar estado de carga para evitar renderizado prematuro
+  const [isInitialized, setIsInitialized] = useState(false);
+  
   // Initialize audio player with lessons array
   const audioPlayer = useAudioPlayer({
     lessons,
@@ -90,6 +93,17 @@ const LearningPath = React.memo(({
   const courseProgress = userProgress.find(p => p.course_id === courseId);
   const isCourseCompleted = courseProgress?.is_completed && courseProgress?.progress_percentage === 100;
 
+  // SOLUCIÓN 3: Inicialización controlada
+  useEffect(() => {
+    if (lessons && lessons.length > 0 && modules && modules.length > 0) {
+      console.log('📚 LearningPath initialized with data:', {
+        lessonCount: lessons.length,
+        moduleCount: modules.length
+      });
+      setIsInitialized(true);
+    }
+  }, [lessons, modules]);
+
   // Check for existing summary
   useEffect(() => {
     if (courseId && isCourseCompleted) {
@@ -124,11 +138,29 @@ const LearningPath = React.memo(({
     lessonProgressCount: lessonProgress.length,
     isCourseCompleted,
     hasSummary,
+    isInitialized,
     audioPlayerState: {
       currentLessonId: audioPlayer.currentLessonId,
       isPlaying: audioPlayer.isPlaying
     }
   });
+
+  // SOLUCIÓN 3: Mostrar loading mientras se inicializa
+  if (!isInitialized) {
+    return (
+      <div className="py-3">
+        <h2 className="text-2xl font-bold mb-6 text-center">Tu Ruta de Aprendizaje</h2>
+        <div className="max-w-2xl mx-auto space-y-8">
+          <div className="flex items-center justify-center py-8">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5e16ea] mx-auto mb-2"></div>
+              <p className="text-gray-500 text-sm">Cargando lecciones...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // OPTIMIZADO: Memoizar función de agrupación con hash estable
   const getLessonsForModule = useCallback((moduleId: string) => {

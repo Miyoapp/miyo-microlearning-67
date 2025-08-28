@@ -4,7 +4,7 @@ import { useUserLessonProgress } from './useUserLessonProgress';
 import { useUserProgress } from './useUserProgress';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useLessonInitialization } from './consolidated-lessons/useLessonInitialization';
-import { useLessonPlayback } from './consolidated-lessons/useLessonPlayback';
+import React from 'react';
 
 export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (podcast: Podcast) => void) {
   const { user } = useAuth();
@@ -27,7 +27,7 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
   const hasUserMadeSelection = useRef(false);
   const hasAutoPositioned = useRef(false);
 
-  // Usar hooks especializados
+  // Usar hook especializado solo para inicialización (sin playback que cause conflictos)
   const {
     currentLesson,
     setCurrentLesson,
@@ -35,14 +35,15 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     initializeCurrentLesson
   } = useLessonInitialization(podcast, lessonProgress, userProgress, user, setPodcast);
 
-  const {
-    isPlaying,
-    setIsPlaying,
-    handleSelectLesson: handleSelectLessonFromPlayback,
-    handleTogglePlay,
-    handleProgressUpdate,
-    isAutoAdvanceAllowed
-  } = useLessonPlayback(podcast, currentLesson, userProgress, user, updateLessonPosition);
+  // Estados simplificados sin conflicto con useAudioPlayer
+  const [isPlaying, setIsPlaying] = React.useState(false);
+
+  // Auto-advance allowed logic (moved from removed useLessonPlayback)
+  const isAutoAdvanceAllowed = React.useMemo(() => {
+    if (!user || !podcast) return false;
+    // Simple auto-advance logic - can be expanded based on user preferences
+    return true;
+  }, [user, podcast]);
 
   // Inline lesson completion handling
   const handleLessonComplete = useCallback(() => {
@@ -105,6 +106,29 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     updateCourseProgress
   ]);
 
+  // Simplified progress update handler
+  const handleProgressUpdate = useCallback((position: number) => {
+    if (!currentLesson || !podcast || !user) return;
+    
+    console.log('🎯 Progress update:', {
+      lessonId: currentLesson.id,
+      position,
+      timestamp: new Date().toLocaleTimeString()
+    });
+    
+    updateLessonPosition(currentLesson.id, podcast.id, position);
+  }, [currentLesson, podcast, user, updateLessonPosition]);
+
+  // Simplified toggle play handler
+  const handleTogglePlay = useCallback(() => {
+    console.log('🎵 Toggle play:', { 
+      currentPlaying: isPlaying,
+      lesson: currentLesson?.title 
+    });
+    
+    setIsPlaying(!isPlaying);
+  }, [isPlaying]);
+
   // SIMPLIFIED: Remove complex audio handling logic, keep only lesson selection logic
   const handleSelectLesson = useCallback((lesson: any, shouldAutoPlay = false) => {
     console.log('🚀 CONSOLIDATED LESSONS handleSelectLesson:', {
@@ -123,16 +147,12 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     // Set the playing state (this is now mainly for UI state tracking)
     setIsPlaying(shouldAutoPlay);
     
-    // Handle the lesson change through playback hook
-    handleSelectLessonFromPlayback(lesson, shouldAutoPlay);
-    
     console.log('✅ CONSOLIDATED LESSONS - Lesson selection complete');
     
   }, [
     currentLesson?.id, 
     setCurrentLesson, 
-    setIsPlaying, 
-    handleSelectLessonFromPlayback
+    setIsPlaying
   ]);
 
   // CRÍTICO: Inicializar podcast cuando todos los datos estén disponibles
