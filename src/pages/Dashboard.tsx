@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
@@ -81,7 +82,7 @@ const Dashboard = () => {
           {/* Mobile-first course sections */}
           <div className="space-y-8 sm:space-y-12">
             <DashboardCourseSection
-              title="Continúa escuchando"
+              title="🎧 Continúa escuchando"
               courses={continueLearningCourses}
               showProgress={true}
               onPlayCourse={handlePlayCourse}
@@ -100,7 +101,7 @@ const Dashboard = () => {
             />
 
             <DashboardCourseSection
-              title="Cursos Premium"
+              title="👑 Cursos Premium"
               courses={premiumCourses}
               showProgress={false}
               onPlayCourse={handlePlayCourse}
@@ -115,3 +116,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
