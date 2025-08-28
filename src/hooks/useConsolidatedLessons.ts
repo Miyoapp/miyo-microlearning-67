@@ -106,36 +106,33 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     updateCourseProgress
   ]);
 
-  // DEFINITIVE FIX: Simplified lesson selection with clear logging
+  // DEFINITIVE FIX: Simplified lesson selection with immediate state updates
   const handleSelectLesson = useCallback((lesson: any, shouldAutoPlay = false) => {
-    console.log('🚀🚀🚀 DEFINITIVE handleSelectLesson:', {
+    console.log('🚀 DEFINITIVE handleSelectLesson:', {
       lessonTitle: lesson.title,
       shouldAutoPlay,
       currentLessonId: currentLesson?.id,
       isSameLesson: currentLesson?.id === lesson.id,
-      currentGlobalState: isPlaying,
+      currentPlayingState: isPlaying,
       timestamp: new Date().toLocaleTimeString()
     });
+    
+    // Mark user selection
+    hasUserMadeSelection.current = true;
     
     // Check if this is the same lesson
     const isSameLesson = currentLesson?.id === lesson.id;
     
     if (isSameLesson) {
       // SAME LESSON: Direct toggle of play state
-      console.log('🔄🔄🔄 SAME LESSON - Direct state toggle from', isPlaying, 'to', shouldAutoPlay);
-      
-      // Force re-render by calling setIsPlaying with explicit value
+      console.log('🔄 SAME LESSON - Toggling from', isPlaying, 'to', shouldAutoPlay);
       setIsPlaying(shouldAutoPlay);
-      
-      console.log('✅✅✅ SAME LESSON - State updated to:', shouldAutoPlay);
+      console.log('✅ SAME LESSON - State updated immediately');
       return;
     }
     
     // DIFFERENT LESSON: Full lesson change workflow
-    hasUserMadeSelection.current = true;
-    console.log('🔀🔀🔀 DIFFERENT LESSON - Full change workflow');
-    console.log('📍 Setting current lesson to:', lesson.title);
-    console.log('📍 Setting playing state to:', shouldAutoPlay);
+    console.log('🔀 DIFFERENT LESSON - Setting new lesson and state');
     
     // Set the new current lesson first
     setCurrentLesson(lesson);
@@ -146,7 +143,7 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     // Handle the lesson change through playback hook
     handleSelectLessonFromPlayback(lesson, shouldAutoPlay);
     
-    console.log('✅✅✅ DIFFERENT LESSON - Complete workflow finished');
+    console.log('✅ DIFFERENT LESSON - Complete workflow finished');
     
   }, [
     currentLesson?.id, 

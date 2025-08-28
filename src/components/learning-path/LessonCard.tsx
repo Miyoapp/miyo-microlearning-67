@@ -47,6 +47,7 @@ const LessonCard = React.memo(({
     isCurrent,
     propIsPlaying,
     canPlay,
+    isCompleted: savedProgress?.is_completed,
     timestamp: new Date().toLocaleTimeString()
   });
   
@@ -67,14 +68,13 @@ const LessonCard = React.memo(({
   const [audioError, setAudioError] = React.useState(false);
   const audioRef = React.useRef<HTMLAudioElement>(null);
 
-  // SIMPLIFIED: Direct play/pause handler
+  // DEFINITIVE FIX: Simplified play/pause handler with immediate response
   const handlePlayPause = () => {
-    console.log('🎵🎵🎵 LESSONCARD BUTTON CLICK:', {
+    console.log('🎵🎵🎵 DEFINITIVE PLAY/PAUSE CLICK:', {
       lessonTitle: lesson.title,
-      currentIsPlaying: propIsPlaying,
-      isCurrent,
+      currentState: propIsPlaying,
+      targetState: !propIsPlaying,
       canPlay,
-      action: propIsPlaying ? 'WILL_PAUSE' : 'WILL_PLAY',
       timestamp: new Date().toLocaleTimeString()
     });
     
@@ -83,7 +83,7 @@ const LessonCard = React.memo(({
       return;
     }
     
-    // Always call with opposite of current state
+    // CRITICAL: Call parent with new state immediately
     onLessonClick(lesson, !propIsPlaying);
   };
 
@@ -169,94 +169,38 @@ const LessonCard = React.memo(({
     setIsAudioReady(false);
   };
 
-  // DEFINITIVE FIX: Simplified and robust audio synchronization
+  // DEFINITIVE FIX: Completely rewritten audio sync - simple and robust
   React.useEffect(() => {
-    console.log('🔄 AUDIO SYNC EFFECT TRIGGERED:', {
+    console.log('🔄 SIMPLIFIED AUDIO SYNC:', {
       lessonTitle: lesson.title,
       isCurrent,
-      propIsPlaying,
-      hasAudioRef: !!audioRef.current,
-      isAudioReady,
-      audioError,
-      readyState: audioRef.current?.readyState,
-      paused: audioRef.current?.paused
+      shouldPlay: propIsPlaying,
+      hasAudio: !!audioRef.current,
+      isReady: isAudioReady,
+      hasError: audioError
     });
 
-    // Only sync audio if this is the current lesson
-    if (!isCurrent || !audioRef.current) {
-      console.log('⏭️ Skipping audio sync - not current lesson or no audio ref');
+    // Only sync if this is the current lesson and we have audio
+    if (!isCurrent || !audioRef.current || audioError) {
       return;
     }
 
     const audio = audioRef.current;
     
-    // Definitive sync function
-    const syncAudioState = async () => {
-      try {
-        console.log('🎵 SYNC AUDIO STATE:', {
-          lessonTitle: lesson.title,
-          shouldPlay: propIsPlaying,
-          currentlyPaused: audio.paused,
-          readyState: audio.readyState,
-          audioError
-        });
-
-        if (audioError) {
-          console.log('🚨 Audio has error, skipping sync');
-          return;
-        }
-
-        if (propIsPlaying) {
-          // Should be playing
-          if (audio.paused) {
-            console.log('▶️ STARTING PLAYBACK for:', lesson.title);
-            
-            // Ensure audio is ready
-            if (audio.readyState < 2) {
-              console.log('⏳ Audio not ready, waiting...');
-              await new Promise(resolve => {
-                const onCanPlay = () => {
-                  audio.removeEventListener('canplay', onCanPlay);
-                  resolve(void 0);
-                };
-                audio.addEventListener('canplay', onCanPlay);
-              });
-            }
-            
-            await audio.play();
-            console.log('✅ PLAYBACK STARTED for:', lesson.title);
-          } else {
-            console.log('🔄 Already playing:', lesson.title);
-          }
-        } else {
-          // Should be paused
-          if (!audio.paused) {
-            console.log('⏸️ PAUSING PLAYBACK for:', lesson.title);
-            audio.pause();
-            console.log('✅ PLAYBACK PAUSED for:', lesson.title);
-          } else {
-            console.log('🔄 Already paused:', lesson.title);
-          }
-        }
-      } catch (error) {
-        console.error('🚨 Audio sync error for', lesson.title, ':', error);
+    // SIMPLIFIED: Direct sync without complex promises or timeouts
+    if (propIsPlaying && audio.paused) {
+      console.log('▶️ STARTING PLAYBACK (simplified)');
+      audio.play().catch(error => {
+        console.error('🚨 Play failed:', error);
         setAudioError(true);
-        
-        // If play failed, update the global state to reflect reality
-        if (propIsPlaying && error.name === 'NotAllowedError') {
-          console.log('🚫 Play blocked by browser, updating state');
-          onLessonClick(lesson, false);
-        }
-      }
-    };
-
-    // Execute sync with a small delay to avoid race conditions
-    const timeoutId = setTimeout(syncAudioState, 50);
-
-    return () => {
-      clearTimeout(timeoutId);
-    };
-  }, [isCurrent, propIsPlaying, lesson.title, lesson.id, audioError]);
+        // Update parent state to reflect reality
+        onLessonClick(lesson, false);
+      });
+    } else if (!propIsPlaying && !audio.paused) {
+      console.log('⏸️ PAUSING PLAYBACK (simplified)');
+      audio.pause();
+    }
+  }, [isCurrent, propIsPlaying, lesson.id, audioError, isAudioReady]);
 
   // Fetch notes when lesson can play and courseId is available
   React.useEffect(() => {
@@ -291,13 +235,22 @@ const LessonCard = React.memo(({
   const [showSpeedDropdown, setShowSpeedDropdown] = React.useState(false);
   const [showVolumeControl, setShowVolumeControl] = React.useState(false);
 
-  // Simple duration and current time handling for all lessons
+  // DEFINITIVE FIX: Progress display logic for completed vs active lessons
   const validDuration = duration || lesson.duracion;
   
-  // Always show actual current time
-  const validCurrentTime = useMemo(() => {
-    return Math.min(currentTime, validDuration);
-  }, [currentTime, validDuration]);
+  // CRITICAL FIX: Show proper progress for completed lessons
+  const displayCurrentTime = useMemo(() => {
+    // If lesson is completed, always show full duration
+    if (savedProgress?.is_completed) {
+      console.log('📊 Completed lesson - showing full duration:', lesson.title);
+      return validDuration;
+    }
+    
+    // For active/incomplete lessons, show actual current time
+    const actualTime = Math.min(currentTime, validDuration);
+    console.log('📊 Active lesson - showing current time:', lesson.title, actualTime);
+    return actualTime;
+  }, [currentTime, validDuration, savedProgress?.is_completed, lesson.title]);
 
   // Handle seek change
   const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -428,7 +381,7 @@ const LessonCard = React.memo(({
               </button>
             )}
             
-            {/* Duration */}
+            {/* DEFINITIVE FIX: Duration display with proper completed lesson handling */}
             <div className={cn(
               "text-xs",
               {
@@ -437,7 +390,7 @@ const LessonCard = React.memo(({
                 "text-gray-400": !canPlay
               }
             )}>
-              {formatTime(validCurrentTime)} / {formatTime(validDuration)}
+              {formatTime(displayCurrentTime)} / {formatTime(validDuration)}
             </div>
           </div>
         </div>
@@ -451,11 +404,11 @@ const LessonCard = React.memo(({
                 type="range"
                 min={0}
                 max={validDuration}
-                value={validCurrentTime}
+                value={displayCurrentTime}
                 onChange={handleSeekChange}
                 className="w-full accent-[#5e16ea] h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer"
                 style={{
-                  background: `linear-gradient(to right, #5e16ea 0%, #5e16ea ${(validCurrentTime / validDuration) * 100}%, #e5e7eb ${(validCurrentTime / validDuration) * 100}%, #e5e7eb 100%)`
+                  background: `linear-gradient(to right, #5e16ea 0%, #5e16ea ${(displayCurrentTime / validDuration) * 100}%, #e5e7eb ${(displayCurrentTime / validDuration) * 100}%, #e5e7eb 100%)`
                 }}
               />
             </div>
