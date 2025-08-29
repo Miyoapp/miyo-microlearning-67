@@ -54,24 +54,7 @@ export function useCourseDataCore(courseId: string | undefined) {
         podcastData.lessons = updatedLessons;
         
         logDebugInfo('Course loaded successfully', { courseTitle: podcastData.title });
-        
-        // CORRECCIÓN CRÍTICA: Log inmediatamente antes y después de setPodcast
-        console.log('🔧 [useCourseDataCore] ABOUT TO SET PODCAST:', {
-          courseId,
-          podcastTitle: podcastData.title,
-          timestamp: new Date().toISOString()
-        });
-        
         setPodcast(podcastData);
-        
-        // CORRECCIÓN CRÍTICA: Verificar que el estado se estableció
-        console.log('🔧 [useCourseDataCore] PODCAST STATE SET - Immediate verification:', {
-          courseId,
-          podcastTitle: podcastData.title,
-          stateWasSet: true,
-          timestamp: new Date().toISOString()
-        });
-        
         setRetryCount(0);
       } else {
         const errorMsg = `No course data found for ID: ${courseId}`;

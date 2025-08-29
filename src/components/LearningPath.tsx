@@ -1,4 +1,3 @@
-
 import { useCallback, useMemo, useState, useEffect } from 'react';
 import { Lesson, Module } from '../types';
 import React from 'react';
@@ -20,79 +19,23 @@ interface LearningPathProps {
   lessons: Lesson[];
   modules: Module[];
   onSelectLesson: (lesson: Lesson, shouldAutoPlay?: boolean) => void;
+  currentLessonId: string | null;
+  isGloballyPlaying: boolean;
   onProgressUpdate?: (position: number) => void;
   onLessonComplete?: () => void;
   podcast?: any;
-  // UNIFIED AUDIO PROPS - single source of truth
-  audioCurrentLessonId: string | null;
-  audioIsPlaying: boolean;
-  audioCurrentTime: number;
-  audioDuration: number;
-  audioIsReady: boolean;
-  audioError: boolean;
-  getDisplayProgress: (lessonId: string, validDuration?: number) => number;
-  onPlay: (lesson: Lesson) => void;
-  onPause: () => void;
-  onSeek: (time: number) => void;
-  onSkipBackward: () => void;
-  onSkipForward: () => void;
-  onSetPlaybackRate: (rate: number) => void;
-  onSetVolume: (volume: number) => void;
-  onSetMuted: (muted: boolean) => void;
 }
 
 const LearningPath = React.memo(({ 
   lessons, 
   modules, 
   onSelectLesson, 
+  currentLessonId, 
+  isGloballyPlaying,
   onProgressUpdate,
   onLessonComplete,
-  podcast,
-  // UNIFIED AUDIO PROPS - use only these
-  audioCurrentLessonId,
-  audioIsPlaying,
-  audioCurrentTime,
-  audioDuration,
-  audioIsReady,
-  audioError,
-  getDisplayProgress,
-  onPlay,
-  onPause,
-  onSeek,
-  onSkipBackward,
-  onSkipForward,
-  onSetPlaybackRate,
-  onSetVolume,
-  onSetMuted
+  podcast
 }: LearningPathProps) => {
-  // Early validation
-  console.log('🛤️ LearningPath render validation:', {
-    hasLessons: !!lessons && lessons.length > 0,
-    hasModules: !!modules && modules.length > 0,
-    podcastId: podcast?.id,
-    audioCurrentLessonId,
-    audioIsPlaying,
-    timestamp: new Date().toLocaleTimeString()
-  });
-
-  // Early return si no hay datos básicos
-  if (!lessons || !modules || lessons.length === 0 || modules.length === 0) {
-    console.log('⚠️ LearningPath - Missing required data, showing loading...');
-    return (
-      <div className="py-3">
-        <h2 className="text-2xl font-bold mb-6 text-center">Tu Ruta de Aprendizaje</h2>
-        <div className="max-w-2xl mx-auto space-y-8">
-          <div className="flex items-center justify-center py-8">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5e16ea] mx-auto mb-2"></div>
-              <p className="text-gray-500 text-sm">Cargando lecciones...</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // Get user progress data for course completion detection
   const { userProgress, markCompletionModalShown } = useUserProgress();
   const { lessonProgress } = useUserLessonProgress();
@@ -106,7 +49,7 @@ const LearningPath = React.memo(({
   // Extract courseId from podcast
   const courseId = podcast?.id || null;
   
-  // Course completion functionality
+  // Course completion functionality - UPDATED: Pass markCompletionModalShown
   const {
     showCompletionModal,
     showSummaryModal,
@@ -120,7 +63,7 @@ const LearningPath = React.memo(({
     podcast,
     userProgress,
     lessonProgress,
-    markCompletionModalShown
+    markCompletionModalShown // NEW: Pass the function to mark modal as shown
   });
 
   // Check if course is completed
@@ -137,122 +80,95 @@ const LearningPath = React.memo(({
   const checkExistingSummary = async () => {
     if (!courseId) return;
     
-    try {
-      const hasExisting = await checkHasSummary();
-      setHasSummary(hasExisting);
-      
-      if (hasExisting) {
-        const summaries = await fetchSummaries(courseId);
-        if (summaries && summaries.length > 0) {
-          setExistingSummary(summaries[0]);
-        }
+    const hasExisting = await checkHasSummary();
+    setHasSummary(hasExisting);
+    
+    if (hasExisting) {
+      const summaries = await fetchSummaries(courseId);
+      if (summaries && summaries.length > 0) {
+        setExistingSummary(summaries[0]);
       }
-    } catch (error) {
-      console.error('❌ Error checking existing summary:', error);
     }
   };
 
-  // UNIFIED: Use only audioCurrentLessonId for all lesson status calculations
-  const lessonStatusMap = useLessonStatus(lessons, modules, audioCurrentLessonId);
+  // Use custom hooks for status and classes
+  const lessonStatusMap = useLessonStatus(lessons, modules, currentLessonId);
   const getLessonClasses = useLessonClasses(lessons, lessonStatusMap);
 
-  console.log('🛤️ LearningPath final render state:', {
+  console.log('🛤️ LearningPath render:', {
+    currentLessonId,
+    isGloballyPlaying,
     lessonCount: lessons.length,
     moduleCount: modules.length,
     courseId,
     lessonProgressCount: lessonProgress.length,
     isCourseCompleted,
-    hasSummary,
-    audioPlayerState: {
-      currentLessonId: audioCurrentLessonId,
-      isPlaying: audioIsPlaying,
-      error: audioError
-    }
+    hasSummary
   });
 
-  // Get lessons for module with validation
+  // OPTIMIZADO: Memoizar función de agrupación con hash estable
   const getLessonsForModule = useCallback((moduleId: string) => {
-    try {
-      const module = modules.find(m => m.id === moduleId);
-      if (!module) {
-        console.warn('⚠️ Module not found:', moduleId);
-        return [];
-      }
-      
-      return module.lessonIds
-        .map(lessonId => {
-          const lesson = lessons.find(lesson => lesson.id === lessonId);
-          if (!lesson) {
-            console.warn('⚠️ Lesson not found for ID:', lessonId);
-          }
-          return lesson;
-        })
-        .filter((lesson): lesson is Lesson => lesson !== undefined);
-    } catch (error) {
-      console.error('❌ Error getting lessons for module:', moduleId, error);
-      return [];
-    }
+    const module = modules.find(m => m.id === moduleId);
+    if (!module) return [];
+    
+    // Obtener lecciones en el orden definido por lessonIds del módulo
+    return module.lessonIds
+      .map(id => lessons.find(lesson => lesson.id === id))
+      .filter((lesson): lesson is Lesson => lesson !== undefined);
   }, [
+    // ESTABILIZADO: Hash más específico para evitar recálculos
     modules.map(m => `${m.id}:${m.lessonIds.join(',')}`).join('|'),
     lessons.map(l => l.id).join('|')
   ]);
 
-  // Handle lesson click with validation
+  // HANDLER DE CLICK CON LOGS ESPECÍFICOS
   const handleLessonClick = useCallback((lesson: Lesson, shouldAutoPlay = true) => {
-    console.log('🎯 LEARNING PATH - CLICK RECIBIDO:', {
+    console.log('🎯🎯🎯 LEARNING PATH - CLICK RECIBIDO:', {
       lessonTitle: lesson.title,
       shouldAutoPlay,
       timestamp: new Date().toLocaleTimeString()
     });
     
-    try {
-      const status = lessonStatusMap.get(lesson.id);
-      if (!status) {
-        console.log('🚫 LEARNING PATH - NO STATUS FOUND:', lesson.title);
-        return;
-      }
-      
-      const { canPlay, isCompleted, isLocked, isFirstInSequence } = status;
-      
-      console.log('🎯 LEARNING PATH - VALIDACIÓN CLICK:', {
+    const status = lessonStatusMap.get(lesson.id);
+    if (!status) {
+      console.log('🚫🚫🚫 LEARNING PATH - NO STATUS FOUND:', lesson.title);
+      return;
+    }
+    
+    const { canPlay, isCompleted, isLocked, isFirstInSequence } = status;
+    
+    console.log('🎯🎯🎯 LEARNING PATH - VALIDACIÓN CLICK:', {
+      lessonTitle: lesson.title,
+      canPlay,
+      isCompleted,
+      isLocked,
+      isFirstInSequence,
+      action: canPlay ? 'PERMITIR REPRODUCCIÓN' : 'BLOQUEAR'
+    });
+    
+    if (canPlay) {
+      console.log('✅✅✅ LEARNING PATH - ENVIANDO A onSelectLesson:', lesson.title);
+      onSelectLesson(lesson, shouldAutoPlay);
+      console.log('✅✅✅ LEARNING PATH - onSelectLesson LLAMADO EXITOSAMENTE:', lesson.title);
+    } else {
+      console.log('🚫🚫🚫 LEARNING PATH - LECCIÓN BLOQUEADA:', {
         lessonTitle: lesson.title,
-        canPlay,
-        isCompleted,
         isLocked,
-        isFirstInSequence,
-        action: canPlay ? 'PERMITIR REPRODUCCIÓN' : 'BLOQUEAR'
+        reason: 'lección anterior no completada'
       });
-      
-      if (canPlay) {
-        console.log('✅ LEARNING PATH - ENVIANDO A onSelectLesson:', lesson.title);
-        onSelectLesson(lesson, shouldAutoPlay);
-        console.log('✅ LEARNING PATH - onSelectLesson LLAMADO EXITOSAMENTE:', lesson.title);
-      } else {
-        console.log('🚫 LEARNING PATH - LECCIÓN BLOQUEADA:', {
-          lessonTitle: lesson.title,
-          isLocked,
-          reason: 'lección anterior no completada'
-        });
-      }
-    } catch (error) {
-      console.error('❌ Error handling lesson click:', error);
     }
   }, [
+    // ESTABILIZADO: Solo incluir referencias estables
     Array.from(lessonStatusMap.entries()).map(([id, status]) => `${id}:${status._hash || 'no-hash'}`).join('|'),
     onSelectLesson
   ]);
 
-  // Get ordered modules with validation
+  // OPTIMIZADO: Memoizar módulos ordenados
   const orderedModules = useMemo(() => {
-    try {
-      return modules.filter(module => {
-        const moduleLessons = getLessonsForModule(module.id);
-        return moduleLessons.length > 0;
-      });
-    } catch (error) {
-      console.error('❌ Error filtering modules:', error);
-      return [];
-    }
+    return modules.filter(module => {
+      const moduleLessons = getLessonsForModule(module.id);
+      return moduleLessons.length > 0;
+    });
   }, [modules, getLessonsForModule]);
 
   // Handle fallback summary creation
@@ -273,51 +189,26 @@ const LearningPath = React.memo(({
         <h2 className="text-2xl font-bold mb-6 text-center">Tu Ruta de Aprendizaje</h2>
         
         <div className="max-w-2xl mx-auto space-y-8">
-          {orderedModules.length > 0 ? (
-            orderedModules.map((module) => {
-              const moduleLessons = getLessonsForModule(module.id);
-              
-              if (moduleLessons.length === 0) {
-                console.warn('⚠️ No lessons found for module:', module.title);
-                return null;
-              }
-              
-              return (
-                <ModuleSection
-                  key={module.id}
-                  module={module}
-                  moduleLessons={moduleLessons}
-                  lessonStatusMap={lessonStatusMap}
-                  getLessonClasses={getLessonClasses}
-                  courseId={courseId}
-                  lessonProgress={lessonProgress}
-                  onLessonClick={handleLessonClick}
-                  onProgressUpdate={onProgressUpdate}
-                  onLessonComplete={onLessonComplete}
-                  // UNIFIED PROPS - pass only unified audio state
-                  audioCurrentLessonId={audioCurrentLessonId}
-                  audioIsPlaying={audioIsPlaying}
-                  audioCurrentTime={audioCurrentTime}
-                  audioDuration={audioDuration}
-                  audioIsReady={audioIsReady}
-                  audioError={audioError}
-                  getDisplayProgress={getDisplayProgress}
-                  onPlay={onPlay}
-                  onPause={onPause}
-                  onSeek={onSeek}
-                  onSkipBackward={onSkipBackward}
-                  onSkipForward={onSkipForward}
-                  onSetPlaybackRate={onSetPlaybackRate}
-                  onSetVolume={onSetVolume}
-                  onSetMuted={onSetMuted}
-                />
-              );
-            })
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-gray-500">No hay módulos disponibles en este curso.</p>
-            </div>
-          )}
+          {orderedModules.map((module) => {
+            const moduleLessons = getLessonsForModule(module.id);
+            
+            return (
+              <ModuleSection
+                key={module.id}
+                module={module}
+                moduleLessons={moduleLessons}
+                lessonStatusMap={lessonStatusMap}
+                getLessonClasses={getLessonClasses}
+                currentLessonId={currentLessonId}
+                isGloballyPlaying={isGloballyPlaying}
+                courseId={courseId}
+                lessonProgress={lessonProgress}
+                onLessonClick={handleLessonClick}
+                onProgressUpdate={onProgressUpdate}
+                onLessonComplete={onLessonComplete}
+              />
+            );
+          })}
           
           {/* Fallback Summary Button - only show if course is completed */}
           {isCourseCompleted && (

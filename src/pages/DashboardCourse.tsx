@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
@@ -11,7 +12,6 @@ import CourseLoadingSkeleton from '@/components/course/CourseLoadingSkeleton';
 import CourseErrorState from '@/components/course/CourseErrorState';
 import CourseNotFoundState from '@/components/course/CourseNotFoundState';
 import CourseAccessHandler from '@/components/course/CourseAccessHandler';
-import CourseErrorBoundary from '@/components/course/CourseErrorBoundary';
 import MetaTags from '@/components/MetaTags';
 import { NotesProvider } from '@/contexts/NotesContext';
 
@@ -21,45 +21,14 @@ const DashboardCourse = () => {
   const { userProgress, loading: progressLoading, refetch, startCourse, toggleSaveCourse } = useUserProgress();
   const [showCheckout, setShowCheckout] = useState(false);
   
-  // Render counter for debugging
-  const renderCount = useRef(0);
-  renderCount.current += 1;
-  
-  // CRÍTICO: useEffect para detectar cambios en podcast desde DashboardCourse
-  useEffect(() => {
-    console.log('🎭 [DashboardCourse] PODCAST STATE CHANGED IN COMPONENT:', {
-      courseId,
-      podcastExists: !!podcast,
-      podcastTitle: podcast?.title,
-      renderCount: renderCount.current,
-      timestamp: new Date().toISOString(),
-      componentReRenderWorking: !!podcast ? 'YES - Component re-rendered with podcast!' : 'NO - Still no podcast in component'
-    });
-  }, [podcast]);
-
-  // CRÍTICO: useEffect para detectar cambios en isLoading desde DashboardCourse
-  useEffect(() => {
-    console.log('🎭 [DashboardCourse] LOADING STATE CHANGED IN COMPONENT:', {
-      courseId,
-      courseLoading,
-      podcastExists: !!podcast,
-      renderCount: renderCount.current,
-      timestamp: new Date().toISOString()
-    });
-  }, [courseLoading]);
-
-  // ENHANCED STABLE REFERENCE with timeout-based cleanup
+  // ENHANCED STABLE REFERENCE: Keep last valid podcast with timeout-based cleanup
   const lastValidPodcast = useRef(podcast);
   const podcastClearTimeout = useRef<NodeJS.Timeout | null>(null);
   
-  // STEP 3: Add fallback safety check
-  const fallbackAttempted = useRef(false);
-  
-  // Track component lifecycle for debugging
+  // Track component lifecycle for subscription debugging
   useEffect(() => {
     console.log('🎭 DASHBOARD COURSE: Component mounted/updated', {
       courseId,
-      renderCount: renderCount.current,
       timestamp: new Date().toISOString(),
       documentVisibilityState: document.visibilityState
     });
@@ -67,75 +36,40 @@ const DashboardCourse = () => {
     return () => {
       console.log('🎭 DASHBOARD COURSE: Component cleanup initiated', {
         courseId,
-        renderCount: renderCount.current,
         timestamp: new Date().toISOString()
       });
     };
   }, [courseId]);
-
-  // STEP 3: Fallback safety mechanism
-  useEffect(() => {
-    if (courseId && !podcast && !courseLoading && !fallbackAttempted.current) {
-      console.log('🚨 [DashboardCourse] FALLBACK TRIGGERED - Force loading course:', {
-        courseId,
-        podcastExists: !!podcast,
-        isLoading: courseLoading,
-        renderCount: renderCount.current,
-        timestamp: new Date().toISOString()
-      });
-      
-      fallbackAttempted.current = true;
-      retryCourse();
-    }
-  }, [courseId, podcast, courseLoading, retryCourse]);
-
-  // Reset fallback attempt when courseId changes
-  useEffect(() => {
-    fallbackAttempted.current = false;
-  }, [courseId]);
   
   if (podcast) {
     lastValidPodcast.current = podcast;
+    // Clear any pending timeout to clear the reference
     if (podcastClearTimeout.current) {
       clearTimeout(podcastClearTimeout.current);
       podcastClearTimeout.current = null;
     }
   } else if (lastValidPodcast.current && !podcastClearTimeout.current) {
+    // Only start timeout if we had valid data and no timeout is running
     podcastClearTimeout.current = setTimeout(() => {
       console.log('🕐 TIMEOUT: Clearing stable podcast reference after extended period without data');
       lastValidPodcast.current = null;
       podcastClearTimeout.current = null;
-    }, 30000);
+    }, 30000); // 30 second timeout to prevent permanent stale data
   }
   
   // Course access and premium status
   const { isPremium, hasAccess, isLoading: accessLoading, error: accessError, refetchPurchases } = useCourseAccess(podcast);
   
-  // UNIFIED: Use consolidated lessons hook with single source of truth
+  // Use consolidated lessons hook
   const { 
     currentLesson, 
+    isPlaying, 
     initializeCurrentLesson,
     handleSelectLesson, 
     handleTogglePlay, 
     handleLessonComplete,
     handleProgressUpdate,
-    initializePodcastWithProgress,
-    // UNIFIED AUDIO PLAYER STATE - single naming convention
-    audioCurrentLessonId,
-    audioIsPlaying,
-    audioCurrentTime,
-    audioDuration,
-    audioIsReady,
-    audioError,
-    getDisplayProgress,
-    onPlay,
-    onPause,
-    onSeek,
-    onSkipBackward,
-    onSkipForward,
-    onSetPlaybackRate,
-    onSetVolume,
-    onSetMuted
+    initializePodcastWithProgress
   } = useConsolidatedLessons(podcast, setPodcast);
   
   // Set up realtime sync
@@ -153,35 +87,15 @@ const DashboardCourse = () => {
   const isCompleted = courseProgress?.is_completed || false;
   const isReviewMode = isCompleted && progressPercentage === 100;
 
-  // POST-REFACTOR DEBUG: Verificar valores críticos
-  console.log('🔍 POST-REFACTOR DEBUG - DashboardCourse Values:', {
-    courseId,
-    podcast: !!podcast,
-    podcastType: podcast?.tipo_curso,
-    userProgressCount: userProgress.length,
-    courseProgress: !!courseProgress,
-    hasStartedCalc: hasStarted,
-    isPremiumCalc: isPremium,
-    hasAccessCalc: hasAccess,
-    currentLessonId: currentLesson?.id,
-    audioCurrentLessonId,
-    audioIsPlaying,
-    audioIsReady,
-    fallbackAttempted: fallbackAttempted.current,
-    renderCount: renderCount.current,
-    componentState: !!podcast ? 'HAS_PODCAST_DATA' : 'NO_PODCAST_DATA'
-  });
-
-  // UNIFIED: Always prefer current, with stable fallback
+  // DEFINITIVE DISPLAY PODCAST: Always prefer current, with stable fallback
   const displayPodcast = podcast || lastValidPodcast.current;
 
-  // ENHANCED LOGGING: Track all state for debugging
-  console.log('🎭 UNIFIED DASHBOARD COURSE STATE:', {
+  // TAB SWITCH DETECTION: Enhanced logging for realtime subscription tracking
+  console.log('🎭 TAB SWITCH & REALTIME DIAGNOSTIC - DASHBOARD COURSE STATE:', {
     timestamp: new Date().toISOString(),
     documentHidden: document.hidden,
     documentVisibilityState: document.visibilityState,
     courseId,
-    renderCount: renderCount.current,
     dataStates: {
       courseLoading,
       progressLoading,
@@ -190,30 +104,38 @@ const DashboardCourse = () => {
       hasLastValidPodcast: !!lastValidPodcast.current,
       hasDisplayPodcast: !!displayPodcast,
       userProgressCount: userProgress.length,
-      timeoutActive: !!podcastClearTimeout.current,
-      fallbackAttempted: fallbackAttempted.current
+      timeoutActive: !!podcastClearTimeout.current
     },
-    unifiedAudioStates: {
-      audioCurrentLessonId,
-      audioIsPlaying,
-      audioError,
-      audioIsReady
+    realtimeInfo: {
+      componentsWithSubscriptions: ['useCoursePurchases', 'useRealtimeProgress', 'useLessonProgressData'],
+      expectedSubscriptionCount: 3,
+      tabSwitchSafe: 'PROTECTED_BY_SUBSCRIPTION_MANAGER'
+    },
+    renderDecision: {
+      shouldShowContent: !!displayPodcast,
+      hasError: !!(courseError || accessError),
+      isLoadingWithoutData: !displayPodcast && (courseLoading || progressLoading),
+      stableReferenceProtection: !!lastValidPodcast.current && !podcast
     }
   });
 
-  // SIMPLIFIED LOADING LOGIC
+  // SIMPLIFIED LOADING LOGIC: Only show loading if we truly have no data
   const isActuallyLoading = !displayPodcast && (courseLoading || progressLoading);
+  
+  // Error handling
   const hasError = courseError || accessError;
+
+  // DEFINITIVE RENDER GUARD: Always show content if we have valid data
   const shouldShowContent = !!displayPodcast;
 
-  console.log('🔒 FINAL RENDER DECISION:', {
+  console.log('🔒 FINAL RENDER DECISION (REALTIME PROTECTED):', {
     shouldShowContent,
     isActuallyLoading,
     hasError: !!hasError,
     displayPodcastValid: !!displayPodcast,
     courseTitle: displayPodcast?.title,
-    renderCount: renderCount.current,
-    guaranteedRender: shouldShowContent ? 'YES - CONTENT WILL RENDER' : 'NO - FALLBACK STATE'
+    guaranteedRender: shouldShowContent ? 'YES - CONTENT WILL RENDER' : 'NO - FALLBACK STATE',
+    realtimeSubscriptionProtection: 'ACTIVE'
   });
 
   const handleStartLearning = async () => {
@@ -248,18 +170,19 @@ const DashboardCourse = () => {
   };
 
   const handleLessonSelect = (lesson: any) => {
+    // Check if user has access to this lesson
     if (isPremium && !hasAccess) {
       console.log('🔒 Lesson access denied - showing checkout');
       setShowCheckout(true);
       return;
     }
     
+    // Use manual selection flag to prevent auto-play interference
     handleSelectLesson(lesson, true);
   };
 
   const handleRetry = () => {
     console.log('🔄 Manual retry triggered from UI');
-    fallbackAttempted.current = false; // Reset fallback for manual retry
     retryCourse();
     if (accessError) {
       refetchPurchases();
@@ -270,103 +193,83 @@ const DashboardCourse = () => {
     window.history.back();
   };
 
-  // PRIORITY 1: Show content if we have valid data
-  if (displayPodcast) {
-    console.log('✅ RENDERING CONTENT - Guaranteed non-blank screen:', {
+  // PRIORITY 1: Show content if we have valid data (NEVER BLANK SCREEN)
+  if (shouldShowContent) {
+    console.log('✅ RENDERING CONTENT - Guaranteed non-blank screen with realtime protection:', {
       courseTitle: displayPodcast.title,
       isCurrentData: !!podcast,
       isStableReference: !podcast && !!lastValidPodcast.current,
       hasUserProgress: userProgress.length > 0,
       courseProgress: !!courseProgress,
-      renderCount: renderCount.current
+      renderStrategy: 'CONTENT_PRIORITY',
+      realtimeProtection: 'SUBSCRIPTION_MANAGER_ACTIVE'
     });
 
     return (
       <DashboardLayout>
-        <CourseErrorBoundary>
-          <NotesProvider>
-            {/* Dynamic Meta Tags for Course */}
-            <MetaTags
-              title={`${displayPodcast.title} - Miyo`}
-              description={displayPodcast.description}
-              image={displayPodcast.imageUrl}
-              url={`${window.location.origin}/dashboard/course/${courseId}`}
-            />
+        <NotesProvider>
+          {/* Dynamic Meta Tags for Course */}
+          <MetaTags
+            title={`${displayPodcast.title} - Miyo`}
+            description={displayPodcast.description}
+            image={displayPodcast.imageUrl}
+            url={`${window.location.origin}/dashboard/course/${courseId}`}
+          />
+          
+          <div className="max-w-7xl mx-auto pb-8">
+            <CoursePageHeader isReviewMode={isReviewMode} />
             
-            <div className="max-w-7xl mx-auto pb-8">
-              <CoursePageHeader isReviewMode={isReviewMode} />
-              
-              <CourseAccessHandler
-                podcast={displayPodcast}
-                currentLesson={currentLesson}
-                hasStarted={hasStarted}
-                isSaved={isSaved}
-                progressPercentage={progressPercentage}
-                isCompleted={isCompleted}
-                isPremium={isPremium}
-                hasAccess={hasAccess}
-                showCheckout={showCheckout}
-                onStartLearning={handleStartLearning}
-                onToggleSave={handleToggleSave}
-                onSelectLesson={handleLessonSelect}
-                onShowCheckout={() => setShowCheckout(true)}
-                onCloseCheckout={() => setShowCheckout(false)}
-                onTogglePlay={handleTogglePlay}
-                onLessonComplete={handleLessonComplete}
-                onProgressUpdate={handleProgressUpdate}
-                onPurchaseComplete={handlePurchaseComplete}
-                // UNIFIED AUDIO PROPS - single source of truth
-                audioCurrentLessonId={audioCurrentLessonId}
-                audioIsPlaying={audioIsPlaying}
-                audioCurrentTime={audioCurrentTime}
-                audioDuration={audioDuration}
-                audioIsReady={audioIsReady}
-                audioError={audioError}
-                getDisplayProgress={getDisplayProgress}
-                onPlay={onPlay}
-                onPause={onPause}
-                onSeek={onSeek}
-                onSkipBackward={onSkipBackward}
-                onSkipForward={onSkipForward}
-                onSetPlaybackRate={onSetPlaybackRate}
-                onSetVolume={onSetVolume}
-                onSetMuted={onSetMuted}
-              />
-            </div>
-          </NotesProvider>
-        </CourseErrorBoundary>
+            <CourseAccessHandler
+              podcast={displayPodcast}
+              currentLesson={currentLesson}
+              hasStarted={hasStarted}
+              isSaved={isSaved}
+              progressPercentage={progressPercentage}
+              isCompleted={isCompleted}
+              isPremium={isPremium}
+              hasAccess={hasAccess}
+              isPlaying={isPlaying}
+              showCheckout={showCheckout}
+              onStartLearning={handleStartLearning}
+              onToggleSave={handleToggleSave}
+              onSelectLesson={handleLessonSelect}
+              onShowCheckout={() => setShowCheckout(true)}
+              onCloseCheckout={() => setShowCheckout(false)}
+              onTogglePlay={handleTogglePlay}
+              onLessonComplete={handleLessonComplete}
+              onProgressUpdate={handleProgressUpdate}
+              onPurchaseComplete={handlePurchaseComplete}
+            />
+          </div>
+        </NotesProvider>
       </DashboardLayout>
     );
   }
 
   // PRIORITY 2: Show error state only if we have an error AND no content
   if (hasError && !shouldShowContent) {
-    console.log('❌ Showing error state:', { courseError, accessError, hasValidContent: false, renderCount: renderCount.current });
+    console.log('❌ Showing error state:', { courseError, accessError, hasValidContent: false });
     return (
       <DashboardLayout>
-        <CourseErrorBoundary>
-          <CourseErrorState
-            error={courseError || accessError || 'Ha ocurrido un error inesperado.'}
-            onRetry={handleRetry}
-            onGoBack={handleGoBack}
-          />
-        </CourseErrorBoundary>
+        <CourseErrorState
+          error={courseError || accessError || 'Ha ocurrido un error inesperado.'}
+          onRetry={handleRetry}
+          onGoBack={handleGoBack}
+        />
       </DashboardLayout>
     );
   }
 
   // PRIORITY 3: Show course not found only if we confirmed no data exists
   if (!isActuallyLoading && !shouldShowContent) {
-    console.log('📭 Showing course not found state', { renderCount: renderCount.current });
+    console.log('📭 Showing course not found state');
     return (
       <DashboardLayout>
-        <CourseErrorBoundary>
-          <CourseNotFoundState
-            courseId={courseId}
-            onRetry={handleRetry}
-            onGoBack={handleGoBack}
-          />
-        </CourseErrorBoundary>
+        <CourseNotFoundState
+          courseId={courseId}
+          onRetry={handleRetry}
+          onGoBack={handleGoBack}
+        />
       </DashboardLayout>
     );
   }
@@ -374,14 +277,11 @@ const DashboardCourse = () => {
   // PRIORITY 4: Show loading only as last resort
   console.log('🔄 Showing loading state (last resort):', { 
     isActuallyLoading, 
-    reason: 'no valid data available and still loading',
-    renderCount: renderCount.current
+    reason: 'no valid data available and still loading'
   });
   return (
     <DashboardLayout>
-      <CourseErrorBoundary>
-        <CourseLoadingSkeleton loadingMessage="Cargando curso..." />
-      </CourseErrorBoundary>
+      <CourseLoadingSkeleton loadingMessage="Cargando curso..." />
     </DashboardLayout>
   );
 };
