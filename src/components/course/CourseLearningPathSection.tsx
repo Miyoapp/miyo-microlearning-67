@@ -57,6 +57,36 @@ const CourseLearningPathSection: React.FC<CourseLearningPathSectionProps> = ({
     audioIsPlaying
   });
 
+  // POST-REFACTOR DEBUG: Verificar datos críticos para renderizado
+  console.log('🔍 POST-REFACTOR DEBUG - CourseLearningPathSection:', {
+    podcastValid: !!podcast,
+    lessonsCount: podcast?.lessons?.length || 0,
+    modulesCount: podcast?.modules?.length || 0,
+    audioCurrentLessonId,
+    audioIsPlaying,
+    audioIsReady,
+    audioError,
+    hasValidData: !!(podcast?.lessons?.length && podcast?.modules?.length)
+  });
+
+  // EARLY RETURN CHECK: Verificar si hay early returns problemáticos
+  if (!podcast) {
+    console.log('❌ CourseLearningPathSection: No podcast data - returning null');
+    return null;
+  }
+
+  if (!podcast.lessons || podcast.lessons.length === 0) {
+    console.log('❌ CourseLearningPathSection: No lessons available - returning null');
+    return null;
+  }
+
+  if (!podcast.modules || podcast.modules.length === 0) {
+    console.log('❌ CourseLearningPathSection: No modules available - returning null');
+    return null;
+  }
+
+  console.log('✅ CourseLearningPathSection: All validations passed - rendering LearningPath');
+
   return (
     <div id="learning-path-section" className="bg-white rounded-2xl shadow-sm p-6">
       <LearningPathErrorBoundary>

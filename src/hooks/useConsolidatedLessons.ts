@@ -1,4 +1,3 @@
-
 import { useEffect, useCallback, useRef } from 'react';
 import { Podcast } from '@/types';
 import { useUserLessonProgress } from './useUserLessonProgress';
@@ -35,6 +34,17 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
     initializeCurrentLesson
   } = useLessonInitialization(podcast, lessonProgress, userProgress, user, setPodcast);
 
+  // POST-REFACTOR DEBUG: Verificar inicialización del hook
+  console.log('🔍 POST-REFACTOR DEBUG - useConsolidatedLessons:', {
+    podcastId: podcast?.id,
+    userId: user?.id,
+    currentLessonId: currentLesson?.id,
+    hasInitialized: hasInitialized.current,
+    lessonProgressCount: lessonProgress?.length || 0,
+    userProgressCount: userProgress?.length || 0,
+    audioPlayerInitialized: !!(podcast?.lessons?.length)
+  });
+
   // Initialize audio player with lessons
   const audioPlayer = useAudioPlayer({
     lessons: podcast?.lessons || [],
@@ -50,6 +60,15 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
         handleProgressUpdate(position);
       }
     }
+  });
+
+  // POST-REFACTOR DEBUG: Verificar estado del audio player
+  console.log('🎵 POST-REFACTOR DEBUG - Audio Player State:', {
+    currentLessonId: audioPlayer.currentLessonId,
+    isPlaying: audioPlayer.isPlaying,
+    isReady: audioPlayer.isReady,
+    error: audioPlayer.error,
+    lessonsAvailable: podcast?.lessons?.length || 0
   });
 
   // Lesson completion handler
@@ -174,21 +193,37 @@ export function useConsolidatedLessons(podcast: Podcast | null, setPodcast: (pod
       userProgress !== undefined && 
       !hasInitialized.current
     ) {
-      console.log('📊 Initializing podcast with progress...');
+      console.log('📊 POST-REFACTOR: Initializing podcast with progress...', {
+        podcastId: podcast.id,
+        userId: user.id,
+        lessonProgressLength: lessonProgress.length,
+        userProgressLength: userProgress.length
+      });
+      
       try {
         initializePodcastWithProgress();
         
         // Auto-position current lesson if no lesson selected
         if (!currentLesson) {
           setTimeout(() => {
+            console.log('📊 POST-REFACTOR: Auto-positioning current lesson...');
             initializeCurrentLesson();
           }, 100); // Small delay to ensure state is set
         }
         
         hasInitialized.current = true;
+        console.log('✅ POST-REFACTOR: Initialization completed successfully');
       } catch (error) {
-        console.error('❌ Error initializing podcast:', error);
+        console.error('❌ POST-REFACTOR: Error initializing podcast:', error);
       }
+    } else {
+      console.log('⏳ POST-REFACTOR: Waiting for initialization conditions:', {
+        hasPodcast: !!podcast,
+        hasUser: !!user,
+        lessonProgressReady: lessonProgress !== undefined,
+        userProgressReady: userProgress !== undefined,
+        alreadyInitialized: hasInitialized.current
+      });
     }
   }, [
     podcast?.id, 

@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
@@ -100,6 +99,22 @@ const DashboardCourse = () => {
   const progressPercentage = courseProgress?.progress_percentage || 0;
   const isCompleted = courseProgress?.is_completed || false;
   const isReviewMode = isCompleted && progressPercentage === 100;
+
+  // POST-REFACTOR DEBUG: Verificar valores críticos
+  console.log('🔍 POST-REFACTOR DEBUG - DashboardCourse Values:', {
+    courseId,
+    podcast: !!podcast,
+    podcastType: podcast?.tipo_curso,
+    userProgressCount: userProgress.length,
+    courseProgress: !!courseProgress,
+    hasStartedCalc: hasStarted,
+    isPremiumCalc: isPremium,
+    hasAccessCalc: hasAccess,
+    currentLessonId: currentLesson?.id,
+    audioCurrentLessonId,
+    audioIsPlaying,
+    audioIsReady
+  });
 
   // UNIFIED: Always prefer current, with stable fallback
   const displayPodcast = podcast || lastValidPodcast.current;
