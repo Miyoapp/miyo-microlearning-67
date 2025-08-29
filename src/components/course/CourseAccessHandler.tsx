@@ -89,36 +89,9 @@ const CourseAccessHandler = ({
 
   return (
     <>
-      {/* Course Hero Section */}
+      {/* Course Hero Section - Remove currentLesson prop */}
       <CourseHero
         podcast={podcast}
-        currentLesson={currentLesson}
-        hasStarted={hasStarted}
-        isSaved={isSaved}
-        progressPercentage={progressPercentage}
-        isCompleted={isCompleted}
-        isPremium={isPremium}
-        hasAccess={hasAccess}
-        onStartLearning={onStartLearning}
-        onToggleSave={onToggleSave}
-        onShowCheckout={onShowCheckout}
-        onTogglePlay={onTogglePlay}
-        // UNIFIED AUDIO PROPS
-        audioCurrentLessonId={audioCurrentLessonId}
-        audioIsPlaying={audioIsPlaying}
-        audioCurrentTime={audioCurrentTime}
-        audioDuration={audioDuration}
-        audioIsReady={audioIsReady}
-        audioError={audioError}
-        getDisplayProgress={getDisplayProgress}
-        onPlay={onPlay}
-        onPause={onPause}
-        onSeek={onSeek}
-        onSkipBackward={onSkipBackward}
-        onSkipForward={onSkipForward}
-        onSetPlaybackRate={onSetPlaybackRate}
-        onSetVolume={onSetVolume}
-        onSetMuted={onSetMuted}
       />
 
       {/* Learning Path Section - Only show if course has started */}
@@ -149,11 +122,17 @@ const CourseAccessHandler = ({
         />
       )}
 
-      {/* Checkout Modal */}
+      {/* Checkout Modal - Handle optional precio */}
       <CheckoutModal
         isOpen={showCheckout}
         onClose={onCloseCheckout}
-        course={podcast}
+        course={{
+          id: podcast.id,
+          title: podcast.title,
+          precio: podcast.precio || 0,
+          imageUrl: podcast.imageUrl,
+          moneda: podcast.moneda
+        }}
         onPurchaseComplete={onPurchaseComplete}
       />
     </>

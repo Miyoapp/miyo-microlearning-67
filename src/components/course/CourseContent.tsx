@@ -1,17 +1,15 @@
-
 import { Podcast, Lesson } from '../../types';
 import LearningPath from '../LearningPath';
 import CourseStats from './CourseStats';
 
 interface CourseContentProps {
   podcast: Podcast;
-  currentLessonId: string | null;
+  audioCurrentLessonId: string | null;
   isGloballyPlaying: boolean;
   onSelectLesson: (lesson: Lesson, shouldAutoPlay?: boolean) => void;
   onProgressUpdate?: (position: number) => void;
   onLessonComplete?: () => void;
   // Audio player props from consolidated hook
-  audioCurrentLessonId: string | null;
   audioIsPlaying: boolean;
   audioCurrentTime: number;
   audioDuration: number;
@@ -30,13 +28,12 @@ interface CourseContentProps {
 
 const CourseContent = ({ 
   podcast, 
-  currentLessonId, 
+  audioCurrentLessonId, 
   isGloballyPlaying, 
   onSelectLesson,
   onProgressUpdate,
   onLessonComplete,
   // Audio player props
-  audioCurrentLessonId,
   audioIsPlaying,
   audioCurrentTime,
   audioDuration,
@@ -54,11 +51,10 @@ const CourseContent = ({
 }: CourseContentProps) => {
   console.log('🏗️ CourseContent render:', {
     podcastTitle: podcast.title,
-    currentLessonId,
+    audioCurrentLessonId,
     isGloballyPlaying,
     hasLessons: podcast.lessons?.length > 0,
     hasModules: podcast.modules?.length > 0,
-    audioCurrentLessonId,
     audioIsPlaying
   });
 
@@ -103,12 +99,11 @@ const CourseContent = ({
               lessons={podcast.lessons}
               modules={podcast.modules}
               onSelectLesson={onSelectLesson}
-              currentLessonId={currentLessonId}
+              audioCurrentLessonId={audioCurrentLessonId}
               isGloballyPlaying={isGloballyPlaying}
               onProgressUpdate={onProgressUpdate}
               onLessonComplete={onLessonComplete}
               podcast={podcast}
-              audioCurrentLessonId={audioCurrentLessonId}
               audioIsPlaying={audioIsPlaying}
               audioCurrentTime={audioCurrentTime}
               audioDuration={audioDuration}

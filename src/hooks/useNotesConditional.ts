@@ -31,5 +31,13 @@ export function useNotesConditional(
     };
   }
 
-  return notesHook;
+  return {
+    notes: notesHook.notes,
+    addNote: notesHook.addNote,
+    updateNote: notesHook.updateNote,
+    deleteNote: notesHook.deleteNote,
+    fetchNotes: async () => {
+      notesHook.fetchNotes();
+    }
+  };
 }
