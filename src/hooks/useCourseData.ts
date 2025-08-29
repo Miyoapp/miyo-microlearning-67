@@ -14,6 +14,17 @@ export function useCourseData(courseId: string | undefined) {
     logDebugInfo
   } = useCourseDataCore(courseId);
 
+  // STEP 1 DEBUG: Verify podcast propagation
+  console.log('🔍 [useCourseData] State propagation check:', {
+    courseId,
+    podcastExists: !!podcast,
+    podcastTitle: podcast?.title,
+    isLoading,
+    error,
+    retryCount,
+    timestamp: new Date().toISOString()
+  });
+
   // Set up all the effects
   useCourseDataEffects({
     courseId,

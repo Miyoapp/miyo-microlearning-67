@@ -25,6 +25,9 @@ const DashboardCourse = () => {
   const lastValidPodcast = useRef(podcast);
   const podcastClearTimeout = useRef<NodeJS.Timeout | null>(null);
   
+  // STEP 3: Add fallback safety check
+  const fallbackAttempted = useRef(false);
+  
   // Track component lifecycle for debugging
   useEffect(() => {
     console.log('🎭 DASHBOARD COURSE: Component mounted/updated', {
@@ -39,6 +42,26 @@ const DashboardCourse = () => {
         timestamp: new Date().toISOString()
       });
     };
+  }, [courseId]);
+
+  // STEP 3: Fallback safety mechanism
+  useEffect(() => {
+    if (courseId && !podcast && !courseLoading && !fallbackAttempted.current) {
+      console.log('🚨 [DashboardCourse] FALLBACK TRIGGERED - Force loading course:', {
+        courseId,
+        podcastExists: !!podcast,
+        isLoading: courseLoading,
+        timestamp: new Date().toISOString()
+      });
+      
+      fallbackAttempted.current = true;
+      retryCourse();
+    }
+  }, [courseId, podcast, courseLoading, retryCourse]);
+
+  // Reset fallback attempt when courseId changes
+  useEffect(() => {
+    fallbackAttempted.current = false;
   }, [courseId]);
   
   if (podcast) {
@@ -113,7 +136,8 @@ const DashboardCourse = () => {
     currentLessonId: currentLesson?.id,
     audioCurrentLessonId,
     audioIsPlaying,
-    audioIsReady
+    audioIsReady,
+    fallbackAttempted: fallbackAttempted.current
   });
 
   // UNIFIED: Always prefer current, with stable fallback
@@ -133,7 +157,8 @@ const DashboardCourse = () => {
       hasLastValidPodcast: !!lastValidPodcast.current,
       hasDisplayPodcast: !!displayPodcast,
       userProgressCount: userProgress.length,
-      timeoutActive: !!podcastClearTimeout.current
+      timeoutActive: !!podcastClearTimeout.current,
+      fallbackAttempted: fallbackAttempted.current
     },
     unifiedAudioStates: {
       audioCurrentLessonId,
@@ -200,6 +225,7 @@ const DashboardCourse = () => {
 
   const handleRetry = () => {
     console.log('🔄 Manual retry triggered from UI');
+    fallbackAttempted.current = false; // Reset fallback for manual retry
     retryCourse();
     if (accessError) {
       refetchPurchases();

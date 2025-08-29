@@ -21,11 +21,30 @@ export function useCourseDataEffects({
   const location = useLocation();
   const navigationType = useNavigationType();
   
-  // PREVENT RACE CONDITIONS: Track loading state
+  // STEP 2: Simplified loading state tracking
   const isLoadingRef = useRef(false);
   const lastLoadedCourseId = useRef<string | null>(null);
+  const hasAttemptedInitialLoad = useRef(false);
 
-  // Main effect for course loading
+  // STEP 2: Force immediate initial load effect
+  useEffect(() => {
+    if (courseId && !hasAttemptedInitialLoad.current) {
+      console.log('🚀 [useCourseDataEffects] FORCING IMMEDIATE INITIAL LOAD:', {
+        courseId,
+        timestamp: new Date().toISOString()
+      });
+      
+      hasAttemptedInitialLoad.current = true;
+      isLoadingRef.current = true;
+      lastLoadedCourseId.current = courseId;
+      
+      cargarCurso().finally(() => {
+        isLoadingRef.current = false;
+      });
+    }
+  }, [courseId]); // Simplified dependency array
+
+  // Main effect for course loading (simplified logic)
   useEffect(() => {
     logDebugInfo('Effect triggered', {
       trigger: 'courseId/location/navigationType change',
@@ -35,11 +54,17 @@ export function useCourseDataEffects({
       navigationType,
       isCurrentlyLoading: isLoadingRef.current,
       lastLoadedCourseId: lastLoadedCourseId.current,
-      courseId
+      courseId,
+      hasAttemptedInitialLoad: hasAttemptedInitialLoad.current
     });
     
-    // RACE CONDITION PREVENTION: Only load if not already loading and course changed
-    if (!isLoadingRef.current && lastLoadedCourseId.current !== courseId) {
+    // STEP 2: Simplified condition - only prevent if actively loading the same course
+    const shouldLoad = courseId && 
+                      !isLoadingRef.current && 
+                      lastLoadedCourseId.current !== courseId;
+    
+    if (shouldLoad) {
+      console.log('🔄 [useCourseDataEffects] Loading course via effect:', courseId);
       isLoadingRef.current = true;
       lastLoadedCourseId.current = courseId;
       
