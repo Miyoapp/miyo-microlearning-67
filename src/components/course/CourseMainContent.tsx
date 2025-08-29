@@ -15,7 +15,6 @@ interface CourseMainContentProps {
   isCompleted: boolean;
   isPremium: boolean;
   hasAccess: boolean;
-  isGloballyPlaying: boolean;
   onStartLearning: () => void;
   onToggleSave: () => void;
   onSelectLesson: (lesson: Lesson) => void;
@@ -49,7 +48,6 @@ const CourseMainContent: React.FC<CourseMainContentProps> = ({
   isCompleted,
   isPremium,
   hasAccess,
-  isGloballyPlaying,
   onStartLearning,
   onToggleSave,
   onSelectLesson,
@@ -89,12 +87,10 @@ const CourseMainContent: React.FC<CourseMainContentProps> = ({
         <div className="relative mx-4 sm:mx-0">
           <CourseLearningPathSection
             podcast={podcast}
-            currentLessonId={currentLesson?.id || null}
-            isGloballyPlaying={isGloballyPlaying}
             onSelectLesson={onSelectLesson}
             onProgressUpdate={onProgressUpdate}
             onLessonComplete={onLessonComplete}
-            // Pass through all audio player props
+            // Pass through all unified audio player props
             audioCurrentLessonId={audioCurrentLessonId}
             audioIsPlaying={audioIsPlaying}
             audioCurrentTime={audioCurrentTime}
