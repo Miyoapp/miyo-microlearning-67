@@ -21,6 +21,33 @@ const DashboardCourse = () => {
   const { userProgress, loading: progressLoading, refetch, startCourse, toggleSaveCourse } = useUserProgress();
   const [showCheckout, setShowCheckout] = useState(false);
   
+  // Render counter for debugging
+  const renderCount = useRef(0);
+  renderCount.current += 1;
+  
+  // CRÍTICO: useEffect para detectar cambios en podcast desde DashboardCourse
+  useEffect(() => {
+    console.log('🎭 [DashboardCourse] PODCAST STATE CHANGED IN COMPONENT:', {
+      courseId,
+      podcastExists: !!podcast,
+      podcastTitle: podcast?.title,
+      renderCount: renderCount.current,
+      timestamp: new Date().toISOString(),
+      componentReRenderWorking: !!podcast ? 'YES - Component re-rendered with podcast!' : 'NO - Still no podcast in component'
+    });
+  }, [podcast]);
+
+  // CRÍTICO: useEffect para detectar cambios en isLoading desde DashboardCourse
+  useEffect(() => {
+    console.log('🎭 [DashboardCourse] LOADING STATE CHANGED IN COMPONENT:', {
+      courseId,
+      courseLoading,
+      podcastExists: !!podcast,
+      renderCount: renderCount.current,
+      timestamp: new Date().toISOString()
+    });
+  }, [courseLoading]);
+
   // ENHANCED STABLE REFERENCE with timeout-based cleanup
   const lastValidPodcast = useRef(podcast);
   const podcastClearTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -32,6 +59,7 @@ const DashboardCourse = () => {
   useEffect(() => {
     console.log('🎭 DASHBOARD COURSE: Component mounted/updated', {
       courseId,
+      renderCount: renderCount.current,
       timestamp: new Date().toISOString(),
       documentVisibilityState: document.visibilityState
     });
@@ -39,6 +67,7 @@ const DashboardCourse = () => {
     return () => {
       console.log('🎭 DASHBOARD COURSE: Component cleanup initiated', {
         courseId,
+        renderCount: renderCount.current,
         timestamp: new Date().toISOString()
       });
     };
@@ -51,6 +80,7 @@ const DashboardCourse = () => {
         courseId,
         podcastExists: !!podcast,
         isLoading: courseLoading,
+        renderCount: renderCount.current,
         timestamp: new Date().toISOString()
       });
       
@@ -137,7 +167,9 @@ const DashboardCourse = () => {
     audioCurrentLessonId,
     audioIsPlaying,
     audioIsReady,
-    fallbackAttempted: fallbackAttempted.current
+    fallbackAttempted: fallbackAttempted.current,
+    renderCount: renderCount.current,
+    componentState: !!podcast ? 'HAS_PODCAST_DATA' : 'NO_PODCAST_DATA'
   });
 
   // UNIFIED: Always prefer current, with stable fallback
@@ -149,6 +181,7 @@ const DashboardCourse = () => {
     documentHidden: document.hidden,
     documentVisibilityState: document.visibilityState,
     courseId,
+    renderCount: renderCount.current,
     dataStates: {
       courseLoading,
       progressLoading,
@@ -179,6 +212,7 @@ const DashboardCourse = () => {
     hasError: !!hasError,
     displayPodcastValid: !!displayPodcast,
     courseTitle: displayPodcast?.title,
+    renderCount: renderCount.current,
     guaranteedRender: shouldShowContent ? 'YES - CONTENT WILL RENDER' : 'NO - FALLBACK STATE'
   });
 
@@ -243,7 +277,8 @@ const DashboardCourse = () => {
       isCurrentData: !!podcast,
       isStableReference: !podcast && !!lastValidPodcast.current,
       hasUserProgress: userProgress.length > 0,
-      courseProgress: !!courseProgress
+      courseProgress: !!courseProgress,
+      renderCount: renderCount.current
     });
 
     return (
@@ -306,7 +341,7 @@ const DashboardCourse = () => {
 
   // PRIORITY 2: Show error state only if we have an error AND no content
   if (hasError && !shouldShowContent) {
-    console.log('❌ Showing error state:', { courseError, accessError, hasValidContent: false });
+    console.log('❌ Showing error state:', { courseError, accessError, hasValidContent: false, renderCount: renderCount.current });
     return (
       <DashboardLayout>
         <CourseErrorBoundary>
@@ -322,7 +357,7 @@ const DashboardCourse = () => {
 
   // PRIORITY 3: Show course not found only if we confirmed no data exists
   if (!isActuallyLoading && !shouldShowContent) {
-    console.log('📭 Showing course not found state');
+    console.log('📭 Showing course not found state', { renderCount: renderCount.current });
     return (
       <DashboardLayout>
         <CourseErrorBoundary>
@@ -339,7 +374,8 @@ const DashboardCourse = () => {
   // PRIORITY 4: Show loading only as last resort
   console.log('🔄 Showing loading state (last resort):', { 
     isActuallyLoading, 
-    reason: 'no valid data available and still loading'
+    reason: 'no valid data available and still loading',
+    renderCount: renderCount.current
   });
   return (
     <DashboardLayout>
