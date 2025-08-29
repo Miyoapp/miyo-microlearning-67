@@ -94,8 +94,14 @@ const CourseAccessHandler = ({
         podcast={podcast}
       />
 
-      {/* Learning Path Section - Only show if course has started */}
-      {hasStarted && (
+      {/* Learning Path Section - Show if course started, is free, or user has access */}
+      {console.log('🔍 Render conditions:', { 
+        hasStarted, 
+        isPremium, 
+        hasAccess, 
+        shouldRender: hasStarted || !isPremium || hasAccess 
+      })}
+      {(hasStarted || !isPremium || hasAccess) && (
         <CourseLearningPathSection
           podcast={podcast}
           onSelectLesson={onSelectLesson}
