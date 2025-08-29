@@ -100,7 +100,6 @@ const CourseContent = ({
               modules={podcast.modules}
               onSelectLesson={onSelectLesson}
               audioCurrentLessonId={audioCurrentLessonId}
-              isGloballyPlaying={isGloballyPlaying}
               onProgressUpdate={onProgressUpdate}
               onLessonComplete={onLessonComplete}
               podcast={podcast}
