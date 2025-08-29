@@ -6,12 +6,10 @@ import { Podcast, Lesson } from '@/types';
 
 interface CourseLearningPathSectionProps {
   podcast: Podcast;
-  currentLessonId: string | null;
-  isGloballyPlaying: boolean;
   onSelectLesson: (lesson: Lesson) => void;
   onProgressUpdate?: (position: number) => void;
   onLessonComplete?: () => void;
-  // UNIFIED AUDIO PROPS
+  // UNIFIED AUDIO PROPS - single source of truth
   audioCurrentLessonId: string | null;
   audioIsPlaying: boolean;
   audioCurrentTime: number;
@@ -31,8 +29,6 @@ interface CourseLearningPathSectionProps {
 
 const CourseLearningPathSection: React.FC<CourseLearningPathSectionProps> = ({
   podcast,
-  currentLessonId,
-  isGloballyPlaying,
   onSelectLesson,
   onProgressUpdate,
   onLessonComplete,

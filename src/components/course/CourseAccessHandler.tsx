@@ -89,7 +89,7 @@ const CourseAccessHandler = ({
 
   return (
     <>
-      {/* Course Hero Section - Remove currentLesson prop */}
+      {/* Course Hero Section */}
       <CourseHero
         podcast={podcast}
       />
@@ -98,12 +98,10 @@ const CourseAccessHandler = ({
       {hasStarted && (
         <CourseLearningPathSection
           podcast={podcast}
-          currentLessonId={audioCurrentLessonId}
-          isGloballyPlaying={audioIsPlaying}
           onSelectLesson={onSelectLesson}
           onProgressUpdate={onProgressUpdate}
           onLessonComplete={onLessonComplete}
-          // UNIFIED AUDIO PROPS
+          // UNIFIED AUDIO PROPS - pass only unified audio state
           audioCurrentLessonId={audioCurrentLessonId}
           audioIsPlaying={audioIsPlaying}
           audioCurrentTime={audioCurrentTime}

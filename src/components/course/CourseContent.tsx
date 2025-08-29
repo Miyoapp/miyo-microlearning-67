@@ -1,3 +1,4 @@
+
 import { Podcast, Lesson } from '../../types';
 import LearningPath from '../LearningPath';
 import CourseStats from './CourseStats';
@@ -5,7 +6,6 @@ import CourseStats from './CourseStats';
 interface CourseContentProps {
   podcast: Podcast;
   audioCurrentLessonId: string | null;
-  isGloballyPlaying: boolean;
   onSelectLesson: (lesson: Lesson, shouldAutoPlay?: boolean) => void;
   onProgressUpdate?: (position: number) => void;
   onLessonComplete?: () => void;
@@ -29,7 +29,6 @@ interface CourseContentProps {
 const CourseContent = ({ 
   podcast, 
   audioCurrentLessonId, 
-  isGloballyPlaying, 
   onSelectLesson,
   onProgressUpdate,
   onLessonComplete,
@@ -52,7 +51,6 @@ const CourseContent = ({
   console.log('🏗️ CourseContent render:', {
     podcastTitle: podcast.title,
     audioCurrentLessonId,
-    isGloballyPlaying,
     hasLessons: podcast.lessons?.length > 0,
     hasModules: podcast.modules?.length > 0,
     audioIsPlaying
