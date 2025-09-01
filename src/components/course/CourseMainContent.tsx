@@ -41,6 +41,11 @@ const CourseMainContent: React.FC<CourseMainContentProps> = ({
   onProgressUpdate,
   onLessonComplete
 }) => {
+  const handleLessonSelect = (lesson: Lesson) => {
+    console.log('🎯 CourseMainContent - Lesson selected:', lesson.title);
+    onSelectLesson(lesson);
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
       {/* Main Content - Full width on mobile */}
@@ -59,7 +64,7 @@ const CourseMainContent: React.FC<CourseMainContentProps> = ({
             podcast={podcast}
             currentLessonId={currentLesson?.id || null}
             isGloballyPlaying={isGloballyPlaying}
-            onSelectLesson={onSelectLesson}
+            onSelectLesson={handleLessonSelect}
             onProgressUpdate={onProgressUpdate}
             onLessonComplete={onLessonComplete}
           />

@@ -1,65 +1,55 @@
 
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Toaster } from '@/components/ui/toaster';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from 'sonner';
+import { AuthProvider } from '@/components/auth/AuthProvider';
+import { AudioPlayerProvider } from '@/contexts/AudioPlayerContext';
+import Home from '@/pages/Home';
+import LoginPage from '@/components/auth/LoginPage';
+import DashboardHome from '@/pages/DashboardHome';
+import DashboardCourse from '@/pages/DashboardCourse';
+import DashboardNotes from '@/pages/DashboardNotes';
+import DashboardCourseNotes from '@/pages/DashboardCourseNotes';
+import DashboardResumes from '@/pages/DashboardResumes';
+import DashboardActionPlans from '@/pages/DashboardActionPlans';
+import RequireAuth from '@/components/auth/RequireAuth';
+import './App.css';
 
-import { AuthProvider } from './components/auth/AuthProvider';
-import Header from './components/Header';
-import Home from './pages/Home';
-import LoginPage from './pages/LoginPage';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
-import EmailConfirmation from './pages/EmailConfirmation';
-import Dashboard from './pages/Dashboard';
-import DashboardCourse from './pages/DashboardCourse';
-import DashboardDiscover from './pages/DashboardDiscover';
-import DashboardMyRoutes from './pages/DashboardMyRoutes';
-import DashboardMisResumenes from './pages/DashboardMisResumenes';
-import DashboardMisNotas from './pages/DashboardMisNotas';
-import DashboardMisPlanes from './pages/DashboardMisPlanes';
-import DashboardCourseNotes from './pages/DashboardCourseNotes';
-import NotFound from './pages/NotFound';
-
-import PaymentSuccess from './pages/PaymentSuccess';
-import PaymentFailure from './pages/PaymentFailure';
-
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 function App() {
   return (
-    <BrowserRouter>
+    <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <QueryClientProvider client={queryClient}>
-          <Toaster />
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/email-confirmation" element={<EmailConfirmation />} />
-            
-            {/* Dashboard routes - Protected */}
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/dashboard/discover" element={<DashboardDiscover />} />
-            <Route path="/dashboard/my-routes" element={<DashboardMyRoutes />} />
-            <Route path="/dashboard/mis-notas" element={<DashboardMisNotas />} />
-            <Route path="/dashboard/mis-notas/curso/:courseId" element={<DashboardCourseNotes />} />
-            <Route path="/dashboard/mis-resumenes" element={<DashboardMisResumenes />} />
-            <Route path="/dashboard/mis-planes" element={<DashboardMisPlanes />} />
-            <Route path="/dashboard/course/:courseId" element={<DashboardCourse />} />
-
-            {/* Payment result pages */}
-            <Route path="/payment/success" element={<PaymentSuccess />} />
-            <Route path="/payment/failure" element={<PaymentFailure />} />
-            <Route path="/payment/pending" element={<PaymentSuccess />} />
-
-            {/* Not Found Route - Catch all */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </QueryClientProvider>
+        <AudioPlayerProvider>
+          <Router>
+            <div className="min-h-screen bg-gray-50">
+              <Routes>
+                {/* Public routes */}
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<LoginPage />} />
+                
+                {/* Protected routes */}
+                <Route path="/dashboard" element={<RequireAuth><DashboardHome /></RequireAuth>} />
+                <Route path="/dashboard/course/:courseId" element={<RequireAuth><DashboardCourse /></RequireAuth>} />
+                <Route path="/dashboard/notes" element={<RequireAuth><DashboardNotes /></RequireAuth>} />
+                <Route path="/dashboard/notes/:courseId" element={<RequireAuth><DashboardCourseNotes /></RequireAuth>} />
+                <Route path="/dashboard/resumes" element={<RequireAuth><DashboardResumes /></RequireAuth>} />
+                <Route path="/dashboard/action-plans" element={<RequireAuth><DashboardActionPlans /></RequireAuth>} />
+              </Routes>
+            </div>
+            <Toaster />
+          </Router>
+        </AudioPlayerProvider>
       </AuthProvider>
-    </BrowserRouter>
+    </QueryClientProvider>
   );
 }
 

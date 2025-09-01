@@ -20,16 +20,20 @@ const CourseLearningPathSection: React.FC<CourseLearningPathSectionProps> = ({
   onProgressUpdate,
   onLessonComplete
 }) => {
+  console.log('🏗️ CourseLearningPathSection render:', {
+    courseTitle: podcast.title,
+    currentLessonId,
+    isGloballyPlaying,
+    timestamp: new Date().toLocaleTimeString()
+  });
+
   return (
     <div id="learning-path-section" className="bg-white rounded-2xl shadow-sm p-6">
       <LearningPath 
         lessons={podcast.lessons}
         modules={podcast.modules}
-        onSelectLesson={onSelectLesson}
         currentLessonId={currentLessonId}
         isGloballyPlaying={isGloballyPlaying}
-        onProgressUpdate={onProgressUpdate}
-        onLessonComplete={onLessonComplete}
         podcast={podcast}
       />
     </div>

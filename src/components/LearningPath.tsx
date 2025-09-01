@@ -1,3 +1,4 @@
+
 import { useCallback, useMemo, useState, useEffect } from 'react';
 import { Lesson, Module } from '../types';
 import React from 'react';
@@ -14,28 +15,26 @@ import CourseCompletionModal from '@/components/summaries/CourseCompletionModal'
 import CreateSummaryModal from '@/components/summaries/CreateSummaryModal';
 import ViewSummaryModal from '@/components/summaries/ViewSummaryModal';
 import { CourseSummary } from '@/types/notes';
+import { useAudioPlayer } from '@/contexts/AudioPlayerContext';
 
 interface LearningPathProps {
   lessons: Lesson[];
   modules: Module[];
-  onSelectLesson: (lesson: Lesson, shouldAutoPlay?: boolean) => void;
   currentLessonId: string | null;
   isGloballyPlaying: boolean;
-  onProgressUpdate?: (position: number) => void;
-  onLessonComplete?: () => void;
   podcast?: any;
 }
 
 const LearningPath = React.memo(({ 
   lessons, 
   modules, 
-  onSelectLesson, 
   currentLessonId, 
   isGloballyPlaying,
-  onProgressUpdate,
-  onLessonComplete,
   podcast
 }: LearningPathProps) => {
+  // Audio player context
+  const { selectLesson } = useAudioPlayer();
+  
   // Get user progress data for course completion detection
   const { userProgress, markCompletionModalShown } = useUserProgress();
   const { lessonProgress } = useUserLessonProgress();
@@ -49,7 +48,7 @@ const LearningPath = React.memo(({
   // Extract courseId from podcast
   const courseId = podcast?.id || null;
   
-  // Course completion functionality - UPDATED: Pass markCompletionModalShown
+  // Course completion functionality
   const {
     showCompletionModal,
     showSummaryModal,
@@ -63,7 +62,7 @@ const LearningPath = React.memo(({
     podcast,
     userProgress,
     lessonProgress,
-    markCompletionModalShown // NEW: Pass the function to mark modal as shown
+    markCompletionModalShown
   });
 
   // Check if course is completed
@@ -106,24 +105,22 @@ const LearningPath = React.memo(({
     hasSummary
   });
 
-  // OPTIMIZADO: Memoizar función de agrupación con hash estable
+  // Get lessons for module
   const getLessonsForModule = useCallback((moduleId: string) => {
     const module = modules.find(m => m.id === moduleId);
     if (!module) return [];
     
-    // Obtener lecciones en el orden definido por lessonIds del módulo
     return module.lessonIds
       .map(id => lessons.find(lesson => lesson.id === id))
       .filter((lesson): lesson is Lesson => lesson !== undefined);
   }, [
-    // ESTABILIZADO: Hash más específico para evitar recálculos
     modules.map(m => `${m.id}:${m.lessonIds.join(',')}`).join('|'),
     lessons.map(l => l.id).join('|')
   ]);
 
-  // HANDLER DE CLICK CON LOGS ESPECÍFICOS
+  // Handle lesson click with new audio system
   const handleLessonClick = useCallback((lesson: Lesson, shouldAutoPlay = true) => {
-    console.log('🎯🎯🎯 LEARNING PATH - CLICK RECIBIDO:', {
+    console.log('🎯 LearningPath - Lesson click:', {
       lessonTitle: lesson.title,
       shouldAutoPlay,
       timestamp: new Date().toLocaleTimeString()
@@ -131,39 +128,21 @@ const LearningPath = React.memo(({
     
     const status = lessonStatusMap.get(lesson.id);
     if (!status) {
-      console.log('🚫🚫🚫 LEARNING PATH - NO STATUS FOUND:', lesson.title);
+      console.log('🚫 LearningPath - No status found:', lesson.title);
       return;
     }
     
-    const { canPlay, isCompleted, isLocked, isFirstInSequence } = status;
+    const { canPlay } = status;
     
-    console.log('🎯🎯🎯 LEARNING PATH - VALIDACIÓN CLICK:', {
-      lessonTitle: lesson.title,
-      canPlay,
-      isCompleted,
-      isLocked,
-      isFirstInSequence,
-      action: canPlay ? 'PERMITIR REPRODUCCIÓN' : 'BLOQUEAR'
-    });
-    
-    if (canPlay) {
-      console.log('✅✅✅ LEARNING PATH - ENVIANDO A onSelectLesson:', lesson.title);
-      onSelectLesson(lesson, shouldAutoPlay);
-      console.log('✅✅✅ LEARNING PATH - onSelectLesson LLAMADO EXITOSAMENTE:', lesson.title);
+    if (canPlay && podcast) {
+      console.log('✅ LearningPath - Selecting lesson via AudioPlayer:', lesson.title);
+      selectLesson(lesson, podcast, shouldAutoPlay);
     } else {
-      console.log('🚫🚫🚫 LEARNING PATH - LECCIÓN BLOQUEADA:', {
-        lessonTitle: lesson.title,
-        isLocked,
-        reason: 'lección anterior no completada'
-      });
+      console.log('🚫 LearningPath - Lesson blocked:', lesson.title);
     }
-  }, [
-    // ESTABILIZADO: Solo incluir referencias estables
-    Array.from(lessonStatusMap.entries()).map(([id, status]) => `${id}:${status._hash || 'no-hash'}`).join('|'),
-    onSelectLesson
-  ]);
+  }, [lessonStatusMap, podcast, selectLesson]);
 
-  // OPTIMIZADO: Memoizar módulos ordenados
+  // Memoize ordered modules
   const orderedModules = useMemo(() => {
     return modules.filter(module => {
       const moduleLessons = getLessonsForModule(module.id);
@@ -204,8 +183,6 @@ const LearningPath = React.memo(({
                 courseId={courseId}
                 lessonProgress={lessonProgress}
                 onLessonClick={handleLessonClick}
-                onProgressUpdate={onProgressUpdate}
-                onLessonComplete={onLessonComplete}
               />
             );
           })}

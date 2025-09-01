@@ -14,8 +14,6 @@ interface ModuleSectionProps {
   courseId: string | null;
   lessonProgress: UserLessonProgress[];
   onLessonClick: (lesson: Lesson, shouldAutoPlay?: boolean) => void;
-  onProgressUpdate?: (position: number) => void;
-  onLessonComplete?: () => void;
 }
 
 const ModuleSection = React.memo(({ 
@@ -27,9 +25,7 @@ const ModuleSection = React.memo(({
   isGloballyPlaying,
   courseId,
   lessonProgress,
-  onLessonClick,
-  onProgressUpdate,
-  onLessonComplete
+  onLessonClick
 }: ModuleSectionProps) => {
   if (moduleLessons.length === 0) return null;
   
@@ -57,11 +53,9 @@ const ModuleSection = React.memo(({
           const status = lessonStatusMap.get(lesson.id);
           if (!status) return null;
           
-          // Add isCurrent calculation and determine if this lesson is playing
           const isCurrent = lesson.id === currentLessonId;
           const isPlaying = isCurrent && isGloballyPlaying;
           
-          // Find saved progress for this specific lesson
           const savedProgress = lessonProgress.find(p => p.lesson_id === lesson.id);
           
           const enhancedStatus = {
@@ -82,8 +76,6 @@ const ModuleSection = React.memo(({
                 is_completed: savedProgress.is_completed || false
               } : undefined}
               onLessonClick={onLessonClick}
-              onProgressUpdate={onProgressUpdate}
-              onLessonComplete={onLessonComplete}
             />
           );
         })}
