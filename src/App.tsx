@@ -6,13 +6,13 @@ import { AuthProvider } from '@/components/auth/AuthProvider';
 import { AudioPlayerProvider } from '@/contexts/AudioPlayerContext';
 import Home from '@/pages/Home';
 import LoginPage from '@/components/auth/LoginPage';
-import DashboardHome from '@/pages/DashboardHome';
+import Dashboard from '@/pages/Dashboard';
 import DashboardCourse from '@/pages/DashboardCourse';
-import DashboardNotes from '@/pages/DashboardNotes';
+import DashboardMisNotas from '@/pages/DashboardMisNotas';
 import DashboardCourseNotes from '@/pages/DashboardCourseNotes';
-import DashboardResumes from '@/pages/DashboardResumes';
-import DashboardActionPlans from '@/pages/DashboardActionPlans';
-import RequireAuth from '@/components/auth/RequireAuth';
+import DashboardMisResumenes from '@/pages/DashboardMisResumenes';
+import DashboardMisPlanes from '@/pages/DashboardMisPlanes';
+import { RequireAuth } from '@/components/auth/RequireAuth';
 import './App.css';
 
 const queryClient = new QueryClient({
@@ -37,12 +37,12 @@ function App() {
                 <Route path="/login" element={<LoginPage />} />
                 
                 {/* Protected routes */}
-                <Route path="/dashboard" element={<RequireAuth><DashboardHome /></RequireAuth>} />
+                <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
                 <Route path="/dashboard/course/:courseId" element={<RequireAuth><DashboardCourse /></RequireAuth>} />
-                <Route path="/dashboard/notes" element={<RequireAuth><DashboardNotes /></RequireAuth>} />
+                <Route path="/dashboard/notes" element={<RequireAuth><DashboardMisNotas /></RequireAuth>} />
                 <Route path="/dashboard/notes/:courseId" element={<RequireAuth><DashboardCourseNotes /></RequireAuth>} />
-                <Route path="/dashboard/resumes" element={<RequireAuth><DashboardResumes /></RequireAuth>} />
-                <Route path="/dashboard/action-plans" element={<RequireAuth><DashboardActionPlans /></RequireAuth>} />
+                <Route path="/dashboard/resumes" element={<RequireAuth><DashboardMisResumenes /></RequireAuth>} />
+                <Route path="/dashboard/action-plans" element={<RequireAuth><DashboardMisPlanes /></RequireAuth>} />
               </Routes>
             </div>
             <Toaster />

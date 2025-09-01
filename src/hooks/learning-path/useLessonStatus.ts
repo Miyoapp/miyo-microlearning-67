@@ -1,7 +1,27 @@
 
 import { useMemo } from 'react';
 import { Lesson, Module } from '@/types';
-import { getOrderedLessons, isFirstLessonInSequence } from '@/hooks/consolidated-lessons/lessonOrderUtils';
+
+// Utility functions moved from deleted consolidated-lessons
+function getOrderedLessons(lessons: Lesson[], modules: Module[]): Lesson[] {
+  const orderedLessons: Lesson[] = [];
+  
+  modules.forEach(module => {
+    module.lessonIds.forEach(lessonId => {
+      const lesson = lessons.find(l => l.id === lessonId);
+      if (lesson) {
+        orderedLessons.push(lesson);
+      }
+    });
+  });
+  
+  return orderedLessons;
+}
+
+function isFirstLessonInSequence(lesson: Lesson, lessons: Lesson[], modules: Module[]): boolean {
+  const orderedLessons = getOrderedLessons(lessons, modules);
+  return orderedLessons.length > 0 && orderedLessons[0].id === lesson.id;
+}
 
 export function useLessonStatus(lessons: Lesson[], modules: Module[], currentLessonId: string | null) {
   return useMemo(() => {
