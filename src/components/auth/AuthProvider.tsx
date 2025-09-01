@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -32,7 +33,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('Clearing auth state...');
     setSession(null);
     setUser(null);
-    // Limpiar localStorage manualmente como fallback
+    // Limpiar solo tokens de Supabase, sin referencias a isAuthenticated
     localStorage.removeItem('sb-ubsextjrmofwzvhvatcl-auth-token');
     localStorage.removeItem('supabase.auth.token');
   };

@@ -14,12 +14,19 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
   // Check if we're in signup mode from URL parameter
   const [isSignUp, setIsSignUp] = useState(searchParams.get('mode') === 'signup');
+
+  // Redirect to dashboard if user is already authenticated
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, navigate]);
 
   // Update signup mode when URL parameter changes
   useEffect(() => {
@@ -43,7 +50,7 @@ const LoginPage = () => {
           navigate('/email-confirmation');
         } else {
           toast.success('¡Bienvenido de vuelta!');
-          navigate('/dashboard');
+          // El redirect a /dashboard se manejará automáticamente por el useEffect
         }
       }
     } catch (error) {
