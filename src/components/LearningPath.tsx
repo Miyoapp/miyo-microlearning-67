@@ -9,7 +9,6 @@ import { useLessonClasses } from '@/hooks/learning-path/useLessonClasses';
 import ModuleSection from './learning-path/ModuleSection';
 import { useCourseCompletion } from '@/hooks/useCourseCompletion';
 import { useUserProgress } from '@/hooks/useUserProgress';
-import { useUserLessonProgress } from '@/hooks/useUserLessonProgress';
 import { useSummaries } from '@/hooks/useSummaries';
 import CourseCompletionModal from '@/components/summaries/CourseCompletionModal';
 import CreateSummaryModal from '@/components/summaries/CreateSummaryModal';
@@ -37,7 +36,6 @@ const LearningPath = React.memo(({
   
   // Get user progress data for course completion detection
   const { userProgress, markCompletionModalShown } = useUserProgress();
-  const { lessonProgress } = useUserLessonProgress();
   const { fetchSummaries } = useSummaries();
 
   // State for summary viewing
@@ -48,7 +46,7 @@ const LearningPath = React.memo(({
   // Extract courseId from podcast
   const courseId = podcast?.id || null;
   
-  // Course completion functionality
+  // Course completion functionality - simplified without lesson progress dependency
   const {
     showCompletionModal,
     showSummaryModal,
@@ -61,7 +59,7 @@ const LearningPath = React.memo(({
   } = useCourseCompletion({
     podcast,
     userProgress,
-    lessonProgress,
+    lessonProgress: [], // Empty array since we don't need it for basic functionality
     markCompletionModalShown
   });
 
@@ -100,7 +98,6 @@ const LearningPath = React.memo(({
     lessonCount: lessons.length,
     moduleCount: modules.length,
     courseId,
-    lessonProgressCount: lessonProgress.length,
     isCourseCompleted,
     hasSummary
   });
@@ -181,7 +178,7 @@ const LearningPath = React.memo(({
                 currentLessonId={currentLessonId}
                 isGloballyPlaying={isGloballyPlaying}
                 courseId={courseId}
-                lessonProgress={lessonProgress}
+                lessonProgress={[]} // Empty array since we don't depend on it anymore
                 onLessonClick={handleLessonClick}
               />
             );

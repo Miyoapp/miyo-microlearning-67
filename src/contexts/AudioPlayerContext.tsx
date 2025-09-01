@@ -1,9 +1,9 @@
 
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect } from 'react';
 import { Lesson, Podcast } from '@/types';
-import { useUserLessonProgress } from '@/hooks/useUserLessonProgress';
 import { useUserProgress } from '@/hooks/useUserProgress';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AudioPlayerState {
   // Core playback state
@@ -58,7 +58,6 @@ export const useAudioPlayer = () => {
 
 export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
-  const { markLessonComplete, updateLessonPosition } = useUserLessonProgress();
   const { updateCourseProgress } = useUserProgress();
   
   // Audio element ref
@@ -83,6 +82,70 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   
   // Progress tracking
   const lastUpdateTime = useRef(0);
+
+  // Direct lesson progress functions
+  const markLessonComplete = useCallback(async (lessonId: string, courseId: string) => {
+    if (!user) return;
+
+    try {
+      console.log('🎯 Marking lesson complete:', lessonId);
+      
+      const { error } = await supabase
+        .from('user_lesson_progress')
+        .upsert({
+          user_id: user.id,
+          lesson_id: lessonId,
+          course_id: courseId,
+          is_completed: true,
+          current_position: 100,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id,lesson_id'
+        });
+
+      if (error) {
+        console.error('Error marking lesson complete:', error);
+      } else {
+        console.log('✅ Lesson marked complete successfully');
+      }
+    } catch (error) {
+      console.error('Error marking lesson complete:', error);
+    }
+  }, [user]);
+
+  const updateLessonPosition = useCallback(async (lessonId: string, courseId: string, position: number) => {
+    if (!user || position < 5) return; // Don't update for very small positions
+
+    try {
+      console.log('📍 Updating lesson position:', lessonId, position);
+      
+      const updates: any = {
+        user_id: user.id,
+        lesson_id: lessonId,
+        course_id: courseId,
+        current_position: Math.round(position),
+        updated_at: new Date().toISOString()
+      };
+
+      // If position >= 100, mark as completed
+      if (position >= 100) {
+        updates.is_completed = true;
+        updates.current_position = 100;
+      }
+
+      const { error } = await supabase
+        .from('user_lesson_progress')
+        .upsert(updates, {
+          onConflict: 'user_id,lesson_id'
+        });
+
+      if (error) {
+        console.error('Error updating lesson position:', error);
+      }
+    } catch (error) {
+      console.error('Error updating lesson position:', error);
+    }
+  }, [user]);
   
   const selectLesson = useCallback((lesson: Lesson, podcast: Podcast, shouldAutoPlay = false) => {
     console.log('🎵 AudioPlayer: Selecting lesson:', lesson.title);
@@ -160,7 +223,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     lastUpdateTime.current = now;
     
     if (time > 5) {
-      console.log('📊 AudioPlayer: Progress update:', currentLesson.title, time.toFixed(1) + '%');
+      console.log('📊 AudioPlayer: Progress update:', currentLesson.title, time.toFixed(1) + 's');
       updateLessonPosition(currentLesson.id, currentPodcast.id, time);
     }
   }, [currentLesson, currentPodcast, user, updateLessonPosition]);
@@ -172,7 +235,6 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     
     // Mark lesson as complete
     markLessonComplete(currentLesson.id, currentPodcast.id);
-    updateLessonPosition(currentLesson.id, currentPodcast.id, duration);
     
     // Check if we should auto-advance
     const currentIndex = currentPodcast.lessons.findIndex(l => l.id === currentLesson.id);
@@ -191,7 +253,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         updateCourseProgress(currentPodcast.id, { progress_percentage: 100 });
       }
     }
-  }, [currentLesson, currentPodcast, user, duration, markLessonComplete, updateLessonPosition, updateCourseProgress, selectLesson]);
+  }, [currentLesson, currentPodcast, user, markLessonComplete, updateCourseProgress, selectLesson]);
   
   // Audio event handlers
   const handleLoadedMetadata = () => {

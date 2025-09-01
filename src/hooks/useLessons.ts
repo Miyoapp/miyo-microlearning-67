@@ -1,16 +1,43 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { Lesson, Podcast } from '@/types';
-import { useUserLessonProgress } from '@/hooks/useUserLessonProgress';
 import { useUserProgress } from '@/hooks/useUserProgress';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { supabase } from '@/integrations/supabase/client';
 
 export function useLessons(podcast: Podcast | null) {
   const { user } = useAuth();
-  const { lessonProgress } = useUserLessonProgress();
   const { userProgress } = useUserProgress();
   
   const [lessonsWithProgress, setLessonsWithProgress] = useState<Lesson[]>([]);
+  const [lessonProgress, setLessonProgress] = useState<any[]>([]);
+  
+  // Fetch lesson progress from Supabase directly
+  const fetchLessonProgress = useCallback(async () => {
+    if (!user || !podcast) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('user_lesson_progress')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('course_id', podcast.id);
+
+      if (error) {
+        console.error('Error fetching lesson progress:', error);
+        return;
+      }
+      
+      setLessonProgress(data || []);
+    } catch (error) {
+      console.error('Error fetching lesson progress:', error);
+    }
+  }, [user, podcast]);
+
+  // Fetch lesson progress when component mounts or podcast changes
+  useEffect(() => {
+    fetchLessonProgress();
+  }, [fetchLessonProgress]);
   
   // Calculate lesson states with progress
   const calculateLessonStates = useCallback(() => {
