@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Module, Lesson } from '@/types';
-import { UserLessonProgress } from '@/hooks/useUserLessonProgress';
 import LessonCard from './LessonCard';
 
 interface ModuleSectionProps {
@@ -12,7 +11,7 @@ interface ModuleSectionProps {
   currentLessonId: string | null;
   isGloballyPlaying: boolean;
   courseId: string | null;
-  lessonProgress: UserLessonProgress[];
+  lessonProgress: any[]; // Keep as generic array since we're not using the specific type anymore
   onLessonClick: (lesson: Lesson, shouldAutoPlay?: boolean) => void;
 }
 
