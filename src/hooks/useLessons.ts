@@ -39,35 +39,11 @@ export function useLessons(podcast: Podcast | null) {
     fetchLessonProgress();
   }, [fetchLessonProgress]);
   
-  // Stable references to prevent recalculations
-  const stableProgressRef = useRef<any[]>([]);
-  const stableUserProgressRef = useRef<any[]>([]);
-  
-  // Deep comparison for lesson progress stability
-  const progressHasChanged = useMemo(() => {
-    if (lessonProgress.length !== stableProgressRef.current.length) return true;
-    return lessonProgress.some((item, index) => {
-      const prev = stableProgressRef.current[index];
-      return !prev || 
-        item.lesson_id !== prev.lesson_id || 
-        item.is_completed !== prev.is_completed;
-    });
-  }, [lessonProgress]);
-  
-  // Deep comparison for user progress stability
-  const userProgressHasChanged = useMemo(() => {
-    const relevantProgress = userProgress.find(p => p.course_id === podcast?.id);
-    const prevRelevantProgress = stableUserProgressRef.current.find(p => p.course_id === podcast?.id);
-    
-    if (!relevantProgress && !prevRelevantProgress) return false;
-    if (!relevantProgress || !prevRelevantProgress) return true;
-    
-    return relevantProgress.is_completed !== prevRelevantProgress.is_completed ||
-           relevantProgress.progress_percentage !== prevRelevantProgress.progress_percentage;
-  }, [userProgress, podcast?.id]);
+  // Force immediate updates - no complex memoization blocking
+  const lastUpdateRef = useRef<number>(0);
 
-  // Memoized lesson calculation to prevent unnecessary recalculations
-  const calculatedLessons = useMemo(() => {
+  // Calculate lessons immediately - no memoization blocking updates
+  const calculateLessonsStates = useCallback(() => {
     if (!podcast || !user) return [];
     
     console.log('📚 useLessons: Calculating lesson states for:', podcast.title);
@@ -110,23 +86,16 @@ export function useLessons(podcast: Podcast | null) {
       };
     });
     
-    console.log('✅ useLessons: Lesson states calculated');
+    console.log('✅ useLessons: Lesson states calculated, updating immediately');
+    setLessonsWithProgress(updatedLessons);
+    lastUpdateRef.current = Date.now();
     return updatedLessons;
   }, [podcast, lessonProgress, userProgress, user]);
   
-  // Update stable references and lessons when data actually changes
+  // Update lessons immediately when data changes
   useEffect(() => {
-    if (progressHasChanged) {
-      stableProgressRef.current = [...lessonProgress];
-    }
-    if (userProgressHasChanged) {
-      stableUserProgressRef.current = [...userProgress];
-    }
-    
-    if ((progressHasChanged || userProgressHasChanged) && calculatedLessons.length > 0) {
-      setLessonsWithProgress(calculatedLessons);
-    }
-  }, [calculatedLessons, progressHasChanged, userProgressHasChanged, lessonProgress, userProgress]);
+    calculateLessonsStates();
+  }, [calculateLessonsStates]);
   
   // Find next lesson to continue (for auto-positioning)
   const getNextLessonToContinue = useCallback(() => {
@@ -150,9 +119,14 @@ export function useLessons(podcast: Podcast | null) {
   }, [lessonsWithProgress]);
   
   // Force refresh lessons (for realtime updates)
-  const refreshLessons = useCallback(() => {
-    fetchLessonProgress();
-  }, [fetchLessonProgress]);
+  const refreshLessons = useCallback(async () => {
+    console.log('🔄 useLessons: Force refreshing lesson progress');
+    await fetchLessonProgress();
+    // Recalculate immediately after fetch
+    setTimeout(() => {
+      calculateLessonsStates();
+    }, 100);
+  }, [fetchLessonProgress, calculateLessonsStates]);
   
   return {
     lessonsWithProgress,

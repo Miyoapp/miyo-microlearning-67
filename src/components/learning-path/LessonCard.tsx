@@ -157,7 +157,7 @@ const LessonCard = React.memo(({
     }
   }, [canPlay, courseId, fetchNotes]);
 
-  // Handle lesson completion feedback
+  // Handle lesson completion feedback - improved immediate sync
   React.useEffect(() => {
     // If this lesson just got completed and we're the current lesson at the end
     if (isCurrent && currentTime >= validDuration * 0.98 && validDuration > 0 && !savedProgress?.is_completed) {
@@ -167,9 +167,15 @@ const LessonCard = React.memo(({
       // Reset after a delay to allow database sync
       setTimeout(() => {
         setJustCompleted(false);
-      }, 5000);
+      }, 5000); // Keep for longer to ensure sync
     }
-  }, [isCurrent, currentTime, validDuration, savedProgress?.is_completed]);
+    
+    // Clear justCompleted if lesson becomes completed in DB
+    if (savedProgress?.is_completed && justCompleted) {
+      console.log('✅ LessonCard: DB shows completed, clearing justCompleted state');
+      setTimeout(() => setJustCompleted(false), 1000);
+    }
+  }, [isCurrent, currentTime, validDuration, savedProgress?.is_completed, justCompleted]);
 
   // Reset justCompleted when saved progress gets updated to completed
   React.useEffect(() => {
@@ -206,26 +212,48 @@ const LessonCard = React.memo(({
   // Speed options for dropdown
   const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
   
-  // Display current time - simplified using DB as single source of truth
+  // Display current time - ALWAYS use DB as single source of truth
   const displayCurrentTime = useMemo(() => {
-    // If lesson was just completed locally, show 100% immediately
+    const debugInfo = {
+      lessonId: lesson.id,
+      justCompleted,
+      isCompleted: savedProgress?.is_completed,
+      currentPosition: savedProgress?.current_position,
+      isCurrent,
+      propIsPlaying,
+      currentTime,
+      validDuration
+    };
+    console.log('📊 DisplayCurrentTime calc:', debugInfo);
+    
+    // HIGHEST PRIORITY: If just completed locally, show 100% immediately
     if (justCompleted) {
+      console.log('📊 Using justCompleted: 100%');
       return validDuration;
     }
     
-    // For completed lessons, always use current_position from DB (which should be 100)
+    // SECOND PRIORITY: If completed in DB, ALWAYS show current_position (should be 100)
     if (savedProgress?.is_completed) {
-      return savedProgress?.current_position || validDuration;
+      const dbPosition = savedProgress.current_position || validDuration;
+      console.log('📊 Using DB position for completed lesson:', dbPosition);
+      return dbPosition;
     }
     
-    // For current lesson that's actively playing, show real-time progress
+    // THIRD PRIORITY: For current lesson actively playing, show real-time
     if (isCurrent && currentLesson?.id === lesson.id && propIsPlaying) {
-      return Math.min(currentTime, validDuration);
+      const realTimePosition = Math.min(currentTime, validDuration);
+      console.log('📊 Using real-time position:', realTimePosition);
+      return realTimePosition;
     }
     
-    // For all other cases, use saved progress from DB
-    return savedProgress?.current_position || 0;
-  }, [isCurrent, currentLesson?.id, lesson.id, currentTime, validDuration, savedProgress, propIsPlaying, justCompleted]);
+    // LOWEST PRIORITY: Use saved progress from DB
+    const savedPosition = savedProgress?.current_position || 0;
+    console.log('📊 Using saved position:', savedPosition);
+    return savedPosition;
+  }, [
+    lesson.id, justCompleted, savedProgress?.is_completed, savedProgress?.current_position,
+    isCurrent, currentLesson?.id, propIsPlaying, currentTime, validDuration
+  ]);
 
   // Handle seek change
   const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {

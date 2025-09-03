@@ -253,30 +253,33 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     // Mark lesson as complete first
     await markLessonComplete(currentLesson.id, currentPodcast.id);
     
-    // Increased delay to allow DB update to complete
+    // CRITICAL: Wait for DB completion BEFORE auto-advance
     setTimeout(async () => {
-      // Force refresh of lessons progress if callback is available
+      console.log('🔄 AudioPlayer: Starting post-completion sequence'); 
+      
+      // Step 1: Force refresh of lessons progress - WAIT for completion
       if (onLessonCompletedCallback) {
-        console.log('🔄 AudioPlayer: Forcing lessons refresh after completion');
+        console.log('🔄 AudioPlayer: Refreshing lessons data...');
         await onLessonCompletedCallback();
+        console.log('✅ AudioPlayer: Lessons refresh completed');
       }
       
-      // Check if we should auto-advance
+      // Step 2: Additional small delay to ensure UI sync
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      // Step 3: Now proceed with auto-advance
       const currentIndex = currentPodcast.lessons.findIndex(l => l.id === currentLesson.id);
       const nextLesson = currentPodcast.lessons[currentIndex + 1];
       
       if (nextLesson) {
-        // The next lesson should be unlocked after current lesson completion
-        console.log('⏭️ AudioPlayer: Auto-advancing to next lesson:', nextLesson.title);
+        console.log('🎯 AudioPlayer: Auto-advancing to next lesson:', nextLesson.title);
         selectLesson(nextLesson, currentPodcast, true);
       } else {
-        console.log('🏁 AudioPlayer: Course completed - no more lessons');
+        console.log('🏁 AudioPlayer: Course completed!');
         setIsPlaying(false);
-        
-        // Update course progress to 100%
         updateCourseProgress(currentPodcast.id, { progress_percentage: 100 });
       }
-    }, 500); // Increased delay to ensure DB update and refresh completes
+    }, 800); // Increased delay for complete synchronization
   }, [currentLesson, currentPodcast, user, markLessonComplete, updateCourseProgress, selectLesson, onLessonCompletedCallback]);
   
   // Audio event handlers
