@@ -72,7 +72,7 @@ const Dashboard = () => {
         </div>
       )}
       
-      <div className="h-full overflow-y-auto pl-6">
+      <div className="h-full overflow-y-auto px-4 sm:px-6">
         <div className="max-w-7xl mx-auto pb-6">
           <DashboardWelcomeHeader 
             userName={userName}

@@ -32,13 +32,13 @@ export const getEmblaOptions = (courseCount: number): EmblaOptionsType => {
 // Get mobile card width based on course count - optimized for real courses only
 export const getMobileCardWidth = (courseCount: number): string => {
   if (courseCount === 1) {
-    return 'w-[92vw]';
+    return 'w-[90vw]';
   } else if (courseCount === 2) {
-    return 'w-[85vw]';
+    return 'w-[75vw]';
   } else if (courseCount === 3) {
-    return 'w-[80vw]';
+    return 'w-[65vw]';
   }
-  return 'w-[85vw]';
+  return 'w-[75vw]';
 };
 
 // Determine if navigation should be shown
