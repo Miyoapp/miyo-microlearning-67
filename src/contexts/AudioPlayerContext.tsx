@@ -169,7 +169,9 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const togglePlay = useCallback(() => {
     if (!audioRef.current || !currentLesson) return;
     
-    console.log('🎵 AudioPlayer: Toggle play:', !isPlaying);
+    console.log('🎵 AudioPlayer: Toggle play - Current state:', isPlaying);
+    
+    // Simply toggle the playing state - don't call selectLesson
     setIsPlaying(!isPlaying);
   }, [isPlaying, currentLesson]);
   
@@ -228,31 +230,32 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   }, [currentLesson, currentPodcast, user, updateLessonPosition]);
   
-  const onLessonComplete = useCallback(() => {
+  const onLessonComplete = useCallback(async () => {
     if (!currentLesson || !currentPodcast || !user) return;
     
     console.log('✅ AudioPlayer: Lesson completed:', currentLesson.title);
     
-    // Mark lesson as complete
-    markLessonComplete(currentLesson.id, currentPodcast.id);
+    // Mark lesson as complete first
+    await markLessonComplete(currentLesson.id, currentPodcast.id);
     
-    // Check if we should auto-advance
-    const currentIndex = currentPodcast.lessons.findIndex(l => l.id === currentLesson.id);
-    const nextLesson = currentPodcast.lessons[currentIndex + 1];
-    
-    if (nextLesson && !nextLesson.isLocked) {
-      console.log('⏭️ AudioPlayer: Auto-advancing to next lesson:', nextLesson.title);
-      selectLesson(nextLesson, currentPodcast, true);
-    } else {
-      console.log('🏁 AudioPlayer: Course completed or no more lessons');
-      setIsPlaying(false);
+    // Give a small delay to allow DB update to propagate
+    setTimeout(() => {
+      // Check if we should auto-advance
+      const currentIndex = currentPodcast.lessons.findIndex(l => l.id === currentLesson.id);
+      const nextLesson = currentPodcast.lessons[currentIndex + 1];
       
-      // Check if course is completed
-      const allCompleted = currentPodcast.lessons.every(lesson => lesson.isCompleted);
-      if (allCompleted) {
+      if (nextLesson) {
+        // The next lesson should be unlocked after current lesson completion
+        console.log('⏭️ AudioPlayer: Auto-advancing to next lesson:', nextLesson.title);
+        selectLesson(nextLesson, currentPodcast, true);
+      } else {
+        console.log('🏁 AudioPlayer: Course completed - no more lessons');
+        setIsPlaying(false);
+        
+        // Update course progress to 100%
         updateCourseProgress(currentPodcast.id, { progress_percentage: 100 });
       }
-    }
+    }, 100); // Small delay to ensure DB update has time to propagate
   }, [currentLesson, currentPodcast, user, markLessonComplete, updateCourseProgress, selectLesson]);
   
   // Audio event handlers

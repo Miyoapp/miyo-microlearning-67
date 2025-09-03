@@ -52,9 +52,17 @@ export function useLessonActions(
         return;
       }
       
-      // SIMPLIFICADO: Solo verificar estado BD para replay, no estado local
+      // NUEVO: Permitir actualizaciones durante replay activo de lecciones completadas
       if (existingProgress?.is_completed) {
-        console.log('🔄 Replay of completed lesson (BD state) - preserving completion status:', lessonId);
+        console.log('🔄 Completed lesson being replayed - allowing position updates during active playback:', lessonId);
+        // Solo actualizar posición si es menor a 100 (durante reproducción activa)
+        if (position < 100) {
+          const updates = {
+            current_position: Math.round(position)
+            // NO cambiar is_completed - mantener estado completado
+          };
+          await updateLessonProgress(lessonId, courseId, updates);
+        }
         return;
       }
       

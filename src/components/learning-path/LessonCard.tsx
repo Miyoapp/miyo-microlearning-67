@@ -174,14 +174,25 @@ const LessonCard = React.memo(({
   
   // Display current time - show saved progress for non-current lessons
   const displayCurrentTime = useMemo(() => {
+    // Priority 1: If lesson is completed, always show 100% UNLESS actively playing
+    if (savedProgress?.is_completed) {
+      // If this is the current lesson AND actively playing, show real progress
+      if (isCurrent && currentLesson?.id === lesson.id && propIsPlaying) {
+        return Math.min(currentTime, validDuration);
+      }
+      // Otherwise, always show 100% for completed lessons
+      return validDuration;
+    }
+    
+    // Priority 2: For incomplete lessons
     if (isCurrent && currentLesson?.id === lesson.id) {
       // For current lesson, show real-time progress
-      return savedProgress?.is_completed ? validDuration : Math.min(currentTime, validDuration);
+      return Math.min(currentTime, validDuration);
     } else {
-      // For non-current lessons, show saved progress or full duration if completed
-      return savedProgress?.is_completed ? validDuration : (savedProgress?.current_position || 0);
+      // For non-current lessons, show saved progress
+      return savedProgress?.current_position || 0;
     }
-  }, [isCurrent, currentLesson?.id, lesson.id, currentTime, validDuration, savedProgress]);
+  }, [isCurrent, currentLesson?.id, lesson.id, currentTime, validDuration, savedProgress, propIsPlaying]);
 
   // Handle seek change
   const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
