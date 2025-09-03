@@ -295,7 +295,7 @@ const LessonCard = React.memo(({
 
   // Status icon logic
   const getStatusIcon = () => {
-    if (!canPlay) {
+    if (!canPlay && !isCompleted) {
       return <Lock size={16} />;
     }
     
@@ -409,7 +409,7 @@ const LessonCard = React.memo(({
         </div>
 
         {/* Audio Controls - Only show if can play and no error */}
-        {canPlay && !(hasError && isCurrent) && (
+        {(canPlay || isCompleted) && !(hasError && isCurrent) && (
           <div className="space-y-3">
             {/* Progress Bar */}
             <div className="relative">
