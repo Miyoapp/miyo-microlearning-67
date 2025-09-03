@@ -253,14 +253,14 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     // Mark lesson as complete first
     await markLessonComplete(currentLesson.id, currentPodcast.id);
     
-    // Force refresh of lessons progress if callback is available
-    if (onLessonCompletedCallback) {
-      console.log('🔄 AudioPlayer: Forcing lessons refresh after completion');
-      onLessonCompletedCallback();
-    }
-    
-    // Increased delay to allow DB update and refresh to propagate
-    setTimeout(() => {
+    // Increased delay to allow DB update to complete
+    setTimeout(async () => {
+      // Force refresh of lessons progress if callback is available
+      if (onLessonCompletedCallback) {
+        console.log('🔄 AudioPlayer: Forcing lessons refresh after completion');
+        await onLessonCompletedCallback();
+      }
+      
       // Check if we should auto-advance
       const currentIndex = currentPodcast.lessons.findIndex(l => l.id === currentLesson.id);
       const nextLesson = currentPodcast.lessons[currentIndex + 1];
@@ -276,7 +276,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         // Update course progress to 100%
         updateCourseProgress(currentPodcast.id, { progress_percentage: 100 });
       }
-    }, 300); // Increased delay to ensure DB update and refresh completes
+    }, 500); // Increased delay to ensure DB update and refresh completes
   }, [currentLesson, currentPodcast, user, markLessonComplete, updateCourseProgress, selectLesson, onLessonCompletedCallback]);
   
   // Audio event handlers

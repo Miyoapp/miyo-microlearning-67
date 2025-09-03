@@ -79,10 +79,11 @@ const DashboardCourse = () => {
   } = useLessons(podcast);
   
   // Refresh lessons progress when needed
-  const refreshLessonsProgress = useCallback(() => {
+  const refreshLessonsProgress = useCallback(async () => {
     if (podcast) {
       console.log('🔄 DashboardCourse: Refreshing lessons progress');
-      calculateLessonStates();
+      await calculateLessonStates();
+      console.log('✅ DashboardCourse: Lessons progress refresh complete');
     }
   }, [podcast, calculateLessonStates]);
 

@@ -206,31 +206,25 @@ const LessonCard = React.memo(({
   // Speed options for dropdown
   const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
   
-  // Display current time - show saved progress for non-current lessons
+  // Display current time - simplified using DB as single source of truth
   const displayCurrentTime = useMemo(() => {
-    // Priority 0: If lesson was just completed locally, show 100% immediately
+    // If lesson was just completed locally, show 100% immediately
     if (justCompleted) {
       return validDuration;
     }
     
-    // Priority 1: If lesson is completed, always show 100% UNLESS actively playing
+    // For completed lessons, always use current_position from DB (which should be 100)
     if (savedProgress?.is_completed) {
-      // If this is the current lesson AND actively playing, show real progress
-      if (isCurrent && currentLesson?.id === lesson.id && propIsPlaying) {
-        return Math.min(currentTime, validDuration);
-      }
-      // Otherwise, always show 100% for completed lessons
-      return validDuration;
+      return savedProgress?.current_position || validDuration;
     }
     
-    // Priority 2: For incomplete lessons
-    if (isCurrent && currentLesson?.id === lesson.id) {
-      // For current lesson, show real-time progress
+    // For current lesson that's actively playing, show real-time progress
+    if (isCurrent && currentLesson?.id === lesson.id && propIsPlaying) {
       return Math.min(currentTime, validDuration);
-    } else {
-      // For non-current lessons, show saved progress
-      return savedProgress?.current_position || 0;
     }
+    
+    // For all other cases, use saved progress from DB
+    return savedProgress?.current_position || 0;
   }, [isCurrent, currentLesson?.id, lesson.id, currentTime, validDuration, savedProgress, propIsPlaying, justCompleted]);
 
   // Handle seek change
