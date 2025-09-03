@@ -7,7 +7,7 @@ import CourseCardWithProgress from '@/components/dashboard/CourseCardWithProgres
 import { obtenerCursos } from '@/lib/api';
 import { useUserProgress } from '@/hooks/useUserProgress';
 import { Podcast } from '@/types';
-import { SidebarTrigger } from '@/components/ui/sidebar/SidebarTrigger';
+import { SidebarTrigger } from '@/components/ui/sidebar/index';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const DashboardMyRoutes = () => {
