@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { useCourseData } from '@/hooks/useCourseData';
@@ -73,23 +73,22 @@ const DashboardCourse = () => {
   const { 
     lessonsWithProgress, 
     getNextLessonToContinue, 
-    canPlayLesson 
+    canPlayLesson,
+    calculateLessonStates
   } = useLessons(podcast);
   
-  // Set up realtime sync
+  // Refresh lessons progress when needed
+  const refreshLessonsProgress = useCallback(() => {
+    if (podcast) {
+      calculateLessonStates();
+    }
+  }, [podcast, calculateLessonStates]);
+  
+  // Set up realtime sync - simplified without circular dependencies
   useCourseRealtimeSync({
     podcast,
-    initializePodcastWithProgress: () => {
-      if (podcast) {
-        // Update podcast with lessons progress
-        const updatedPodcast = {
-          ...podcast,
-          lessons: lessonsWithProgress
-        };
-        setPodcast(updatedPodcast);
-      }
-    },
-    refetch
+    refetch,
+    onProgressUpdate: refreshLessonsProgress
   });
   
   // Course progress calculations

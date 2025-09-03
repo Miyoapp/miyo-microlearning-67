@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Lesson, Podcast } from '@/types';
 import { useUserProgress } from '@/hooks/useUserProgress';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -39,9 +39,36 @@ export function useLessons(podcast: Podcast | null) {
     fetchLessonProgress();
   }, [fetchLessonProgress]);
   
-  // Calculate lesson states with progress
-  const calculateLessonStates = useCallback(() => {
-    if (!podcast) return [];
+  // Stable references to prevent recalculations
+  const stableProgressRef = useRef<any[]>([]);
+  const stableUserProgressRef = useRef<any[]>([]);
+  
+  // Deep comparison for lesson progress stability
+  const progressHasChanged = useMemo(() => {
+    if (lessonProgress.length !== stableProgressRef.current.length) return true;
+    return lessonProgress.some((item, index) => {
+      const prev = stableProgressRef.current[index];
+      return !prev || 
+        item.lesson_id !== prev.lesson_id || 
+        item.is_completed !== prev.is_completed;
+    });
+  }, [lessonProgress]);
+  
+  // Deep comparison for user progress stability
+  const userProgressHasChanged = useMemo(() => {
+    const relevantProgress = userProgress.find(p => p.course_id === podcast?.id);
+    const prevRelevantProgress = stableUserProgressRef.current.find(p => p.course_id === podcast?.id);
+    
+    if (!relevantProgress && !prevRelevantProgress) return false;
+    if (!relevantProgress || !prevRelevantProgress) return true;
+    
+    return relevantProgress.is_completed !== prevRelevantProgress.is_completed ||
+           relevantProgress.progress_percentage !== prevRelevantProgress.progress_percentage;
+  }, [userProgress, podcast?.id]);
+
+  // Memoized lesson calculation to prevent unnecessary recalculations
+  const calculatedLessons = useMemo(() => {
+    if (!podcast || !user) return [];
     
     console.log('📚 useLessons: Calculating lesson states for:', podcast.title);
     
@@ -85,15 +112,21 @@ export function useLessons(podcast: Podcast | null) {
     
     console.log('✅ useLessons: Lesson states calculated');
     return updatedLessons;
-  }, [podcast, lessonProgress, userProgress]);
+  }, [podcast, lessonProgress, userProgress, user]);
   
-  // Update lessons when data changes
+  // Update stable references and lessons when data actually changes
   useEffect(() => {
-    if (podcast && user) {
-      const updated = calculateLessonStates();
-      setLessonsWithProgress(updated);
+    if (progressHasChanged) {
+      stableProgressRef.current = [...lessonProgress];
     }
-  }, [podcast, user, lessonProgress, userProgress, calculateLessonStates]);
+    if (userProgressHasChanged) {
+      stableUserProgressRef.current = [...userProgress];
+    }
+    
+    if ((progressHasChanged || userProgressHasChanged) && calculatedLessons.length > 0) {
+      setLessonsWithProgress(calculatedLessons);
+    }
+  }, [calculatedLessons, progressHasChanged, userProgressHasChanged, lessonProgress, userProgress]);
   
   // Find next lesson to continue (for auto-positioning)
   const getNextLessonToContinue = useCallback(() => {
@@ -116,10 +149,15 @@ export function useLessons(podcast: Podcast | null) {
     return lessonWithProgress ? !lessonWithProgress.isLocked : false;
   }, [lessonsWithProgress]);
   
+  // Force refresh lessons (for realtime updates)
+  const refreshLessons = useCallback(() => {
+    fetchLessonProgress();
+  }, [fetchLessonProgress]);
+  
   return {
     lessonsWithProgress,
     getNextLessonToContinue,
     canPlayLesson,
-    calculateLessonStates
+    calculateLessonStates: refreshLessons
   };
 }
