@@ -77,6 +77,9 @@ const LessonCard = React.memo(({
   const [showSpeedDropdown, setShowSpeedDropdown] = React.useState(false);
   const [showVolumeControl, setShowVolumeControl] = React.useState(false);
 
+  // Local state to handle immediate completion visual feedback
+  const [justCompleted, setJustCompleted] = React.useState(false);
+
   // Play/pause handler - fixed to avoid restart
   const handlePlayPause = () => {
     console.log('🎵 LessonCard - Play/Pause click:', {
@@ -144,12 +147,37 @@ const LessonCard = React.memo(({
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  // Progress display logic - moved here before useEffect that needs it
+  const validDuration = isCurrent && currentLesson?.id === lesson.id ? duration : (lesson.duracion || 0);
+
   // Fetch notes when lesson can play and courseId is available
   React.useEffect(() => {
     if (canPlay && courseId) {
       fetchNotes();
     }
   }, [canPlay, courseId, fetchNotes]);
+
+  // Handle lesson completion feedback
+  React.useEffect(() => {
+    // If this lesson just got completed and we're the current lesson at the end
+    if (isCurrent && currentTime >= validDuration * 0.98 && validDuration > 0 && !savedProgress?.is_completed) {
+      console.log('🏁 LessonCard: Detected lesson completion, setting justCompleted');
+      setJustCompleted(true);
+      
+      // Reset after a delay to allow database sync
+      setTimeout(() => {
+        setJustCompleted(false);
+      }, 5000);
+    }
+  }, [isCurrent, currentTime, validDuration, savedProgress?.is_completed]);
+
+  // Reset justCompleted when saved progress gets updated to completed
+  React.useEffect(() => {
+    if (savedProgress?.is_completed && justCompleted) {
+      console.log('🔄 LessonCard: Database sync complete, resetting justCompleted');
+      setJustCompleted(false);
+    }
+  }, [savedProgress?.is_completed, justCompleted]);
 
   // Handle adding note
   const handleAddNote = async (noteText: string) => {
@@ -177,12 +205,14 @@ const LessonCard = React.memo(({
 
   // Speed options for dropdown
   const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
-
-  // Progress display logic
-  const validDuration = isCurrent && currentLesson?.id === lesson.id ? duration : (lesson.duracion || 0);
   
   // Display current time - show saved progress for non-current lessons
   const displayCurrentTime = useMemo(() => {
+    // Priority 0: If lesson was just completed locally, show 100% immediately
+    if (justCompleted) {
+      return validDuration;
+    }
+    
     // Priority 1: If lesson is completed, always show 100% UNLESS actively playing
     if (savedProgress?.is_completed) {
       // If this is the current lesson AND actively playing, show real progress
@@ -201,7 +231,7 @@ const LessonCard = React.memo(({
       // For non-current lessons, show saved progress
       return savedProgress?.current_position || 0;
     }
-  }, [isCurrent, currentLesson?.id, lesson.id, currentTime, validDuration, savedProgress, propIsPlaying]);
+  }, [isCurrent, currentLesson?.id, lesson.id, currentTime, validDuration, savedProgress, propIsPlaying, justCompleted]);
 
   // Handle seek change
   const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {

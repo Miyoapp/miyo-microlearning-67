@@ -29,7 +29,8 @@ const DashboardCourse = () => {
     selectLesson,
     togglePlay,
     onLessonComplete,
-    onProgressUpdate 
+    onProgressUpdate,
+    setOnLessonCompletedCallback
   } = useAudioPlayer();
   
   // Enhanced stable reference with timeout-based cleanup
@@ -80,9 +81,16 @@ const DashboardCourse = () => {
   // Refresh lessons progress when needed
   const refreshLessonsProgress = useCallback(() => {
     if (podcast) {
+      console.log('🔄 DashboardCourse: Refreshing lessons progress');
       calculateLessonStates();
     }
   }, [podcast, calculateLessonStates]);
+
+  // Connect lessons refresh callback to audio player
+  useEffect(() => {
+    setOnLessonCompletedCallback(() => refreshLessonsProgress);
+    return () => setOnLessonCompletedCallback(null);
+  }, [refreshLessonsProgress, setOnLessonCompletedCallback]);
   
   // Set up realtime sync - simplified without circular dependencies
   useCourseRealtimeSync({
