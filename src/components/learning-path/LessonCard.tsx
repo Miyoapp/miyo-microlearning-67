@@ -79,6 +79,9 @@ const LessonCard = React.memo(({
 
   // Local state to handle immediate completion visual feedback
   const [justCompleted, setJustCompleted] = React.useState(false);
+  
+  // State for temporary progress during replay of completed lessons
+  const [temporaryPosition, setTemporaryPosition] = React.useState<number | null>(null);
 
   // Play/pause handler - FIXED condition check
   const handlePlayPause = () => {
@@ -188,6 +191,28 @@ const LessonCard = React.memo(({
       setJustCompleted(false);
     }
   }, [savedProgress?.is_completed, justCompleted]);
+  
+  // Update temporary position during playback of completed lessons
+  React.useEffect(() => {
+    // Only update temporaryPosition for completed lessons that are currently playing
+    if (savedProgress?.is_completed && isCurrent && propIsPlaying && validDuration > 0) {
+      console.log('🎯 Updating temporaryPosition for completed lesson:', currentTime);
+      setTemporaryPosition(Math.min(currentTime, validDuration));
+    }
+  }, [savedProgress?.is_completed, isCurrent, propIsPlaying, currentTime, validDuration]);
+  
+  // Reset temporary position when lesson changes or becomes inactive
+  React.useEffect(() => {
+    // Reset temporaryPosition when:
+    // 1. Lesson is no longer current
+    // 2. Current lesson ID changes 
+    if (!isCurrent || (currentLesson && currentLesson.id !== lesson.id)) {
+      if (temporaryPosition !== null) {
+        console.log('🔄 Resetting temporaryPosition - lesson changed');
+        setTemporaryPosition(null);
+      }
+    }
+  }, [isCurrent, currentLesson?.id, lesson.id, temporaryPosition]);
 
   // Handle adding note
   const handleAddNote = async (noteText: string) => {
@@ -216,36 +241,51 @@ const LessonCard = React.memo(({
   // Speed options for dropdown
   const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
   
-  // SIMPLIFIED display current time - DB is the SINGLE source of truth
+  // TEMPORAL PROGRESS display current time - handles completed lesson replay
   const displayCurrentTime = useMemo(() => {
-    console.log('📊 DisplayCurrentTime - SIMPLIFIED:', {
+    console.log('📊 DisplayCurrentTime - TEMPORAL PROGRESS:', {
       lessonId: lesson.id,
       isCompleted: savedProgress?.is_completed,
       currentPosition: savedProgress?.current_position,
       isCurrent,
       propIsPlaying,
-      currentTime
+      currentTime,
+      temporaryPosition
     });
     
-    // If completed in DB, always show 100% (current_position should be 100)
+    // FOR COMPLETED LESSONS: Handle temporary replay progress
     if (savedProgress?.is_completed) {
-      const completedPosition = Math.max(savedProgress.current_position || 0, validDuration);
-      console.log('📊 COMPLETED - showing:', completedPosition);
-      return completedPosition;
+      // If currently playing: show real-time progress
+      if (isCurrent && propIsPlaying) {
+        const realTime = Math.min(currentTime, validDuration);
+        console.log('📊 COMPLETED PLAYING - showing real-time:', realTime);
+        return realTime;
+      }
+      
+      // If paused: show temporary position (maintains pause position)
+      if (isCurrent && !propIsPlaying && temporaryPosition !== null) {
+        console.log('📊 COMPLETED PAUSED - showing temporaryPosition:', temporaryPosition);
+        return temporaryPosition;
+      }
+      
+      // If not current: show 100% from DB (completed state)
+      console.log('📊 COMPLETED INACTIVE - showing 100%:', validDuration);
+      return validDuration;
     }
     
+    // FOR NON-COMPLETED LESSONS: Original logic
     // If this is the current lesson playing, show real-time
     if (isCurrent && currentLesson?.id === lesson.id && propIsPlaying) {
       const realTime = Math.min(currentTime, validDuration);
-      console.log('📊 PLAYING - showing real-time:', realTime);
+      console.log('📊 NON-COMPLETED PLAYING - showing real-time:', realTime);
       return realTime;
     }
     
     // Otherwise, use saved progress
     const savedPos = savedProgress?.current_position || 0;
-    console.log('📊 SAVED - showing saved position:', savedPos);
+    console.log('📊 NON-COMPLETED SAVED - showing saved position:', savedPos);
     return savedPos;
-  }, [savedProgress?.is_completed, savedProgress?.current_position, isCurrent, currentLesson?.id, propIsPlaying, currentTime, validDuration, lesson.id]);
+  }, [savedProgress?.is_completed, savedProgress?.current_position, isCurrent, currentLesson?.id, propIsPlaying, currentTime, validDuration, lesson.id, temporaryPosition]);
 
   // Handle seek change
   const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
