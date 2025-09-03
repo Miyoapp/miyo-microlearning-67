@@ -40,7 +40,8 @@ export function useLessonStatus(lessons: Lesson[], modules: Module[], currentLes
       // - Lecciones completadas (🏆) SIEMPRE reproducibles
       // - Lecciones desbloqueadas (▶) reproducibles
       // - Primera lección siempre reproducible
-      const canPlay = isCompleted || !isLocked || isFirstInSequence;
+      // - Lección actual (🎵) SIEMPRE reproducible (AUTO-ADVANCE FIX)
+      const canPlay = isCompleted || !isLocked || isFirstInSequence || isCurrent;
       
       const status = {
         isCompleted,
