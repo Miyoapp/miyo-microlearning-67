@@ -14,6 +14,7 @@ interface CourseAccessHandlerProps {
   isPremium: boolean;
   hasAccess: boolean;
   isPlaying: boolean;
+  lessonProgress: any[];
   showCheckout: boolean;
   onStartLearning: () => void;
   onToggleSave: () => void;
@@ -37,6 +38,7 @@ const CourseAccessHandler: React.FC<CourseAccessHandlerProps> = ({
   isPremium,
   hasAccess,
   isPlaying,
+  lessonProgress,
   showCheckout,
   onStartLearning,
   onToggleSave,
@@ -60,6 +62,7 @@ const CourseAccessHandler: React.FC<CourseAccessHandlerProps> = ({
         isPremium={isPremium}
         hasAccess={hasAccess}
         isGloballyPlaying={isPlaying}
+        lessonProgress={lessonProgress}
         onStartLearning={onStartLearning}
         onToggleSave={onToggleSave}
         onSelectLesson={onSelectLesson}

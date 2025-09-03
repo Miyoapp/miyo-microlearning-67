@@ -258,6 +258,7 @@ const DashboardCourse = () => {
               isPremium={isPremium}
               hasAccess={hasAccess}
               isPlaying={isPlaying}
+              lessonProgress={freshLessonProgress}
               showCheckout={showCheckout}
               onStartLearning={handleStartLearning}
               onToggleSave={handleToggleSave}

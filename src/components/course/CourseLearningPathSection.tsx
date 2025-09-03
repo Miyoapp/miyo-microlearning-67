@@ -7,6 +7,7 @@ interface CourseLearningPathSectionProps {
   podcast: Podcast;
   currentLessonId: string | null;
   isGloballyPlaying: boolean;
+  lessonProgress: any[];
   onSelectLesson: (lesson: Lesson) => void;
   onProgressUpdate?: (position: number) => void;
   onLessonComplete?: () => void;
@@ -16,6 +17,7 @@ const CourseLearningPathSection: React.FC<CourseLearningPathSectionProps> = ({
   podcast,
   currentLessonId,
   isGloballyPlaying,
+  lessonProgress,
   onSelectLesson,
   onProgressUpdate,
   onLessonComplete
@@ -34,6 +36,7 @@ const CourseLearningPathSection: React.FC<CourseLearningPathSectionProps> = ({
         modules={podcast.modules}
         currentLessonId={currentLessonId}
         isGloballyPlaying={isGloballyPlaying}
+        lessonProgress={lessonProgress}
         podcast={podcast}
       />
     </div>

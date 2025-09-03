@@ -16,6 +16,7 @@ interface CourseMainContentProps {
   isPremium: boolean;
   hasAccess: boolean;
   isGloballyPlaying: boolean;
+  lessonProgress: any[];
   onStartLearning: () => void;
   onToggleSave: () => void;
   onSelectLesson: (lesson: Lesson) => void;
@@ -34,6 +35,7 @@ const CourseMainContent: React.FC<CourseMainContentProps> = ({
   isPremium,
   hasAccess,
   isGloballyPlaying,
+  lessonProgress,
   onStartLearning,
   onToggleSave,
   onSelectLesson,
@@ -64,6 +66,7 @@ const CourseMainContent: React.FC<CourseMainContentProps> = ({
             podcast={podcast}
             currentLessonId={currentLesson?.id || null}
             isGloballyPlaying={isGloballyPlaying}
+            lessonProgress={lessonProgress}
             onSelectLesson={handleLessonSelect}
             onProgressUpdate={onProgressUpdate}
             onLessonComplete={onLessonComplete}

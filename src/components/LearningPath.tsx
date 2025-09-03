@@ -21,6 +21,7 @@ interface LearningPathProps {
   modules: Module[];
   currentLessonId: string | null;
   isGloballyPlaying: boolean;
+  lessonProgress: any[];
   podcast?: any;
 }
 
@@ -29,6 +30,7 @@ const LearningPath = React.memo(({
   modules, 
   currentLessonId, 
   isGloballyPlaying,
+  lessonProgress,
   podcast
 }: LearningPathProps) => {
   // Audio player context
@@ -59,7 +61,7 @@ const LearningPath = React.memo(({
   } = useCourseCompletion({
     podcast,
     userProgress,
-    lessonProgress: [], // Empty array since we don't need it for basic functionality
+    lessonProgress,
     markCompletionModalShown
   });
 
@@ -178,7 +180,7 @@ const LearningPath = React.memo(({
                 currentLessonId={currentLessonId}
                 isGloballyPlaying={isGloballyPlaying}
                 courseId={courseId}
-                lessonProgress={[]} // Empty array since we don't depend on it anymore
+                lessonProgress={lessonProgress}
                 onLessonClick={handleLessonClick}
               />
             );
