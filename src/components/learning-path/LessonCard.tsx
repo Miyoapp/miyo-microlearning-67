@@ -48,6 +48,7 @@ const LessonCard = React.memo(({
     playbackRate, 
     isMuted, 
     hasError,
+    togglePlay,
     seekTo, 
     skipForward, 
     skipBackward, 
@@ -76,12 +77,12 @@ const LessonCard = React.memo(({
   const [showSpeedDropdown, setShowSpeedDropdown] = React.useState(false);
   const [showVolumeControl, setShowVolumeControl] = React.useState(false);
 
-  // Play/pause handler - simplified
+  // Play/pause handler - fixed to avoid restart
   const handlePlayPause = () => {
     console.log('🎵 LessonCard - Play/Pause click:', {
       lessonTitle: lesson.title,
+      isCurrent,
       currentState: propIsPlaying,
-      targetState: !propIsPlaying,
       canPlay,
       timestamp: new Date().toLocaleTimeString()
     });
@@ -91,7 +92,15 @@ const LessonCard = React.memo(({
       return;
     }
     
-    onLessonClick(lesson, !propIsPlaying);
+    if (isCurrent) {
+      // Current lesson: just toggle play/pause without reloading
+      console.log('🎵 Toggling current lesson playback');
+      togglePlay();
+    } else {
+      // Different lesson: select new lesson
+      console.log('🎵 Selecting new lesson');
+      onLessonClick(lesson, true);
+    }
   };
 
   // Handle seeking - only if this is current lesson

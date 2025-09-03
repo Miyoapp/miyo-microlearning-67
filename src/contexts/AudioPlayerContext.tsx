@@ -150,6 +150,15 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const selectLesson = useCallback((lesson: Lesson, podcast: Podcast, shouldAutoPlay = false) => {
     console.log('🎵 AudioPlayer: Selecting lesson:', lesson.title);
     
+    // Avoid unnecessary reload if selecting the same lesson
+    if (currentLesson?.id === lesson.id) {
+      console.log('🎵 Same lesson already selected, just toggling play state');
+      if (shouldAutoPlay && !isPlaying) {
+        setIsPlaying(true);
+      }
+      return;
+    }
+    
     setCurrentLesson(lesson);
     setCurrentPodcast(podcast);
     setIsLoading(true);
@@ -164,7 +173,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         setIsPlaying(true);
       }
     }
-  }, []);
+  }, [currentLesson, isPlaying]);
   
   const togglePlay = useCallback(() => {
     if (!audioRef.current || !currentLesson) return;
