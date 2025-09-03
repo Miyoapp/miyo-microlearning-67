@@ -1,7 +1,7 @@
 
 import React from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import { SidebarTrigger } from '@/components/ui/sidebar/SidebarTrigger';
+import { SidebarTrigger } from '@/components/ui/sidebar/index';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { NotesProvider } from '@/contexts/NotesContext';
 import NotesSection from '@/components/notes-section/NotesSection';

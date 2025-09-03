@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { SidebarProvider } from '@/components/ui/sidebar/SidebarProvider';
 import DashboardSidebar from './DashboardSidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
 

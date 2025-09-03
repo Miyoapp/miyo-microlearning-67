@@ -13,7 +13,7 @@ import {
   SidebarMenuItem,
   SidebarHeader,
   SidebarFooter 
-} from '@/components/ui/sidebar';
+} from '@/components/ui/sidebar/index';
 import { useAuth } from '@/components/auth/AuthProvider';
 import Logo from '@/components/common/Logo';
 import { toast } from 'sonner';

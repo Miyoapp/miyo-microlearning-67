@@ -8,7 +8,7 @@ import { obtenerCursos, obtenerCategorias } from '@/lib/api';
 import { useUserProgress } from '@/hooks/useUserProgress';
 import { useNewCourses } from '@/hooks/useNewCourses';
 import { Podcast, CategoryModel } from '@/types';
-import { SidebarTrigger } from '@/components/ui/sidebar/SidebarTrigger';
+import { SidebarTrigger } from '@/components/ui/sidebar/index';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { CalendarDays, Sparkles } from 'lucide-react';
 
