@@ -80,11 +80,16 @@ const LessonCard = React.memo(({
   // Local state to handle immediate completion visual feedback
   const [justCompleted, setJustCompleted] = React.useState(false);
 
-  // Play/pause handler - fixed to avoid restart
+  // Play/pause handler - FIXED condition check
   const handlePlayPause = () => {
+    const isCurrentLesson = currentLesson && currentLesson.id === lesson.id;
+    
     console.log('🎵 LessonCard - Play/Pause click:', {
       lessonTitle: lesson.title,
       isCurrent,
+      isCurrentLesson,
+      currentLessonId: currentLesson?.id,
+      thisLessonId: lesson.id,
       currentState: propIsPlaying,
       canPlay,
       timestamp: new Date().toLocaleTimeString()
@@ -95,13 +100,12 @@ const LessonCard = React.memo(({
       return;
     }
     
-    if (isCurrent) {
-      // Current lesson: just toggle play/pause without reloading
-      console.log('🎵 Toggling current lesson playback');
+    // FIXED: Use exact ID comparison for current lesson check
+    if (isCurrentLesson) {
+      console.log('🎵 TOGGLE PLAY - Current lesson confirmed');
       togglePlay();
     } else {
-      // Different lesson: select new lesson
-      console.log('🎵 Selecting new lesson');
+      console.log('🎵 SELECT NEW - Different lesson');
       onLessonClick(lesson, true);
     }
   };
@@ -212,48 +216,36 @@ const LessonCard = React.memo(({
   // Speed options for dropdown
   const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
   
-  // Display current time - ALWAYS use DB as single source of truth
+  // SIMPLIFIED display current time - DB is the SINGLE source of truth
   const displayCurrentTime = useMemo(() => {
-    const debugInfo = {
+    console.log('📊 DisplayCurrentTime - SIMPLIFIED:', {
       lessonId: lesson.id,
-      justCompleted,
       isCompleted: savedProgress?.is_completed,
       currentPosition: savedProgress?.current_position,
       isCurrent,
       propIsPlaying,
-      currentTime,
-      validDuration
-    };
-    console.log('📊 DisplayCurrentTime calc:', debugInfo);
+      currentTime
+    });
     
-    // HIGHEST PRIORITY: If just completed locally, show 100% immediately
-    if (justCompleted) {
-      console.log('📊 Using justCompleted: 100%');
-      return validDuration;
-    }
-    
-    // SECOND PRIORITY: If completed in DB, ALWAYS show current_position (should be 100)
+    // If completed in DB, always show 100% (current_position should be 100)
     if (savedProgress?.is_completed) {
-      const dbPosition = savedProgress.current_position || validDuration;
-      console.log('📊 Using DB position for completed lesson:', dbPosition);
-      return dbPosition;
+      const completedPosition = Math.max(savedProgress.current_position || 0, validDuration);
+      console.log('📊 COMPLETED - showing:', completedPosition);
+      return completedPosition;
     }
     
-    // THIRD PRIORITY: For current lesson actively playing, show real-time
+    // If this is the current lesson playing, show real-time
     if (isCurrent && currentLesson?.id === lesson.id && propIsPlaying) {
-      const realTimePosition = Math.min(currentTime, validDuration);
-      console.log('📊 Using real-time position:', realTimePosition);
-      return realTimePosition;
+      const realTime = Math.min(currentTime, validDuration);
+      console.log('📊 PLAYING - showing real-time:', realTime);
+      return realTime;
     }
     
-    // LOWEST PRIORITY: Use saved progress from DB
-    const savedPosition = savedProgress?.current_position || 0;
-    console.log('📊 Using saved position:', savedPosition);
-    return savedPosition;
-  }, [
-    lesson.id, justCompleted, savedProgress?.is_completed, savedProgress?.current_position,
-    isCurrent, currentLesson?.id, propIsPlaying, currentTime, validDuration
-  ]);
+    // Otherwise, use saved progress
+    const savedPos = savedProgress?.current_position || 0;
+    console.log('📊 SAVED - showing saved position:', savedPos);
+    return savedPos;
+  }, [savedProgress?.is_completed, savedProgress?.current_position, isCurrent, currentLesson?.id, propIsPlaying, currentTime, validDuration, lesson.id]);
 
   // Handle seek change
   const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {

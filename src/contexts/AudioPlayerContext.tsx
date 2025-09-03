@@ -253,19 +253,19 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     // Mark lesson as complete first
     await markLessonComplete(currentLesson.id, currentPodcast.id);
     
-    // CRITICAL: Wait for DB completion BEFORE auto-advance
+    // CRITICAL SEQUENCE: DB update -> Callback -> Auto-advance
     setTimeout(async () => {
-      console.log('🔄 AudioPlayer: Starting post-completion sequence'); 
+      console.log('🔄 AudioPlayer: Starting DEFINITIVE post-completion sequence'); 
       
       // Step 1: Force refresh of lessons progress - WAIT for completion
       if (onLessonCompletedCallback) {
-        console.log('🔄 AudioPlayer: Refreshing lessons data...');
+        console.log('🔄 AudioPlayer: Executing lessons refresh callback...');
         await onLessonCompletedCallback();
-        console.log('✅ AudioPlayer: Lessons refresh completed');
+        console.log('✅ AudioPlayer: Lessons refresh callback completed');
       }
       
-      // Step 2: Additional small delay to ensure UI sync
-      await new Promise(resolve => setTimeout(resolve, 200));
+      // Step 2: LONGER delay to ensure complete database and UI sync
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       // Step 3: Now proceed with auto-advance
       const currentIndex = currentPodcast.lessons.findIndex(l => l.id === currentLesson.id);
@@ -279,7 +279,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         setIsPlaying(false);
         updateCourseProgress(currentPodcast.id, { progress_percentage: 100 });
       }
-    }, 800); // Increased delay for complete synchronization
+    }, 1000); // INCREASED to 1000ms for complete synchronization
   }, [currentLesson, currentPodcast, user, markLessonComplete, updateCourseProgress, selectLesson, onLessonCompletedCallback]);
   
   // Audio event handlers

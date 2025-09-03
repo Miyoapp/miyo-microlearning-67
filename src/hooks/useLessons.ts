@@ -11,6 +11,7 @@ export function useLessons(podcast: Podcast | null) {
   
   const [lessonsWithProgress, setLessonsWithProgress] = useState<Lesson[]>([]);
   const [lessonProgress, setLessonProgress] = useState<any[]>([]);
+  const [forceUpdateFlag, setForceUpdateFlag] = useState(0);
   
   // Fetch lesson progress from Supabase directly
   const fetchLessonProgress = useCallback(async () => {
@@ -42,11 +43,11 @@ export function useLessons(podcast: Podcast | null) {
   // Force immediate updates - no complex memoization blocking
   const lastUpdateRef = useRef<number>(0);
 
-  // Calculate lessons immediately - no memoization blocking updates
+  // Calculate lessons immediately - SYNCHRONOUS updates only
   const calculateLessonsStates = useCallback(() => {
     if (!podcast || !user) return [];
     
-    console.log('📚 useLessons: Calculating lesson states for:', podcast.title);
+    console.log('📚 useLessons: IMMEDIATE calculation for:', podcast.title);
     
     const courseProgress = userProgress.find(p => p.course_id === podcast.id);
     const isReviewMode = courseProgress?.is_completed && courseProgress?.progress_percentage === 100;
@@ -62,16 +63,12 @@ export function useLessons(podcast: Podcast | null) {
       let isLocked = false;
       
       if (isReviewMode) {
-        // Review mode: all lessons unlocked
         isLocked = false;
       } else if (lesson.id === firstLessonId) {
-        // First lesson always unlocked
         isLocked = false;
       } else if (isCompleted) {
-        // Completed lessons always unlocked
         isLocked = false;
       } else {
-        // Check if previous lesson is completed
         const previousLesson = podcast.lessons[index - 1];
         if (previousLesson) {
           const previousProgress = lessonProgress.find(p => p.lesson_id === previousLesson.id);
@@ -86,11 +83,12 @@ export function useLessons(podcast: Podcast | null) {
       };
     });
     
-    console.log('✅ useLessons: Lesson states calculated, updating immediately');
+    // IMMEDIATE update - no delays
+    console.log('✅ useLessons: IMMEDIATE state update');
     setLessonsWithProgress(updatedLessons);
-    lastUpdateRef.current = Date.now();
+    setForceUpdateFlag(prev => prev + 1);
     return updatedLessons;
-  }, [podcast, lessonProgress, userProgress, user]);
+  }, [podcast, lessonProgress, userProgress, user, forceUpdateFlag]);
   
   // Update lessons immediately when data changes
   useEffect(() => {
@@ -118,20 +116,24 @@ export function useLessons(podcast: Podcast | null) {
     return lessonWithProgress ? !lessonWithProgress.isLocked : false;
   }, [lessonsWithProgress]);
   
-  // Force refresh lessons (for realtime updates)
+  // Force refresh lessons (for realtime updates) - SYNCHRONOUS
   const refreshLessons = useCallback(async () => {
-    console.log('🔄 useLessons: Force refreshing lesson progress');
+    console.log('🔄 useLessons: IMMEDIATE refresh starting');
     await fetchLessonProgress();
-    // Recalculate immediately after fetch
-    setTimeout(() => {
-      calculateLessonsStates();
-    }, 100);
+    
+    // IMMEDIATE recalculation - no setTimeout delays
+    console.log('🔄 useLessons: Forcing immediate recalculation');
+    const freshLessons = calculateLessonsStates();
+    
+    console.log('✅ useLessons: IMMEDIATE refresh complete');
+    return freshLessons;
   }, [fetchLessonProgress, calculateLessonsStates]);
   
   return {
     lessonsWithProgress,
     getNextLessonToContinue,
     canPlayLesson,
-    calculateLessonStates: refreshLessons
+    calculateLessonStates: refreshLessons,
+    lessonProgress // Export for DashboardCourse
   };
 }

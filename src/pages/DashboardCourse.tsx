@@ -22,6 +22,9 @@ const DashboardCourse = () => {
   const { userProgress, loading: progressLoading, refetch, startCourse, toggleSaveCourse } = useUserProgress();
   const [showCheckout, setShowCheckout] = useState(false);
   
+  // Fresh lesson progress state for immediate UI updates
+  const [freshLessonProgress, setFreshLessonProgress] = useState<any[]>([]);
+  
   // Audio player state
   const { 
     currentLesson, 
@@ -75,14 +78,29 @@ const DashboardCourse = () => {
     lessonsWithProgress, 
     getNextLessonToContinue, 
     canPlayLesson,
-    calculateLessonStates
+    calculateLessonStates,
+    lessonProgress: rawLessonProgress
   } = useLessons(podcast);
+  
+  // Sync fresh lesson progress with raw data
+  useEffect(() => {
+    if (rawLessonProgress && rawLessonProgress.length > 0) {
+      console.log('📊 DashboardCourse: Updating fresh lesson progress', rawLessonProgress.length);
+      setFreshLessonProgress([...rawLessonProgress]);
+    }
+  }, [rawLessonProgress]);
   
   // Refresh lessons progress when needed
   const refreshLessonsProgress = useCallback(async () => {
     if (podcast) {
       console.log('🔄 DashboardCourse: Refreshing lessons progress');
-      await calculateLessonStates();
+      const updatedProgress = await calculateLessonStates();
+      
+      // Force immediate UI update
+      if (updatedProgress) {
+        console.log('🔄 DashboardCourse: Force updating fresh progress');
+        setFreshLessonProgress([...updatedProgress]);
+      }
       console.log('✅ DashboardCourse: Lessons progress refresh complete');
     }
   }, [podcast, calculateLessonStates]);
