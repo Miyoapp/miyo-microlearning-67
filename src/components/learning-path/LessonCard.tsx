@@ -310,7 +310,7 @@ const LessonCard = React.memo(({
     <div className={cn(
       "bg-white rounded-lg border shadow-sm transition-all duration-200",
       {
-        "border-[#5e16ea] shadow-md": isCompleted || (isCurrent && !isCompleted),
+        "border-[#5e16ea] shadow-md": isCompleted || isCurrent,
         "border-gray-200": !isCurrent && !isCompleted && canPlay,
         "border-gray-100 bg-gray-50": !canPlay,
         "hover:shadow-md": canPlay,
@@ -354,7 +354,7 @@ const LessonCard = React.memo(({
               <h4 className={cn(
                 "font-medium text-sm",
                 {
-                  "text-[#5e16ea]": isCompleted || (isCurrent && !isCompleted),
+                  "text-[#5e16ea]": isCompleted || isCurrent,
                   "text-gray-900": canPlay && !isCurrent && !isCompleted,
                   "text-gray-400": !canPlay,
                   "text-red-600": hasError && isCurrent
