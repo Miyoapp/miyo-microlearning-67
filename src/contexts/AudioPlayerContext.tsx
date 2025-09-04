@@ -69,9 +69,6 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // Callback for lesson completion - allows external refresh triggers
   const [onLessonCompletedCallback, setOnLessonCompletedCallback] = useState<(() => void) | null>(null);
   
-  // Saved positions cache for resumption
-  const [savedPositions, setSavedPositions] = useState<Map<string, number>>(new Map());
-  
   // Core state
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
   const [currentPodcast, setCurrentPodcast] = useState<Podcast | null>(null);
@@ -156,7 +153,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   }, [user]);
   
-  const selectLesson = useCallback(async (lesson: Lesson, podcast: Podcast, shouldAutoPlay = false) => {
+  const selectLesson = useCallback((lesson: Lesson, podcast: Podcast, shouldAutoPlay = false) => {
     console.log('🎵 AudioPlayer: Selecting lesson:', lesson.title);
     
     // Avoid unnecessary reload if selecting the same lesson
@@ -174,25 +171,6 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     setHasError(false);
     setIsReady(false);
     
-    // Load saved position for this lesson
-    if (user) {
-      try {
-        const { data } = await supabase
-          .from('user_lesson_progress')
-          .select('current_position')
-          .eq('user_id', user.id)
-          .eq('lesson_id', lesson.id)
-          .single();
-        
-        if (data?.current_position) {
-          setSavedPositions(prev => new Map(prev).set(lesson.id, data.current_position));
-          console.log('📍 Cached saved position for lesson:', lesson.title, data.current_position + 's');
-        }
-      } catch (error) {
-        console.log('No saved position found for lesson:', lesson.title);
-      }
-    }
-    
     if (audioRef.current) {
       audioRef.current.src = lesson.urlAudio;
       audioRef.current.load();
@@ -201,7 +179,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         setIsPlaying(true);
       }
     }
-  }, [currentLesson, isPlaying, user]);
+  }, [currentLesson, isPlaying]);
   
   const togglePlay = useCallback(() => {
     if (!audioRef.current || !currentLesson) return;
@@ -306,20 +284,12 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   
   // Audio event handlers
   const handleLoadedMetadata = () => {
-    if (audioRef.current && currentLesson) {
+    if (audioRef.current) {
       setDuration(audioRef.current.duration);
       setIsReady(true);
       setIsLoading(false);
       setHasError(false);
       console.log('🎵 AudioPlayer: Metadata loaded');
-      
-      // Seek to saved position if available
-      const savedPosition = savedPositions.get(currentLesson.id);
-      if (savedPosition && savedPosition > 0 && savedPosition < audioRef.current.duration) {
-        console.log('⏭️ Seeking to saved position:', savedPosition + 's');
-        audioRef.current.currentTime = savedPosition;
-        setCurrentTime(savedPosition);
-      }
     }
   };
   
