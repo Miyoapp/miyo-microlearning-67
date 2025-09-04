@@ -364,7 +364,6 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     onProgressUpdate,
     onLessonComplete,
     setOnLessonCompletedCallback,
-    pausedAt,
   };
   
   return (
