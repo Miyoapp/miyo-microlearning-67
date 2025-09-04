@@ -63,93 +63,37 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress, mar
     }
   }, [markCompletionModalShown]);
 
-  // SOLUCIÓN 2: Lógica mejorada de detección
-  const checkCourseCompletion = useCallback(async () => {
-    console.log('🔍 IMPROVED CHECK - Starting course completion check:', {
-      hasPodcast: !!podcast,
-      hasUserProgress: !!userProgress,
-      isCurrentlyChecking: isCheckingRef.current,
-      podcastId: podcast?.id
-    });
-
-    // Prevent multiple simultaneous checks
-    if (isCheckingRef.current) {
-      console.log('⏸️ ALREADY CHECKING - Skipping to prevent race condition');
+  // Función directa para mostrar modal (sin esperar userProgress)
+  const triggerCompletionCheck = useCallback(async () => {
+    if (!podcast) {
+      console.log('⏹️ SKIP - No podcast available for completion check');
       return;
     }
 
-    if (!podcast || !userProgress) {
-      console.log('⏹️ SKIP - Completion check skipped: missing data');
+    // Evitar mostrar múltiples veces para el mismo curso
+    if (modalShownForCourseRef.current === podcast.id) {
+      console.log('⏸️ SKIP - Modal already shown for this course:', podcast.id);
       return;
     }
 
-    isCheckingRef.current = true;
+    console.log('🎉 DIRECT TRIGGER - Showing completion modal immediately!');
+    
+    // Marcar que ya mostramos el modal para este curso
+    modalShownForCourseRef.current = podcast.id;
+    
+    // Mostrar modal inmediatamente
+    await showModalImmediately(podcast.id, podcast.lessonCount, podcast.duration);
+    
+    console.log('✅ COMPLETION MODAL SHOWN INSTANTLY');
+  }, [podcast, showModalImmediately]);
 
-    try {
-      const courseProgress = userProgress.find(p => p.course_id === podcast.id);
-      
-      console.log('📊 PROGRESS ANALYSIS:', {
-        courseId: podcast.id,
-        isCompleted: courseProgress?.is_completed,
-        progressPercentage: courseProgress?.progress_percentage,
-        completionModalShown: courseProgress?.completion_modal_shown,
-        previousProgress: previousProgressRef.current,
-        modalAlreadyShownForThisCourse: modalShownForCourseRef.current === podcast.id
-      });
-      
-      // SOLUCIÓN 3: Condiciones mejoradas
-      const shouldShowModal = (
-        courseProgress?.is_completed && 
-        courseProgress?.progress_percentage === 100 && 
-        courseProgress?.completion_modal_shown === false &&
-        modalShownForCourseRef.current !== podcast.id // Evitar mostrar múltiples veces
-      );
-      
-      // ALTERNATIVA: Detectar transición de incompleto a completo
-      const wasIncompleteNowComplete = (
-        courseProgress?.is_completed && 
-        courseProgress?.progress_percentage === 100 && 
-        previousProgressRef.current < 100 &&
-        courseProgress?.completion_modal_shown === false &&
-        modalShownForCourseRef.current !== podcast.id
-      );
-      
-      if (shouldShowModal || wasIncompleteNowComplete) {
-        console.log('🎉 COURSE COMPLETED - Showing modal immediately!');
-        
-        // Marcar que ya mostramos el modal para este curso
-        modalShownForCourseRef.current = podcast.id;
-        
-        // Mostrar modal inmediatamente
-        await showModalImmediately(podcast.id, podcast.lessonCount, podcast.duration);
-        
-        console.log('✅ MODAL SHOWN INSTANTLY');
-      } else {
-        console.log('🔄 SKIP MODAL - Conditions not met');
-      }
-      
-      // Update previous progress
-      if (courseProgress?.progress_percentage !== undefined) {
-        previousProgressRef.current = courseProgress.progress_percentage;
-      }
-    } finally {
-      isCheckingRef.current = false;
-    }
-  }, [podcast, userProgress, showModalImmediately]);
-
-  // SOLUCIÓN 4: Reset cuando cambia el podcast
+  // Reset cuando cambia el podcast
   useEffect(() => {
     if (podcast?.id && modalShownForCourseRef.current !== podcast.id) {
       modalShownForCourseRef.current = null;
       previousProgressRef.current = 0;
     }
   }, [podcast?.id]);
-
-  // Effect principal
-  useEffect(() => {
-    console.log('🔄 EFFECT TRIGGER - Course completion check triggered');
-    checkCourseCompletion();
-  }, [checkCourseCompletion]);
 
   // SOLUCIÓN 5: Función directa para casos urgentes
   const forceShowCompletionModal = useCallback(async () => {
@@ -208,6 +152,6 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress, mar
     handleCreateSummary,
     handleOpenSummaryModal,
     checkHasSummary,
-    forceShowCompletionModal // Nueva función para casos urgentes
+    triggerCompletionCheck // Nueva función para activación directa
   };
 }

@@ -47,8 +47,9 @@ interface AudioPlayerActions {
   onProgressUpdate: (time: number) => void;
   onLessonComplete: () => void;
   
-  // Callback for lesson completion
+  // Callbacks for completion events
   setOnLessonCompletedCallback: (callback: (() => void) | null) => void;
+  setOnCourseCompletedCallback: (callback: (() => void) | null) => void;
 }
 
 type AudioPlayerContextType = AudioPlayerState & AudioPlayerActions;
@@ -70,8 +71,9 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // Audio element ref
   const audioRef = useRef<HTMLAudioElement>(null);
   
-  // Callback for lesson completion - allows external refresh triggers
+  // Callbacks for lesson completion and course completion
   const [onLessonCompletedCallback, setOnLessonCompletedCallback] = useState<(() => void) | null>(null);
+  const [onCourseCompletedCallback, setOnCourseCompletedCallback] = useState<(() => void) | null>(null);
   
   // Core state
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
@@ -324,12 +326,18 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         console.log('🎯 AudioPlayer: Auto-advancing to next lesson:', nextLesson.title);
         selectLesson(nextLesson, currentPodcast, true);
       } else {
-        console.log('🏁 AudioPlayer: Course completed!');
+        console.log('🏁 AudioPlayer: Course completed! Triggering completion modal...');
         setIsPlaying(false);
         updateCourseProgress(currentPodcast.id, { progress_percentage: 100 });
+        
+        // Trigger course completion modal immediately
+        if (onCourseCompletedCallback) {
+          console.log('🎉 AudioPlayer: Executing course completion callback...');
+          onCourseCompletedCallback();
+        }
       }
     }, 1000); // INCREASED to 1000ms for complete synchronization
-  }, [currentLesson, currentPodcast, user, markLessonComplete, updateCourseProgress, selectLesson, onLessonCompletedCallback]);
+  }, [currentLesson, currentPodcast, user, markLessonComplete, updateCourseProgress, selectLesson, onLessonCompletedCallback, onCourseCompletedCallback]);
   
   // Audio event handlers
   const handleLoadedMetadata = () => {
@@ -421,7 +429,8 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     toggleMute,
     onProgressUpdate,
     onLessonComplete,
-    setOnLessonCompletedCallback
+    setOnLessonCompletedCallback,
+    setOnCourseCompletedCallback
   };
   
   return (

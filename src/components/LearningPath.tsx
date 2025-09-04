@@ -34,7 +34,7 @@ const LearningPath = React.memo(({
   podcast
 }: LearningPathProps) => {
   // Audio player context
-  const { selectLesson } = useAudioPlayer();
+  const { selectLesson, setOnCourseCompletedCallback } = useAudioPlayer();
   
   // Get user progress data for course completion detection
   const { userProgress, markCompletionModalShown } = useUserProgress();
@@ -57,7 +57,8 @@ const LearningPath = React.memo(({
     setShowSummaryModal,
     handleCreateSummary,
     handleOpenSummaryModal,
-    checkHasSummary
+    checkHasSummary,
+    triggerCompletionCheck
   } = useCourseCompletion({
     podcast,
     userProgress,
@@ -68,6 +69,17 @@ const LearningPath = React.memo(({
   // Check if course is completed
   const courseProgress = userProgress.find(p => p.course_id === courseId);
   const isCourseCompleted = courseProgress?.is_completed && courseProgress?.progress_percentage === 100;
+
+  // Set up course completion callback for immediate modal display
+  useEffect(() => {
+    if (triggerCompletionCheck) {
+      setOnCourseCompletedCallback(triggerCompletionCheck);
+    }
+    
+    return () => {
+      setOnCourseCompletedCallback(null);
+    };
+  }, [triggerCompletionCheck, setOnCourseCompletedCallback]);
 
   // Check for existing summary
   useEffect(() => {
