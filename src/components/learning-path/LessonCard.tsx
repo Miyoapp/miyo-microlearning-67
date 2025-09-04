@@ -226,7 +226,7 @@ const LessonCard = React.memo(({
   };
 
   // Handle editing note
-  const handleEditNote = async (noteId: string, updates: Partial<Pick<LessonNote, 'note_text' | 'note_title' | 'tags' | 'is_favorite'>>) => {
+  const handleEditNote = async (noteId: string, updates: Partial<Pick<LessonNote, 'note_text' | 'tags' | 'is_favorite'>>) => {
     await updateNote(noteId, updates);
   };
 

@@ -413,7 +413,6 @@ export type Database = {
           is_favorite: boolean | null
           lesson_id: string
           note_text: string
-          note_title: string | null
           tags: string[] | null
           timestamp_seconds: number
           updated_at: string
@@ -426,7 +425,6 @@ export type Database = {
           is_favorite?: boolean | null
           lesson_id: string
           note_text: string
-          note_title?: string | null
           tags?: string[] | null
           timestamp_seconds?: number
           updated_at?: string
@@ -439,7 +437,6 @@ export type Database = {
           is_favorite?: boolean | null
           lesson_id?: string
           note_text?: string
-          note_title?: string | null
           tags?: string[] | null
           timestamp_seconds?: number
           updated_at?: string
