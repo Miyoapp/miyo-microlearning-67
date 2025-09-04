@@ -43,6 +43,22 @@ export function useLessons(podcast: Podcast | null) {
   // Force immediate updates - no complex memoization blocking
   const lastUpdateRef = useRef<number>(0);
 
+  // Helper function to get ordered lessons based on modules
+  const getOrderedLessons = useCallback(() => {
+    if (!podcast?.modules) return podcast?.lessons || [];
+    
+    const orderedLessons: Lesson[] = [];
+    podcast.modules.forEach(module => {
+      module.lessonIds.forEach(lessonId => {
+        const lesson = podcast.lessons.find(l => l.id === lessonId);
+        if (lesson) {
+          orderedLessons.push(lesson);
+        }
+      });
+    });
+    return orderedLessons;
+  }, [podcast]);
+
   // Calculate lessons immediately - SYNCHRONOUS updates only
   const calculateLessonsStates = useCallback(() => {
     if (!podcast || !user) return [];
@@ -52,25 +68,28 @@ export function useLessons(podcast: Podcast | null) {
     const courseProgress = userProgress.find(p => p.course_id === podcast.id);
     const isReviewMode = courseProgress?.is_completed && courseProgress?.progress_percentage === 100;
     
-    // Get first lesson ID for unlocking
-    const firstModule = podcast.modules[0];
-    const firstLessonId = firstModule?.lessonIds?.[0];
+    // Get ordered lessons based on module structure
+    const orderedLessons = getOrderedLessons();
+    const firstLessonId = orderedLessons[0]?.id;
     
-    const updatedLessons = podcast.lessons.map((lesson, index) => {
+    const updatedLessons = podcast.lessons.map((lesson) => {
       const progress = lessonProgress.find(p => p.lesson_id === lesson.id);
       const isCompleted = progress?.is_completed || false;
       
       let isLocked = false;
       
-      if (isReviewMode) {
+      // CRITICAL: Completed lessons are NEVER locked
+      if (isCompleted) {
+        isLocked = false;
+      } else if (isReviewMode) {
         isLocked = false;
       } else if (lesson.id === firstLessonId) {
         isLocked = false;
-      } else if (isCompleted) {
-        isLocked = false;
       } else {
-        const previousLesson = podcast.lessons[index - 1];
-        if (previousLesson) {
+        // Find this lesson's position in the ordered sequence
+        const currentIndex = orderedLessons.findIndex(l => l.id === lesson.id);
+        if (currentIndex > 0) {
+          const previousLesson = orderedLessons[currentIndex - 1];
           const previousProgress = lessonProgress.find(p => p.lesson_id === previousLesson.id);
           isLocked = !previousProgress?.is_completed;
         }
