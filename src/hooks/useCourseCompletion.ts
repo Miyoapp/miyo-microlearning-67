@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Podcast } from '@/types';
 import { CourseCompletionStats } from '@/types/notes';
@@ -15,8 +14,10 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress, mar
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [showSummaryModal, setShowSummaryModal] = useState(false);
   const [completionStats, setCompletionStats] = useState<CourseCompletionStats | null>(null);
+  const [isLoadingStats, setIsLoadingStats] = useState(false);
   const previousProgressRef = useRef<number>(0);
   const isCheckingRef = useRef(false);
+  const modalShownForCourseRef = useRef<string | null>(null);
   
   const { getCourseStats, createSummary, hasSummary } = useSummaries();
   
@@ -24,9 +25,47 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress, mar
   const getCourseStatsRef = useRef(getCourseStats);
   getCourseStatsRef.current = getCourseStats;
 
-  // Stabilized course completion detection
+  // SOLUCIÓN 1: Mostrar modal inmediatamente y cargar stats en paralelo
+  const showModalImmediately = useCallback(async (courseId: string, lessonCount: number, duration: number) => {
+    console.log('🚀 IMMEDIATE MODAL - Showing modal instantly');
+    
+    // Mostrar modal inmediatamente con stats básicos
+    setCompletionStats({
+      totalLessons: lessonCount,
+      completedLessons: lessonCount, // Sabemos que está completo
+      totalNotes: 0, // Se actualizará después
+      totalTimeSpent: duration * 60,
+      courseDuration: duration * 60
+    });
+    
+    setShowCompletionModal(true);
+    
+    // Marcar como mostrado inmediatamente (no bloqueante)
+    if (markCompletionModalShown) {
+      markCompletionModalShown(courseId).catch(console.error);
+    }
+    
+    // Cargar stats detalladas en paralelo (sin bloquear el modal)
+    setIsLoadingStats(true);
+    try {
+      const stats = await getCourseStatsRef.current(courseId);
+      if (stats) {
+        setCompletionStats(prev => prev ? {
+          ...prev,
+          completedLessons: stats.completedLessons,
+          totalNotes: stats.totalNotes
+        } : null);
+      }
+    } catch (error) {
+      console.error('Error loading detailed stats:', error);
+    } finally {
+      setIsLoadingStats(false);
+    }
+  }, [markCompletionModalShown]);
+
+  // SOLUCIÓN 2: Lógica mejorada de detección
   const checkCourseCompletion = useCallback(async () => {
-    console.log('🔍 DEFINITIVE CHECK - Starting course completion check:', {
+    console.log('🔍 IMPROVED CHECK - Starting course completion check:', {
       hasPodcast: !!podcast,
       hasUserProgress: !!userProgress,
       isCurrentlyChecking: isCheckingRef.current,
@@ -40,10 +79,7 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress, mar
     }
 
     if (!podcast || !userProgress) {
-      console.log('⏹️ DEFINITIVE SKIP - Completion check skipped:', {
-        noPodcast: !podcast,
-        noUserProgress: !userProgress
-      });
+      console.log('⏹️ SKIP - Completion check skipped: missing data');
       return;
     }
 
@@ -52,51 +88,44 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress, mar
     try {
       const courseProgress = userProgress.find(p => p.course_id === podcast.id);
       
-      console.log('📊 DEFINITIVE PROGRESS - Course progress analysis:', {
+      console.log('📊 PROGRESS ANALYSIS:', {
         courseId: podcast.id,
-        progressData: courseProgress,
         isCompleted: courseProgress?.is_completed,
         progressPercentage: courseProgress?.progress_percentage,
         completionModalShown: courseProgress?.completion_modal_shown,
-        previousProgress: previousProgressRef.current
+        previousProgress: previousProgressRef.current,
+        modalAlreadyShownForThisCourse: modalShownForCourseRef.current === podcast.id
       });
       
-      // NUEVA LÓGICA: Solo mostrar modal si el curso está 100% completo, 
-      // el modal NO ha sido mostrado antes, y es una nueva completación
-      if (courseProgress?.is_completed && 
-          courseProgress?.progress_percentage === 100 && 
-          courseProgress?.completion_modal_shown === false &&
-          previousProgressRef.current < 100) {
+      // SOLUCIÓN 3: Condiciones mejoradas
+      const shouldShowModal = (
+        courseProgress?.is_completed && 
+        courseProgress?.progress_percentage === 100 && 
+        courseProgress?.completion_modal_shown === false &&
+        modalShownForCourseRef.current !== podcast.id // Evitar mostrar múltiples veces
+      );
+      
+      // ALTERNATIVA: Detectar transición de incompleto a completo
+      const wasIncompleteNowComplete = (
+        courseProgress?.is_completed && 
+        courseProgress?.progress_percentage === 100 && 
+        previousProgressRef.current < 100 &&
+        courseProgress?.completion_modal_shown === false &&
+        modalShownForCourseRef.current !== podcast.id
+      );
+      
+      if (shouldShowModal || wasIncompleteNowComplete) {
+        console.log('🎉 COURSE COMPLETED - Showing modal immediately!');
         
-        console.log('🎉 DEFINITIVE COMPLETION - Course just completed! Showing congratulations modal');
+        // Marcar que ya mostramos el modal para este curso
+        modalShownForCourseRef.current = podcast.id;
         
-        // Get course stats using stable ref
-        const stats = await getCourseStatsRef.current(podcast.id);
-        if (stats) {
-          setCompletionStats({
-            totalLessons: podcast.lessonCount,
-            completedLessons: stats.completedLessons,
-            totalNotes: stats.totalNotes,
-            totalTimeSpent: podcast.duration * 60,
-            courseDuration: podcast.duration * 60
-          });
-          
-          setShowCompletionModal(true);
-          
-          // Marcar el modal como mostrado en la base de datos
-          if (markCompletionModalShown) {
-            await markCompletionModalShown(podcast.id);
-          }
-          
-          console.log('✅ DEFINITIVE MODAL SHOWN - Completion modal displayed and marked as shown in database');
-        }
+        // Mostrar modal inmediatamente
+        await showModalImmediately(podcast.id, podcast.lessonCount, podcast.duration);
+        
+        console.log('✅ MODAL SHOWN INSTANTLY');
       } else {
-        console.log('🔄 DEFINITIVE SKIP MODAL - Modal not shown because:', {
-          notCompleted: !courseProgress?.is_completed,
-          notFullProgress: courseProgress?.progress_percentage !== 100,
-          alreadyShown: courseProgress?.completion_modal_shown === true,
-          notNewCompletion: previousProgressRef.current >= 100
-        });
+        console.log('🔄 SKIP MODAL - Conditions not met');
       }
       
       // Update previous progress
@@ -106,15 +135,31 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress, mar
     } finally {
       isCheckingRef.current = false;
     }
-  }, [podcast, userProgress, markCompletionModalShown]); // Added markCompletionModalShown dependency
+  }, [podcast, userProgress, showModalImmediately]);
 
-  // DEFINITIVE: Effect with minimal, stable dependencies
+  // SOLUCIÓN 4: Reset cuando cambia el podcast
   useEffect(() => {
-    console.log('🔄 DEFINITIVE EFFECT - useEffect triggered for course completion check');
+    if (podcast?.id && modalShownForCourseRef.current !== podcast.id) {
+      modalShownForCourseRef.current = null;
+      previousProgressRef.current = 0;
+    }
+  }, [podcast?.id]);
+
+  // Effect principal
+  useEffect(() => {
+    console.log('🔄 EFFECT TRIGGER - Course completion check triggered');
     checkCourseCompletion();
   }, [checkCourseCompletion]);
 
-  // Handle creating summary with new structure
+  // SOLUCIÓN 5: Función directa para casos urgentes
+  const forceShowCompletionModal = useCallback(async () => {
+    if (!podcast) return;
+    
+    console.log('⚡ FORCE SHOW - Forcing completion modal display');
+    await showModalImmediately(podcast.id, podcast.lessonCount, podcast.duration);
+  }, [podcast, showModalImmediately]);
+
+  // Handle creating summary
   const handleCreateSummary = useCallback(async (formData: {
     title: string;
     keyConcepts: string;
@@ -126,7 +171,7 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress, mar
     await createSummary(
       podcast.id, 
       formData.title, 
-      '', // summary_content can be empty now
+      '', 
       'personal',
       formData.keyConcepts,
       formData.personalInsight,
@@ -137,20 +182,17 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress, mar
     setShowCompletionModal(false);
   }, [podcast, createSummary]);
 
-  // Handle opening summary modal
   const handleOpenSummaryModal = useCallback(() => {
-    console.log('📝 DEFINITIVE SUMMARY - Opening summary modal, closing completion modal');
+    console.log('📝 SUMMARY MODAL - Opening summary modal');
     setShowCompletionModal(false);
     setShowSummaryModal(true);
   }, []);
 
-  // Handle closing completion modal DEFINITIVELY
   const handleCloseCompletionModal = useCallback(() => {
-    console.log('❌ DEFINITIVE CLOSE - Closing completion modal');
+    console.log('❌ CLOSE MODAL - Closing completion modal');
     setShowCompletionModal(false);
   }, []);
 
-  // Check if course has summary for fallback button
   const checkHasSummary = useCallback(async (): Promise<boolean> => {
     if (!podcast) return false;
     return await hasSummary(podcast.id);
@@ -160,10 +202,12 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress, mar
     showCompletionModal,
     showSummaryModal,
     completionStats,
+    isLoadingStats,
     setShowCompletionModal: handleCloseCompletionModal,
     setShowSummaryModal,
     handleCreateSummary,
     handleOpenSummaryModal,
-    checkHasSummary
+    checkHasSummary,
+    forceShowCompletionModal // Nueva función para casos urgentes
   };
 }
