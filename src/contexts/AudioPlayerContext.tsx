@@ -49,6 +49,9 @@ interface AudioPlayerActions {
   
   // Callback for lesson completion
   setOnLessonCompletedCallback: (callback: (() => void) | null) => void;
+  
+  // Callback for course completion
+  setOnCourseCompletedCallback: (callback: (() => void) | null) => void;
 }
 
 type AudioPlayerContextType = AudioPlayerState & AudioPlayerActions;
@@ -72,6 +75,9 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   
   // Callback for lesson completion - allows external refresh triggers
   const [onLessonCompletedCallback, setOnLessonCompletedCallback] = useState<(() => void) | null>(null);
+  
+  // Callback for course completion - triggers immediate completion check
+  const [onCourseCompletedCallback, setOnCourseCompletedCallback] = useState<(() => void) | null>(null);
   
   // Core state
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
@@ -326,7 +332,15 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       } else {
         console.log('🏁 AudioPlayer: Course completed!');
         setIsPlaying(false);
-        updateCourseProgress(currentPodcast.id, { progress_percentage: 100 });
+        await updateCourseProgress(currentPodcast.id, { progress_percentage: 100 });
+        
+        // Trigger immediate completion check after updating progress
+        if (onCourseCompletedCallback) {
+          console.log('🎉 AudioPlayer: Triggering immediate completion check...');
+          setTimeout(() => {
+            onCourseCompletedCallback();
+          }, 100); // Small delay to ensure DB update is processed
+        }
       }
     }, 1000); // INCREASED to 1000ms for complete synchronization
   }, [currentLesson, currentPodcast, user, markLessonComplete, updateCourseProgress, selectLesson, onLessonCompletedCallback]);
@@ -421,7 +435,8 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     toggleMute,
     onProgressUpdate,
     onLessonComplete,
-    setOnLessonCompletedCallback
+    setOnLessonCompletedCallback,
+    setOnCourseCompletedCallback
   };
   
   return (
