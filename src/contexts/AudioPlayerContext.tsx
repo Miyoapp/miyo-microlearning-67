@@ -24,6 +24,9 @@ interface AudioPlayerState {
   
   // Course data
   currentPodcast: Podcast | null;
+  
+  // Pause position tracking
+  pausedAt: number | null;
 }
 
 interface AudioPlayerActions {
@@ -85,6 +88,9 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [isLoading, setIsLoading] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [hasError, setHasError] = useState(false);
+  
+  // Pause position tracking
+  const [pausedAt, setPausedAt] = useState<number | null>(null);
   
   // Progress tracking
   const lastUpdateTime = useRef(0);
@@ -153,7 +159,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   }, [user]);
   
-  const selectLesson = useCallback((lesson: Lesson, podcast: Podcast, shouldAutoPlay = false) => {
+  const selectLesson = useCallback(async (lesson: Lesson, podcast: Podcast, shouldAutoPlay = false) => {
     console.log('🎵 AudioPlayer: Selecting lesson:', lesson.title);
     
     // Avoid unnecessary reload if selecting the same lesson
@@ -165,11 +171,33 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       return;
     }
     
+    // Reset pause position when changing lessons
+    setPausedAt(null);
+    
     setCurrentLesson(lesson);
     setCurrentPodcast(podcast);
     setIsLoading(true);
     setHasError(false);
     setIsReady(false);
+    
+    // Fetch saved position from DB for lessons in progress
+    if (user) {
+      try {
+        const { data: progress } = await supabase
+          .from('user_lesson_progress')
+          .select('current_position, is_completed')
+          .eq('user_id', user.id)
+          .eq('lesson_id', lesson.id)
+          .maybeSingle();
+        
+        if (progress && !progress.is_completed && progress.current_position > 0) {
+          setPausedAt(progress.current_position);
+          console.log('🎵 Found saved position for lesson:', progress.current_position);
+        }
+      } catch (error) {
+        console.error('Error fetching lesson progress:', error);
+      }
+    }
     
     if (audioRef.current) {
       audioRef.current.src = lesson.urlAudio;
@@ -179,16 +207,26 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         setIsPlaying(true);
       }
     }
-  }, [currentLesson, isPlaying]);
+  }, [currentLesson, isPlaying, user]);
   
   const togglePlay = useCallback(() => {
     if (!audioRef.current || !currentLesson) return;
     
     console.log('🎵 AudioPlayer: Toggle play - Current state:', isPlaying);
     
-    // Simply toggle the playing state - don't call selectLesson
+    if (isPlaying) {
+      // Save current position when pausing
+      setPausedAt(audioRef.current.currentTime);
+      console.log('⏸️ Saved pause position:', audioRef.current.currentTime);
+    } else if (pausedAt !== null && audioRef.current.readyState >= 2) {
+      // Restore position when resuming if we have a saved position
+      audioRef.current.currentTime = pausedAt;
+      console.log('▶️ Restored position from pause:', pausedAt);
+      setPausedAt(null);
+    }
+    
     setIsPlaying(!isPlaying);
-  }, [isPlaying, currentLesson]);
+  }, [isPlaying, currentLesson, pausedAt]);
   
   const seekTo = useCallback((time: number) => {
     if (audioRef.current) {
@@ -290,6 +328,13 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       setIsLoading(false);
       setHasError(false);
       console.log('🎵 AudioPlayer: Metadata loaded');
+      
+      // Restore saved position if available
+      if (pausedAt !== null && pausedAt > 0 && pausedAt < audioRef.current.duration) {
+        audioRef.current.currentTime = pausedAt;
+        console.log('🎵 Restored saved position:', pausedAt);
+        setPausedAt(null);
+      }
     }
   };
   
@@ -351,6 +396,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     isReady,
     hasError,
     currentPodcast,
+    pausedAt,
     
     // Actions
     selectLesson,
