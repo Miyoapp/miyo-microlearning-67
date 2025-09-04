@@ -1,34 +1,45 @@
-import React from 'react';
+import * as React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
-// Create a client with optimized default settings
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      // Default cache time: 5 minutes fresh, 10 minutes garbage collection
-      staleTime: 5 * 60 * 1000,
-      gcTime: 10 * 60 * 1000,
-      retry: 3,
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: true,
-    },
-    mutations: {
-      retry: 1,
-    },
-  },
-});
+// Create a client with safer default settings
+let queryClientInstance: QueryClient | null = null;
+
+const getQueryClient = () => {
+  if (!queryClientInstance) {
+    queryClientInstance = new QueryClient({
+      defaultOptions: {
+        queries: {
+          staleTime: 5 * 60 * 1000, // 5 minutes
+          gcTime: 10 * 60 * 1000, // 10 minutes 
+          retry: 2, // Reduced retry count for safety
+          refetchOnWindowFocus: false,
+          refetchOnReconnect: true,
+        },
+        mutations: {
+          retry: 1,
+        },
+      },
+    });
+  }
+  return queryClientInstance;
+};
 
 interface QueryProviderProps {
   children: React.ReactNode;
 }
 
 export function QueryProvider({ children }: QueryProviderProps) {
+  // Ensure we have React available
+  if (!React) {
+    console.error('React is not available in QueryProvider');
+    return children as React.ReactElement;
+  }
+
+  const queryClient = getQueryClient();
+
   return (
     <QueryClientProvider client={queryClient}>
       {children}
-      <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );
 }
