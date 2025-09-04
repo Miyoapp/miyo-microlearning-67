@@ -75,6 +75,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [pausedAt, setPausedAt] = useState<number | null>(null);
   
   // Audio settings
   const [volume, setVolumeState] = useState(1);
