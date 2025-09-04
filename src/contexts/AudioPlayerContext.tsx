@@ -25,7 +25,8 @@ interface AudioPlayerState {
   // Course data
   currentPodcast: Podcast | null;
   
-  // Pause position tracking
+  // Position tracking
+  initialPosition: number | null;
   pausedAt: number | null;
 }
 
@@ -89,7 +90,8 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [isReady, setIsReady] = useState(false);
   const [hasError, setHasError] = useState(false);
   
-  // Pause position tracking
+  // Position tracking - separate responsibilities
+  const [initialPosition, setInitialPosition] = useState<number | null>(null);
   const [pausedAt, setPausedAt] = useState<number | null>(null);
   
   // Progress tracking
@@ -171,8 +173,9 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       return;
     }
     
-    // Reset pause position when changing lessons
+    // Reset positions when changing lessons
     setPausedAt(null);
+    setInitialPosition(null);
     
     setCurrentLesson(lesson);
     setCurrentPodcast(podcast);
@@ -191,7 +194,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
           .maybeSingle();
         
         if (progress && !progress.is_completed && progress.current_position > 0) {
-          setPausedAt(progress.current_position);
+          setInitialPosition(progress.current_position);
           console.log('🎵 Found saved position for lesson:', progress.current_position);
         }
       } catch (error) {
@@ -215,13 +218,21 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     console.log('🎵 AudioPlayer: Toggle play - Current state:', isPlaying);
     
     if (isPlaying) {
-      // Save current position when pausing
-      setPausedAt(audioRef.current.currentTime);
-      console.log('⏸️ Saved pause position:', audioRef.current.currentTime);
+      // Save EXACT current position when pausing - round to prevent precision issues
+      const currentPos = Math.round(audioRef.current.currentTime * 10) / 10;
+      setPausedAt(currentPos);
+      console.log('⏸️ Saved pause position:', currentPos);
     } else if (pausedAt !== null && audioRef.current.readyState >= 2) {
-      // Restore position when resuming if we have a saved position
-      audioRef.current.currentTime = pausedAt;
-      console.log('▶️ Restored position from pause:', pausedAt);
+      // Restore position when resuming - only seek if difference is significant
+      const currentPos = audioRef.current.currentTime;
+      const diff = Math.abs(currentPos - pausedAt);
+      
+      if (diff > 0.5) { // Only seek if difference > 0.5 seconds
+        audioRef.current.currentTime = pausedAt;
+        console.log('▶️ Restored position from pause:', pausedAt, '(was at:', currentPos, ')');
+      } else {
+        console.log('▶️ Position close enough, not seeking. Current:', currentPos, 'Target:', pausedAt);
+      }
       setPausedAt(null);
     }
     
@@ -329,11 +340,11 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       setHasError(false);
       console.log('🎵 AudioPlayer: Metadata loaded');
       
-      // Restore saved position if available
-      if (pausedAt !== null && pausedAt > 0 && pausedAt < audioRef.current.duration) {
-        audioRef.current.currentTime = pausedAt;
-        console.log('🎵 Restored saved position:', pausedAt);
-        setPausedAt(null);
+      // Restore INITIAL position from DB (not pause position)
+      if (initialPosition !== null && initialPosition > 0 && initialPosition < audioRef.current.duration) {
+        audioRef.current.currentTime = initialPosition;
+        console.log('🎵 Restored initial position from DB:', initialPosition);
+        setInitialPosition(null); // Clear after use
       }
     }
   };
@@ -396,6 +407,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     isReady,
     hasError,
     currentPodcast,
+    initialPosition,
     pausedAt,
     
     // Actions
