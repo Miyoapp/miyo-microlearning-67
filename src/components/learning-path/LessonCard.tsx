@@ -192,14 +192,19 @@ const LessonCard = React.memo(({
     }
   }, [savedProgress?.is_completed, justCompleted]);
   
-  // Update temporary position during playback of completed lessons
+  // Update temporary position during playback (both completed and non-completed lessons)
   React.useEffect(() => {
-    // Only update temporaryPosition for completed lessons that are currently playing
-    if (savedProgress?.is_completed && isCurrent && propIsPlaying && validDuration > 0) {
-      console.log('🎯 Updating temporaryPosition for completed lesson:', currentTime);
+    if (isCurrent && propIsPlaying && validDuration > 0) {
+      console.log('🎯 Updating temporaryPosition for current lesson:', currentTime);
       setTemporaryPosition(Math.min(currentTime, validDuration));
     }
-  }, [savedProgress?.is_completed, isCurrent, propIsPlaying, currentTime, validDuration]);
+    
+    // When pausing a non-completed lesson, save the current position
+    if (isCurrent && !propIsPlaying && !savedProgress?.is_completed && currentTime > 0) {
+      console.log('⏸️ Saving temporaryPosition for paused non-completed lesson:', currentTime);
+      setTemporaryPosition(Math.min(currentTime, validDuration));
+    }
+  }, [isCurrent, propIsPlaying, currentTime, validDuration, savedProgress?.is_completed]);
   
   // Reset temporary position when lesson changes or becomes inactive
   React.useEffect(() => {
@@ -273,12 +278,18 @@ const LessonCard = React.memo(({
       return validDuration;
     }
     
-    // FOR NON-COMPLETED LESSONS: Original logic
+    // FOR NON-COMPLETED LESSONS: Enhanced logic with pause support
     // If this is the current lesson playing, show real-time
     if (isCurrent && currentLesson?.id === lesson.id && propIsPlaying) {
       const realTime = Math.min(currentTime, validDuration);
       console.log('📊 NON-COMPLETED PLAYING - showing real-time:', realTime);
       return realTime;
+    }
+    
+    // If paused: show temporary position (maintains pause position)
+    if (isCurrent && !propIsPlaying && temporaryPosition !== null) {
+      console.log('📊 NON-COMPLETED PAUSED - showing temporaryPosition:', temporaryPosition);
+      return temporaryPosition;
     }
     
     // Otherwise, use saved progress
