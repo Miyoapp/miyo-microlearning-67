@@ -63,10 +63,19 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress, mar
     }
   }, [markCompletionModalShown]);
 
-  // Función directa para mostrar modal (sin esperar userProgress)
+  // Función directa para mostrar modal SOLO cuando realmente se completa
   const triggerCompletionCheck = useCallback(async () => {
     if (!podcast) {
       console.log('⏹️ SKIP - No podcast available for completion check');
+      return;
+    }
+
+    // CRÍTICO: Verificar que realmente se completó el curso
+    const courseProgress = userProgress.find(p => p.course_id === podcast.id);
+    const isReallyCompleted = courseProgress?.is_completed && courseProgress?.progress_percentage === 100;
+    
+    if (!isReallyCompleted) {
+      console.log('⏹️ SKIP - Course not actually completed yet');
       return;
     }
 
@@ -76,7 +85,13 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress, mar
       return;
     }
 
-    console.log('🎉 DIRECT TRIGGER - Showing completion modal immediately!');
+    // Verificar que no se haya mostrado ya el modal en la DB
+    if (courseProgress?.completion_modal_shown) {
+      console.log('⏸️ SKIP - Modal already shown according to database');
+      return;
+    }
+
+    console.log('🎉 DIRECT TRIGGER - Course really completed, showing modal!');
     
     // Marcar que ya mostramos el modal para este curso
     modalShownForCourseRef.current = podcast.id;
@@ -85,7 +100,7 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress, mar
     await showModalImmediately(podcast.id, podcast.lessonCount, podcast.duration);
     
     console.log('✅ COMPLETION MODAL SHOWN INSTANTLY');
-  }, [podcast, showModalImmediately]);
+  }, [podcast, userProgress, showModalImmediately]);
 
   // Reset cuando cambia el podcast
   useEffect(() => {
