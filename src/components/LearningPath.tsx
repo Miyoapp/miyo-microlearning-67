@@ -91,7 +91,7 @@ const LearningPath = React.memo(({
   };
 
   // Use custom hooks for status and classes
-  const lessonStatusMap = useLessonStatus(lessons, modules, currentLessonId);
+  const lessonStatusMap = useLessonStatus(lessons, modules, currentLessonId, lessonProgress);
   const getLessonClasses = useLessonClasses(lessons, lessonStatusMap);
 
   console.log('🛤️ LearningPath render:', {
