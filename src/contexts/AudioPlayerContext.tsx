@@ -153,7 +153,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   }, [user]);
   
-  const selectLesson = useCallback((lesson: Lesson, podcast: Podcast, shouldAutoPlay = false, setPausedAt(null);) => {
+  const selectLesson = useCallback((lesson: Lesson, podcast: Podcast, shouldAutoPlay = false) => {
     console.log('🎵 AudioPlayer: Selecting lesson:', lesson.title);
     
     // Avoid unnecessary reload if selecting the same lesson
@@ -182,35 +182,20 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   }, [currentLesson, isPlaying]);
   
   const togglePlay = useCallback(() => {
-  if (!audioRef.current || !currentLesson) return;
-  
-  console.log('🎵 AudioPlayer: Toggle play - Current state:', isPlaying);
-  
-  if (isPlaying) {
-    // Al pausar, guardar la posición actual
-    const currentPosition = audioRef.current.currentTime;
-    setPausedAt(currentPosition);
-    console.log('⏸️ Pausing at:', currentPosition);
-  } else {
-    // Al reanudar, usar la posición guardada si existe
-    if (pausedAt !== null && audioRef.current) {
-      console.log('▶️ Resuming from:', pausedAt);
-      audioRef.current.currentTime = pausedAt;
-      setCurrentTime(pausedAt);
-    }
-    setPausedAt(null); // Limpiar después de restaurar
-  }
-  
-  setIsPlaying(!isPlaying);
-}, [isPlaying, pausedAt, currentLesson]);
+    if (!audioRef.current || !currentLesson) return;
+    
+    console.log('🎵 AudioPlayer: Toggle play - Current state:', isPlaying);
+    
+    // Simply toggle the playing state - don't call selectLesson
+    setIsPlaying(!isPlaying);
+  }, [isPlaying, currentLesson]);
   
   const seekTo = useCallback((time: number) => {
-  if (audioRef.current) {
-    audioRef.current.currentTime = time;
-    setCurrentTime(time);
-    setPausedAt(null); // Limpiar pause state al hacer seek manual
-  }
-}, []);
+    if (audioRef.current) {
+      audioRef.current.currentTime = time;
+      setCurrentTime(time);
+    }
+  }, []);
   
   const skipForward = useCallback((seconds = 15) => {
     if (audioRef.current) {
@@ -378,7 +363,8 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     toggleMute,
     onProgressUpdate,
     onLessonComplete,
-    setOnLessonCompletedCallback
+    setOnLessonCompletedCallback,
+    pausedAt,
   };
   
   return (
