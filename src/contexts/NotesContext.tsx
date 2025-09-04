@@ -38,19 +38,42 @@ function notesReducer(state: NotesState, action: NotesAction): NotesState {
     
     case 'ADD_NOTE': {
       const { courseId, note } = action.payload;
-      return {
-        ...state,
-        coursesWithNotes: state.coursesWithNotes.map(course =>
-          course.courseId === courseId
-            ? {
-                ...course,
-                notes: [...course.notes, note],
-                notesCount: course.notesCount + 1,
-                lastNoteDate: note.created_at
-              }
-            : course
-        )
-      };
+      
+      // Check if course already exists
+      const existingCourseIndex = state.coursesWithNotes.findIndex(course => course.courseId === courseId);
+      
+      if (existingCourseIndex !== -1) {
+        // Course exists, add note to existing course
+        return {
+          ...state,
+          coursesWithNotes: state.coursesWithNotes.map(course =>
+            course.courseId === courseId
+              ? {
+                  ...course,
+                  notes: [...course.notes, note],
+                  notesCount: course.notesCount + 1,
+                  lastNoteDate: note.created_at
+                }
+              : course
+          )
+        };
+      } else {
+        // Course doesn't exist, create new course with the note
+        const newCourse = {
+          courseId: courseId,
+          courseTitle: 'Curso', // Default title, will be updated by realtime sync
+          categoryName: 'General', // Default category
+          categoryId: '',
+          notesCount: 1,
+          lastNoteDate: note.created_at,
+          notes: [note]
+        };
+        
+        return {
+          ...state,
+          coursesWithNotes: [...state.coursesWithNotes, newCourse]
+        };
+      }
     }
     
     case 'UPDATE_NOTE': {
