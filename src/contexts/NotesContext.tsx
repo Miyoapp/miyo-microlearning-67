@@ -199,6 +199,7 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
             course_id: note.course_id,
             user_id: note.user_id,
             note_text: note.note_text,
+            lesson_title: note.lecciones?.titulo,
             timestamp_seconds: note.timestamp_seconds,
             tags: note.tags || [],
             is_favorite: note.is_favorite || false,
@@ -237,12 +238,21 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
           tags: tags,
           is_favorite: false
         })
-        .select()
+        .select(`
+          *,
+          lecciones (
+            titulo
+          )
+        `)
         .single();
 
       if (error) throw error;
       
-      const newNote = data as unknown as LessonNote;
+      const rawNote = data as any;
+      const newNote = {
+        ...rawNote,
+        lesson_title: rawNote.lecciones?.titulo
+      } as LessonNote;
       dispatch({ type: 'ADD_NOTE', payload: { courseId, note: newNote } });
       toast.success('Nota guardada exitosamente');
       return newNote;

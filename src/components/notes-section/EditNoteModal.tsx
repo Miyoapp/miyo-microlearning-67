@@ -71,7 +71,7 @@ const EditNoteModal: React.FC<EditNoteModalProps> = ({
           <div className="bg-gray-50 p-3 rounded-md text-sm">
             <p className="font-medium text-gray-700">{courseTitle}</p>
             <p className="text-gray-500">
-              Tiempo: {formatTime(note.timestamp_seconds)} • Lección {note.lesson_id.slice(-1)}
+              Tiempo: {formatTime(note.timestamp_seconds)} • {note.lesson_title || `Lección ${note.lesson_id.slice(-1)}`}
             </p>
           </div>
           

@@ -9,11 +9,14 @@ interface LessonNotesGroupProps {
 }
 
 const LessonNotesGroup = ({ lessonId, notes }: LessonNotesGroupProps) => {
+  // Get lesson title from the first note (all notes in this group are from the same lesson)
+  const lessonTitle = notes.length > 0 ? notes[0].lesson_title : null;
+  
   return (
     <div className="space-y-4">
       <div className="flex items-center space-x-2">
         <h3 className="font-semibold text-gray-900">
-          Lección {lessonId}
+          {lessonTitle || `Lección ${lessonId.slice(-1)}`}
         </h3>
         <span className="text-sm text-gray-500">
           ({notes.length} {notes.length === 1 ? 'nota' : 'notas'})

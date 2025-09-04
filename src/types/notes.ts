@@ -6,6 +6,7 @@ export interface LessonNote {
   user_id: string;
   note_text: string;
   note_title?: string;
+  lesson_title?: string;
   timestamp_seconds: number;
   tags: string[];
   is_favorite: boolean;

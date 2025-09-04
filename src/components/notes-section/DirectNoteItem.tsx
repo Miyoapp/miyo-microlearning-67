@@ -123,7 +123,7 @@ const DirectNoteItem: React.FC<DirectNoteItemProps> = ({ note, courseTitle }) =>
             <Clock size={10} />
             <span>{formatTime(note.timestamp_seconds)}</span>
             <span>•</span>
-            <span className="font-medium">Lección {note.lesson_id.slice(-1)}</span>
+            <span className="font-medium">{note.lesson_title || `Lección ${note.lesson_id.slice(-1)}`}</span>
           </div>
           <span>
             {formatDistanceToNow(new Date(note.created_at), { 
