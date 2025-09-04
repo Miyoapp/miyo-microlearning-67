@@ -297,47 +297,98 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   }, [currentLesson, currentPodcast, user, updateLessonPosition]);
   
   const onLessonComplete = useCallback(async () => {
-    if (!currentLesson || !currentPodcast || !user) return;
+  if (!currentLesson || !currentPodcast || !user) return;
+  
+  console.log('✅ AudioPlayer: Lesson completed:', currentLesson.title);
+  
+  // Verificar si es la última lección INMEDIATAMENTE
+  const currentIndex = currentPodcast.lessons.findIndex(l => l.id === currentLesson.id);
+  const nextLesson = currentPodcast.lessons[currentIndex + 1];
+  const isLastLesson = !nextLesson;
+  
+  console.log('🔍 Lesson analysis:', {
+    currentIndex,
+    totalLessons: currentPodcast.lessons.length,
+    isLastLesson,
+    lessonTitle: currentLesson.title
+  });
+  
+  // PASO 1: Marcar lección como completa (no bloquear el modal)
+  markLessonComplete(currentLesson.id, currentPodcast.id).catch(console.error);
+  
+  if (isLastLesson) {
+    // 🚀 CURSO COMPLETADO - ACTUALIZACIÓN DIRECTA E INMEDIATA
+    console.log('🏁 COURSE COMPLETED! Updating progress and showing modal IMMEDIATELY');
     
-    console.log('✅ AudioPlayer: Lesson completed:', currentLesson.title);
+    setIsPlaying(false);
     
-    // Mark lesson as complete first
-    await markLessonComplete(currentLesson.id, currentPodcast.id);
-    
-    // CRITICAL SEQUENCE: DB update -> Callback -> Auto-advance
-    setTimeout(async () => {
-      console.log('🔄 AudioPlayer: Starting DEFINITIVE post-completion sequence'); 
-      
-      // Step 1: Force refresh of lessons progress - WAIT for completion
-      if (onLessonCompletedCallback) {
-        console.log('🔄 AudioPlayer: Executing lessons refresh callback...');
-        await onLessonCompletedCallback();
-        console.log('✅ AudioPlayer: Lessons refresh callback completed');
-      }
-      
-      // Step 2: LONGER delay to ensure complete database and UI sync
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Step 3: Now proceed with auto-advance
-      const currentIndex = currentPodcast.lessons.findIndex(l => l.id === currentLesson.id);
-      const nextLesson = currentPodcast.lessons[currentIndex + 1];
-      
-      if (nextLesson) {
-        console.log('🎯 AudioPlayer: Auto-advancing to next lesson:', nextLesson.title);
-        selectLesson(nextLesson, currentPodcast, true);
+    // ACTUALIZACIÓN DIRECTA del progreso del curso - SIN ESPERAS
+    try {
+      // Actualizar en base de datos inmediatamente
+      const { error: courseError } = await supabase
+        .from('user_course_progress')
+        .upsert({
+          user_id: user.id,
+          course_id: currentPodcast.id,
+          progress_percentage: 100,
+          is_completed: true,
+          completion_modal_shown: false, // Importante: permitir que se muestre
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id,course_id'
+        });
+
+      if (courseError) {
+        console.error('Error updating course progress:', courseError);
       } else {
-        console.log('🏁 AudioPlayer: Course completed! Triggering completion modal...');
-        setIsPlaying(false);
-        updateCourseProgress(currentPodcast.id, { progress_percentage: 100 });
-        
-        // Trigger course completion modal immediately
-        if (onCourseCompletedCallback) {
-          console.log('🎉 AudioPlayer: Executing course completion callback...');
-          onCourseCompletedCallback();
-        }
+        console.log('✅ Course progress updated directly in database');
       }
-    }, 1000); // INCREASED to 1000ms for complete synchronization
-  }, [currentLesson, currentPodcast, user, markLessonComplete, updateCourseProgress, selectLesson, onLessonCompletedCallback, onCourseCompletedCallback]);
+
+      // FORZAR actualización del hook useUserProgress
+      await updateCourseProgress(currentPodcast.id, { 
+        progress_percentage: 100,
+        is_completed: true 
+      });
+
+      console.log('✅ Course progress updated via hook');
+      
+    } catch (error) {
+      console.error('Error in course completion update:', error);
+    }
+    
+    // MODAL INMEDIATO - ejecutar callback sin más delays
+    if (onCourseCompletedCallback) {
+      console.log('🎉 Executing course completion callback INSTANTLY');
+      // Pequeño timeout para asegurar que las actualizaciones se propaguen
+      setTimeout(() => {
+        onCourseCompletedCallback();
+      }, 100); // Mínimo delay para propagación de estado
+    }
+    
+    // Opcional: Refresh en background (no bloquear modal)
+    setTimeout(() => {
+      if (onLessonCompletedCallback) {
+        onLessonCompletedCallback();
+      }
+    }, 200);
+    
+  } else {
+    // 📚 HAY MÁS LECCIONES - Auto-advance normal
+    console.log('📚 More lessons available, proceeding with auto-advance');
+    
+    // Breve delay solo para auto-advance (no afecta modal de curso completo)
+    setTimeout(async () => {
+      // Refresh lessons progress
+      if (onLessonCompletedCallback) {
+        await onLessonCompletedCallback();
+      }
+      
+      // Auto-advance a la siguiente lección
+      console.log('🎯 Auto-advancing to next lesson:', nextLesson.title);
+      selectLesson(nextLesson, currentPodcast, true);
+    }, 200); // Delay mínimo solo para auto-advance
+  }
+}, [currentLesson, currentPodcast, user, markLessonComplete, updateCourseProgress, selectLesson, onLessonCompletedCallback, onCourseCompletedCallback]);
   
   // Audio event handlers
   const handleLoadedMetadata = () => {
