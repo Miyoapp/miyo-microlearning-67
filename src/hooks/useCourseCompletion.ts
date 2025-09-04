@@ -108,10 +108,10 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress, mar
     }
   }, [podcast, userProgress, markCompletionModalShown]); // Added markCompletionModalShown dependency
 
-  // DEFINITIVE: Effect with minimal, stable dependencies
-  useEffect(() => {
-    console.log('🔄 DEFINITIVE EFFECT - useEffect triggered for course completion check');
-    checkCourseCompletion();
+  // Direct trigger function for immediate course completion detection
+  const triggerCompletionCheck = useCallback(async () => {
+    console.log('🎯 IMMEDIATE TRIGGER - Course completion check triggered directly');
+    await checkCourseCompletion();
   }, [checkCourseCompletion]);
 
   // Handle creating summary with new structure
@@ -164,6 +164,7 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress, mar
     setShowSummaryModal,
     handleCreateSummary,
     handleOpenSummaryModal,
-    checkHasSummary
+    checkHasSummary,
+    triggerCompletionCheck
   };
 }
