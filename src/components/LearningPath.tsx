@@ -34,7 +34,7 @@ const LearningPath = React.memo(({
   podcast
 }: LearningPathProps) => {
   // Audio player context
-  const { selectLesson, setOnCourseCompletedCallback } = useAudioPlayer();
+  const { selectLesson } = useAudioPlayer();
   
   // Get user progress data for course completion detection
   const { userProgress, markCompletionModalShown } = useUserProgress();
@@ -48,7 +48,7 @@ const LearningPath = React.memo(({
   // Extract courseId from podcast
   const courseId = podcast?.id || null;
   
-  // Course completion functionality - with direct trigger capability
+  // Course completion functionality - simplified without lesson progress dependency
   const {
     showCompletionModal,
     showSummaryModal,
@@ -57,8 +57,7 @@ const LearningPath = React.memo(({
     setShowSummaryModal,
     handleCreateSummary,
     handleOpenSummaryModal,
-    checkHasSummary,
-    triggerCompletionCheck
+    checkHasSummary
   } = useCourseCompletion({
     podcast,
     userProgress,
@@ -161,23 +160,6 @@ const LearningPath = React.memo(({
       setShowViewSummaryModal(true);
     }
   };
-
-  // IMMEDIATE course completion handler - triggered directly from AudioPlayer
-  const handleCourseCompleted = useCallback(() => {
-    console.log('🎉 IMMEDIATE COURSE COMPLETION - Triggering completion check directly');
-    triggerCompletionCheck();
-  }, [triggerCompletionCheck]);
-
-  // Connect course completion callback to AudioPlayer
-  useEffect(() => {
-    console.log('🔗 LearningPath: Connecting course completion callback');
-    setOnCourseCompletedCallback(handleCourseCompleted);
-    
-    return () => {
-      console.log('🔌 LearningPath: Disconnecting course completion callback');
-      setOnCourseCompletedCallback(null);
-    };
-  }, [handleCourseCompleted, setOnCourseCompletedCallback]);
   
   return (
     <>
