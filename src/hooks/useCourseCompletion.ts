@@ -156,12 +156,6 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress, mar
     return await hasSummary(podcast.id);
   }, [podcast, hasSummary]);
 
-  // Manual trigger function for immediate completion check
-  const triggerCompletionCheck = useCallback(async () => {
-    console.log('🚀 MANUAL TRIGGER - Triggering immediate completion check');
-    await checkCourseCompletion();
-  }, [checkCourseCompletion]);
-
   return {
     showCompletionModal,
     showSummaryModal,
@@ -170,7 +164,6 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress, mar
     setShowSummaryModal,
     handleCreateSummary,
     handleOpenSummaryModal,
-    checkHasSummary,
-    triggerCompletionCheck
+    checkHasSummary
   };
 }

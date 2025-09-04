@@ -34,11 +34,7 @@ const LearningPath = React.memo(({
   podcast
 }: LearningPathProps) => {
   // Audio player context
-  const { 
-    selectLesson,
-    setOnLessonCompletedCallback,
-    setOnCourseCompletedCallback
-  } = useAudioPlayer();
+  const { selectLesson } = useAudioPlayer();
   
   // Get user progress data for course completion detection
   const { userProgress, markCompletionModalShown } = useUserProgress();
@@ -61,20 +57,13 @@ const LearningPath = React.memo(({
     setShowSummaryModal,
     handleCreateSummary,
     handleOpenSummaryModal,
-    checkHasSummary,
-    triggerCompletionCheck
+    checkHasSummary
   } = useCourseCompletion({
     podcast,
     userProgress,
     lessonProgress,
     markCompletionModalShown
   });
-
-  // Connect completion check to audio player
-  useEffect(() => {
-    setOnCourseCompletedCallback(triggerCompletionCheck);
-    return () => setOnCourseCompletedCallback(null);
-  }, [triggerCompletionCheck, setOnCourseCompletedCallback]);
 
   // Check if course is completed
   const courseProgress = userProgress.find(p => p.course_id === courseId);
