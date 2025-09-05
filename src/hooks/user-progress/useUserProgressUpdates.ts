@@ -11,10 +11,10 @@ export function useUserProgressUpdates(
 ) {
   const { user } = useAuth();
 
-  const updateCourseProgress = useCallback(async (courseId: string, updates: Partial<UserCourseProgress>) => {
+  const updateCourseProgress = useCallback(async (courseId: string, updates: Partial<UserCourseProgress>, forceRefetch = false) => {
     if (!user) return;
 
-    console.log('📈 Updating course progress:', { courseId, updates });
+    console.log('📈 Updating course progress:', { courseId, updates, forceRefetch });
 
     try {
       const { error } = await supabase
@@ -30,7 +30,7 @@ export function useUserProgressUpdates(
 
       if (error) throw error;
 
-      // Update local state
+      // Update local state IMMEDIATAMENTE
       setUserProgress(prev => {
         const existing = prev.find(p => p.course_id === courseId);
         if (existing) {
@@ -54,6 +54,28 @@ export function useUserProgressUpdates(
       });
 
       console.log('✅ Course progress updated successfully');
+
+      // REFETCH INMEDIATO para casos críticos (como completion)
+      if (forceRefetch) {
+        console.log('🔄 Force refetching user progress...');
+        // Pequeño delay para asegurar que la DB se ha actualizado
+        setTimeout(async () => {
+          try {
+            const { data: freshData } = await supabase
+              .from('user_course_progress')
+              .select('*')
+              .eq('user_id', user.id);
+            
+            if (freshData) {
+              setUserProgress(freshData);
+              console.log('✅ Fresh progress data loaded');
+            }
+          } catch (refetchError) {
+            console.error('Error refetching progress:', refetchError);
+          }
+        }, 50);
+      }
+      
     } catch (error) {
       console.error('❌ Error updating course progress:', error);
       toast.error('Error al actualizar el progreso');

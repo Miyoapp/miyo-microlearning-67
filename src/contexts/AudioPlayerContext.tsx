@@ -344,13 +344,13 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         console.log('✅ Course progress updated directly in database');
       }
 
-      // FORZAR actualización del hook useUserProgress
+      // FORZAR actualización del hook useUserProgress con refetch inmediato
       await updateCourseProgress(currentPodcast.id, { 
         progress_percentage: 100,
         is_completed: true 
-      });
+      }, true); // forceRefetch = true para completion
 
-      console.log('✅ Course progress updated via hook');
+      console.log('✅ Course progress updated via hook with force refetch');
       
     } catch (error) {
       console.error('Error in course completion update:', error);

@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Podcast } from '@/types';
 import { CourseCompletionStats } from '@/types/notes';
 import { useSummaries } from '@/hooks/useSummaries';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 interface UseCourseCompletionProps {
   podcast: Podcast | null;  
@@ -19,6 +21,7 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress, mar
   const isCheckingRef = useRef(false);
   const modalShownForCourseRef = useRef<string | null>(null);
   
+  const { user: auth } = useAuth();
   const { getCourseStats, createSummary, hasSummary } = useSummaries();
   
   // Use ref to keep stable reference to getCourseStats
@@ -63,52 +66,72 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress, mar
     }
   }, [markCompletionModalShown]);
 
-  // Función directa para mostrar modal SOLO cuando realmente se completa
+  // NUEVA FUNCIÓN: Verificación directa desde DB (no depende del estado local)
   const triggerCompletionCheck = useCallback(async () => {
     if (!podcast) {
       console.log('⏹️ SKIP - No podcast available for completion check');
       return;
     }
 
-    // CRÍTICO: Verificar que realmente se completó el curso
-    const courseProgress = userProgress.find(p => p.course_id === podcast.id);
-    const isReallyCompleted = courseProgress?.is_completed && courseProgress?.progress_percentage === 100;
+    console.log('🔍 COMPLETION CHECK - Querying DB directly for fresh data...');
     
-    if (!isReallyCompleted) {
-      console.log('⏹️ SKIP - Course not actually completed yet');
-      return;
-    }
+    try {
+      // CONSULTA DIRECTA A LA DB para obtener datos frescos
+      const { data: courseProgress, error } = await supabase
+        .from('user_course_progress')
+        .select('progress_percentage, is_completed, completion_modal_shown')
+        .eq('course_id', podcast.id)
+        .eq('user_id', auth.id)
+        .single();
 
-    // Evitar mostrar múltiples veces para el mismo curso
-    if (modalShownForCourseRef.current === podcast.id) {
-      console.log('⏸️ SKIP - Modal already shown for this course:', podcast.id);
-      return;
-    }
+      if (error) {
+        console.log('⚠️ No progress found in DB, course not completed yet');
+        return;
+      }
 
-    // Verificar que no se haya mostrado ya el modal en la DB
-    if (courseProgress?.completion_modal_shown) {
-      console.log('⏸️ SKIP - Modal already shown according to database');
-      return;
-    }
+      // Verificar REALMENTE que el curso está completo según la DB
+      const isReallyCompleted = courseProgress?.is_completed && courseProgress?.progress_percentage === 100;
+      
+      if (!isReallyCompleted) {
+        console.log('⏹️ SKIP - Course not actually completed yet (DB check)', courseProgress);
+        return;
+      }
 
-    console.log('🎉 DIRECT TRIGGER - Course really completed, showing modal!');
-    
-    // Marcar que ya mostramos el modal para este curso
-    modalShownForCourseRef.current = podcast.id;
-    
-    // Mostrar modal inmediatamente
-    await showModalImmediately(podcast.id, podcast.lessonCount, podcast.duration);
-    
-    console.log('✅ COMPLETION MODAL SHOWN INSTANTLY');
-  }, [podcast, userProgress, showModalImmediately]);
+      // Evitar mostrar múltiples veces para el mismo curso
+      if (modalShownForCourseRef.current === podcast.id) {
+        console.log('⏸️ SKIP - Modal already shown for this course (memory):', podcast.id);
+        return;
+      }
 
-  // Reset cuando cambia el podcast
-  useEffect(() => {
-    if (podcast?.id && modalShownForCourseRef.current !== podcast.id) {
-      modalShownForCourseRef.current = null;
-      previousProgressRef.current = 0;
+      // Verificar que no se haya mostrado ya el modal en la DB
+      if (courseProgress?.completion_modal_shown) {
+        console.log('⏸️ SKIP - Modal already shown according to database');
+        return;
+      }
+
+      console.log('🎉 DB CONFIRMED - Course really completed, showing modal IMMEDIATELY!');
+      
+      // Marcar que ya mostramos el modal para este curso
+      modalShownForCourseRef.current = podcast.id;
+      
+      // Mostrar modal inmediatamente con datos frescos de la DB
+      await showModalImmediately(podcast.id, podcast.lessonCount, podcast.duration);
+      
+      console.log('✅ COMPLETION MODAL SHOWN INSTANTLY (DB verified)');
+      
+    } catch (error) {
+      console.error('❌ Error checking course completion from DB:', error);
+      
+      // FALLBACK: Si falla la verificación DB, usar forceShowCompletionModal
+      console.log('🚨 Using fallback completion check...');
+      setTimeout(() => {
+        if (modalShownForCourseRef.current !== podcast.id) {
+          // Fallback directo sin dependencia circular
+          showModalImmediately(podcast.id, podcast.lessonCount, podcast.duration);
+        }
+      }, 200);
     }
-  }, [podcast?.id]);
+  }, [podcast, showModalImmediately]);
 
   // SOLUCIÓN 5: Función directa para casos urgentes
   const forceShowCompletionModal = useCallback(async () => {
@@ -117,6 +140,14 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress, mar
     console.log('⚡ FORCE SHOW - Forcing completion modal display');
     await showModalImmediately(podcast.id, podcast.lessonCount, podcast.duration);
   }, [podcast, showModalImmediately]);
+
+  // Reset cuando cambia el podcast
+  useEffect(() => {
+    if (podcast?.id && modalShownForCourseRef.current !== podcast.id) {
+      modalShownForCourseRef.current = null;
+      previousProgressRef.current = 0;
+    }
+  }, [podcast?.id]);
 
   // Handle creating summary
   const handleCreateSummary = useCallback(async (formData: {
@@ -166,6 +197,7 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress, mar
     handleCreateSummary,
     handleOpenSummaryModal,
     checkHasSummary,
-    triggerCompletionCheck // Nueva función para activación directa
+    triggerCompletionCheck, // Nueva función para activación directa con verificación DB
+    forceShowCompletionModal // Función de fallback para casos urgentes
   };
 }
