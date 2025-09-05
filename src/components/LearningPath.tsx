@@ -252,7 +252,7 @@ const LearningPath = React.memo(({
         <CreateSummaryModal
           isOpen={showSummaryModal}
           onClose={() => setShowSummaryModal(false)}
-          onSave={handleCreateSummary}
+          onSave={handleCreateSummaryWrapper}
           courseTitle={podcast.title}
         />
       )}
