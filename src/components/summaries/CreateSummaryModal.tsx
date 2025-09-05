@@ -139,7 +139,7 @@ const CreateSummaryModal: React.FC<CreateSummaryModalProps> = ({
               onChange={(e) => setFormData(prev => ({ ...prev, personalInsight: e.target.value }))}
               placeholder="¿Cuál fue tu mayor aprendizaje o revelación personal?"
               className="min-h-[100px] resize-none"
-              ``` required
+              required
             />
           </div>
 
