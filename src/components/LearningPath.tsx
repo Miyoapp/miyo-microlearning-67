@@ -110,7 +110,10 @@ const LearningPath = React.memo(({
 }) => {
   await handleCreateSummary(formData);
   await checkExistingSummary();
-}, [handleCreateSummary, checkExistingSummary]);
+  // Cerrar modal después de actualizar el estado
+  setShowSummaryModal(false);
+  setShowCompletionModal();
+}, [handleCreateSummary, checkExistingSummary, setShowSummaryModal, setShowCompletionModal]);
   
   // Use custom hooks for status and classes
   const lessonStatusMap = useLessonStatus(lessons, modules, currentLessonId, lessonProgress);

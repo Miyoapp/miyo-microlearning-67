@@ -137,8 +137,7 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress, mar
       formData.actionPlans
     );
     
-    setShowSummaryModal(false);
-    setShowCompletionModal(false);
+    // No cerramos los modales automáticamente - se hará desde el componente
   }, [podcast, createSummary]);
 
   const handleOpenSummaryModal = useCallback(() => {
