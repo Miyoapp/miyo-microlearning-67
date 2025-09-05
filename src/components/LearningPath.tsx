@@ -65,19 +65,7 @@ const LearningPath = React.memo(({
     lessonProgress,
     markCompletionModalShown
   });
-  const handleCreateSummaryWrapper = useCallback(async (formData: {
-  title: string;
-  keyConcepts: string;
-  personalInsight: string;
-  actionPlans: string[];
-}) => {
-  // Llamar la función original del hook
-  await handleCreateSummary(formData);
-  
-  // Refrescar el estado local para actualizar el botón
-  await checkExistingSummary();
-}, [handleCreateSummary, checkExistingSummary]);
-  
+
   // Check if course is completed
   const courseProgress = userProgress.find(p => p.course_id === courseId);
   const isCourseCompleted = courseProgress?.is_completed && courseProgress?.progress_percentage === 100;
@@ -113,7 +101,17 @@ const LearningPath = React.memo(({
       }
     }
   };
-
+  
+  const handleCreateSummaryWrapper = useCallback(async (formData: {
+  title: string;
+  keyConcepts: string;
+  personalInsight: string;
+  actionPlans: string[];
+}) => {
+  await handleCreateSummary(formData);
+  await checkExistingSummary();
+}, [handleCreateSummary, checkExistingSummary]);
+  
   // Use custom hooks for status and classes
   const lessonStatusMap = useLessonStatus(lessons, modules, currentLessonId, lessonProgress);
   const getLessonClasses = useLessonClasses(lessons, lessonStatusMap);
@@ -254,7 +252,7 @@ const LearningPath = React.memo(({
         <CreateSummaryModal
           isOpen={showSummaryModal}
           onClose={() => setShowSummaryModal(false)}
-          onSave={handleCreateSummaryWrapper}
+          onSave={handleCreateSummary}
           courseTitle={podcast.title}
         />
       )}
