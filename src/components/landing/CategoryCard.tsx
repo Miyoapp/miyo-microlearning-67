@@ -1,117 +1,85 @@
-
-import React, { useState } from 'react';
-import { Play, Pause } from 'lucide-react';
-import { CategoriaLanding } from '@/types/landing';
+import React from 'react';
+import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 interface CategoryCardProps {
-  categoria: CategoriaLanding;
+  categoria?: {
+    id: string;
+    emoji?: string;
+    title?: string;
+    description?: string;
+  };
+  category?: {
+    id: string;
+    emoji: string;
+    title: string;
+    description: string;
+  };
 }
 
-const CategoryCard = ({ categoria }: CategoryCardProps) => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [audioRef] = useState<HTMLAudioElement | null>(null);
+const CategoryCard: React.FC<CategoryCardProps> = ({ categoria, category }) => {
+  const navigate = useNavigate();
+  
+  // Support both prop names for backwards compatibility
+  const item = category || categoria;
+  
+  if (!item) return null;
 
-  // Mapeo de imágenes de Cloudinary para cada categoría
-  const getImageForCategory = (nombre: string) => {
-    const nombreLower = nombre.toLowerCase();
-    
-    if (nombreLower.includes('productividad')) {
-      return 'https://res.cloudinary.com/dyjx9cjat/image/upload/v1753193121/productividad_djlbni.jpg';
-    }
-    if (nombreLower.includes('bienestar')) {
-      return 'https://res.cloudinary.com/dyjx9cjat/image/upload/v1753193108/bienestar_hoklc1.jpg';
-    }
-    if (nombreLower.includes('relaciones') || nombreLower.includes('humanas')) {
-      return 'https://res.cloudinary.com/dyjx9cjat/image/upload/v1753193119/relaciones_humanas_b91shk.jpg';
-    }
-    if (nombreLower.includes('espiritualidad')) {
-      return 'https://res.cloudinary.com/dyjx9cjat/image/upload/v1753193121/espiritualidad_qyd5m1.jpg';
-    }
-    if (nombreLower.includes('autoconocimiento')) {
-      return 'https://res.cloudinary.com/dyjx9cjat/image/upload/v1753193118/autoconocimiento_gecxqp.jpg';
-    }
-    if (nombreLower.includes('habilidades') || nombreLower.includes('personales') || nombreLower.includes('desarrollo')) {
-      return 'https://res.cloudinary.com/dyjx9cjat/image/upload/v1753193108/habilidadespersonales_n8bijl.jpg';
-    }
-    
-    // Fallback a la imagen original o una imagen por defecto
-    return categoria.imagen_url || 'https://images.unsplash.com/photo-1721322800607-8c38375eef04?auto=format&fit=crop&w=400&q=80';
+  const handleClick = () => {
+    navigate('/login?mode=signup');
   };
 
-  const handlePlayPause = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    if (!categoria.audio_preview_url) return;
-    
-    if (audioRef) {
-      if (isPlaying) {
-        audioRef.pause();
-      } else {
-        audioRef.play();
-      }
-      setIsPlaying(!isPlaying);
-    }
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 }
   };
-
-  const imageUrl = getImageForCategory(categoria.nombre);
 
   return (
-    <div className="group relative bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer">
-      {/* Audio element */}
-      {categoria.audio_preview_url && (
-        <audio
-          ref={(ref) => {
-            if (ref) {
-              (audioRef as any) = ref;
-              ref.addEventListener('ended', () => setIsPlaying(false));
-            }
-          }}
-          src={categoria.audio_preview_url}
-          preload="none"
-        />
-      )}
-      
-      {/* Image container */}
-      <div className="relative h-48 bg-gradient-to-br from-miyo-100 to-miyo-200 overflow-hidden">
-        <img
-          src={imageUrl}
-          alt={categoria.nombre}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          onError={(e) => {
-            // Fallback en caso de error de imagen
-            e.currentTarget.style.display = 'none';
-          }}
-        />
+    <motion.div
+      variants={cardVariants}
+      transition={{ duration: 0.5 }}
+      whileHover={{ 
+        y: -8,
+        transition: { duration: 0.2 }
+      }}
+      className="group cursor-pointer"
+      onClick={handleClick}
+    >
+      <div className="relative h-full bg-white/60 backdrop-blur-lg border border-white/20 rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 hover:bg-white/70">
+        {/* Gradiente de fondo sutil */}
+        <div className="absolute inset-0 bg-gradient-to-br from-miyo-50/30 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         
-        {/* Play button overlay */}
-        {categoria.audio_preview_url && (
-          <button
-            onClick={handlePlayPause}
-            className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+        {/* Contenido */}
+        <div className="relative z-10">
+          {/* Icono con animación */}
+          <motion.div 
+            className="text-4xl mb-4 transform group-hover:scale-110 transition-transform duration-300"
+            whileHover={{ rotate: [0, -10, 10, 0] }}
+            transition={{ duration: 0.5 }}
           >
-            <div className="bg-white/90 backdrop-blur-sm rounded-full p-3 hover:bg-white transition-colors">
-              {isPlaying ? (
-                <Pause className="w-6 h-6 text-miyo-800" />
-              ) : (
-                <Play className="w-6 h-6 text-miyo-800 ml-0.5" />
-              )}
-            </div>
-          </button>
-        )}
-      </div>
-      
-      {/* Content */}
-      <div className="p-6">
-        <h3 className="text-xl font-semibold text-gray-900 mb-2 group-hover:text-miyo-800 transition-colors">
-          {categoria.nombre}
-        </h3>
-        {categoria.descripcion && (
-          <p className="text-gray-600 text-sm line-clamp-2">
-            {categoria.descripcion}
+            {item.emoji}
+          </motion.div>
+          
+          {/* Título */}
+          <h3 className="text-xl font-semibold text-gray-900 mb-3 group-hover:text-miyo-800 transition-colors duration-300">
+            {item.title}
+          </h3>
+          
+          {/* Descripción */}
+          <p className="text-gray-600 text-sm leading-relaxed">
+            {item.description}
           </p>
-        )}
+          
+          {/* Indicador de hover */}
+          <div className="mt-4 flex items-center text-miyo-600 text-sm font-medium opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+            Explorar →
+          </div>
+        </div>
+        
+        {/* Brillo sutil en hover */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 -translate-x-full group-hover:translate-x-full transition-all duration-700 rounded-2xl" />
       </div>
-    </div>
+    </motion.div>
   );
 };
 

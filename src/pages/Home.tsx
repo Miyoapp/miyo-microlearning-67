@@ -2,8 +2,8 @@
 import React from 'react';
 import Header from '../components/Header';
 import HomeHero from '../components/home/HomeHero';
-import ScrollVelocityCarousel from '../components/landing/ScrollVelocityCarousel';
-import HowItWorks from '../components/home/HowItWorks';
+import StaticCategoriesSection from '../components/landing/StaticCategoriesSection';
+import UpdatedHowItWorks from '../components/home/UpdatedHowItWorks';
 import FavoriteMoments from '../components/home/FavoriteMoments';
 import Footer from '../components/home/Footer';
 
@@ -12,8 +12,8 @@ const Home = () => {
     <div className="min-h-screen bg-gray-50">
       <Header />
       <HomeHero />
-      <ScrollVelocityCarousel />
-      <HowItWorks />
+      <StaticCategoriesSection />
+      <UpdatedHowItWorks />
       <FavoriteMoments />
       <Footer />
     </div>
