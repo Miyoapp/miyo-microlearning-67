@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Route, NotebookPen, FileText, Target } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const steps = [
   {
@@ -145,20 +146,19 @@ const UpdatedHowItWorks: React.FC = () => {
             </div>
           </div>
 
-          {/* Mensaje final */}
+          {/* Call to Action */}
           <motion.div 
             className="text-center mt-16"
             variants={stepVariants}
             transition={{ duration: 0.6 }}
           >
-            <div className="glass rounded-2xl p-8 max-w-2xl mx-auto">
-              <h3 className="text-2xl font-semibold text-gray-900 mb-4">
-                Tu crecimiento personal, optimizado
-              </h3>
-              <p className="text-gray-600">
-                Cada funcionalidad está diseñada para maximizar tu aprendizaje y transformar el conocimiento en resultados tangibles en tu vida.
-              </p>
-            </div>
+            <Button 
+              size="lg" 
+              className="bg-miyo-800 hover:bg-miyo-700 text-white px-8 py-4 h-auto text-lg font-medium" 
+              onClick={() => window.location.href = '/login?mode=signup'}
+            >
+              🎧 Explorar cursos
+            </Button>
           </motion.div>
         </div>
       </motion.div>
