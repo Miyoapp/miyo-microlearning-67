@@ -6,7 +6,7 @@ import CourseCardWithProgress from '@/components/dashboard/CourseCardWithProgres
 import { Button } from '@/components/ui/button';
 import { obtenerCursos, obtenerCategorias } from '@/lib/api';
 import { useUserProgress } from '@/hooks/useUserProgress';
-import { useNewCoursesOptimized } from '@/hooks/useNewCoursesOptimized';
+import { useNewCourses } from '@/hooks/useNewCourses';
 import { Podcast, CategoryModel } from '@/types';
 import { SidebarTrigger } from '@/components/ui/sidebar/index';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -20,7 +20,7 @@ const DashboardDiscover = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { userProgress, toggleSaveCourse } = useUserProgress();
-  const { newCourses, loading: newCoursesLoading, error: newCoursesError } = useNewCoursesOptimized();
+  const { newCourses, loading: newCoursesLoading, error: newCoursesError } = useNewCourses();
 
   useEffect(() => {
     const loadData = async () => {
