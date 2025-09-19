@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import CourseCardWithProgress from '@/components/dashboard/CourseCardWithProgress';
 import { Button } from '@/components/ui/button';
-import { obtenerCategoriasOptimizado } from '@/lib/api/optimizedCourseAPI';
+import { useCachedCategories } from '@/hooks/queries/useCachedCategories';
 import { useCachedCoursesFiltered } from '@/hooks/queries/useCachedCourses';
 import { useCachedProgressData, useToggleSaveCourse } from '@/hooks/queries/useCachedUserProgress';
-import { useQuery } from '@tanstack/react-query';
+import { CategoryModel } from '@/types';
 import { SidebarTrigger } from '@/components/ui/sidebar/index';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { CalendarDays, Sparkles } from 'lucide-react';
@@ -35,13 +35,8 @@ const DashboardDiscoverOptimized = () => {
   // OPTIMIZED: Use cached toggle save mutation
   const toggleSaveCourseMutation = useToggleSaveCourse();
   
-  // OPTIMIZED: Cached categories query
-  const { data: categories = [], isLoading: categoriesLoading } = useQuery({
-    queryKey: ['categories'],
-    queryFn: obtenerCategoriasOptimizado,
-    staleTime: 10 * 60 * 1000, // 10 minutes - categories don't change often
-    gcTime: 30 * 60 * 1000, // 30 minutes
-  });
+  // OPTIMIZED: Use cached categories
+  const { data: categories = [], isLoading: categoriesLoading } = useCachedCategories();
 
   const loading = coursesLoading || progressLoading || categoriesLoading;
   
@@ -150,7 +145,7 @@ const DashboardDiscoverOptimized = () => {
               >
                 Todos
               </Button>
-              {categories.map(category => (
+              {(categories as CategoryModel[]).map(category => (
                 <Button
                   key={category.id}
                   variant={selectedCategory === category.id ? "default" : "outline"}

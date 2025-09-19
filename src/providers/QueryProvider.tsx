@@ -9,14 +9,19 @@ const getQueryClient = () => {
     queryClientInstance = new QueryClient({
       defaultOptions: {
         queries: {
-          staleTime: 5 * 60 * 1000, // 5 minutes
-          gcTime: 10 * 60 * 1000, // 10 minutes 
-          retry: 2, // Reduced retry count for safety
-          refetchOnWindowFocus: false,
-          refetchOnReconnect: true,
+          // OPTIMIZED: Longer cache times for stable data
+          staleTime: 10 * 60 * 1000, // 10 minutes - data stays fresh longer
+          gcTime: 30 * 60 * 1000, // 30 minutes - keep in memory longer
+          retry: 3, // Better retry strategy
+          retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+          refetchOnWindowFocus: false, // Prevent unnecessary refetches
+          refetchOnReconnect: 'always', // Only refetch on reconnect
+          refetchOnMount: false, // Don't refetch if we have cached data
+          networkMode: 'offlineFirst', // Use cache when network is slow
         },
         mutations: {
-          retry: 1,
+          retry: 2, // Retry mutations once more
+          networkMode: 'offlineFirst',
         },
       },
     });
