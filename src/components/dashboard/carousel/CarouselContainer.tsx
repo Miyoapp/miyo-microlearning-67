@@ -90,11 +90,12 @@ const CarouselContainer: React.FC<CarouselContainerProps> = ({
       <div 
         className="overflow-hidden" 
         ref={emblaRef}
-        style={{ 
+        style={isMobile ? { 
+          touchAction: 'pan-x',
+          WebkitOverflowScrolling: 'touch',
+        } : {
           touchAction: 'pan-y pan-x pinch-zoom',
           overscrollBehaviorX: 'contain',
-          scrollSnapType: 'x mandatory',
-          scrollBehavior: 'smooth'
         }}
       >
         <div className="flex">
@@ -107,8 +108,8 @@ const CarouselContainer: React.FC<CarouselContainerProps> = ({
                   : 'w-full sm:w-1/2 lg:w-1/3 xl:w-1/4 pr-6'
               }`}
               style={isMobile ? { 
-                scrollSnapAlign: courses.length <= 3 ? 'start' : 'center',
-                scrollSnapStop: 'always'
+                scrollSnapAlign: 'start',
+                scrollSnapStop: 'normal'
               } : {}}
             >
               <CourseCardWithProgress

@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import CategoryCard from './CategoryCard';
-import FloatingElements from './FloatingElements';
+import FloatingElementsOptimized from './FloatingElementsOptimized';
 
 const categoriesData = [
   {
@@ -89,7 +89,7 @@ const StaticCategoriesSection: React.FC = () => {
 
   return (
     <section className="relative py-20 px-4 sm:px-6 lg:px-8 bg-white overflow-hidden">
-      <FloatingElements />
+      <FloatingElementsOptimized />
       
       <motion.div 
         className="miyo-container relative z-10"

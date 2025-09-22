@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import MomentCard from './MomentCard';
-import FloatingElements from '../landing/FloatingElements';
+import FloatingElementsOptimized from '../landing/FloatingElementsOptimized';
 import { Car, Dumbbell, Train, Coffee, Moon } from 'lucide-react';
 
 const FavoriteMomentsModern = () => {
@@ -83,7 +83,7 @@ const FavoriteMomentsModern = () => {
   return (
     <section className="relative py-24 px-4 sm:px-6 lg:px-8 bg-white overflow-hidden">
       {/* Elementos flotantes de fondo */}
-      <FloatingElements />
+      <FloatingElementsOptimized />
       
       <motion.div 
         className="miyo-container relative z-10"

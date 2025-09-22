@@ -13,32 +13,35 @@ export const getDisplayCourses = (courses: CarouselItem[], isMobile: boolean): C
   return courses;
 };
 
-// Dynamic Embla configuration based on course count
+// Dynamic Embla configuration based on course count - Mobile Optimized
 export const getEmblaOptions = (courseCount: number): EmblaOptionsType => {
   const hasFewerCards = courseCount <= 3;
   
   return {
-    align: hasFewerCards ? 'start' : 'center',
+    align: 'start',
     slidesToScroll: 1,
-    containScroll: 'keepSnaps',
-    dragFree: false,
+    containScroll: 'trimSnaps',
+    dragFree: true,
     skipSnaps: false,
     loop: false,
     watchDrag: true,
-    inViewThreshold: 0.8,
+    inViewThreshold: 0.3,
+    startIndex: 0,
+    active: true,
+    breakpoints: {},
   };
 };
 
 // Get mobile card width based on course count - optimized for real courses only
 export const getMobileCardWidth = (courseCount: number): string => {
   if (courseCount === 1) {
-    return 'w-[90vw]';
+    return 'w-[85vw]';
   } else if (courseCount === 2) {
-    return 'w-[75vw]';
+    return 'w-[70vw]';
   } else if (courseCount === 3) {
-    return 'w-[65vw]';
+    return 'w-[60vw]';
   }
-  return 'w-[75vw]';
+  return 'w-[70vw]';
 };
 
 // Determine if navigation should be shown
