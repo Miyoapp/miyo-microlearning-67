@@ -14,17 +14,16 @@ export const usePerformanceOptimization = (): PerformanceConfig => {
   const [isLowEndDevice, setIsLowEndDevice] = useState(false);
 
   useEffect(() => {
-    // Detect low-end devices
+    // Detect low-end devices - more conservative approach
     const checkDeviceCapabilities = () => {
       // Check memory (if available)
       const memory = (navigator as any).deviceMemory;
       const hardwareConcurrency = navigator.hardwareConcurrency || 2;
       
-      // Consider low-end if: mobile + low memory/cores
-      const isLowEnd = isMobile && (
-        (memory && memory <= 2) || 
-        hardwareConcurrency <= 2 ||
-        window.innerWidth <= 400
+      // Only consider truly low-end devices
+      const isLowEnd = (
+        (memory && memory <= 1) || 
+        (hardwareConcurrency <= 1 && window.innerWidth <= 360)
       );
       
       setIsLowEndDevice(isLowEnd);
@@ -44,7 +43,13 @@ export const usePerformanceOptimization = (): PerformanceConfig => {
 // Utility to conditionally apply motion props
 export const getMotionProps = (props: any, config: PerformanceConfig) => {
   if (config.disableMotion) {
-    return {};
+    // Still show content immediately without animations
+    return {
+      initial: { opacity: 1 },
+      animate: { opacity: 1 },
+      whileInView: { opacity: 1 },
+      viewport: props.viewport || { once: true }
+    };
   }
   
   if (config.reduceAnimations) {
