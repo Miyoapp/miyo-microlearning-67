@@ -29,7 +29,19 @@ const DashboardCourseSection: React.FC<DashboardCourseSectionProps> = ({
   onToggleSave,
   onCourseClick,
 }) => {
+  // Debug logging to understand why "Continúa escuchando" might not show
+  console.log('📚 DashboardCourseSection render:', {
+    title,
+    coursesCount: courses.length,
+    showProgress,
+    timestamp: new Date().toLocaleTimeString()
+  });
+
   if (courses.length === 0) {
+    // Show a placeholder for "Continúa escuchando" when empty to help with debugging
+    if (title.includes('Continúa escuchando')) {
+      console.log('🔍 "Continúa escuchando" section has no courses - this might be the issue');
+    }
     return null;
   }
 

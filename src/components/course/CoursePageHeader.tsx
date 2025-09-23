@@ -43,7 +43,9 @@ const CoursePageHeader: React.FC<CoursePageHeaderProps> = ({ isReviewMode }) => 
             />
           </button>
           
-          <SidebarTrigger />
+          <div className="bg-white rounded-full shadow-lg">
+            <SidebarTrigger />
+          </div>
         </div>
       ) : (
         /* Desktop Layout: Current layout maintained */
