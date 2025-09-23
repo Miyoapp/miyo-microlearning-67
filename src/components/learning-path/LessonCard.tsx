@@ -155,7 +155,20 @@ const LessonCard = React.memo(({
   };
 
   // Progress display logic - moved here before useEffect that needs it
-  const validDuration = isCurrent && currentLesson?.id === lesson.id ? duration : (lesson.duracion || 0);
+  // Fix for mobile: Ensure completed lessons always have valid duration
+  const validDuration = useMemo(() => {
+    if (isCurrent && currentLesson?.id === lesson.id) {
+      return duration;
+    }
+    
+    // For completed lessons, ensure we have a valid duration
+    if (savedProgress?.is_completed && (lesson.duracion || 0) === 0) {
+      // If lesson duration is 0 but it's completed, use saved progress position as duration
+      return savedProgress.current_position || lesson.duracion || 1;
+    }
+    
+    return lesson.duracion || 0;
+  }, [isCurrent, currentLesson?.id, lesson.id, duration, lesson.duracion, savedProgress?.is_completed, savedProgress?.current_position]);
 
   // Fetch notes when lesson can play and courseId is available
   React.useEffect(() => {
@@ -255,7 +268,8 @@ const LessonCard = React.memo(({
       isCurrent,
       propIsPlaying,
       currentTime,
-      temporaryPosition
+      temporaryPosition,
+      validDuration
     });
     
     // FOR COMPLETED LESSONS: Handle temporary replay progress
@@ -274,8 +288,10 @@ const LessonCard = React.memo(({
       }
       
       // If not current: show 100% from DB (completed state)
-      console.log('📊 COMPLETED INACTIVE - showing 100%:', validDuration);
-      return validDuration;
+      // Fix: Use saved current_position if validDuration is 0, otherwise use validDuration
+      const completedPosition = validDuration > 0 ? validDuration : (savedProgress.current_position || 1);
+      console.log('📊 COMPLETED INACTIVE - showing 100%:', completedPosition);
+      return completedPosition;
     }
     
     // FOR NON-COMPLETED LESSONS: Enhanced logic with pause support
