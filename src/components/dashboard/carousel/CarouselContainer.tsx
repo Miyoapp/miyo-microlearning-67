@@ -18,6 +18,7 @@ interface CarouselContainerProps {
   onPlayCourse?: (courseId: string) => void;
   onToggleSave?: (courseId: string) => void;
   onCourseClick?: (courseId: string) => void;
+  onCourseHover?: (courseId: string) => void;
   containerClassName?: string;
 }
 
@@ -27,6 +28,7 @@ const CarouselContainer: React.FC<CarouselContainerProps> = ({
   onPlayCourse,
   onToggleSave,
   onCourseClick,
+  onCourseHover,
   containerClassName = ""
 }) => {
   const isMobile = useIsMobile();
@@ -118,6 +120,7 @@ const CarouselContainer: React.FC<CarouselContainerProps> = ({
                 onPlay={() => onPlayCourse?.(item.podcast.id)}
                 onToggleSave={() => onToggleSave?.(item.podcast.id)}
                 onClick={() => onCourseClick?.(item.podcast.id)}
+                onHover={() => onCourseHover?.(item.podcast.id)}
               />
             </div>
           ))}

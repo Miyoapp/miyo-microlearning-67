@@ -6,6 +6,7 @@ import DashboardCourseSection from '@/components/dashboard/DashboardCourseSectio
 import { SidebarTrigger } from '@/components/ui/sidebar/SidebarTrigger';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useDashboardDataOptimized } from '@/hooks/dashboard/useDashboardDataOptimized';
+import { useDashboardPrefetch } from '@/hooks/dashboard/useDashboardPrefetch';
 
 /**
  * OPTIMIZED: Dashboard que usa React Query para caché inteligente
@@ -27,6 +28,13 @@ const DashboardOptimized = () => {
     refetch,
   } = useDashboardDataOptimized();
 
+  // OPTIMIZED: Intelligent prefetching
+  const { prefetchOnHover } = useDashboardPrefetch({
+    continueLearningCourses,
+    freeCourses,
+    premiumCourses
+  });
+
   // CORREGIDO: Solo navegar al curso, no iniciar reproducción
   const handlePlayCourse = async (courseId: string) => {
     console.log('🚀 OPTIMIZED Dashboard: Navigating to course:', courseId);
@@ -41,6 +49,10 @@ const DashboardOptimized = () => {
 
   const handleCourseClick = (courseId: string) => {
     navigate(`/dashboard/course/${courseId}`);
+  };
+
+  const handleCourseHover = (courseId: string) => {
+    prefetchOnHover(courseId);
   };
 
   if (loading) {
@@ -88,6 +100,7 @@ const DashboardOptimized = () => {
               onPlayCourse={handlePlayCourse}
               onToggleSave={handleToggleSave}
               onCourseClick={handleCourseClick}
+              onCourseHover={handleCourseHover}
             />
 
             <DashboardCourseSection
@@ -98,6 +111,7 @@ const DashboardOptimized = () => {
               onPlayCourse={handlePlayCourse}
               onToggleSave={handleToggleSave}
               onCourseClick={handleCourseClick}
+              onCourseHover={handleCourseHover}
             />
 
             <DashboardCourseSection
@@ -107,6 +121,7 @@ const DashboardOptimized = () => {
               onPlayCourse={handlePlayCourse}
               onToggleSave={handleToggleSave}
               onCourseClick={handleCourseClick}
+              onCourseHover={handleCourseHover}
             />
           </div>
         </div>

@@ -15,6 +15,7 @@ interface TouchCarouselProps {
   onPlayCourse?: (courseId: string) => void;
   onToggleSave?: (courseId: string) => void;
   onCourseClick?: (courseId: string) => void;
+  onCourseHover?: (courseId: string) => void;
 }
 
 const TouchCarousel: React.FC<TouchCarouselProps> = ({
@@ -23,7 +24,8 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
   showProgress = true,
   onPlayCourse,
   onToggleSave,
-  onCourseClick
+  onCourseClick,
+  onCourseHover
 }) => {
   return (
     <div className="mb-8 sm:mb-12">
@@ -35,6 +37,7 @@ const TouchCarousel: React.FC<TouchCarouselProps> = ({
         onPlayCourse={onPlayCourse}
         onToggleSave={onToggleSave}
         onCourseClick={onCourseClick}
+        onCourseHover={onCourseHover}
       />
     </div>
   );

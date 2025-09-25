@@ -17,6 +17,7 @@ interface CourseCardWithProgressProps {
   onPlay?: () => void;
   onToggleSave?: () => void;
   onClick?: () => void;
+  onHover?: () => void;
 }
 
 const CourseCardWithProgress: React.FC<CourseCardWithProgressProps> = ({
@@ -27,7 +28,8 @@ const CourseCardWithProgress: React.FC<CourseCardWithProgressProps> = ({
   showProgress = true,
   onPlay,
   onToggleSave,
-  onClick
+  onClick,
+  onHover
 }) => {
   const handleSaveClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -45,7 +47,10 @@ const CourseCardWithProgress: React.FC<CourseCardWithProgressProps> = ({
   console.log('CourseCard render - Course:', podcast.id, 'isSaved:', isSaved, 'progress:', progress, 'showProgress:', showProgress);
 
   return (
-    <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer w-full h-full flex flex-col">
+    <Card 
+      className="group hover:shadow-lg transition-all duration-300 cursor-pointer w-full h-full flex flex-col"
+      onMouseEnter={onHover}
+    >
       <CardContent className="p-0 flex flex-col h-full">
         <div onClick={onClick} className="flex-1 flex flex-col h-full">
           {/* Mobile-first image container */}

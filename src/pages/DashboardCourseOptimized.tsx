@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
@@ -7,6 +6,7 @@ import { useCachedProgressData, useUpdateCourseProgress, useToggleSaveCourse } f
 import { useLessons } from '@/hooks/useLessons';
 import { useCourseRealtimeSync } from '@/hooks/course/useCourseRealtimeSync';
 import { useCourseAccess } from '@/hooks/course/useCourseAccess';
+import { useCourseDataEffectsOptimized } from '@/hooks/course/useCourseDataEffectsOptimized';
 import CoursePageHeader from '@/components/course/CoursePageHeader';
 import CourseLoadingSkeleton from '@/components/course/CourseLoadingSkeleton';
 import CourseErrorState from '@/components/course/CourseErrorState';
@@ -16,14 +16,24 @@ import MetaTags from '@/components/MetaTags';
 import { NotesProvider } from '@/contexts/NotesContext';
 import { useAudioPlayer } from '@/contexts/AudioPlayerContext';
 
-const DashboardCourse = () => {
+const DashboardCourseOptimized = () => {
   const { courseId } = useParams<{ courseId: string }>();
   
   // OPTIMIZED: Use cached course data (single query instead of 4+)
-  const { data: podcast, isLoading: courseLoading, error: courseError, refetch: retryCourse } = useCachedCourse(courseId);
+  const { 
+    data: podcast, 
+    isLoading: courseLoading, 
+    error: courseError, 
+    refetch: retryCourse 
+  } = useCachedCourse(courseId);
   
   // OPTIMIZED: Use cached progress data
-  const { userProgress, isLoading: progressLoading, refetch } = useCachedProgressData();
+  const { 
+    userProgress, 
+    isLoading: progressLoading, 
+    refetch 
+  } = useCachedProgressData();
+  
   const updateProgressMutation = useUpdateCourseProgress();
   const toggleSaveMutation = useToggleSaveCourse();
   
@@ -51,6 +61,14 @@ const DashboardCourse = () => {
     lastValidPodcast.current = podcast;
   }
   
+  // OPTIMIZED: Use simplified effects
+  useCourseDataEffectsOptimized({
+    courseId,
+    hasPodcast: !!podcast,
+    hasError: !!courseError,
+    refetchCourse: retryCourse
+  });
+  
   // Course access and premium status
   const { isPremium, hasAccess, isLoading: accessLoading, error: accessError, refetchPurchases } = useCourseAccess(podcast);
   
@@ -66,7 +84,7 @@ const DashboardCourse = () => {
   // Sync fresh lesson progress with raw data
   useEffect(() => {
     if (rawLessonProgress && rawLessonProgress.length > 0) {
-      console.log('📊 DashboardCourse: Updating fresh lesson progress', rawLessonProgress.length);
+      console.log('📊 DashboardCourseOptimized: Updating fresh lesson progress', rawLessonProgress.length);
       setFreshLessonProgress([...rawLessonProgress]);
     }
   }, [rawLessonProgress]);
@@ -74,15 +92,15 @@ const DashboardCourse = () => {
   // Refresh lessons progress when needed
   const refreshLessonsProgress = useCallback(async () => {
     if (podcast) {
-      console.log('🔄 DashboardCourse: Refreshing lessons progress');
+      console.log('🔄 DashboardCourseOptimized: Refreshing lessons progress');
       const updatedProgress = await calculateLessonStates();
       
       // Force immediate UI update
       if (updatedProgress) {
-        console.log('🔄 DashboardCourse: Force updating fresh progress');
+        console.log('🔄 DashboardCourseOptimized: Force updating fresh progress');
         setFreshLessonProgress([...updatedProgress]);
       }
-      console.log('✅ DashboardCourse: Lessons progress refresh complete');
+      console.log('✅ DashboardCourseOptimized: Lessons progress refresh complete');
     }
   }, [podcast, calculateLessonStates]);
 
@@ -131,7 +149,7 @@ const DashboardCourse = () => {
     }
   }, [displayPodcast, lessonsWithProgress, currentLesson, getNextLessonToContinue, selectLesson]);
 
-  console.log('🔒 DASHBOARD COURSE STATE:', {
+  console.log('🔒 OPTIMIZED DASHBOARD COURSE STATE:', {
     shouldShowContent: !!displayPodcast,
     isActuallyLoading: !displayPodcast && (courseLoading || progressLoading),
     hasError: !!(courseError || accessError),
@@ -139,7 +157,8 @@ const DashboardCourse = () => {
     courseTitle: displayPodcast?.title,
     currentLesson: currentLesson?.title,
     isPlaying,
-    lessonsCount: lessonsWithProgress.length
+    lessonsCount: lessonsWithProgress.length,
+    cacheHit: podcast && !courseLoading ? 'HIT' : 'MISS'
   });
 
   const isActuallyLoading = !displayPodcast && (courseLoading || progressLoading);
@@ -216,14 +235,15 @@ const DashboardCourse = () => {
 
   // Show content if we have valid data
   if (shouldShowContent) {
-    console.log('✅ RENDERING CONTENT with new audio system:', {
+    console.log('✅ OPTIMIZED: RENDERING CONTENT with cached data:', {
       courseTitle: displayPodcast.title,
       isCurrentData: !!podcast,
       isStableReference: !podcast && !!lastValidPodcast.current,
       hasUserProgress: userProgress.length > 0,
       courseProgress: !!courseProgress,
       currentLesson: currentLesson?.title,
-      isPlaying
+      isPlaying,
+      performanceMode: 'OPTIMIZED'
     });
 
     return (
@@ -295,8 +315,8 @@ const DashboardCourse = () => {
     );
   }
 
-  // Show loading
-  console.log('🔄 Showing loading state');
+  // Show loading with optimized skeleton
+  console.log('🔄 OPTIMIZED: Showing loading state with cached fallback');
   return (
     <DashboardLayout>
       <CourseLoadingSkeleton loadingMessage="Cargando curso..." />
@@ -304,4 +324,4 @@ const DashboardCourse = () => {
   );
 };
 
-export default DashboardCourse;
+export default DashboardCourseOptimized;

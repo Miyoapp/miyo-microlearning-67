@@ -18,6 +18,7 @@ interface DashboardCourseSectionProps {
   onPlayCourse: (courseId: string) => void;
   onToggleSave: (courseId: string) => void;
   onCourseClick: (courseId: string) => void;
+  onCourseHover?: (courseId: string) => void;
 }
 
 const DashboardCourseSection: React.FC<DashboardCourseSectionProps> = ({
@@ -28,6 +29,7 @@ const DashboardCourseSection: React.FC<DashboardCourseSectionProps> = ({
   onPlayCourse,
   onToggleSave,
   onCourseClick,
+  onCourseHover,
 }) => {
   // Debug logging to understand why "Continúa escuchando" might not show
   console.log('📚 DashboardCourseSection render:', {
@@ -61,6 +63,7 @@ const DashboardCourseSection: React.FC<DashboardCourseSectionProps> = ({
         onPlayCourse={onPlayCourse}
         onToggleSave={onToggleSave}
         onCourseClick={onCourseClick}
+        onCourseHover={onCourseHover}
       />
     </div>
   );
