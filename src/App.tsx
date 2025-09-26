@@ -8,8 +8,8 @@ import Home from '@/pages/Home';
 import LoginPage from '@/components/auth/LoginPage';
 import Dashboard from '@/pages/Dashboard';
 import DashboardCourse from '@/pages/DashboardCourse';
-import DashboardDiscover from '@/pages/DashboardDiscover';
-import DashboardMyRoutes from '@/pages/DashboardMyRoutes';
+import DashboardDiscoverOptimized from '@/pages/DashboardDiscoverOptimized';
+import DashboardMyRoutesOptimized from '@/pages/DashboardMyRoutesOptimized';
 import DashboardMisNotas from '@/pages/DashboardMisNotas';
 import DashboardCourseNotes from '@/pages/DashboardCourseNotes';
 import DashboardMisResumenes from '@/pages/DashboardMisResumenes';
@@ -41,8 +41,8 @@ function App() {
                 {/* Protected routes */}
                 <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
                 <Route path="/dashboard/course/:courseId" element={<RequireAuth><DashboardCourse /></RequireAuth>} />
-                <Route path="/dashboard/discover" element={<RequireAuth><DashboardDiscover /></RequireAuth>} />
-                <Route path="/dashboard/my-routes" element={<RequireAuth><DashboardMyRoutes /></RequireAuth>} />
+                <Route path="/dashboard/discover" element={<RequireAuth><DashboardDiscoverOptimized /></RequireAuth>} />
+                <Route path="/dashboard/my-routes" element={<RequireAuth><DashboardMyRoutesOptimized /></RequireAuth>} />
                 <Route path="/dashboard/mis-notas" element={<RequireAuth><DashboardMisNotas /></RequireAuth>} />
                 <Route path="/dashboard/notes/:courseId" element={<RequireAuth><DashboardCourseNotes /></RequireAuth>} />
                 <Route path="/dashboard/mis-resumenes" element={<RequireAuth><DashboardMisResumenes /></RequireAuth>} />

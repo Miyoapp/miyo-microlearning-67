@@ -9,58 +9,61 @@ import { SidebarTrigger } from '@/components/ui/sidebar/index';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 /**
- * OPTIMIZED: My Routes page que usa React Query para caché inteligente
- * Reutiliza datos cacheados y elimina consultas redundantes
+ * OPTIMIZED: Dashboard My Routes que usa React Query para caché inteligente
+ * Reduce las consultas de 30+ a solo 2 consultas cacheadas
  */
 const DashboardMyRoutesOptimized = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   
-  // OPTIMIZED: Use cached courses data
+  // OPTIMIZED: Cached courses data
   const { 
-    allCourses, 
-    isLoading: coursesLoading, 
+    allCourses,
+    isLoading: coursesLoading,
     error: coursesError 
   } = useCachedCoursesFiltered();
   
-  // OPTIMIZED: Use cached user progress with derived data functions
+  // OPTIMIZED: Cached user progress with derived functions
   const { 
     userProgress,
     getContinueLearningCourses,
     getSavedCourses,
     getCompletedCourses,
-    isLoading: progressLoading 
+    isLoading: progressLoading,
+    refetch 
   } = useCachedProgressData();
   
-  // OPTIMIZED: Use cached toggle save mutation
+  // OPTIMIZED: Cached mutations
   const toggleSaveCourseMutation = useToggleSaveCourse();
 
-  const loading = coursesLoading || progressLoading;
-
-  // OPTIMIZED: Calculate derived data using cached functions
+  // OPTIMIZED: Use cached derived functions
   const continueLearningCourses = getContinueLearningCourses(allCourses);
   const savedCourses = getSavedCourses(allCourses);
   const completedCourses = getCompletedCourses(allCourses);
 
-  // CORREGIDO: Solo navegar al curso, no iniciar reproducción
   const handlePlayCourse = async (courseId: string) => {
-    console.log('🚀 OPTIMIZED MyRoutes: Navigating to course:', courseId);
+    console.log('🚀 OPTIMIZED My Routes: Navigating to course:', courseId);
     navigate(`/dashboard/course/${courseId}`);
   };
 
   const handleToggleSave = async (courseId: string) => {
-    console.log('🚀 OPTIMIZED MyRoutes: Toggling save for course:', courseId);
+    console.log('🚀 OPTIMIZED My Routes: Toggling save for course:', courseId);
     await toggleSaveCourseMutation.mutateAsync(courseId);
+    // Note: No need to refetch due to optimistic updates
   };
 
   const handleCourseClick = (courseId: string) => {
     navigate(`/dashboard/course/${courseId}`);
   };
 
-  console.log('🚀 OPTIMIZED MyRoutes render:', {
-    savedCoursesCount: savedCourses.length,
+  const loading = coursesLoading || progressLoading;
+
+  console.log('📊 OPTIMIZED MY ROUTES RENDER:', {
+    allCoursesCount: allCourses.length,
     continueLearningCount: continueLearningCourses.length,
-    completedCoursesCount: completedCourses.length,
+    savedCount: savedCourses.length,
+    completedCount: completedCourses.length,
+    userProgressCount: userProgress.length,
     loading
   });
 
@@ -101,7 +104,7 @@ const DashboardMyRoutesOptimized = () => {
             <p className="text-sm sm:text-base text-gray-600">Tu progreso y cursos guardados</p>
           </div>
 
-          {/* Mobile-first carousels */}
+          {/* Mobile-first carousels - OPTIMIZED */}
           <div className="space-y-8 sm:space-y-12">
             <TouchCarousel
               title="Continúa escuchando"
@@ -112,7 +115,7 @@ const DashboardMyRoutesOptimized = () => {
               onCourseClick={handleCourseClick}
             />
 
-            {/* Mobile-first saved courses */}
+            {/* Mobile-first saved courses - OPTIMIZED */}
             <div className="px-4 sm:px-0">
               <h2 className="text-xl sm:text-2xl font-bold mb-6">Guardados</h2>
               {savedCourses.length === 0 ? (
@@ -121,18 +124,16 @@ const DashboardMyRoutesOptimized = () => {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                  {savedCourses.map(course => {
-                    const progress = userProgress.find(p => p.course_id === course.id);
-                    const progressPercentage = progress?.progress_percentage || 0;
-                    console.log(`🚀 OPTIMIZED MyRoutes Saved: Course ${course.id} progress: ${progressPercentage}%`);
+                  {savedCourses.map(courseData => {
+                    const { podcast: course, progress, isSaved } = courseData;
                     return (
                       <div key={course.id} className="h-full">
                         <CourseCardWithProgress
                           podcast={course}
-                          progress={progressPercentage}
+                          progress={progress}
                           isPlaying={false}
-                          isSaved={true}
-                          showProgress={progressPercentage > 0}
+                          isSaved={isSaved}
+                          showProgress={progress > 0}
                           onPlay={() => handlePlayCourse(course.id)}
                           onToggleSave={() => handleToggleSave(course.id)}
                           onClick={() => handleCourseClick(course.id)}
@@ -144,7 +145,7 @@ const DashboardMyRoutesOptimized = () => {
               )}
             </div>
 
-            {/* Mobile-first completed courses */}
+            {/* Mobile-first completed courses - OPTIMIZED */}
             <div className="px-4 sm:px-0">
               <h2 className="text-xl sm:text-2xl font-bold mb-6">Terminados</h2>
               {completedCourses.length === 0 ? (
@@ -153,15 +154,15 @@ const DashboardMyRoutesOptimized = () => {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                  {completedCourses.map(course => {
-                    const progress = userProgress.find(p => p.course_id === course.id);
+                  {completedCourses.map(courseData => {
+                    const { podcast: course, isSaved } = courseData;
                     return (
                       <div key={course.id} className="h-full">
                         <CourseCardWithProgress
                           podcast={course}
                           progress={100}
                           isPlaying={false}
-                          isSaved={progress?.is_saved || false}
+                          isSaved={isSaved}
                           showProgress={true}
                           onPlay={() => handlePlayCourse(course.id)}
                           onToggleSave={() => handleToggleSave(course.id)}
