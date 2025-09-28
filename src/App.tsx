@@ -10,10 +10,10 @@ import Dashboard from '@/pages/Dashboard';
 import DashboardCourse from '@/pages/DashboardCourse';
 import DashboardDiscoverOptimized from '@/pages/DashboardDiscoverOptimized';
 import DashboardMyRoutesOptimized from '@/pages/DashboardMyRoutesOptimized';
-import DashboardMisNotas from '@/pages/DashboardMisNotas';
+import DashboardMisNotasOptimized from '@/pages/DashboardMisNotasOptimized';
 import DashboardCourseNotes from '@/pages/DashboardCourseNotes';
-import DashboardMisResumenes from '@/pages/DashboardMisResumenes';
-import DashboardMisPlanes from '@/pages/DashboardMisPlanes';
+import DashboardMisResumenesOptimized from '@/pages/DashboardMisResumenesOptimized';
+import DashboardMisPlanesOptimized from '@/pages/DashboardMisPlanesOptimized';
 import { RequireAuth } from '@/components/auth/RequireAuth';
 import './App.css';
 
@@ -43,10 +43,10 @@ function App() {
                 <Route path="/dashboard/course/:courseId" element={<RequireAuth><DashboardCourse /></RequireAuth>} />
                 <Route path="/dashboard/discover" element={<RequireAuth><DashboardDiscoverOptimized /></RequireAuth>} />
                 <Route path="/dashboard/my-routes" element={<RequireAuth><DashboardMyRoutesOptimized /></RequireAuth>} />
-                <Route path="/dashboard/mis-notas" element={<RequireAuth><DashboardMisNotas /></RequireAuth>} />
+                <Route path="/dashboard/mis-notas" element={<RequireAuth><DashboardMisNotasOptimized /></RequireAuth>} />
                 <Route path="/dashboard/notes/:courseId" element={<RequireAuth><DashboardCourseNotes /></RequireAuth>} />
-                <Route path="/dashboard/mis-resumenes" element={<RequireAuth><DashboardMisResumenes /></RequireAuth>} />
-                <Route path="/dashboard/mis-planes" element={<RequireAuth><DashboardMisPlanes /></RequireAuth>} />
+                <Route path="/dashboard/mis-resumenes" element={<RequireAuth><DashboardMisResumenesOptimized /></RequireAuth>} />
+                <Route path="/dashboard/mis-planes" element={<RequireAuth><DashboardMisPlanesOptimized /></RequireAuth>} />
               </Routes>
             </div>
             <Toaster />
