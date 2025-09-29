@@ -188,17 +188,32 @@ export const useCachedProgressData = () => {
   };
 
   const getSavedCourses = (allCourses: any[]) => {
-    return allCourses.filter(course => {
-      const progress = userProgress.find(p => p.course_id === course.id);
-      return progress?.is_saved || false;
-    });
+    return allCourses
+      .map(course => {
+        const progress = userProgress.find(p => p.course_id === course.id);
+        return {
+          podcast: course,
+          progress: progress?.progress_percentage || 0,
+          isPlaying: false,
+          isSaved: progress?.is_saved || false
+        };
+      })
+      .filter(course => course.isSaved);
   };
 
   const getCompletedCourses = (allCourses: any[]) => {
-    return allCourses.filter(course => {
-      const progress = userProgress.find(p => p.course_id === course.id);
-      return progress?.is_completed || false;
-    });
+    return allCourses
+      .map(course => {
+        const progress = userProgress.find(p => p.course_id === course.id);
+        return {
+          podcast: course,
+          progress: progress?.progress_percentage || 0,
+          isPlaying: false,
+          isSaved: progress?.is_saved || false,
+          isCompleted: progress?.is_completed || false
+        };
+      })
+      .filter(course => course.isCompleted);
   };
 
   const getCourseProgress = (courseId: string) => {
