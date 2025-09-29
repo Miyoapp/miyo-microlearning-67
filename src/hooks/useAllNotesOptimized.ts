@@ -22,18 +22,20 @@ export function useAllNotesOptimized() {
     queryFn: async (): Promise<CourseWithNotes[]> => {
       if (!user) return [];
 
-      // Single optimized query with JOINs
+      console.log('🔍 NOTAS: Fetching notes for user:', user.id);
+      
+      // Single optimized query with more tolerant JOINs
       const { data: notesData, error } = await supabase
         .from('lesson_notes')
         .select(`
           *,
-          lecciones!inner (
+          lecciones (
             titulo,
-            modulos!inner (
+            modulos (
               curso_id,
-              cursos!inner (
+              cursos (
                 titulo,
-                categorias!inner (
+                categorias (
                   id,
                   nombre
                 )
@@ -43,6 +45,11 @@ export function useAllNotesOptimized() {
         `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
+
+      console.log('📝 NOTAS: Query result:', { 
+        notesCount: notesData?.length || 0, 
+        error: error?.message 
+      });
 
       if (error) {
         console.error('Error fetching notes:', error);

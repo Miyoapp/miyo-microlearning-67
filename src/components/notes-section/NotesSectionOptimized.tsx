@@ -7,6 +7,7 @@ import NotesStats from './NotesStats';
 import NotesFilters from './NotesFilters';
 import NotesContentList from './NotesContentList';
 import { Skeleton } from '@/components/ui/skeleton';
+import ErrorBoundary from '@/components/ui/ErrorBoundary';
 
 const NotesSectionOptimized = () => {
   const { coursesWithNotes, loading } = useAllNotesOptimized();
@@ -18,6 +19,12 @@ const NotesSectionOptimized = () => {
     updateFilterType,
     updateSelectedTags
   } = useNotesFilters(coursesWithNotes);
+
+  console.log('📝 NOTAS SECTION: Rendering with data:', {
+    coursesCount: coursesWithNotes.length,
+    loading,
+    filteredCount: filteredCourses.length
+  });
 
   if (loading) {
     return (
@@ -65,22 +72,24 @@ const NotesSectionOptimized = () => {
   }, {} as Record<string, typeof filteredCourses>);
 
   return (
-    <div className="space-y-6">
-      <NotesHeader />
-      
-      <NotesStats stats={stats} />
-      
-      <NotesFilters
-        filters={filters}
-        onSearchChange={updateSearchTerm}
-        onFilterTypeChange={updateFilterType}
-        onTagsChange={updateSelectedTags}
-      />
+    <ErrorBoundary>
+      <div className="space-y-6">
+        <NotesHeader />
+        
+        <NotesStats stats={stats} />
+        
+        <NotesFilters
+          filters={filters}
+          onSearchChange={updateSearchTerm}
+          onFilterTypeChange={updateFilterType}
+          onTagsChange={updateSelectedTags}
+        />
 
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-        <NotesContentList coursesByCategory={coursesByCategory} />
+        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <NotesContentList coursesByCategory={coursesByCategory} />
+        </div>
       </div>
-    </div>
+    </ErrorBoundary>
   );
 };
 

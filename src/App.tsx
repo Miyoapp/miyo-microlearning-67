@@ -7,7 +7,7 @@ import { AudioPlayerProvider } from '@/contexts/AudioPlayerContext';
 import Home from '@/pages/Home';
 import LoginPage from '@/components/auth/LoginPage';
 import Dashboard from '@/pages/Dashboard';
-import DashboardCourse from '@/pages/DashboardCourse';
+import DashboardCourseOptimized from '@/pages/DashboardCourseOptimized';
 import DashboardDiscoverOptimized from '@/pages/DashboardDiscoverOptimized';
 import DashboardMyRoutesOptimized from '@/pages/DashboardMyRoutesOptimized';
 import DashboardMisNotasOptimized from '@/pages/DashboardMisNotasOptimized';
@@ -40,7 +40,7 @@ function App() {
                 
                 {/* Protected routes */}
                 <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
-                <Route path="/dashboard/course/:courseId" element={<RequireAuth><DashboardCourse /></RequireAuth>} />
+                <Route path="/dashboard/course/:courseId" element={<RequireAuth><DashboardCourseOptimized /></RequireAuth>} />
                 <Route path="/dashboard/discover" element={<RequireAuth><DashboardDiscoverOptimized /></RequireAuth>} />
                 <Route path="/dashboard/my-routes" element={<RequireAuth><DashboardMyRoutesOptimized /></RequireAuth>} />
                 <Route path="/dashboard/mis-notas" element={<RequireAuth><DashboardMisNotasOptimized /></RequireAuth>} />
