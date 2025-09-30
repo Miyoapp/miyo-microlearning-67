@@ -140,84 +140,115 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'SET_LOADING', payload: true });
     
     try {
+      console.log('🔍 CONTEXT: Fetching notes for user (multi-query approach):', user.id);
+      
+      // Step 1: Get all notes for the user
       const { data: notesData, error: notesError } = await supabase
         .from('lesson_notes')
-        .select(`
-          *,
-          lecciones (
-            titulo,
-            modulos (
-              curso_id,
-              cursos (
-                titulo,
-                categorias (
-                  id,
-                  nombre
-                )
-              )
-            )
-          )
-        `)
+        .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (notesError) {
+        console.error('❌ CONTEXT: Error fetching notes:', notesError);
         throw notesError;
       }
-      
-      const courseMap = new Map<string, CourseWithNotes>();
-      
-      if (notesData) {
-        for (const noteRaw of notesData) {
-          const note = noteRaw as any;
-          
-          if (!note.lecciones?.modulos?.cursos) {
-            continue;
-          }
-          
-          const courseId = note.lecciones.modulos.curso_id;
-          const courseTitle = note.lecciones.modulos.cursos.titulo;
-          const categoryName = note.lecciones.modulos.cursos.categorias?.nombre || 'Sin categoría';
-          const categoryId = note.lecciones.modulos.cursos.categorias?.id || 'no-category';
 
-          if (!courseMap.has(courseId)) {
-            courseMap.set(courseId, {
-              courseId,
-              courseTitle,
-              categoryName,
-              categoryId,
-              notesCount: 0,
-              lastNoteDate: note.created_at,
-              notes: []
-            });
-          }
-
-          const courseWithNotes = courseMap.get(courseId)!;
-          courseWithNotes.notes.push({
-            id: note.id,
-            lesson_id: note.lesson_id,
-            course_id: note.course_id,
-            user_id: note.user_id,
-            note_text: note.note_text,
-            lesson_title: note.lecciones?.titulo,
-            timestamp_seconds: note.timestamp_seconds,
-            tags: note.tags || [],
-            is_favorite: note.is_favorite || false,
-            created_at: note.created_at,
-            updated_at: note.updated_at
-          } as LessonNote);
-          
-          courseWithNotes.notesCount++;
-          
-          if (new Date(note.created_at) > new Date(courseWithNotes.lastNoteDate)) {
-            courseWithNotes.lastNoteDate = note.created_at;
-          }
-        }
+      if (!notesData || notesData.length === 0) {
+        console.log('📝 CONTEXT: No notes found for user');
+        dispatch({ type: 'SET_COURSES_WITH_NOTES', payload: [] });
+        return;
       }
 
-      dispatch({ type: 'SET_COURSES_WITH_NOTES', payload: Array.from(courseMap.values()) });
+      console.log('📝 CONTEXT: Found', notesData.length, 'notes');
+
+      // Step 2: Extract unique IDs
+      const courseIds = [...new Set(notesData.map(note => note.course_id))];
+      const lessonIds = [...new Set(notesData.map(note => note.lesson_id))];
+
+      // Step 3: Fetch courses data
+      const { data: coursesData, error: coursesError } = await supabase
+        .from('cursos')
+        .select('id, titulo, categoria_id')
+        .in('id', courseIds);
+
+      if (coursesError) {
+        console.error('❌ CONTEXT: Error fetching courses:', coursesError);
+      }
+
+      // Step 4: Extract category IDs and fetch categories
+      const categoryIds = [...new Set(coursesData?.map(course => course.categoria_id).filter(Boolean) || [])];
+      const { data: categoriesData, error: categoriesError } = await supabase
+        .from('categorias')
+        .select('id, nombre')
+        .in('id', categoryIds);
+
+      if (categoriesError) {
+        console.error('❌ CONTEXT: Error fetching categories:', categoriesError);
+      }
+
+      // Step 5: Fetch lessons data for titles
+      const { data: lessonsData, error: lessonsError } = await supabase
+        .from('lecciones')
+        .select('id, titulo')
+        .in('id', lessonIds);
+
+      if (lessonsError) {
+        console.error('❌ CONTEXT: Error fetching lessons:', lessonsError);
+      }
+
+      // Step 6: Create lookup maps
+      const courseMap = new Map(coursesData?.map(course => [course.id, course]) || []);
+      const categoryMap = new Map(categoriesData?.map(category => [category.id, category]) || []);
+      const lessonMap = new Map(lessonsData?.map(lesson => [lesson.id, lesson]) || []);
+
+      // Step 7: Group notes by course
+      const courseNotesMap = new Map<string, CourseWithNotes>();
+      
+      notesData.forEach(noteRaw => {
+        const courseId = noteRaw.course_id;
+        const course = courseMap.get(courseId);
+        const category = course ? categoryMap.get(course.categoria_id) : null;
+        const lesson = lessonMap.get(noteRaw.lesson_id);
+
+        if (!courseNotesMap.has(courseId)) {
+          courseNotesMap.set(courseId, {
+            courseId,
+            courseTitle: course?.titulo || 'Curso sin título',
+            categoryName: category?.nombre || 'Sin categoría',
+            categoryId: category?.id || 'no-category',
+            notesCount: 0,
+            lastNoteDate: noteRaw.created_at,
+            notes: []
+          });
+        }
+
+        const courseWithNotes = courseNotesMap.get(courseId)!;
+        courseWithNotes.notes.push({
+          id: noteRaw.id,
+          lesson_id: noteRaw.lesson_id,
+          course_id: noteRaw.course_id,
+          user_id: noteRaw.user_id,
+          note_text: noteRaw.note_text,
+          lesson_title: lesson?.titulo || 'Lección sin título',
+          timestamp_seconds: noteRaw.timestamp_seconds,
+          tags: noteRaw.tags || [],
+          is_favorite: noteRaw.is_favorite || false,
+          created_at: noteRaw.created_at,
+          updated_at: noteRaw.updated_at
+        } as LessonNote);
+        
+        courseWithNotes.notesCount++;
+        
+        if (new Date(noteRaw.created_at) > new Date(courseWithNotes.lastNoteDate)) {
+          courseWithNotes.lastNoteDate = noteRaw.created_at;
+        }
+      });
+
+      console.log('✅ CONTEXT: Successfully grouped notes into', courseNotesMap.size, 'courses');
+      dispatch({ type: 'SET_COURSES_WITH_NOTES', payload: Array.from(courseNotesMap.values()) });
     } catch (error) {
-      console.error('Error fetching all notes:', error);
+      console.error('❌ CONTEXT: Error fetching all notes:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Error al cargar las notas' });
       toast.error('Error al cargar las notas');
     }
@@ -238,21 +269,31 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
           tags: tags,
           is_favorite: false
         })
-        .select(`
-          *,
-          lecciones (
-            titulo
-          )
-        `)
+        .select('*')
         .single();
 
       if (error) throw error;
       
-      const rawNote = data as any;
-      const newNote = {
-        ...rawNote,
-        lesson_title: rawNote.lecciones?.titulo
-      } as LessonNote;
+      // Fetch lesson title separately
+      const { data: lessonData } = await supabase
+        .from('lecciones')
+        .select('titulo')
+        .eq('id', lessonId)
+        .single();
+      
+      const newNote: LessonNote = {
+        id: (data as any).id,
+        lesson_id: (data as any).lesson_id,
+        course_id: (data as any).course_id,
+        user_id: (data as any).user_id,
+        note_text: (data as any).note_text,
+        timestamp_seconds: (data as any).timestamp_seconds,
+        tags: (data as any).tags || [],
+        is_favorite: (data as any).is_favorite || false,
+        created_at: (data as any).created_at,
+        updated_at: (data as any).updated_at,
+        lesson_title: lessonData?.titulo || 'Lección sin título'
+      };
       dispatch({ type: 'ADD_NOTE', payload: { courseId, note: newNote } });
       toast.success('Nota guardada exitosamente');
       return newNote;

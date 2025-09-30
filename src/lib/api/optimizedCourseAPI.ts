@@ -137,9 +137,10 @@ export const obtenerCursosOptimizado = async (): Promise<Podcast[]> => {
  */
 export const obtenerCursoPorIdOptimizado = async (id: string): Promise<Podcast | null> => {
   try {
-    console.log(`🚀 OPTIMIZED: Fetching course ${id} with single query...`);
+    console.log(`🚀 OPTIMIZED: Fetching course ${id} with nested query...`);
     
-    const { data, error } = await supabase
+    // Try nested query first
+    let { data, error } = await supabase
       .from('cursos')
       .select(`
         id,
@@ -188,19 +189,77 @@ export const obtenerCursoPorIdOptimizado = async (id: string): Promise<Podcast |
       .eq('id', id)
       .maybeSingle();
 
-    if (error) {
-      console.error(`❌ OPTIMIZED: Error fetching course ${id}:`, error);
-      throw error;
+    // If nested query fails, use multi-query fallback
+    if (error || !data) {
+      console.log(`🔄 OPTIMIZED: Nested query failed for course ${id}, trying multi-query fallback...`);
+      
+      // Step 1: Get basic course data
+      const { data: courseData, error: courseError } = await supabase
+        .from('cursos')
+        .select('id, titulo, descripcion, imagen_portada, duracion_total, numero_lecciones, fecha_creacion, fecha_actualizacion, tipo_curso, precio, moneda, nivel, likes, dislikes, categoria_id, creador_id')
+        .eq('id', id)
+        .maybeSingle();
+
+      if (courseError || !courseData) {
+        console.log(`❌ OPTIMIZED: Course not found: ${id}`);
+        throw new Error(`Curso no encontrado: ${id}`);
+      }
+
+      // Step 2: Get category data
+      const { data: categoryData } = await supabase
+        .from('categorias')
+        .select('id, nombre')
+        .eq('id', courseData.categoria_id)
+        .maybeSingle();
+
+      // Step 3: Get creator data
+      const { data: creatorData } = await supabase
+        .from('creadores')
+        .select('id, nombre, imagen_url, linkedin_url')
+        .eq('id', courseData.creador_id)
+        .maybeSingle();
+
+      // Step 4: Get creator social media
+      const { data: socialMediaData } = await supabase
+        .from('creador_social_media')
+        .select('platform, url')
+        .eq('creador_id', courseData.creador_id);
+
+      // Step 5: Get modules
+      const { data: modulesData } = await supabase
+        .from('modulos')
+        .select('id, titulo, orden')
+        .eq('curso_id', id)
+        .order('orden');
+
+      // Step 6: Get lessons
+      const moduleIds = modulesData?.map(m => m.id) || [];
+      const { data: lessonsData } = await supabase
+        .from('lecciones')
+        .select('id, titulo, duracion, url_audio, orden, estado_inicial, descripcion, modulo_id')
+        .in('modulo_id', moduleIds)
+        .order('orden');
+
+      // Reconstruct data structure
+      data = {
+        ...courseData,
+        categorias: categoryData || { id: 'no-category', nombre: 'Sin categoría' },
+        creadores: {
+          ...creatorData,
+          creador_social_media: socialMediaData || []
+        },
+        modulos: modulesData?.map(modulo => ({
+          ...modulo,
+          lecciones: lessonsData?.filter(lesson => lesson.modulo_id === modulo.id) || []
+        })) || []
+      };
+
+      console.log(`✅ OPTIMIZED: Multi-query fallback successful for course: ${data.titulo}`);
+    } else {
+      console.log(`✅ OPTIMIZED: Nested query successful for course: ${data.titulo}`);
     }
 
-    if (!data) {
-      console.log(`❌ OPTIMIZED: Course not found: ${id}`);
-      throw new Error(`Curso no encontrado: ${id}`);
-    }
-
-    console.log(`✅ OPTIMIZED: Course found: ${data.titulo}`);
-
-    // Transform to application format (same logic as above)
+    // Transform to application format
     const modules = data.modulos
       ?.sort((a: any, b: any) => a.orden - b.orden)
       .map((modulo: any) => ({
