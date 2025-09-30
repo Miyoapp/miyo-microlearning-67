@@ -11,7 +11,7 @@ export function useLessons(podcast: Podcast | null) {
   
   const [lessonsWithProgress, setLessonsWithProgress] = useState<Lesson[]>([]);
   const [lessonProgress, setLessonProgress] = useState<any[]>([]);
-  const [forceUpdateFlag, setForceUpdateFlag] = useState(0);
+  
   
   // Fetch lesson progress from Supabase directly
   const fetchLessonProgress = useCallback(async () => {
@@ -48,9 +48,10 @@ export function useLessons(podcast: Podcast | null) {
     if (!podcast?.modules) return podcast?.lessons || [];
     
     const orderedLessons: Lesson[] = [];
-    podcast.modules.forEach(module => {
-      module.lessonIds.forEach(lessonId => {
-        const lesson = podcast.lessons.find(l => l.id === lessonId);
+    podcast.modules.forEach((module) => {
+      const lessonIds = Array.isArray((module as any).lessonIds) ? (module as any).lessonIds : [];
+      lessonIds.forEach((lessonId: string) => {
+        const lesson = podcast.lessons.find((l) => l.id === lessonId);
         if (lesson) {
           orderedLessons.push(lesson);
         }
@@ -105,9 +106,8 @@ export function useLessons(podcast: Podcast | null) {
     // IMMEDIATE update - no delays
     console.log('✅ useLessons: IMMEDIATE state update');
     setLessonsWithProgress(updatedLessons);
-    setForceUpdateFlag(prev => prev + 1);
     return updatedLessons;
-  }, [podcast, lessonProgress, userProgress, user, forceUpdateFlag]);
+  }, [podcast, lessonProgress, userProgress, user]);
   
   // Update lessons immediately when data changes
   useEffect(() => {

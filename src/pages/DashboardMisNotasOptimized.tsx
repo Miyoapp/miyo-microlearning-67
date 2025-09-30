@@ -3,6 +3,7 @@ import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { SidebarTrigger } from '@/components/ui/sidebar/index';
 import { useIsMobile } from '@/hooks/use-mobile';
 import NotesSectionOptimized from '@/components/notes-section/NotesSectionOptimized';
+import { NotesProvider } from '@/contexts/NotesContext';
 
 const DashboardMisNotasOptimized = () => {
   const isMobile = useIsMobile();
@@ -18,7 +19,9 @@ const DashboardMisNotasOptimized = () => {
       
       <div className="h-full overflow-y-auto pl-6">
         <div className="max-w-7xl mx-auto pb-6">
-          <NotesSectionOptimized />
+          <NotesProvider>
+            <NotesSectionOptimized />
+          </NotesProvider>
         </div>
       </div>
     </DashboardLayout>
