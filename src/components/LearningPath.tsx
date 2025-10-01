@@ -33,6 +33,10 @@ const LearningPath = React.memo(({
   lessonProgress,
   podcast
 }: LearningPathProps) => {
+  // Normalize inputs to safe arrays
+  const safeLessons = Array.isArray(lessons) ? lessons : [];
+  const safeModules = Array.isArray(modules) ? modules : [];
+  
   // Audio player context
   const { selectLesson, setOnCourseCompletedCallback } = useAudioPlayer();
   
@@ -116,14 +120,14 @@ const LearningPath = React.memo(({
 }, [handleCreateSummary, checkExistingSummary, setShowSummaryModal, setShowCompletionModal]);
   
   // Use custom hooks for status and classes
-  const lessonStatusMap = useLessonStatus(lessons, modules, currentLessonId, lessonProgress);
-  const getLessonClasses = useLessonClasses(lessons, lessonStatusMap);
+  const lessonStatusMap = useLessonStatus(safeLessons, safeModules, currentLessonId, lessonProgress);
+  const getLessonClasses = useLessonClasses(safeLessons, lessonStatusMap);
 
   console.log('🛤️ LearningPath render:', {
     currentLessonId,
     isGloballyPlaying,
-    lessonCount: lessons.length,
-    moduleCount: modules.length,
+    lessonCount: safeLessons.length,
+    moduleCount: safeModules.length,
     courseId,
     isCourseCompleted,
     hasSummary
@@ -131,15 +135,16 @@ const LearningPath = React.memo(({
 
   // Get lessons for module
   const getLessonsForModule = useCallback((moduleId: string) => {
-    const module = modules.find(m => m.id === moduleId);
+    const module = safeModules.find(m => m.id === moduleId);
     if (!module) return [];
     
-    return module.lessonIds
-      .map(id => lessons.find(lesson => lesson.id === id))
+    const lessonIds = Array.isArray((module as any).lessonIds) ? (module as any).lessonIds : [];
+    return lessonIds
+      .map((id: string) => safeLessons.find(lesson => lesson.id === id))
       .filter((lesson): lesson is Lesson => lesson !== undefined);
   }, [
-    modules.map(m => `${m.id}:${m.lessonIds.join(',')}`).join('|'),
-    lessons.map(l => l.id).join('|')
+    safeModules.map(m => `${m.id}:${Array.isArray((m as any).lessonIds) ? (m as any).lessonIds.join(',') : ''}`).join('|'),
+    safeLessons.map(l => l.id).join('|')
   ]);
 
   // Handle lesson click with new audio system
@@ -168,11 +173,11 @@ const LearningPath = React.memo(({
 
   // Memoize ordered modules
   const orderedModules = useMemo(() => {
-    return modules.filter(module => {
+    return safeModules.filter(module => {
       const moduleLessons = getLessonsForModule(module.id);
       return moduleLessons.length > 0;
     });
-  }, [modules, getLessonsForModule]);
+  }, [safeModules, getLessonsForModule]);
 
   // Handle fallback summary creation
   const handleFallbackSummaryClick = () => {

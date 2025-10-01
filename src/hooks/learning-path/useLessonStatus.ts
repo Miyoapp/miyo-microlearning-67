@@ -18,7 +18,8 @@ function getOrderedLessons(lessons: Lesson[], modules: Module[]): Lesson[] {
   const orderedLessons: Lesson[] = [];
   
   modules.forEach(module => {
-    module.lessonIds.forEach(lessonId => {
+    const lessonIds = Array.isArray((module as any).lessonIds) ? (module as any).lessonIds : [];
+    lessonIds.forEach((lessonId: string) => {
       const lesson = lessons.find(l => l.id === lessonId);
       if (lesson) {
         orderedLessons.push(lesson);
@@ -62,8 +63,12 @@ export function useLessonStatus(
   lessonProgress?: any[] // Progreso desde la base de datos
 ): Map<string, LessonStatus> {
   return useMemo(() => {
+    // Normalize inputs to safe arrays
+    const safeLessons = Array.isArray(lessons) ? lessons : [];
+    const safeModules = Array.isArray(modules) ? modules : [];
+    
     const lessonStatusMap = new Map<string, LessonStatus>();
-    const orderedLessons = getOrderedLessons(lessons, modules);
+    const orderedLessons = getOrderedLessons(safeLessons, safeModules);
     
     // Crear mapa de progreso para acceso rápido
     const progressMap = new Map();
@@ -74,7 +79,7 @@ export function useLessonStatus(
     }
     
     // Crear lecciones enriquecidas con progreso de DB
-    const enrichedLessons = lessons.map(lesson => {
+    const enrichedLessons = safeLessons.map(lesson => {
       const dbProgress = progressMap.get(lesson.id);
       return {
         ...lesson,
@@ -84,7 +89,7 @@ export function useLessonStatus(
     });
     
     // Recalcular lecciones desbloqueadas basándose en progreso real
-    const enrichedOrderedLessons = getOrderedLessons(enrichedLessons, modules);
+    const enrichedOrderedLessons = getOrderedLessons(enrichedLessons, safeModules);
     const unlockedLessonIds = calculateUnlockedLessons(enrichedOrderedLessons);
     
     console.log('🔍 Recalculating lesson status:');
@@ -147,8 +152,8 @@ export function useLessonStatus(
     return lessonStatusMap;
   }, [
     // Dependencias estabilizadas
-    lessons.map(l => `${l.id}:${l.isCompleted}:${l.isLocked}`).join('|'),
-    modules.map(m => `${m.id}:${m.lessonIds.join(',')}`).join('|'),
+    Array.isArray(lessons) ? lessons.map(l => `${l.id}:${l.isCompleted}:${l.isLocked}`).join('|') : '',
+    Array.isArray(modules) ? modules.map(m => `${m.id}:${Array.isArray((m as any).lessonIds) ? (m as any).lessonIds.join(',') : ''}`).join('|') : '',
     currentLessonId,
     // Incluir progreso de DB en dependencias
     lessonProgress?.map(p => `${p.lesson_id}:${p.is_completed}:${p.current_position}`).join('|')
