@@ -232,13 +232,18 @@ export const obtenerCursoPorIdOptimizado = async (id: string): Promise<Podcast |
         .eq('curso_id', id)
         .order('orden');
 
-      // Step 6: Get lessons
+      // Step 6: Get lessons (guard against empty moduleIds)
       const moduleIds = modulesData?.map(m => m.id) || [];
-      const { data: lessonsData } = await supabase
-        .from('lecciones')
-        .select('id, titulo, duracion, url_audio, orden, estado_inicial, descripcion, modulo_id')
-        .in('modulo_id', moduleIds)
-        .order('orden');
+      let lessonsData: any[] = [];
+      if (moduleIds.length > 0) {
+        const { data: lessonsResp } = await supabase
+          .from('lecciones')
+          .select('id, titulo, duracion, url_audio, orden, estado_inicial, descripcion, modulo_id')
+          .in('modulo_id', moduleIds)
+          .order('orden');
+        lessonsData = lessonsResp || [];
+      }
+
 
       // Reconstruct data structure
       data = {

@@ -73,7 +73,7 @@ export function useLessons(podcast: Podcast | null) {
     const orderedLessons = getOrderedLessons();
     const firstLessonId = orderedLessons[0]?.id;
     
-    const updatedLessons = podcast.lessons.map((lesson) => {
+    const updatedLessons = (podcast.lessons || []).map((lesson) => {
       const progress = lessonProgress.find(p => p.lesson_id === lesson.id);
       const isCompleted = progress?.is_completed || false;
       

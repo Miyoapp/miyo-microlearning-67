@@ -22,7 +22,10 @@ export const obtenerLecciones = async (cursoId: string): Promise<Lesson[]> => {
     
     // Obtener todas las lecciones que pertenecen a estos módulos
     const moduloIds = modulosData.map(m => m.id);
-    
+    if (moduloIds.length === 0) {
+      console.warn(`No hay módulos para el curso ${cursoId}; retornando 0 lecciones`);
+      return [];
+    }
     const { data: leccionesData, error: errorLecciones } = await supabase
       .from('lecciones')
       .select('*')

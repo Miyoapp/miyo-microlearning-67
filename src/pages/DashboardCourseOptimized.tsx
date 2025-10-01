@@ -15,6 +15,7 @@ import CourseAccessHandler from '@/components/course/CourseAccessHandler';
 import MetaTags from '@/components/MetaTags';
 import { NotesProvider } from '@/contexts/NotesContext';
 import { useAudioPlayer } from '@/contexts/AudioPlayerContext';
+import ErrorBoundary from '@/components/ui/ErrorBoundary';
 
 const DashboardCourseOptimized = () => {
   const { courseId } = useParams<{ courseId: string }>();
@@ -247,43 +248,55 @@ const DashboardCourseOptimized = () => {
     });
 
     return (
-      <DashboardLayout>
-        <NotesProvider>
-          <MetaTags
-            title={`${displayPodcast.title} - Miyo`}
-            description={displayPodcast.description}
-            image={displayPodcast.imageUrl}
-            url={`${window.location.origin}/dashboard/course/${courseId}`}
-          />
-          
-          <div className="max-w-7xl mx-auto pb-8">
-            <CoursePageHeader isReviewMode={isReviewMode} />
-            
-            <CourseAccessHandler
-              podcast={displayPodcast}
-              currentLesson={currentLesson}
-              hasStarted={hasStarted}
-              isSaved={isSaved}
-              progressPercentage={progressPercentage}
-              isCompleted={isCompleted}
-              isPremium={isPremium}
-              hasAccess={hasAccess}
-              isPlaying={isPlaying}
-              lessonProgress={freshLessonProgress}
-              showCheckout={showCheckout}
-              onStartLearning={handleStartLearning}
-              onToggleSave={handleToggleSave}
-              onSelectLesson={handleLessonSelect}
-              onShowCheckout={() => setShowCheckout(true)}
-              onCloseCheckout={() => setShowCheckout(false)}
-              onTogglePlay={togglePlay}
-              onLessonComplete={onLessonComplete}
-              onProgressUpdate={onProgressUpdate}
-              onPurchaseComplete={handlePurchaseComplete}
+      <ErrorBoundary
+        fallback={
+          <DashboardLayout>
+            <CourseErrorState
+              error="Ha ocurrido un error inesperado."
+              onRetry={handleRetry}
+              onGoBack={handleGoBack}
             />
-          </div>
-        </NotesProvider>
-      </DashboardLayout>
+          </DashboardLayout>
+        }
+     >
+        <DashboardLayout>
+          <NotesProvider>
+            <MetaTags
+              title={`${displayPodcast.title} - Miyo`}
+              description={displayPodcast.description}
+              image={displayPodcast.imageUrl}
+              url={`${window.location.origin}/dashboard/course/${courseId}`}
+            />
+            
+            <div className="max-w-7xl mx-auto pb-8">
+              <CoursePageHeader isReviewMode={isReviewMode} />
+              
+              <CourseAccessHandler
+                podcast={displayPodcast}
+                currentLesson={currentLesson}
+                hasStarted={hasStarted}
+                isSaved={isSaved}
+                progressPercentage={progressPercentage}
+                isCompleted={isCompleted}
+                isPremium={isPremium}
+                hasAccess={hasAccess}
+                isPlaying={isPlaying}
+                lessonProgress={freshLessonProgress}
+                showCheckout={showCheckout}
+                onStartLearning={handleStartLearning}
+                onToggleSave={handleToggleSave}
+                onSelectLesson={handleLessonSelect}
+                onShowCheckout={() => setShowCheckout(true)}
+                onCloseCheckout={() => setShowCheckout(false)}
+                onTogglePlay={togglePlay}
+                onLessonComplete={onLessonComplete}
+                onProgressUpdate={onProgressUpdate}
+                onPurchaseComplete={handlePurchaseComplete}
+              />
+            </div>
+          </NotesProvider>
+        </DashboardLayout>
+      </ErrorBoundary>
     );
   }
 
