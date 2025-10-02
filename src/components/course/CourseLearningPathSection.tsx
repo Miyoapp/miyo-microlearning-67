@@ -2,6 +2,7 @@
 import React from 'react';
 import LearningPath from '@/components/LearningPath';
 import { Podcast, Lesson } from '@/types';
+import ErrorBoundary from '@/components/ui/ErrorBoundary';
 
 interface CourseLearningPathSectionProps {
   podcast: Podcast;
@@ -25,14 +26,16 @@ const CourseLearningPathSection: React.FC<CourseLearningPathSectionProps> = ({
 
   return (
     <div id="learning-path-section" className="bg-white rounded-2xl shadow-sm p-6">
-      <LearningPath 
-        lessons={podcast.lessons || []}
-        modules={podcast.modules || []}
-        currentLessonId={currentLessonId}
-        isGloballyPlaying={isGloballyPlaying}
-        lessonProgress={lessonProgress}
-        podcast={podcast}
-      />
+      <ErrorBoundary fallback={<div className="p-4">No se pudo cargar el itinerario de aprendizaje.</div>}>
+        <LearningPath 
+          lessons={podcast.lessons || []}
+          modules={podcast.modules || []}
+          currentLessonId={currentLessonId}
+          isGloballyPlaying={isGloballyPlaying}
+          lessonProgress={lessonProgress}
+          podcast={podcast}
+        />
+      </ErrorBoundary>
     </div>
   );
 };

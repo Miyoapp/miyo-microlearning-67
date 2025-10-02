@@ -5,6 +5,7 @@ import CourseHeader from './CourseHeader';
 import CourseLearningPathSection from './CourseLearningPathSection';
 import CourseSidebar from './CourseSidebar';
 import PremiumOverlay from './PremiumOverlay';
+import ErrorBoundary from '@/components/ui/ErrorBoundary';
 
 interface CourseMainContentProps {
   podcast: Podcast;
@@ -62,15 +63,17 @@ const CourseMainContent: React.FC<CourseMainContentProps> = ({
         />
 
         <div className="relative mx-4 sm:mx-0">
-          <CourseLearningPathSection
-            podcast={podcast}
-            currentLessonId={currentLesson?.id || null}
-            isGloballyPlaying={isGloballyPlaying}
-            lessonProgress={lessonProgress}
-            onSelectLesson={handleLessonSelect}
-            onProgressUpdate={onProgressUpdate}
-            onLessonComplete={onLessonComplete}
-          />
+          <ErrorBoundary fallback={<div className="p-4">Se produjo un error al cargar el itinerario de aprendizaje.</div>}>
+            <CourseLearningPathSection
+              podcast={podcast}
+              currentLessonId={currentLesson?.id || null}
+              isGloballyPlaying={isGloballyPlaying}
+              lessonProgress={lessonProgress}
+              onSelectLesson={handleLessonSelect}
+              onProgressUpdate={onProgressUpdate}
+              onLessonComplete={onLessonComplete}
+            />
+          </ErrorBoundary>
           
           {/* Premium overlay for learning path */}
           {isPremium && !hasAccess && (

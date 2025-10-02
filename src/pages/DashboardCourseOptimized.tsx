@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useLayoutEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { useCachedCourse } from '@/hooks/queries/useCachedCourses';
@@ -63,7 +63,7 @@ const DashboardCourseOptimized = () => {
   }
 
   // Reset refs when courseId changes to prevent stale data during navigation
-  useEffect(() => {
+  useLayoutEffect(() => {
     console.log('🔄 Course ID changed, resetting state:', courseId);
     hasAutoPositioned.current = false;
     lastValidPodcast.current = undefined;
@@ -278,7 +278,7 @@ const DashboardCourseOptimized = () => {
               url={`${window.location.origin}/dashboard/course/${courseId}`}
             />
             
-            <div className="max-w-7xl mx-auto pb-8">
+            <div key={courseId} className="max-w-7xl mx-auto pb-8">
               <CoursePageHeader isReviewMode={isReviewMode} />
               
               <CourseAccessHandler
