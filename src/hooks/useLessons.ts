@@ -12,6 +12,15 @@ export function useLessons(podcast: Podcast | null) {
   const [lessonsWithProgress, setLessonsWithProgress] = useState<Lesson[]>([]);
   const [lessonProgress, setLessonProgress] = useState<any[]>([]);
   
+  // Reset state when podcast changes
+  useEffect(() => {
+    if (podcast) {
+      console.log('🔄 useLessons: Podcast changed, resetting state:', podcast.id);
+      setLessonsWithProgress([]);
+      setLessonProgress([]);
+    }
+  }, [podcast?.id]);
+  
   
   // Fetch lesson progress from Supabase directly
   const fetchLessonProgress = useCallback(async () => {
@@ -45,7 +54,8 @@ export function useLessons(podcast: Podcast | null) {
 
   // Helper function to get ordered lessons based on modules
   const getOrderedLessons = useCallback(() => {
-    if (!podcast?.modules) return podcast?.lessons || [];
+    if (!podcast?.modules) return Array.isArray(podcast?.lessons) ? podcast.lessons : [];
+    if (!Array.isArray(podcast.lessons)) return [];
     
     const orderedLessons: Lesson[] = [];
     podcast.modules.forEach((module) => {

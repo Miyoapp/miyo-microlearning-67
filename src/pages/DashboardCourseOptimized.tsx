@@ -61,6 +61,14 @@ const DashboardCourseOptimized = () => {
   if (podcast) {
     lastValidPodcast.current = podcast;
   }
+
+  // Reset refs when courseId changes to prevent stale data during navigation
+  useEffect(() => {
+    console.log('🔄 Course ID changed, resetting state:', courseId);
+    hasAutoPositioned.current = false;
+    lastValidPodcast.current = undefined;
+    setFreshLessonProgress([]);
+  }, [courseId]);
   
   // OPTIMIZED: Use simplified effects
   useCourseDataEffectsOptimized({
@@ -129,8 +137,9 @@ const DashboardCourseOptimized = () => {
   const isCompleted = courseProgress?.is_completed || false;
   const isReviewMode = isCompleted && progressPercentage === 100;
 
-  // Display podcast with stable fallback
-  const displayPodcast = podcast || lastValidPodcast.current;
+  // Display podcast with stable fallback (only if same courseId)
+  const displayPodcast = podcast || 
+    (lastValidPodcast.current?.id === courseId ? lastValidPodcast.current : undefined);
 
   // Auto-position on next lesson to continue (only once)
   const hasAutoPositioned = useRef(false);
@@ -249,6 +258,7 @@ const DashboardCourseOptimized = () => {
 
     return (
       <ErrorBoundary
+        key={courseId} // Force remount on course change
         fallback={
           <DashboardLayout>
             <CourseErrorState
