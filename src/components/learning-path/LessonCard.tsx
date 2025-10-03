@@ -54,15 +54,32 @@ const LessonCard = React.memo(({
     skipBackward, 
     setVolume, 
     setPlaybackRate, 
-    toggleMute 
+    toggleMute,
+    isProviderReady: isAudioReady
   } = useAudioPlayer();
+
+  // Guard: Don't render if audio provider is not ready
+  if (!isAudioReady) {
+    console.debug('⏳ LessonCard: AudioProvider not ready for lesson:', lesson.title);
+    return (
+      <div className="bg-gray-100 rounded-lg border border-gray-200 p-4 animate-pulse">
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
+          <div className="flex-1">
+            <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   
-  console.log('🎴 LessonCard render:', {
+  console.debug('🎴 LessonCard render:', {
     lessonTitle: lesson.title,
     isCurrent,
     propIsPlaying,
     canPlay,
     isCompleted: savedProgress?.is_completed,
+    isAudioReady,
     timestamp: new Date().toLocaleTimeString()
   });
   

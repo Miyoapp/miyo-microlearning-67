@@ -21,6 +21,7 @@ interface AudioPlayerState {
   isLoading: boolean;
   isReady: boolean;
   hasError: boolean;
+  isProviderReady: boolean;
   
   // Course data
   currentPodcast: Podcast | null;
@@ -72,6 +73,7 @@ export const useAudioPlayer = () => {
       isLoading: false,
       isReady: false,
       hasError: false,
+      isProviderReady: false,
       currentPodcast: null,
       initialPosition: null,
       pausedAt: null,
@@ -119,6 +121,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [isLoading, setIsLoading] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [isProviderReady, setIsProviderReady] = useState(false);
   
   // Position tracking - separate responsibilities
   const [initialPosition, setInitialPosition] = useState<number | null>(null);
@@ -126,6 +129,16 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   
   // Progress tracking
   const lastUpdateTime = useRef(0);
+
+  // Set provider as ready after mount
+  useEffect(() => {
+    console.debug('🎵 AudioPlayerProvider mounted - setting isProviderReady=true');
+    setIsProviderReady(true);
+    return () => {
+      console.debug('🎵 AudioPlayerProvider unmounting - setting isProviderReady=false');
+      setIsProviderReady(false);
+    };
+  }, []);
 
   // Direct lesson progress functions
   const markLessonComplete = useCallback(async (lessonId: string, courseId: string) => {
@@ -493,6 +506,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     isLoading,
     isReady,
     hasError,
+    isProviderReady,
     currentPodcast,
     initialPosition,
     pausedAt,

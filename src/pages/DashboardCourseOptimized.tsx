@@ -51,7 +51,8 @@ const DashboardCourseOptimized = () => {
     togglePlay,
     onLessonComplete,
     onProgressUpdate,
-    setOnLessonCompletedCallback
+    setOnLessonCompletedCallback,
+    isProviderReady: isAudioReady
   } = useAudioPlayer();
   
   // OPTIMIZED: Simplified stable reference (React Query handles caching)
@@ -243,12 +244,22 @@ const DashboardCourseOptimized = () => {
     window.history.back();
   };
 
-  // Show content if we have valid data AND lessons/modules are ready
+  // Show content if we have valid data AND lessons/modules are ready AND audio provider is ready
   const hasValidLessonsData = displayPodcast && 
     Array.isArray(displayPodcast.lessons) && 
     Array.isArray(displayPodcast.modules);
   
-  if (shouldShowContent && hasValidLessonsData) {
+  const canShowContent = shouldShowContent && hasValidLessonsData && isAudioReady;
+  
+  console.debug('🎯 DashboardCourseOptimized render check:', {
+    shouldShowContent,
+    hasValidLessonsData,
+    isAudioReady,
+    canShowContent,
+    courseId
+  });
+  
+  if (canShowContent) {
     console.log('✅ OPTIMIZED: RENDERING CONTENT with cached data:', {
       courseTitle: displayPodcast.title,
       isCurrentData: !!podcast,
