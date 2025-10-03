@@ -59,7 +59,35 @@ const AudioPlayerContext = createContext<AudioPlayerContextType | null>(null);
 export const useAudioPlayer = () => {
   const context = useContext(AudioPlayerContext);
   if (!context) {
-    throw new Error('useAudioPlayer must be used within AudioPlayerProvider');
+    console.warn('⚠️ useAudioPlayer called outside AudioPlayerProvider - returning safe no-op object');
+    // Return safe no-op object instead of throwing
+    return {
+      currentLesson: null,
+      isPlaying: false,
+      currentTime: 0,
+      duration: 0,
+      volume: 1,
+      playbackRate: 1,
+      isMuted: false,
+      isLoading: false,
+      isReady: false,
+      hasError: false,
+      currentPodcast: null,
+      initialPosition: null,
+      pausedAt: null,
+      selectLesson: () => console.warn('selectLesson called without provider'),
+      togglePlay: () => console.warn('togglePlay called without provider'),
+      seekTo: () => console.warn('seekTo called without provider'),
+      skipForward: () => console.warn('skipForward called without provider'),
+      skipBackward: () => console.warn('skipBackward called without provider'),
+      setVolume: () => console.warn('setVolume called without provider'),
+      setPlaybackRate: () => console.warn('setPlaybackRate called without provider'),
+      toggleMute: () => console.warn('toggleMute called without provider'),
+      onProgressUpdate: () => console.warn('onProgressUpdate called without provider'),
+      onLessonComplete: () => console.warn('onLessonComplete called without provider'),
+      setOnLessonCompletedCallback: () => console.warn('setOnLessonCompletedCallback called without provider'),
+      setOnCourseCompletedCallback: () => console.warn('setOnCourseCompletedCallback called without provider'),
+    };
   }
   return context;
 };

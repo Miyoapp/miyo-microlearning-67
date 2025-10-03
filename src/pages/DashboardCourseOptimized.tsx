@@ -243,8 +243,12 @@ const DashboardCourseOptimized = () => {
     window.history.back();
   };
 
-  // Show content if we have valid data
-  if (shouldShowContent) {
+  // Show content if we have valid data AND lessons/modules are ready
+  const hasValidLessonsData = displayPodcast && 
+    Array.isArray(displayPodcast.lessons) && 
+    Array.isArray(displayPodcast.modules);
+  
+  if (shouldShowContent && hasValidLessonsData) {
     console.log('✅ OPTIMIZED: RENDERING CONTENT with cached data:', {
       courseTitle: displayPodcast.title,
       isCurrentData: !!podcast,
@@ -253,6 +257,8 @@ const DashboardCourseOptimized = () => {
       courseProgress: !!courseProgress,
       currentLesson: currentLesson?.title,
       isPlaying,
+      lessonsReady: displayPodcast.lessons.length,
+      modulesReady: displayPodcast.modules.length,
       performanceMode: 'OPTIMIZED'
     });
 
