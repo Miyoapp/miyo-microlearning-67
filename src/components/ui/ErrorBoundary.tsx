@@ -26,6 +26,15 @@ class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('🚨 ErrorBoundary caught an error:', error, errorInfo);
+    try {
+      console.debug('🔎 ErrorBoundary diagnostics:', {
+        message: error?.message,
+        stack: error?.stack?.split('\n').slice(0, 3).join(' | '),
+        componentStack: errorInfo?.componentStack?.split('\n').slice(0, 3).join(' | '),
+        path: typeof window !== 'undefined' ? window.location?.pathname : 'N/A',
+        time: new Date().toISOString()
+      });
+    } catch {}
     this.setState({
       error,
       errorInfo

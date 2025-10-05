@@ -186,6 +186,9 @@ const LessonCard = React.memo(({
     
     return lesson.duracion || 0;
   }, [isCurrent, currentLesson?.id, lesson.id, duration, lesson.duracion, savedProgress?.is_completed, savedProgress?.current_position]);
+  
+  // Ensure we never divide by 0 in UI calculations
+  const safeDuration = Number.isFinite(validDuration) && validDuration > 0 ? validDuration : 1;
 
   // Fetch notes when lesson can play and courseId is available
   React.useEffect(() => {
@@ -331,6 +334,10 @@ const LessonCard = React.memo(({
     return savedPos;
   }, [savedProgress?.is_completed, savedProgress?.current_position, isCurrent, currentLesson?.id, propIsPlaying, currentTime, validDuration, lesson.id, temporaryPosition]);
 
+  // Clamp progress values for safe UI calculations
+  const clampedCurrentTime = Math.max(0, Math.min(displayCurrentTime, safeDuration));
+  const progressPercent = safeDuration > 0 ? (clampedCurrentTime / safeDuration) * 100 : 0;
+
   // Handle seek change
   const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseFloat(e.target.value);
@@ -460,13 +467,13 @@ const LessonCard = React.memo(({
               <input
                 type="range"
                 min={0}
-                max={validDuration}
-                value={displayCurrentTime}
+                max={safeDuration}
+                value={clampedCurrentTime}
                 onChange={handleSeekChange}
                 disabled={!isCurrent} // Only allow seeking on current lesson
                 className="w-full accent-[#5e16ea] h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
                 style={{
-                  background: `linear-gradient(to right, #5e16ea 0%, #5e16ea ${(displayCurrentTime / validDuration) * 100}%, #e5e7eb ${(displayCurrentTime / validDuration) * 100}%, #e5e7eb 100%)`
+                  background: `linear-gradient(to right, #5e16ea 0%, #5e16ea ${progressPercent}%, #e5e7eb ${progressPercent}%, #e5e7eb 100%)`
                 }}
               />
             </div>

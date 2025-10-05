@@ -86,7 +86,7 @@ export const obtenerCursosOptimizado = async (): Promise<Podcast[]> => {
         .map((leccion: any, index: number) => ({
           id: leccion.id,
           title: leccion.titulo,
-          duracion: leccion.duracion,
+          duracion: (typeof leccion.duracion === 'number' && isFinite(leccion.duracion) && leccion.duracion > 0) ? leccion.duracion : 1,
           urlAudio: leccion.url_audio,
           isCompleted: false,
           isLocked: leccion.estado_inicial === 'bloqueado' && index !== 0,
@@ -281,7 +281,7 @@ export const obtenerCursoPorIdOptimizado = async (id: string): Promise<Podcast |
       .map((leccion: any, index: number) => ({
         id: leccion.id,
         title: leccion.titulo,
-        duracion: leccion.duracion,
+        duracion: (typeof leccion.duracion === 'number' && isFinite(leccion.duracion) && leccion.duracion > 0) ? leccion.duracion : 1,
         urlAudio: leccion.url_audio,
         isCompleted: false,
         isLocked: leccion.estado_inicial === 'bloqueado' && index !== 0,
