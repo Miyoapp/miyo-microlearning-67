@@ -16,6 +16,7 @@ import DashboardMisResumenesOptimized from '@/pages/DashboardMisResumenesOptimiz
 import DashboardMisPlanesOptimized from '@/pages/DashboardMisPlanesOptimized';
 import { RequireAuth } from '@/components/auth/RequireAuth';
 import ErrorBoundary from '@/components/ui/ErrorBoundary';
+import RouteErrorBoundary from '@/components/ui/RouteErrorBoundary';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -41,7 +42,7 @@ function App() {
                   
                   {/* Protected routes */}
                   <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
-                  <Route path="/dashboard/course/:courseId" element={<RequireAuth><DashboardCourseOptimized /></RequireAuth>} />
+                  <Route path="/dashboard/course/:courseId" element={<RouteErrorBoundary><RequireAuth><DashboardCourseOptimized /></RequireAuth></RouteErrorBoundary>} />
                   <Route path="/dashboard/discover" element={<RequireAuth><DashboardDiscoverOptimized /></RequireAuth>} />
                   <Route path="/dashboard/my-routes" element={<RequireAuth><DashboardMyRoutesOptimized /></RequireAuth>} />
                   <Route path="/dashboard/mis-notas" element={<RequireAuth><DashboardMisNotasOptimized /></RequireAuth>} />

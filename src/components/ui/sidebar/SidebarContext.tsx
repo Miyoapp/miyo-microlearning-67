@@ -21,7 +21,19 @@ export const SidebarContext = React.createContext<SidebarContext | null>(null)
 export function useSidebar() {
   const context = React.useContext(SidebarContext)
   if (!context) {
-    throw new Error("useSidebar must be used within a SidebarProvider.")
+    if (typeof window !== "undefined" && process.env.NODE_ENV !== "production") {
+      // Soft fallback to avoid hard crashes before provider mounts
+      console.warn("useSidebar called outside of SidebarProvider. Returning no-op implementation.")
+    }
+    return {
+      state: "collapsed",
+      open: false,
+      setOpen: () => {},
+      openMobile: false,
+      setOpenMobile: () => {},
+      isMobile: false,
+      toggleSidebar: () => {},
+    }
   }
 
   return context
