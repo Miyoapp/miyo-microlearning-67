@@ -24,8 +24,8 @@ const CoursePageHeader: React.FC<CoursePageHeaderProps> = ({ isReviewMode }) => 
   });
 
   const handleBackClick = () => {
-    console.log('Back button clicked, navigating to dashboard');
-    navigate('/dashboard');
+    console.log('Back button clicked, navigating back');
+    navigate(-1);
   };
 
   return (
