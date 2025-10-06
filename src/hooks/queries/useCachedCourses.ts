@@ -2,6 +2,21 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { obtenerCursosOptimizado, obtenerCursoPorIdOptimizado } from '@/lib/api/optimizedCourseAPI';
 import { Podcast } from '@/types';
 
+// Helper function to add timeout to queries
+const createQueryWithTimeout = <T,>(
+  queryFn: () => Promise<T>,
+  timeoutMs: number = 15000 // 15 seconds default
+): (() => Promise<T>) => {
+  return () => {
+    return Promise.race([
+      queryFn(),
+      new Promise<T>((_, reject) =>
+        setTimeout(() => reject(new Error('Query timeout - please check your connection')), timeoutMs)
+      )
+    ]);
+  };
+};
+
 // Query keys for cache management
 export const courseKeys = {
   all: ['courses'] as const,
@@ -18,7 +33,7 @@ export const courseKeys = {
 export const useCachedCourses = () => {
   return useQuery({
     queryKey: courseKeys.lists(),
-    queryFn: obtenerCursosOptimizado,
+    queryFn: createQueryWithTimeout(obtenerCursosOptimizado, 15000),
     staleTime: 5 * 60 * 1000, // 5 minutes - data stays fresh
     gcTime: 10 * 60 * 1000, // 10 minutes - garbage collection time
     refetchOnWindowFocus: false, // Don't refetch on window focus
@@ -34,7 +49,7 @@ export const useCachedCourses = () => {
 export const useCachedCourse = (courseId: string | undefined) => {
   return useQuery({
     queryKey: courseKeys.detail(courseId || ''),
-    queryFn: () => obtenerCursoPorIdOptimizado(courseId!),
+    queryFn: createQueryWithTimeout(() => obtenerCursoPorIdOptimizado(courseId!), 15000),
     enabled: !!courseId, // Only run if courseId exists
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
@@ -54,7 +69,7 @@ export const usePrefetchCourse = () => {
   const prefetchCourse = (courseId: string) => {
     queryClient.prefetchQuery({
       queryKey: courseKeys.detail(courseId),
-      queryFn: () => obtenerCursoPorIdOptimizado(courseId),
+      queryFn: createQueryWithTimeout(() => obtenerCursoPorIdOptimizado(courseId), 15000),
       staleTime: 5 * 60 * 1000,
     });
   };

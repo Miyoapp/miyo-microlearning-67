@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useIsMobile } from './use-mobile';
+import { isWindows } from '@/utils/platformDetection';
 
 interface PerformanceConfig {
   reduceAnimations: boolean;
@@ -12,30 +13,32 @@ interface PerformanceConfig {
 export const usePerformanceOptimization = (): PerformanceConfig => {
   const isMobile = useIsMobile();
   const [isLowEndDevice, setIsLowEndDevice] = useState(false);
+  const isWindowsOS = useMemo(() => isWindows(), []);
 
   useEffect(() => {
-    // Detect low-end devices - more conservative approach
+    // Detect low-end devices - more conservative approach for Windows
     const checkDeviceCapabilities = () => {
       // Check memory (if available)
       const memory = (navigator as any).deviceMemory;
       const hardwareConcurrency = navigator.hardwareConcurrency || 2;
       
-      // Only consider truly low-end devices
+      // Consider low-end devices AND Windows for animations
       const isLowEnd = (
-        (memory && memory <= 1) || 
-        (hardwareConcurrency <= 1 && window.innerWidth <= 360)
+        (memory && memory <= 2) || // Increased threshold for safety
+        (hardwareConcurrency <= 2) || // More conservative
+        isWindowsOS // Treat Windows as requiring optimization
       );
       
       setIsLowEndDevice(isLowEnd);
     };
 
     checkDeviceCapabilities();
-  }, [isMobile]);
+  }, [isMobile, isWindowsOS]);
 
   return {
     reduceAnimations: isMobile || isLowEndDevice,
-    disableMotion: isLowEndDevice,
-    simplifyEffects: isMobile,
+    disableMotion: isLowEndDevice || isWindowsOS, // Disable motion on Windows
+    simplifyEffects: isMobile || isWindowsOS, // Simplify effects on Windows
     enableLazyLoading: true,
   };
 };
