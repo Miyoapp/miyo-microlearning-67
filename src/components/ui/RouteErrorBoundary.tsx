@@ -27,8 +27,17 @@ class RouteErrorBoundary extends Component<Props, State> {
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     try {
       const path = typeof window !== "undefined" ? window.location?.pathname : "N/A"
-      console.error("🚨 RouteErrorBoundary:", { path, message: error?.message, stack: error?.stack?.split("\n").slice(0, 3).join(" | "), componentStack: errorInfo?.componentStack?.split("\n").slice(0, 3).join(" | "), time: new Date().toISOString() })
-    } catch {}
+      console.error("🚨 RouteErrorBoundary caught error:", {
+        path,
+        message: error?.message,
+        errorName: error?.name,
+        stack: error?.stack?.split("\n").slice(0, 8).join("\n"),
+        componentStack: errorInfo?.componentStack?.split("\n").slice(0, 10).join("\n"),
+        time: new Date().toISOString()
+      })
+    } catch (logError) {
+      console.error("Error logging boundary error:", logError)
+    }
     this.setState({ error, errorInfo })
   }
 

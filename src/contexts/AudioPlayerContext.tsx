@@ -121,7 +121,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [isLoading, setIsLoading] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const [isProviderReady, setIsProviderReady] = useState(false);
+  const [isProviderReady, setIsProviderReady] = useState(true); // Ready by default - no need to wait for useEffect
   
   // Position tracking - separate responsibilities
   const [initialPosition, setInitialPosition] = useState<number | null>(null);

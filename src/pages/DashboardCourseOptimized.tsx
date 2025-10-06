@@ -244,12 +244,12 @@ const DashboardCourseOptimized = () => {
     window.history.back();
   };
 
-  // Show content if we have valid data AND lessons/modules are ready AND audio provider is ready
+  // Show content if we have valid data AND lessons/modules are ready
   const hasValidLessonsData = displayPodcast && 
     Array.isArray(displayPodcast.lessons) && 
     Array.isArray(displayPodcast.modules);
   
-  const canShowContent = shouldShowContent && hasValidLessonsData && isAudioReady;
+  const canShowContent = shouldShowContent && hasValidLessonsData;
   
   console.debug('🎯 DashboardCourseOptimized render check:', {
     shouldShowContent,
