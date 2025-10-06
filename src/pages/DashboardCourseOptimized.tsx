@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback, useLayoutEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useLayoutEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { useCachedCourse } from '@/hooks/queries/useCachedCourses';
@@ -19,6 +19,9 @@ import ErrorBoundary from '@/components/ui/ErrorBoundary';
 
 const DashboardCourseOptimized = () => {
   const { courseId } = useParams<{ courseId: string }>();
+  
+  // 🛡️ RACE CONDITION FIX: Initial mount buffer to prevent premature error display
+  const [isInitialMount, setIsInitialMount] = useState(true);
   
   // OPTIMIZED: Use cached course data (single query instead of 4+)
   const { 
@@ -142,6 +145,36 @@ const DashboardCourseOptimized = () => {
   const displayPodcast = podcast || 
     (lastValidPodcast.current?.id === courseId ? lastValidPodcast.current : undefined);
 
+  // 🛡️ RACE CONDITION FIX: Create safePodcast with defensive defaults
+  const safePodcast = useMemo(() => {
+    if (!displayPodcast) return null;
+    
+    return {
+      ...displayPodcast,
+      lessons: Array.isArray(displayPodcast.lessons) ? displayPodcast.lessons : [],
+      modules: Array.isArray(displayPodcast.modules) ? displayPodcast.modules : [],
+      creator: {
+        id: displayPodcast.creator?.id || 'unknown',
+        name: displayPodcast.creator?.name || 'Autor desconocido',
+        imageUrl: displayPodcast.creator?.imageUrl || '/placeholder.svg',
+        linkedinUrl: displayPodcast.creator?.linkedinUrl || undefined
+      },
+      category: {
+        id: displayPodcast.category?.id || 'unknown',
+        nombre: displayPodcast.category?.nombre || 'Sin categoría'
+      }
+    };
+  }, [displayPodcast]);
+
+  // 🛡️ RACE CONDITION FIX: Initial mount buffer timer
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsInitialMount(false);
+    }, 120); // 120ms buffer for initialization
+    
+    return () => clearTimeout(timer);
+  }, []);
+
   // Auto-position on next lesson to continue (only once)
   const hasAutoPositioned = useRef(false);
   useEffect(() => {
@@ -160,6 +193,21 @@ const DashboardCourseOptimized = () => {
     }
   }, [displayPodcast, lessonsWithProgress, currentLesson, getNextLessonToContinue, selectLesson]);
 
+  // 🛡️ DEV LOGGING: Track render states for debugging
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📊 DashboardCourseOptimized render state:', {
+        courseId,
+        hasPodcast: !!podcast,
+        courseLoading,
+        progressLoading,
+        accessLoading,
+        isInitialMount,
+        timestamp: new Date().toISOString()
+      });
+    }
+  }, [courseId, podcast, courseLoading, progressLoading, accessLoading, isInitialMount]);
+
   console.log('🔒 OPTIMIZED DASHBOARD COURSE STATE:', {
     shouldShowContent: !!displayPodcast,
     isActuallyLoading: !displayPodcast && (courseLoading || progressLoading),
@@ -172,9 +220,8 @@ const DashboardCourseOptimized = () => {
     cacheHit: podcast && !courseLoading ? 'HIT' : 'MISS'
   });
 
-  const isActuallyLoading = !displayPodcast && (courseLoading || progressLoading);
+  const isActuallyLoading = !safePodcast && (courseLoading || progressLoading);
   const hasError = courseError || accessError;
-  const shouldShowContent = !!displayPodcast;
 
   // OPTIMIZED: Use cached mutations for better performance
   const handleStartLearning = async () => {
@@ -243,44 +290,75 @@ const DashboardCourseOptimized = () => {
   const handleGoBack = () => {
     window.history.back();
   };
-
-  // Show content if we have valid data AND lessons/modules are ready
-  const hasValidLessonsData = displayPodcast && 
-    Array.isArray(displayPodcast.lessons) && 
-    Array.isArray(displayPodcast.modules);
   
-  const canShowContent = shouldShowContent && hasValidLessonsData;
-  
-  console.debug('🎯 DashboardCourseOptimized render check:', {
-    shouldShowContent,
-    hasValidLessonsData,
-    isAudioReady,
-    canShowContent,
-    courseId
-  });
-  
+  // 🛡️ SIMPLIFIED RENDER FLOW: Clear, ordered guards for all states
   // CRITICAL: Wrap ALL returns with NotesProvider to prevent context errors
   return (
     <NotesProvider>
       <ErrorBoundary
         key={courseId}
         fallback={
-          <DashboardLayout>
+          <div className="min-h-screen flex items-center justify-center p-4">
             <CourseErrorState
               error="Ha ocurrido un error inesperado."
               onRetry={handleRetry}
               onGoBack={handleGoBack}
             />
-          </DashboardLayout>
+          </div>
         }
       >
         <DashboardLayout>
-          {canShowContent && (
+          {/* 1️⃣ GUARD: Invalid courseId */}
+          {!courseId && (
+            <CourseNotFoundState
+              courseId={courseId}
+              onRetry={handleRetry}
+              onGoBack={handleGoBack}
+            />
+          )}
+
+          {/* 2️⃣ GUARD: Initial mount buffer - prevents premature error display */}
+          {courseId && isInitialMount && (
+            <CourseLoadingSkeleton loadingMessage="Inicializando..." />
+          )}
+
+          {/* 3️⃣ STATE: Loading */}
+          {courseId && !isInitialMount && isActuallyLoading && (
+            <CourseLoadingSkeleton loadingMessage="Cargando curso..." />
+          )}
+
+          {/* 4️⃣ STATE: Error */}
+          {courseId && !isInitialMount && !isActuallyLoading && hasError && (
+            <CourseErrorState
+              error={courseError || accessError || 'Ha ocurrido un error inesperado.'}
+              onRetry={handleRetry}
+              onGoBack={handleGoBack}
+            />
+          )}
+
+          {/* 5️⃣ STATE: Not found */}
+          {courseId && !isInitialMount && !isActuallyLoading && !hasError && !safePodcast && (
+            <CourseNotFoundState
+              courseId={courseId}
+              onRetry={handleRetry}
+              onGoBack={handleGoBack}
+            />
+          )}
+
+          {/* 6️⃣ STATE: Loading lessons/modules data */}
+          {courseId && !isInitialMount && !isActuallyLoading && !hasError && safePodcast && 
+           (!Array.isArray(safePodcast.lessons) || !Array.isArray(safePodcast.modules)) && (
+            <CourseLoadingSkeleton loadingMessage="Cargando contenido del curso..." />
+          )}
+
+          {/* 7️⃣ STATE: Success - Always render content when we have valid safePodcast */}
+          {courseId && !isInitialMount && !isActuallyLoading && !hasError && safePodcast && 
+           Array.isArray(safePodcast.lessons) && Array.isArray(safePodcast.modules) && (
             <>
               <MetaTags
-                title={`${displayPodcast.title} - Miyo`}
-                description={displayPodcast.description}
-                image={displayPodcast.imageUrl}
+                title={`${safePodcast.title} - Miyo`}
+                description={safePodcast.description}
+                image={safePodcast.imageUrl}
                 url={`${window.location.origin}/dashboard/course/${courseId}`}
               />
               
@@ -288,7 +366,7 @@ const DashboardCourseOptimized = () => {
                 <CoursePageHeader isReviewMode={isReviewMode} />
                 
                 <CourseAccessHandler
-                  podcast={displayPodcast}
+                  podcast={safePodcast}
                   currentLesson={currentLesson}
                   hasStarted={hasStarted}
                   isSaved={isSaved}
@@ -311,26 +389,6 @@ const DashboardCourseOptimized = () => {
                 />
               </div>
             </>
-          )}
-
-          {hasError && !shouldShowContent && (
-            <CourseErrorState
-              error={courseError || accessError || 'Ha ocurrido un error inesperado.'}
-              onRetry={handleRetry}
-              onGoBack={handleGoBack}
-            />
-          )}
-
-          {!isActuallyLoading && !shouldShowContent && !hasError && (
-            <CourseNotFoundState
-              courseId={courseId}
-              onRetry={handleRetry}
-              onGoBack={handleGoBack}
-            />
-          )}
-
-          {isActuallyLoading && (
-            <CourseLoadingSkeleton loadingMessage="Cargando curso..." />
           )}
         </DashboardLayout>
       </ErrorBoundary>

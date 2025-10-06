@@ -27,10 +27,14 @@ class RouteErrorBoundary extends Component<Props, State> {
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     try {
       const path = typeof window !== "undefined" ? window.location?.pathname : "N/A"
+      const isTransientCandidate = error?.message?.toLowerCase().includes('initializing') || 
+                                    error?.message?.toLowerCase().includes('not ready');
+      
       console.error("🚨 RouteErrorBoundary caught error:", {
         path,
         message: error?.message,
         errorName: error?.name,
+        isTransientCandidate: isTransientCandidate ? '⚠️ YES - may be race condition' : 'NO',
         stack: error?.stack?.split("\n").slice(0, 8).join("\n"),
         componentStack: errorInfo?.componentStack?.split("\n").slice(0, 10).join("\n"),
         time: new Date().toISOString()
