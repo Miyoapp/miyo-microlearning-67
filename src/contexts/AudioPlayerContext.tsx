@@ -253,7 +253,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         setIsPlaying(true);
       }
     }
-  }, [currentLesson, isPlaying, user]);
+  }, [currentLesson?.id, isPlaying, user]);
   
   const togglePlay = useCallback(() => {
     if (!audioRef.current || !currentLesson) return;
@@ -280,7 +280,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
     
     setIsPlaying(!isPlaying);
-  }, [isPlaying, currentLesson, pausedAt]);
+  }, [isPlaying, currentLesson?.id, pausedAt]);
   
   const seekTo = useCallback((time: number) => {
     if (audioRef.current) {
@@ -290,7 +290,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   }, []);
   
   const skipForward = useCallback((seconds = 15) => {
-    if (audioRef.current) {
+    if (audioRef.current && duration > 0) {
       const newTime = Math.min(duration, currentTime + seconds);
       seekTo(newTime);
     }
@@ -335,7 +335,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       console.log('📊 AudioPlayer: Progress update:', currentLesson.title, time.toFixed(1) + 's');
       updateLessonPosition(currentLesson.id, currentPodcast.id, time);
     }
-  }, [currentLesson, currentPodcast, user, updateLessonPosition]);
+  }, [currentLesson?.id, currentPodcast?.id, user?.id, updateLessonPosition]);
   
   const onLessonComplete = useCallback(async () => {
   if (!currentLesson || !currentPodcast || !user) return;
