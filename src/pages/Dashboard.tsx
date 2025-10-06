@@ -41,7 +41,7 @@ const Dashboard = () => {
   useEffect(() => {
     console.log('🔄 Dashboard mounted, refetching progress data');
     refetch();
-  }, [refetch]);
+  }, []);
 
   // OPTIMIZED: Solo navegar al curso, no iniciar reproducción
   const handlePlayCourse = async (courseId: string) => {

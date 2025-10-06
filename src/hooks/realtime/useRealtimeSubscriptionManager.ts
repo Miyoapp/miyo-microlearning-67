@@ -59,7 +59,7 @@ export function useRealtimeSubscriptionManager() {
         activeChannels.current.delete(subscriptionKey);
       }
       
-      subscriptionStates.current.set(subscriptionKey, false);
+      subscriptionStates.current.delete(subscriptionKey);
     };
   }, []);
 
@@ -68,7 +68,7 @@ export function useRealtimeSubscriptionManager() {
     
     activeChannels.current.forEach((channel, key) => {
       supabase.removeChannel(channel);
-      subscriptionStates.current.set(key, false);
+      subscriptionStates.current.delete(key);
     });
     
     activeChannels.current.clear();

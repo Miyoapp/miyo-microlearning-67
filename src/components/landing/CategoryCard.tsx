@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { useGlassEffect } from '@/hooks/useGlassEffect';
 
 interface CategoryCardProps {
   categoria?: {
@@ -19,6 +20,7 @@ interface CategoryCardProps {
 
 const CategoryCard: React.FC<CategoryCardProps> = ({ categoria, category }) => {
   const navigate = useNavigate();
+  const { glassClass } = useGlassEffect();
   
   // Support both prop names for backwards compatibility
   const item = category || categoria;
@@ -45,7 +47,7 @@ const CategoryCard: React.FC<CategoryCardProps> = ({ categoria, category }) => {
       className="group cursor-pointer"
       onClick={handleClick}
     >
-      <div className="relative h-full bg-white/60 backdrop-blur-lg border border-white/20 rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 hover:bg-white/70">
+      <div className={`relative h-full ${glassClass} rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 hover:bg-white/70`}>
         {/* Gradiente de fondo sutil */}
         <div className="absolute inset-0 bg-gradient-to-br from-miyo-50/30 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         

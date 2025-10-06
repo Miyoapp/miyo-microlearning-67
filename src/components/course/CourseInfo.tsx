@@ -6,14 +6,17 @@ import { Podcast } from '../../types';
 import SoundEqualizer from './SoundEqualizer';
 import { formatMinutesToHumanReadable } from '@/lib/formatters';
 import CreatorSocialMediaLinks from './CreatorSocialMediaLinks';
+import { useGlassEffect } from '@/hooks/useGlassEffect';
 
 interface CourseInfoProps {
   podcast: Podcast;
 }
 
 const CourseInfo = ({ podcast }: CourseInfoProps) => {
+  const { glassClass } = useGlassEffect();
+  
   return (
-    <div className="glass rounded-3xl p-8 backdrop-blur-md shadow-lg">
+    <div className={`${glassClass} rounded-3xl p-8 shadow-lg`}>
       <div className="flex flex-col lg:flex-row gap-8 items-start">
         {/* Course image */}
         <div className="w-full lg:w-1/3">

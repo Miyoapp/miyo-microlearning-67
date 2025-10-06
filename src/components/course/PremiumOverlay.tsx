@@ -2,6 +2,7 @@
 import React from 'react';
 import { Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useGlassEffect } from '@/hooks/useGlassEffect';
 
 interface PremiumOverlayProps {
   onUnlock: () => void;
@@ -10,6 +11,8 @@ interface PremiumOverlayProps {
 }
 
 const PremiumOverlay: React.FC<PremiumOverlayProps> = ({ onUnlock, price, currency = 'USD' }) => {
+  const { glassClass } = useGlassEffect();
+  
   const formatCurrency = (amount: number, curr: string) => {
     switch (curr) {
       case 'USD':
@@ -35,7 +38,7 @@ const PremiumOverlay: React.FC<PremiumOverlayProps> = ({ onUnlock, price, curren
     }}>
       {/* Only center message - removed top-right button */}
       <div className="absolute inset-0 flex items-center justify-center">
-        <div className="text-center p-6 max-w-sm bg-white/95 rounded-xl shadow-lg backdrop-blur-md">
+        <div className={`text-center p-6 max-w-sm ${glassClass} rounded-xl shadow-lg`}>
           <Crown className="w-10 h-10 mx-auto text-yellow-500 mb-3" />
           <h3 className="text-xl font-bold mb-3">Contenido Premium</h3>
           <p className="text-gray-600 text-sm mb-4">
