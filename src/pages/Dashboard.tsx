@@ -1,6 +1,6 @@
 
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import DashboardWelcomeHeader from '@/components/dashboard/DashboardWelcomeHeader';
@@ -36,6 +36,12 @@ const Dashboard = () => {
     freeCourses,
     premiumCourses
   });
+
+  // Refetch progress when component mounts to ensure fresh data
+  useEffect(() => {
+    console.log('🔄 Dashboard mounted, refetching progress data');
+    refetch();
+  }, [refetch]);
 
   // OPTIMIZED: Solo navegar al curso, no iniciar reproducción
   const handlePlayCourse = async (courseId: string) => {

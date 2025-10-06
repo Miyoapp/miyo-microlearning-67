@@ -98,6 +98,18 @@ export const useDashboardDataOptimized = () => {
     };
   });
 
+  // Logging detallado para debugging
+  const coursesInProgress = userProgress.filter(p => p.progress_percentage > 0 && p.progress_percentage < 100);
+  console.log('📊 CONTINUE LEARNING COURSES:', {
+    allCoursesCount: allCourses.length,
+    userProgressCount: userProgress.length,
+    continueLearningCount: continueLearningCourses.length,
+    coursesInProgress: coursesInProgress.map(p => ({
+      courseId: p.course_id,
+      progress: p.progress_percentage
+    }))
+  });
+
   const toggleSaveCourse = async (courseId: string) => {
     console.log('📊 OPTIMIZED: Toggling save for course:', courseId);
     await toggleSaveCourseMutation.mutateAsync(courseId);

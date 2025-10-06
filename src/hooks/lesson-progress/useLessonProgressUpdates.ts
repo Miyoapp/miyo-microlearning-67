@@ -5,6 +5,8 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { toast } from 'sonner';
 import { UserLessonProgress, LessonProgressUpdates } from './types';
 import { useReviewMode } from './useReviewMode';
+import { useQueryClient } from '@tanstack/react-query';
+import { userProgressKeys } from '@/hooks/queries/useCachedUserProgress';
 
 export function useLessonProgressUpdates(
   lessonProgress: UserLessonProgress[],
@@ -12,6 +14,7 @@ export function useLessonProgressUpdates(
 ) {
   const { user } = useAuth();
   const { isInReviewMode } = useReviewMode();
+  const queryClient = useQueryClient();
 
   const updateLessonProgress = useCallback(async (
     lessonId: string, 
@@ -139,6 +142,12 @@ export function useLessonProgressUpdates(
       if (isCriticalUpdate) {
         console.log('🎯 CRITICAL UPDATE: Executing DB update immediately for completion');
         await updateDatabase();
+        
+        // Invalidar caché de React Query para forzar refetch en Dashboard
+        if (user?.id) {
+          queryClient.invalidateQueries({ queryKey: userProgressKeys.user(user.id) });
+          console.log('🔄 Cache invalidated for user progress');
+        }
       } else {
         // For non-critical updates, execute in background
         updateDatabase().catch(error => {

@@ -45,7 +45,7 @@ export const useCachedUserProgress = () => {
       return progressData;
     },
     enabled: !!user,
-    staleTime: 2 * 60 * 1000, // 2 minutes - more frequent updates for user data
+    staleTime: 30 * 1000, // 30 seconds - faster cache expiration for real-time updates
     gcTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
   });

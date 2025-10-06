@@ -4,12 +4,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { toast } from 'sonner';
 import { UserCourseProgress } from './types';
+import { useQueryClient } from '@tanstack/react-query';
+import { userProgressKeys } from '@/hooks/queries/useCachedUserProgress';
 
 export function useUserProgressUpdates(
   userProgress: UserCourseProgress[],
   setUserProgress: React.Dispatch<React.SetStateAction<UserCourseProgress[]>>
 ) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const updateCourseProgress = useCallback(async (courseId: string, updates: Partial<UserCourseProgress>, forceRefetch = false) => {
     if (!user) return;
@@ -55,6 +58,10 @@ export function useUserProgressUpdates(
 
       console.log('✅ Course progress updated successfully');
 
+      // Invalidar caché de React Query para forzar refetch en Dashboard
+      queryClient.invalidateQueries({ queryKey: userProgressKeys.user(user.id) });
+      console.log('🔄 Cache invalidated for user progress');
+      
       // REFETCH INMEDIATO para casos críticos (como completion)
       if (forceRefetch) {
         console.log('🔄 Force refetching user progress...');
