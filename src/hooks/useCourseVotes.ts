@@ -32,9 +32,17 @@ export function useCourseVotes(courseId: string) {
         .from('cursos')
         .select('likes, dislikes')
         .eq('id', courseId)
-        .single();
+        .maybeSingle();
 
       if (courseError) throw courseError;
+
+      // Treat null as "course not found" - use safe defaults
+      if (!courseData) {
+        console.warn('Course not found:', courseId);
+        setVotes({ likes: 0, dislikes: 0, userVote: 'none' });
+        setLoading(false);
+        return;
+      }
 
       // Get user's vote if authenticated
       let userVote: 'like' | 'dislike' | 'none' = 'none';

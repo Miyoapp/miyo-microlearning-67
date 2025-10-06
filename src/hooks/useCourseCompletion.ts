@@ -82,15 +82,21 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress, mar
         .select('progress_percentage, is_completed, completion_modal_shown')
         .eq('course_id', podcast.id)
         .eq('user_id', auth.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
+        console.error('❌ Error fetching course progress:', error);
+        return;
+      }
+
+      // Treat null as "no progress yet" - course not completed
+      if (!courseProgress) {
         console.log('⚠️ No progress found in DB, course not completed yet');
         return;
       }
 
       // Verificar REALMENTE que el curso está completo según la DB
-      const isReallyCompleted = courseProgress?.is_completed && courseProgress?.progress_percentage === 100;
+      const isReallyCompleted = courseProgress.is_completed && courseProgress.progress_percentage === 100;
       
       if (!isReallyCompleted) {
         console.log('⏹️ SKIP - Course not actually completed yet (DB check)', courseProgress);

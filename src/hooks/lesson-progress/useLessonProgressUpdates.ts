@@ -77,9 +77,9 @@ export function useLessonProgressUpdates(
           .select('*')
           .eq('user_id', user.id)
           .eq('lesson_id', lessonId)
-          .single();
+          .maybeSingle();
 
-        if (fetchError && fetchError.code !== 'PGRST116') {
+        if (fetchError) {
           console.error('Error fetching existing progress:', fetchError);
           throw fetchError;
         }
@@ -93,7 +93,7 @@ export function useLessonProgressUpdates(
           updated_at: new Date().toISOString(),
         };
 
-        // If record exists, use existing values as base
+        // Treat null as "no existing progress" - use safe defaults
         const existingProgress = existingData || {
           is_completed: false,
           current_position: 0

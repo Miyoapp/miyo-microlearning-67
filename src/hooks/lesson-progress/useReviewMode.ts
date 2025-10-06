@@ -15,13 +15,14 @@ export function useReviewMode() {
         .select('progress_percentage, is_completed')
         .eq('user_id', user.id)
         .eq('course_id', courseId)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         console.error('Error checking review mode:', error);
         return false;
       }
 
+      // Treat null data as "not in review mode" (no progress yet)
       const isReviewMode = data?.is_completed === true && data?.progress_percentage === 100;
       console.log('🔍 Review mode check for course:', courseId, 'isReviewMode:', isReviewMode);
       return isReviewMode;

@@ -22,11 +22,17 @@ export const useDashboardData = () => {
     const loadUserData = async () => {
       if (user) {
         try {
-          const { data: profile } = await supabase
+          const { data: profile, error } = await supabase
             .from('profiles')
             .select('name, created_at')
             .eq('id', user.id)
-            .single();
+            .maybeSingle();
+          
+          if (error) {
+            console.error('Error loading user profile:', error);
+            setUserName(user.email || 'Usuario');
+            return;
+          }
           
           if (profile) {
             setUserName(profile.name || user.email || 'Usuario');
@@ -36,6 +42,9 @@ export const useDashboardData = () => {
             const today = new Date();
             const isToday = createdDate.toDateString() === today.toDateString();
             setIsFirstTimeUser(isToday);
+          } else {
+            // No profile found - use email as fallback
+            setUserName(user.email || 'Usuario');
           }
         } catch (error) {
           console.error('Error loading user profile:', error);

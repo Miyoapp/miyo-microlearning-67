@@ -171,7 +171,7 @@ export function useAllNotesOptimized() {
         .from('lecciones')
         .select('titulo')
         .eq('id', lessonId)
-        .single();
+        .maybeSingle();
       
       return {
         ...data,

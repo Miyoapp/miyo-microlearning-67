@@ -279,7 +279,7 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
         .from('lecciones')
         .select('titulo')
         .eq('id', lessonId)
-        .single();
+        .maybeSingle();
       
       const newNote: LessonNote = {
         id: (data as any).id,
