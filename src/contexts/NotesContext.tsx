@@ -410,7 +410,16 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
 export function useNotesContext() {
   const context = useContext(NotesContext);
   if (context === undefined) {
-    throw new Error('useNotesContext must be used within a NotesProvider');
+    console.warn('⚠️ useNotesContext called outside NotesProvider - returning safe no-op object');
+    // Return safe no-op object instead of throwing
+    return {
+      state: initialState,
+      fetchAllNotes: async () => {},
+      addNote: async () => undefined,
+      updateNote: async () => {},
+      toggleFavorite: async () => {},
+      deleteNote: async () => {}
+    };
   }
   return context;
 }

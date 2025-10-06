@@ -259,23 +259,11 @@ const DashboardCourseOptimized = () => {
     courseId
   });
   
-  if (canShowContent) {
-    console.log('✅ OPTIMIZED: RENDERING CONTENT with cached data:', {
-      courseTitle: displayPodcast.title,
-      isCurrentData: !!podcast,
-      isStableReference: !podcast && !!lastValidPodcast.current,
-      hasUserProgress: userProgress.length > 0,
-      courseProgress: !!courseProgress,
-      currentLesson: currentLesson?.title,
-      isPlaying,
-      lessonsReady: displayPodcast.lessons.length,
-      modulesReady: displayPodcast.modules.length,
-      performanceMode: 'OPTIMIZED'
-    });
-
-    return (
+  // CRITICAL: Wrap ALL returns with NotesProvider to prevent context errors
+  return (
+    <NotesProvider>
       <ErrorBoundary
-        key={courseId} // Force remount on course change
+        key={courseId}
         fallback={
           <DashboardLayout>
             <CourseErrorState
@@ -285,82 +273,68 @@ const DashboardCourseOptimized = () => {
             />
           </DashboardLayout>
         }
-     >
+      >
         <DashboardLayout>
-          <NotesProvider>
-            <MetaTags
-              title={`${displayPodcast.title} - Miyo`}
-              description={displayPodcast.description}
-              image={displayPodcast.imageUrl}
-              url={`${window.location.origin}/dashboard/course/${courseId}`}
-            />
-            
-            <div key={courseId} className="max-w-7xl mx-auto pb-8">
-              <CoursePageHeader isReviewMode={isReviewMode} />
-              
-              <CourseAccessHandler
-                podcast={displayPodcast}
-                currentLesson={currentLesson}
-                hasStarted={hasStarted}
-                isSaved={isSaved}
-                progressPercentage={progressPercentage}
-                isCompleted={isCompleted}
-                isPremium={isPremium}
-                hasAccess={hasAccess}
-                isPlaying={isPlaying}
-                lessonProgress={freshLessonProgress}
-                showCheckout={showCheckout}
-                onStartLearning={handleStartLearning}
-                onToggleSave={handleToggleSave}
-                onSelectLesson={handleLessonSelect}
-                onShowCheckout={() => setShowCheckout(true)}
-                onCloseCheckout={() => setShowCheckout(false)}
-                onTogglePlay={togglePlay}
-                onLessonComplete={onLessonComplete}
-                onProgressUpdate={onProgressUpdate}
-                onPurchaseComplete={handlePurchaseComplete}
+          {canShowContent && (
+            <>
+              <MetaTags
+                title={`${displayPodcast.title} - Miyo`}
+                description={displayPodcast.description}
+                image={displayPodcast.imageUrl}
+                url={`${window.location.origin}/dashboard/course/${courseId}`}
               />
-            </div>
-          </NotesProvider>
+              
+              <div key={courseId} className="max-w-7xl mx-auto pb-8">
+                <CoursePageHeader isReviewMode={isReviewMode} />
+                
+                <CourseAccessHandler
+                  podcast={displayPodcast}
+                  currentLesson={currentLesson}
+                  hasStarted={hasStarted}
+                  isSaved={isSaved}
+                  progressPercentage={progressPercentage}
+                  isCompleted={isCompleted}
+                  isPremium={isPremium}
+                  hasAccess={hasAccess}
+                  isPlaying={isPlaying}
+                  lessonProgress={freshLessonProgress}
+                  showCheckout={showCheckout}
+                  onStartLearning={handleStartLearning}
+                  onToggleSave={handleToggleSave}
+                  onSelectLesson={handleLessonSelect}
+                  onShowCheckout={() => setShowCheckout(true)}
+                  onCloseCheckout={() => setShowCheckout(false)}
+                  onTogglePlay={togglePlay}
+                  onLessonComplete={onLessonComplete}
+                  onProgressUpdate={onProgressUpdate}
+                  onPurchaseComplete={handlePurchaseComplete}
+                />
+              </div>
+            </>
+          )}
+
+          {hasError && !shouldShowContent && (
+            <CourseErrorState
+              error={courseError || accessError || 'Ha ocurrido un error inesperado.'}
+              onRetry={handleRetry}
+              onGoBack={handleGoBack}
+            />
+          )}
+
+          {!isActuallyLoading && !shouldShowContent && !hasError && (
+            <CourseNotFoundState
+              courseId={courseId}
+              onRetry={handleRetry}
+              onGoBack={handleGoBack}
+            />
+          )}
+
+          {isActuallyLoading && (
+            <CourseLoadingSkeleton loadingMessage="Cargando curso..." />
+          )}
         </DashboardLayout>
       </ErrorBoundary>
-    );
-  }
-
-  // Show error state
-  if (hasError && !shouldShowContent) {
-    console.log('❌ Showing error state:', { courseError, accessError, hasValidContent: false });
-    return (
-      <DashboardLayout>
-        <CourseErrorState
-          error={courseError || accessError || 'Ha ocurrido un error inesperado.'}
-          onRetry={handleRetry}
-          onGoBack={handleGoBack}
-        />
-      </DashboardLayout>
-    );
-  }
-
-  // Show course not found
-  if (!isActuallyLoading && !shouldShowContent) {
-    console.log('📭 Showing course not found state');
-    return (
-      <DashboardLayout>
-        <CourseNotFoundState
-          courseId={courseId}
-          onRetry={handleRetry}
-          onGoBack={handleGoBack}
-        />
-      </DashboardLayout>
-    );
-  }
-
-  // Show loading with optimized skeleton
-  console.log('🔄 OPTIMIZED: Showing loading state with cached fallback');
-  return (
-    <DashboardLayout>
-      <CourseLoadingSkeleton loadingMessage="Cargando curso..." />
-    </DashboardLayout>
+    </NotesProvider>
   );
 };
 
