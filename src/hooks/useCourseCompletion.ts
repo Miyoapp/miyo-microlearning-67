@@ -66,7 +66,8 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress, mar
     }
   }, [markCompletionModalShown]);
 
-  // NUEVA FUNCIÓN: Verificación directa desde DB (no depende del estado local)
+  // FALLBACK: Este método se mantiene como respaldo en caso de que
+  // el useEffect no se dispare por alguna razón (edge case)
   const triggerCompletionCheck = useCallback(async () => {
     if (!podcast) {
       console.log('⏹️ SKIP - No podcast available for completion check');
@@ -146,6 +147,30 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress, mar
     console.log('⚡ FORCE SHOW - Forcing completion modal display');
     await showModalImmediately(podcast.id, podcast.lessonCount, podcast.duration);
   }, [podcast, showModalImmediately]);
+
+  // SOLUCIÓN PRINCIPAL: Escuchar cambios en userProgress para mostrar modal automáticamente
+  useEffect(() => {
+    if (!podcast || !userProgress || userProgress.length === 0) return;
+
+    const courseProgress = userProgress.find(p => p.course_id === podcast.id);
+
+    if (!courseProgress) return;
+
+    const isCompleted = courseProgress.is_completed && courseProgress.progress_percentage === 100;
+    const alreadyShownInDB = courseProgress.completion_modal_shown;
+    const alreadyShownInSession = modalShownForCourseRef.current === podcast.id;
+
+    if (isCompleted && !alreadyShownInDB && !alreadyShownInSession) {
+      console.log('🎉 STATE-BASED MODAL - Course completed via local state', {
+        courseId: podcast.id,
+        courseTitle: podcast.title,
+        timestamp: new Date().toISOString()
+      });
+
+      modalShownForCourseRef.current = podcast.id;
+      showModalImmediately(podcast.id, podcast.lessonCount, podcast.duration);
+    }
+  }, [podcast, userProgress, showModalImmediately]);
 
   // Reset cuando cambia el podcast
   useEffect(() => {

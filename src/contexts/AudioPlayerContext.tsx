@@ -403,7 +403,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       // Pequeño timeout para asegurar que las actualizaciones se propaguen
       setTimeout(() => {
         onCourseCompletedCallback();
-      }, 100); // Mínimo delay para propagación de estado
+      }, 50); // Reducido de 100ms a 50ms para menor delay
     }
     
     // Opcional: Refresh en background (no bloquear modal)
