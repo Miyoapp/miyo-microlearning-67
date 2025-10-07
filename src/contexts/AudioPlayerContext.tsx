@@ -397,10 +397,13 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       console.error('Error in course completion update:', error);
     }
     
-    // MODAL INMEDIATO - ejecutar callback sin delays
+    // MODAL INMEDIATO - ejecutar callback sin más delays
     if (onCourseCompletedCallback) {
-      console.log('🎉 Executing course completion callback INSTANTLY at:', new Date().toISOString());
-      onCourseCompletedCallback(); // Sin setTimeout - inmediato
+      console.log('🎉 Executing course completion callback INSTANTLY');
+      // Pequeño timeout para asegurar que las actualizaciones se propaguen
+      setTimeout(() => {
+        onCourseCompletedCallback();
+      }, 100); // Mínimo delay para propagación de estado
     }
     
     // Opcional: Refresh en background (no bloquear modal)

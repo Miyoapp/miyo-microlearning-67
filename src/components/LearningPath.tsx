@@ -82,7 +82,7 @@ const LearningPath = React.memo(({
     handleCreateSummary,
     handleOpenSummaryModal,
     checkHasSummary,
-    forceShowCompletionModal
+    triggerCompletionCheck
   } = useCourseCompletion({
     podcast,
     userProgress,
@@ -96,14 +96,14 @@ const LearningPath = React.memo(({
 
   // Set up course completion callback for immediate modal display
   useEffect(() => {
-    if (forceShowCompletionModal) {
-      setOnCourseCompletedCallback(forceShowCompletionModal);
+    if (triggerCompletionCheck) {
+      setOnCourseCompletedCallback(triggerCompletionCheck);
     }
     
     return () => {
       setOnCourseCompletedCallback(null);
     };
-  }, [forceShowCompletionModal, setOnCourseCompletedCallback]);
+  }, [triggerCompletionCheck, setOnCourseCompletedCallback]);
 
   // Check for existing summary
   useEffect(() => {
