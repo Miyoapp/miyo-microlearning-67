@@ -11,12 +11,7 @@ const ResumesListOptimized = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const handleDelete = async (summaryId: string) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este resumen?')) {
-      const success = await deleteSummary(summaryId);
-      if (!success) {
-        console.error('Error al eliminar el resumen');
-      }
-    }
+    await deleteSummary(summaryId);
   };
 
   // Filter summaries based on search

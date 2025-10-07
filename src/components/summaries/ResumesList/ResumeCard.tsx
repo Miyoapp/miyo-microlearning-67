@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { EnrichedSummary } from '@/hooks/useAllSummaries';
 import ActionButton from './ActionButton';
 import ViewSummaryModal from '../ViewSummaryModal';
+import DeleteConfirmationDialog from '@/components/ui/delete-confirmation-dialog';
 import { Eye, Edit, Trash2, Lightbulb, CheckCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -14,13 +15,19 @@ interface ResumeCardProps {
 
 const ResumeCard: React.FC<ResumeCardProps> = ({ resume, onDelete }) => {
   const [showViewModal, setShowViewModal] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const handleViewComplete = () => {
     setShowViewModal(true);
   };
 
-  const handleDelete = () => {
+  const handleDeleteClick = () => {
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = () => {
     onDelete(resume.id);
+    setIsDeleteModalOpen(false);
   };
 
   const formatCreatedAt = (dateString: string) => {
@@ -98,7 +105,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({ resume, onDelete }) => {
           </ActionButton>
           <ActionButton 
             variant="danger" 
-            onClick={handleDelete}
+            onClick={handleDeleteClick}
             icon={Trash2}
           >
             Eliminar
@@ -113,6 +120,16 @@ const ResumeCard: React.FC<ResumeCardProps> = ({ resume, onDelete }) => {
           summary={resume}
         />
       )}
+
+      <DeleteConfirmationDialog
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+        title="¿Eliminar resumen?"
+        description="Esta acción no se puede deshacer. El resumen será eliminado permanentemente."
+        confirmText="Confirmar eliminación"
+        cancelText="Cancelar"
+      />
     </>
   );
 };
