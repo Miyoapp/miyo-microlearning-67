@@ -150,13 +150,30 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress }: U
     }
   }, [podcast, showModalImmediately]);
 
-  // SOLUCIÓN 5: Función directa para casos urgentes
+  // SOLUCIÓN 5: Función directa para casos urgentes CON VALIDACIONES
   const forceShowCompletionModal = useCallback(async () => {
     if (!podcast) return;
     
+    // Aplicar las mismas validaciones que el useEffect reactivo
+    const courseProgress = userProgress.find(p => p.course_id === podcast.id);
+    const isCompleted = courseProgress?.is_completed === true && courseProgress?.progress_percentage === 100;
+    const alreadyShownInDB = courseProgress?.completion_modal_shown === true;
+    const alreadyShownInSession = modalShownForCourseRef.current === podcast.id;
+    
+    // Solo mostrar si el curso está completado y el modal no se ha mostrado antes
+    if (!isCompleted || alreadyShownInDB || alreadyShownInSession) {
+      console.log('⏭️ SKIP FORCE SHOW - Course not completed or already shown', {
+        isCompleted,
+        alreadyShownInDB,
+        alreadyShownInSession
+      });
+      return;
+    }
+    
     console.log('⚡ FORCE SHOW - Forcing completion modal display');
+    modalShownForCourseRef.current = podcast.id;
     await showModalImmediately(podcast.id, podcast.lessonCount, podcast.duration);
-  }, [podcast, showModalImmediately]);
+  }, [podcast, userProgress, showModalImmediately]);
 
   // SOLUCIÓN PRINCIPAL: Escuchar cambios en userProgress para mostrar modal automáticamente
   useEffect(() => {
