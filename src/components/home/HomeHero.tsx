@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { getOptimizedCloudinaryUrl, CloudinaryPresets } from '@/utils/cloudinary';
 
 const HomeHero = () => {
   const navigate = useNavigate();
@@ -52,10 +53,9 @@ const HomeHero = () => {
                 className="bg-gray-900 rounded-lg p-1 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
               >
                 <img
-                  src={image}
+                  src={getOptimizedCloudinaryUrl(image, CloudinaryPresets.THUMBNAIL)}
                   alt={`Course preview ${index + 1}`}
                   className="w-full h-32 md:h-36 lg:h-40 object-cover rounded-sm"
-                  loading="lazy"
                 />
               </div>
             ))}

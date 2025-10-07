@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { CategoriaLanding } from '@/types/landing';
+import { getOptimizedCloudinaryUrl, CloudinaryPresets } from '@/utils/cloudinary';
 
 interface CategoryScrollCardProps {
   categoria: CategoriaLanding;
@@ -44,7 +45,7 @@ const CategoryScrollCard = ({ categoria, onClick }: CategoryScrollCardProps) => 
     >
       {/* Imagen de fondo */}
       <img
-        src={imageUrl}
+        src={getOptimizedCloudinaryUrl(imageUrl, CloudinaryPresets.CATEGORY_IMAGE)}
         alt={categoria.nombre}
         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
         onError={(e) => {

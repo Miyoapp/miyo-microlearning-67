@@ -9,6 +9,7 @@ import CheckoutModal from './CheckoutModal';
 import { useCoursePurchases } from '@/hooks/useCoursePurchases';
 import { cn } from '@/lib/utils';
 import { formatMinutesToHumanReadable } from '@/lib/formatters';
+import { getOptimizedCloudinaryUrl, CloudinaryPresets } from '@/utils/cloudinary';
 
 interface CourseHeaderProps {
   podcast: Podcast;
@@ -91,7 +92,7 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
       {/* Course Image - Mobile optimized */}
       <div className="relative mb-4 sm:mb-6">
         <img
-          src={podcast.imageUrl}
+          src={getOptimizedCloudinaryUrl(podcast.imageUrl, CloudinaryPresets.CARD_IMAGE)}
           alt={podcast.title}
           className="w-full h-40 sm:h-48 object-cover rounded-lg sm:rounded-xl"
         />
@@ -132,7 +133,7 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
           onClick={podcast.creator?.linkedinUrl ? handleCreatorClick : undefined}
         >
           <img
-            src={podcast.creator?.imageUrl || '/placeholder.svg'}
+            src={getOptimizedCloudinaryUrl(podcast.creator?.imageUrl || '/placeholder.svg', CloudinaryPresets.AVATAR)}
             alt={podcast.creator?.name || 'Autor desconocido'}
             className="w-6 h-6 sm:w-8 sm:h-8 rounded-full object-cover flex-shrink-0"
           />

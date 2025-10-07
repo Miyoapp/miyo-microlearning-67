@@ -7,6 +7,7 @@ import { Play, Pause, Bookmark, BookmarkCheck, Clock, Headphones } from 'lucide-
 import { Podcast } from '@/types';
 import { formatMinutesToHumanReadable } from '@/lib/formatters';
 import PremiumBadge from '@/components/PremiumBadge';
+import { getOptimizedCloudinaryUrl, CloudinaryPresets } from '@/utils/cloudinary';
 
 interface CourseCardWithProgressProps {
   podcast: Podcast;
@@ -56,7 +57,7 @@ const CourseCardWithProgress: React.FC<CourseCardWithProgressProps> = ({
           {/* Mobile-first image container */}
           <div className="aspect-[4/3] relative overflow-hidden rounded-t-lg flex-shrink-0">
             <img 
-              src={podcast.imageUrl} 
+              src={getOptimizedCloudinaryUrl(podcast.imageUrl, CloudinaryPresets.CARD_IMAGE)} 
               alt={podcast.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
@@ -77,7 +78,7 @@ const CourseCardWithProgress: React.FC<CourseCardWithProgressProps> = ({
               {/* Creator info */}
               <div className="flex items-center space-x-2 mb-4">
                 <img 
-                  src={podcast.creator.imageUrl} 
+                  src={getOptimizedCloudinaryUrl(podcast.creator.imageUrl, CloudinaryPresets.AVATAR)} 
                   alt={podcast.creator.name}
                   className="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex-shrink-0"
                 />

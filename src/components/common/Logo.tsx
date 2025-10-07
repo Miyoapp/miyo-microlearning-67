@@ -2,6 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { getOptimizedCloudinaryUrl, CloudinaryPresets } from '@/utils/cloudinary';
 
 interface LogoProps {
   className?: string;
@@ -28,7 +29,7 @@ const Logo: React.FC<LogoProps> = ({ className = '', linkClassName = '', onClick
   return (
     <Link to="/" className={`inline-block ${linkClassName}`} onClick={handleClick}>
       <img 
-        src="https://res.cloudinary.com/dyjx9cjat/image/upload/v1742489263/image/jag130kkjn6aezxvf9q6.jpg" 
+        src={getOptimizedCloudinaryUrl("https://res.cloudinary.com/dyjx9cjat/image/upload/v1742489263/image/jag130kkjn6aezxvf9q6.jpg", CloudinaryPresets.THUMBNAIL)} 
         alt="MIYO Logo" 
         className={`h-10 w-auto ${className}`}
       />

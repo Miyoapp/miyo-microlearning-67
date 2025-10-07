@@ -7,6 +7,7 @@ import SoundEqualizer from './SoundEqualizer';
 import { formatMinutesToHumanReadable } from '@/lib/formatters';
 import CreatorSocialMediaLinks from './CreatorSocialMediaLinks';
 import { useGlassEffect } from '@/hooks/useGlassEffect';
+import { getOptimizedCloudinaryUrl, CloudinaryPresets } from '@/utils/cloudinary';
 
 interface CourseInfoProps {
   podcast: Podcast;
@@ -21,7 +22,7 @@ const CourseInfo = ({ podcast }: CourseInfoProps) => {
         {/* Course image */}
         <div className="w-full lg:w-1/3">
           <img 
-            src={podcast.imageUrl} 
+            src={getOptimizedCloudinaryUrl(podcast.imageUrl, CloudinaryPresets.CARD_IMAGE)} 
             alt={podcast.title}
             className="w-full h-auto rounded-xl shadow-md object-cover aspect-square"
           />
@@ -31,7 +32,7 @@ const CourseInfo = ({ podcast }: CourseInfoProps) => {
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <img 
-                  src={podcast.creator.imageUrl} 
+                  src={getOptimizedCloudinaryUrl(podcast.creator.imageUrl, CloudinaryPresets.AVATAR)} 
                   alt={podcast.creator.name}
                   className="w-12 h-12 rounded-full border-2 border-white shadow-md"
                 />

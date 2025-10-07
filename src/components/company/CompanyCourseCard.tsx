@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { Podcast } from "@/types";
 import { formatMinutesToHumanReadable } from "@/lib/formatters";
 import PremiumBadge from "@/components/PremiumBadge";
+import { getOptimizedCloudinaryUrl, CloudinaryPresets } from "@/utils/cloudinary";
 
 interface CompanyCourseCardProps {
   podcast: Podcast;
@@ -16,7 +17,7 @@ const CompanyCourseCard = ({ podcast }: CompanyCourseCardProps) => {
       <Card className="overflow-hidden transition-all duration-300 w-full h-full hover:shadow-lg hover:-translate-y-1 flex flex-col group">
         <div className="aspect-[4/3] relative overflow-hidden flex-shrink-0">
           <img 
-            src={podcast.imageUrl} 
+            src={getOptimizedCloudinaryUrl(podcast.imageUrl, CloudinaryPresets.CARD_IMAGE)} 
             alt={podcast.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
@@ -48,7 +49,7 @@ const CompanyCourseCard = ({ podcast }: CompanyCourseCardProps) => {
           
           <div className="flex items-center mt-auto pt-3 border-t border-gray-100">
             <img 
-              src={podcast.creator.imageUrl} 
+              src={getOptimizedCloudinaryUrl(podcast.creator.imageUrl, CloudinaryPresets.AVATAR)} 
               alt={podcast.creator.name}
               className="w-5 h-5 sm:w-6 sm:h-6 rounded-full mr-2 flex-shrink-0"
             />

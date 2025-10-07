@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { CreditCard, Lock, Shield, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { getOptimizedCloudinaryUrl, CloudinaryPresets } from '@/utils/cloudinary';
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -125,7 +126,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
           {/* Course preview */}
           <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
             <img
-              src={course.imageUrl}
+              src={getOptimizedCloudinaryUrl(course.imageUrl, CloudinaryPresets.THUMBNAIL)}
               alt={course.title}
               className="w-12 h-12 rounded-lg object-cover"
             />

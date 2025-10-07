@@ -1,6 +1,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Podcast } from '../../types';
+import { getOptimizedCloudinaryUrl, CloudinaryPresets } from '@/utils/cloudinary';
 
 interface CourseDiscProps {
   podcast: Podcast;
@@ -15,7 +16,7 @@ const CourseDisc = ({ podcast, percentComplete }: CourseDiscProps) => {
         {/* Course image in center */}
         <div className="absolute w-[85%] h-[85%] rounded-full overflow-hidden shadow-inner border-8 border-gray-700">
           <img 
-            src={podcast.imageUrl} 
+            src={getOptimizedCloudinaryUrl(podcast.imageUrl, CloudinaryPresets.DISC_IMAGE)} 
             alt={podcast.title}
             className="w-full h-full object-cover"
           />
@@ -42,7 +43,7 @@ const CourseDisc = ({ podcast, percentComplete }: CourseDiscProps) => {
       {/* Creator avatar positioned over the disc */}
       <div className="absolute bottom-0 right-0 transform translate-x-1/4">
         <Avatar className="w-20 h-20 border-4 border-white shadow-lg">
-          <AvatarImage src={podcast.creator.imageUrl} alt={podcast.creator.name} />
+          <AvatarImage src={getOptimizedCloudinaryUrl(podcast.creator.imageUrl, CloudinaryPresets.AVATAR)} alt={podcast.creator.name} />
           <AvatarFallback>{podcast.creator.name.charAt(0)}</AvatarFallback>
         </Avatar>
       </div>

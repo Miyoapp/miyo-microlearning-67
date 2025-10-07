@@ -4,6 +4,7 @@ import { Podcast } from '../types';
 import { Clock, Headphones } from 'lucide-react';
 import { formatMinutesToHumanReadable } from '@/lib/formatters';
 import PremiumBadge from '@/components/PremiumBadge';
+import { getOptimizedCloudinaryUrl, CloudinaryPresets } from '@/utils/cloudinary';
 
 interface PodcastCardProps {
   podcast: Podcast;
@@ -17,7 +18,7 @@ const PodcastCard = ({ podcast }: PodcastCardProps) => {
     >
       <div className="aspect-[4/3] relative overflow-hidden flex-shrink-0">
         <img 
-          src={podcast.imageUrl}
+          src={getOptimizedCloudinaryUrl(podcast.imageUrl, CloudinaryPresets.CARD_IMAGE)}
           alt={podcast.title}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
@@ -40,7 +41,7 @@ const PodcastCard = ({ podcast }: PodcastCardProps) => {
           <div className="mb-4">
             <div className="flex items-center gap-2">
               <img 
-                src={podcast.creator.imageUrl} 
+                src={getOptimizedCloudinaryUrl(podcast.creator.imageUrl, CloudinaryPresets.AVATAR)} 
                 alt={podcast.creator.name}
                 className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-cover flex-shrink-0"
               />
