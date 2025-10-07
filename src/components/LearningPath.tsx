@@ -8,7 +8,7 @@ import { useLessonStatus } from '@/hooks/learning-path/useLessonStatus';
 import { useLessonClasses } from '@/hooks/learning-path/useLessonClasses';
 import ModuleSection from './learning-path/ModuleSection';
 import { useCourseCompletion } from '@/hooks/useCourseCompletion';
-import { useUserProgress } from '@/hooks/useUserProgress';
+import { useCachedProgressData } from '@/hooks/queries/useCachedUserProgress';
 import { useSummaries } from '@/hooks/useSummaries';
 import CourseCompletionModal from '@/components/summaries/CourseCompletionModal';
 import CreateSummaryModal from '@/components/summaries/CreateSummaryModal';
@@ -60,8 +60,8 @@ const LearningPath = React.memo(({
     );
   }
   
-  // Get user progress data for course completion detection
-  const { userProgress, markCompletionModalShown } = useUserProgress();
+  // Get user progress data for course completion detection (with realtime updates)
+  const { userProgress } = useCachedProgressData();
   const { fetchSummaries } = useSummaries();
 
   // State for summary viewing
@@ -72,7 +72,7 @@ const LearningPath = React.memo(({
   // Extract courseId from podcast
   const courseId = podcast?.id || null;
   
-  // Course completion functionality - simplified without lesson progress dependency
+  // Course completion functionality - unified with realtime progress source
   const {
     showCompletionModal,
     showSummaryModal,
@@ -82,12 +82,11 @@ const LearningPath = React.memo(({
     handleCreateSummary,
     handleOpenSummaryModal,
     checkHasSummary,
-    triggerCompletionCheck
+    forceShowCompletionModal
   } = useCourseCompletion({
     podcast,
     userProgress,
-    lessonProgress,
-    markCompletionModalShown
+    lessonProgress
   });
 
   // Check if course is completed
@@ -96,14 +95,14 @@ const LearningPath = React.memo(({
 
   // Set up course completion callback for immediate modal display
   useEffect(() => {
-    if (triggerCompletionCheck) {
-      setOnCourseCompletedCallback(triggerCompletionCheck);
+    if (forceShowCompletionModal) {
+      setOnCourseCompletedCallback(forceShowCompletionModal);
     }
     
     return () => {
       setOnCourseCompletedCallback(null);
     };
-  }, [triggerCompletionCheck, setOnCourseCompletedCallback]);
+  }, [forceShowCompletionModal, setOnCourseCompletedCallback]);
 
   // Check for existing summary
   useEffect(() => {

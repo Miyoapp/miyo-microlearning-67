@@ -9,10 +9,9 @@ interface UseCourseCompletionProps {
   podcast: Podcast | null;  
   userProgress: any[];
   lessonProgress: any[];
-  markCompletionModalShown?: (courseId: string) => Promise<void>;
 }
 
-export function useCourseCompletion({ podcast, userProgress, lessonProgress, markCompletionModalShown }: UseCourseCompletionProps) {
+export function useCourseCompletion({ podcast, userProgress, lessonProgress }: UseCourseCompletionProps) {
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [showSummaryModal, setShowSummaryModal] = useState(false);
   const [completionStats, setCompletionStats] = useState<CourseCompletionStats | null>(null);
@@ -43,9 +42,20 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress, mar
     
     setShowCompletionModal(true);
     
-    // Marcar como mostrado inmediatamente (no bloqueante)
-    if (markCompletionModalShown) {
-      markCompletionModalShown(courseId).catch(console.error);
+    // Marcar como mostrado en DB (fallback interno, no bloqueante)
+    if (auth?.id) {
+      supabase
+        .from('user_course_progress')
+        .update({ completion_modal_shown: true })
+        .eq('user_id', auth.id)
+        .eq('course_id', courseId)
+        .then(({ error }) => {
+          if (error) {
+            console.error('Error marking modal as shown:', error);
+          } else {
+            console.log('✅ Modal marked as shown in DB');
+          }
+        });
     }
     
     // Cargar stats detalladas en paralelo (sin bloquear el modal)
@@ -64,7 +74,7 @@ export function useCourseCompletion({ podcast, userProgress, lessonProgress, mar
     } finally {
       setIsLoadingStats(false);
     }
-  }, [markCompletionModalShown]);
+  }, [auth?.id]);
 
   // FALLBACK: Este método se mantiene como respaldo en caso de que
   // el useEffect no se dispare por alguna razón (edge case)
