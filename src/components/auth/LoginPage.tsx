@@ -43,7 +43,29 @@ const LoginPage = () => {
         : await signIn(email, password);
 
       if (error) {
-        toast.error(error.message);
+        // Mensajes de error específicos basados en el código de error de Supabase
+        let errorMessage = error.message;
+        
+        if (!isSignUp) {
+          // Errores específicos para login
+          if (error.message.includes('Invalid login credentials') || 
+              error.message.includes('invalid_credentials')) {
+            errorMessage = 'El correo o la contraseña ingresados son incorrectos.';
+          } else if (error.message.includes('Email not confirmed')) {
+            errorMessage = 'Por favor confirma tu correo electrónico antes de iniciar sesión.';
+          } else if (error.message.includes('User not found')) {
+            errorMessage = 'El correo ingresado no está registrado.';
+          }
+        } else {
+          // Errores específicos para registro
+          if (error.message.includes('User already registered')) {
+            errorMessage = 'Este correo ya está registrado. Por favor inicia sesión.';
+          } else if (error.message.includes('Password should be at least')) {
+            errorMessage = 'La contraseña debe tener al menos 6 caracteres.';
+          }
+        }
+        
+        toast.error(errorMessage);
       } else {
         if (isSignUp) {
           // Redirigir a la página de confirmación de email

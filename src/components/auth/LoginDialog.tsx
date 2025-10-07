@@ -38,7 +38,19 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({ open, onOpenChange }) 
     if (mode === 'login') {
       const { error } = await signIn(email, password);
       if (error) {
-        toast.error('Error al iniciar sesión: ' + error.message);
+        // Mensajes de error específicos para login
+        let errorMessage = error.message;
+        
+        if (error.message.includes('Invalid login credentials') || 
+            error.message.includes('invalid_credentials')) {
+          errorMessage = 'El correo o la contraseña ingresados son incorrectos.';
+        } else if (error.message.includes('Email not confirmed')) {
+          errorMessage = 'Por favor confirma tu correo electrónico antes de iniciar sesión.';
+        } else if (error.message.includes('User not found')) {
+          errorMessage = 'El correo ingresado no está registrado.';
+        }
+        
+        toast.error(errorMessage);
       } else {
         toast.success('¡Sesión iniciada correctamente!');
         navigate('/dashboard');
@@ -46,7 +58,16 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({ open, onOpenChange }) 
     } else {
       const { error } = await signUp(email, password, name);
       if (error) {
-        toast.error('Error al crear la cuenta: ' + error.message);
+        // Mensajes de error específicos para registro
+        let errorMessage = error.message;
+        
+        if (error.message.includes('User already registered')) {
+          errorMessage = 'Este correo ya está registrado. Por favor inicia sesión.';
+        } else if (error.message.includes('Password should be at least')) {
+          errorMessage = 'La contraseña debe tener al menos 6 caracteres.';
+        }
+        
+        toast.error(errorMessage);
       } else {
         // Redirigir a la página de confirmación de email
         navigate('/email-confirmation');
