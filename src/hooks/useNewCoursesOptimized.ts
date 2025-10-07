@@ -16,6 +16,10 @@ export const useNewCoursesOptimized = () => {
 
   console.log('📊 OPTIMIZED NEW COURSES:', {
     count: newCourses.length,
+    courses: newCourses.map(c => ({ 
+      title: c.title, 
+      created: c.fecha_creacion 
+    })),
     loading,
     error: !!error,
     cacheStrategy: 'CACHED_FILTERED'

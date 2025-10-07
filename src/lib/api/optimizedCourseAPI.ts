@@ -119,7 +119,8 @@ export const obtenerCursosOptimizado = async (): Promise<Podcast[]> => {
         moneda: curso.moneda || 'USD',
         nivel: curso.nivel,
         likes: curso.likes,
-        dislikes: curso.dislikes
+        dislikes: curso.dislikes,
+        fecha_creacion: curso.fecha_creacion
       };
     });
 
@@ -319,7 +320,8 @@ export const obtenerCursoPorIdOptimizado = async (id: string): Promise<Podcast |
       moneda: data.moneda || 'USD',
       nivel: data.nivel,
       likes: data.likes,
-      dislikes: data.dislikes
+      dislikes: data.dislikes,
+      fecha_creacion: data.fecha_creacion
     };
 
     console.log(`🎉 OPTIMIZED: Successfully transformed course: ${transformedCourse.title}`);

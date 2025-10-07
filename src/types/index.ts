@@ -57,6 +57,7 @@ export interface Podcast {
   nivel?: string | null;
   likes: number;
   dislikes: number;
+  fecha_creacion: string;
 }
 
 export interface CategoriaLanding {

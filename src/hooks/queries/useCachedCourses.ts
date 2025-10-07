@@ -131,12 +131,15 @@ export const useCachedCoursesFiltered = () => {
   };
 
   const getNewCourses = (limit: number = 4) => {
-    // Sort by creation date (assuming it's stored in a field we have access to)
-    // For now, we'll sort by ID as a proxy for creation order
-    return allCourses
-      ?.slice()
-      .reverse() // Most recent first
-      .slice(0, limit) || [];
+    if (!allCourses) return [];
+    
+    return [...allCourses]
+      .sort((a, b) => {
+        const dateA = new Date(a.fecha_creacion).getTime();
+        const dateB = new Date(b.fecha_creacion).getTime();
+        return dateB - dateA; // Más reciente primero
+      })
+      .slice(0, limit);
   };
 
   return {

@@ -40,7 +40,8 @@ export const transformarCursoAModelo = async (curso: SupabaseCurso): Promise<Pod
       moneda: curso.moneda || 'USD',
       nivel: curso.nivel,
       likes: curso.likes,
-      dislikes: curso.dislikes
+      dislikes: curso.dislikes,
+      fecha_creacion: curso.fecha_creacion
     };
   } catch (error) {
     console.error(`Error al transformar curso ${curso.id}:`, error);
@@ -72,7 +73,8 @@ export const transformarCursoAModelo = async (curso: SupabaseCurso): Promise<Pod
       moneda: 'USD',
       nivel: curso.nivel,
       likes: 0,
-      dislikes: 0
+      dislikes: 0,
+      fecha_creacion: curso.fecha_creacion
     };
   }
 };
