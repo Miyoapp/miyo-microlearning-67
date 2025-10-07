@@ -27,7 +27,7 @@ const HomeHero = () => {
           {/* Left Column - Text Content */}
           <div className="text-left">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 animate-slide-down">
-              Cursos en{' '}
+              Microcursos en{' '}
               <span className="text-miyo-800">audio</span>
               {' '}para conocerte, crecer y avanzar a tu ritmo
             </h1>
