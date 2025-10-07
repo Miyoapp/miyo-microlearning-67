@@ -7,11 +7,20 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 
 const ResumesListOptimized = () => {
-  const { summaries, loading } = useAllSummariesOptimized();
+  const { summaries, loading, deleteSummary } = useAllSummariesOptimized();
   const [searchTerm, setSearchTerm] = useState('');
 
+  const handleDelete = async (summaryId: string) => {
+    if (window.confirm('¿Estás seguro de que quieres eliminar este resumen?')) {
+      const success = await deleteSummary(summaryId);
+      if (!success) {
+        console.error('Error al eliminar el resumen');
+      }
+    }
+  };
+
   // Filter summaries based on search
-  const filteredSummariesData = summaries.filter(summary => 
+  const filteredSummariesData = summaries.filter(summary =>
     summary.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     summary.course_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     summary.category_name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -91,10 +100,7 @@ const ResumesListOptimized = () => {
                 <ResumeCard 
                   key={summary.id} 
                   resume={summary} 
-                  onDelete={async (id) => {
-                    // Handle delete here if needed
-                    console.log('Delete summary:', id);
-                  }}
+                  onDelete={handleDelete}
                 />
               ))}
             </div>
