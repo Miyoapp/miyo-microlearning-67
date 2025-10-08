@@ -56,7 +56,10 @@ const DashboardSidebar = () => {
       title: 'Mis Planes',
       url: '/dashboard/mis-planes',
       icon: '🎯'
-    },
+    }
+  ];
+
+  const accountItems = [
     {
       title: 'Mi Perfil',
       url: '/dashboard/profile',
@@ -126,6 +129,16 @@ const DashboardSidebar = () => {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             {renderMenuItems(learningItems)}
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Mi Cuenta Group */}
+        <SidebarGroup className="mt-6">
+          <SidebarGroupLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-4">
+            MI CUENTA
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            {renderMenuItems(accountItems)}
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
