@@ -6,6 +6,7 @@ import { AuthProvider } from '@/components/auth/AuthProvider';
 import { AudioPlayerProvider } from '@/contexts/AudioPlayerContext';
 import Home from '@/pages/Home';
 import LoginPage from '@/components/auth/LoginPage';
+import EmailConfirmation from '@/pages/EmailConfirmation';
 import Dashboard from '@/pages/Dashboard';
 import DashboardCourseOptimized from '@/pages/DashboardCourseOptimized';
 import DashboardDiscoverOptimized from '@/pages/DashboardDiscoverOptimized';
@@ -40,6 +41,7 @@ function App() {
                   {/* Public routes */}
                   <Route path="/" element={<Home />} />
                   <Route path="/login" element={<LoginPage />} />
+                  <Route path="/email-confirmation" element={<EmailConfirmation />} />
                   
                   {/* Protected routes */}
                   <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
