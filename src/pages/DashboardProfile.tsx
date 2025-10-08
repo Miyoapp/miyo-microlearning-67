@@ -9,6 +9,8 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { Eye, EyeOff } from 'lucide-react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
+import { SidebarTrigger } from '@/components/ui/sidebar/index';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Profile {
   id: string;
@@ -19,6 +21,7 @@ interface Profile {
 
 const DashboardProfile = () => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -135,6 +138,13 @@ const DashboardProfile = () => {
 
   return (
     <DashboardLayout>
+      {/* Mobile hamburger menu */}
+      {isMobile && (
+        <div className="fixed top-4 right-4 z-50 bg-white rounded-full shadow-lg">
+          <SidebarTrigger />
+        </div>
+      )}
+      
       <div className="h-full overflow-auto p-4 lg:p-8">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl font-bold text-gray-900 mb-8">Mi Perfil</h1>
