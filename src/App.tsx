@@ -14,6 +14,7 @@ import DashboardMisNotasOptimized from '@/pages/DashboardMisNotasOptimized';
 import DashboardCourseNotes from '@/pages/DashboardCourseNotes';
 import DashboardMisResumenesOptimized from '@/pages/DashboardMisResumenesOptimized';
 import DashboardMisPlanesOptimized from '@/pages/DashboardMisPlanesOptimized';
+import DashboardProfile from '@/pages/DashboardProfile';
 import { RequireAuth } from '@/components/auth/RequireAuth';
 import ErrorBoundary from '@/components/ui/ErrorBoundary';
 import RouteErrorBoundary from '@/components/ui/RouteErrorBoundary';
@@ -49,6 +50,7 @@ function App() {
                   <Route path="/dashboard/notes/:courseId" element={<RequireAuth><DashboardCourseNotes /></RequireAuth>} />
                   <Route path="/dashboard/mis-resumenes" element={<RequireAuth><DashboardMisResumenesOptimized /></RequireAuth>} />
                   <Route path="/dashboard/mis-planes" element={<RequireAuth><DashboardMisPlanesOptimized /></RequireAuth>} />
+                  <Route path="/dashboard/profile" element={<RequireAuth><DashboardProfile /></RequireAuth>} />
                 </Routes>
               </ErrorBoundary>
             </div>

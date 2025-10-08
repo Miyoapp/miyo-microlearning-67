@@ -56,6 +56,11 @@ const DashboardSidebar = () => {
       title: 'Mis Planes',
       url: '/dashboard/mis-planes',
       icon: '🎯'
+    },
+    {
+      title: 'Mi Perfil',
+      url: '/dashboard/profile',
+      icon: '👤'
     }
   ];
 
