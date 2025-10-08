@@ -1,6 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/components/auth/AuthProvider';
-import { supabase } from '@/integrations/supabase/client';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,54 +9,30 @@ import { Eye, EyeOff } from 'lucide-react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { SidebarTrigger } from '@/components/ui/sidebar/index';
 import { useIsMobile } from '@/hooks/use-mobile';
-
-interface Profile {
-  id: string;
-  email: string;
-  name: string;
-  avatar_url: string;
-}
+import { useCachedProfile, useUpdateProfile, useUpdatePassword } from '@/hooks/queries/useCachedProfile';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const DashboardProfile = () => {
-  const { user } = useAuth();
   const isMobile = useIsMobile();
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const { data: profile, isLoading, error } = useCachedProfile();
+  const updateProfile = useUpdateProfile();
+  const updatePassword = useUpdatePassword();
+  
   const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(true);
   
   // Form state
-  const [name, setName] = useState('');
+  const [name, setName] = useState(profile?.name || '');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      fetchProfile();
+  // Update name when profile loads
+  React.useEffect(() => {
+    if (profile?.name) {
+      setName(profile.name);
     }
-  }, [user]);
-
-  const fetchProfile = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user?.id)
-        .single();
-
-      if (error) throw error;
-
-      setProfile(data);
-      setName(data.name || '');
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-      toast.error('Error al cargar el perfil');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [profile?.name]);
 
   const handleSave = async () => {
     // Validations
@@ -78,32 +52,24 @@ const DashboardProfile = () => {
     }
 
     try {
-      // Update name
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ name })
-        .eq('id', user?.id);
-
-      if (profileError) throw profileError;
+      // Update name if changed
+      if (name !== profile?.name) {
+        await updateProfile.mutateAsync({ name });
+      }
 
       // Update password if provided
       if (password) {
-        const { error: passwordError } = await supabase.auth.updateUser({
-          password: password
-        });
-
-        if (passwordError) throw passwordError;
-        toast.success('Contraseña actualizada correctamente');
+        await updatePassword.mutateAsync({ password });
       }
 
-      toast.success('Perfil actualizado correctamente');
+      // Reset form
       setIsEditing(false);
       setPassword('');
       setConfirmPassword('');
-      fetchProfile();
+      setShowPassword(false);
+      setShowConfirmPassword(false);
     } catch (error) {
       console.error('Error updating profile:', error);
-      toast.error('Error al actualizar el perfil');
     }
   };
 
@@ -116,17 +82,7 @@ const DashboardProfile = () => {
     setShowConfirmPassword(false);
   };
 
-  if (loading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-full">
-          <div className="text-lg text-gray-600">Cargando perfil...</div>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
-  if (!profile) {
+  if (error) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-full">
@@ -154,30 +110,42 @@ const DashboardProfile = () => {
               <CardTitle>Información Personal</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {/* Avatar Section */}
-                <div className="flex flex-col items-center md:items-start space-y-4">
-                  <Avatar className="w-32 h-32">
-                    <AvatarImage src={profile.avatar_url} alt={profile.name} />
-                    <AvatarFallback className="text-2xl bg-miyo-100 text-miyo-800">
-                      {profile.name?.charAt(0).toUpperCase() || profile.email?.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+              {isLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  <div className="flex flex-col items-center md:items-start space-y-4">
+                    <Skeleton className="w-32 h-32 rounded-full" />
+                  </div>
+                  <div className="md:col-span-2 space-y-6">
+                    <Skeleton className="h-8 w-48" />
+                    <Skeleton className="h-8 w-64" />
+                    <Skeleton className="h-10 w-32" />
+                  </div>
                 </div>
+              ) : profile ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  {/* Avatar Section */}
+                  <div className="flex flex-col items-center md:items-start space-y-4">
+                    <Avatar className="w-32 h-32">
+                      <AvatarImage src={profile.avatar_url || undefined} alt={profile.name || ''} />
+                      <AvatarFallback className="text-2xl bg-miyo-100 text-miyo-800">
+                        {profile.name?.charAt(0).toUpperCase() || profile.email?.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
 
-                {/* Profile Information */}
-                <div className="md:col-span-2 space-y-6">
+                  {/* Profile Information */}
+                  <div className="md:col-span-2 space-y-6">
                   {!isEditing ? (
                     // View Mode
                     <>
                       <div>
                         <Label className="text-sm font-semibold text-gray-700">Nombre</Label>
-                        <p className="mt-1 text-lg text-gray-900">{profile.name}</p>
+                        <p className="mt-1 text-lg text-gray-900">{profile.name || 'Sin nombre'}</p>
                       </div>
 
                       <div>
                         <Label className="text-sm font-semibold text-gray-700">Correo Electrónico</Label>
-                        <p className="mt-1 text-lg text-gray-600">{profile.email}</p>
+                        <p className="mt-1 text-lg text-gray-600">{profile.email || 'Sin correo'}</p>
                         <p className="text-xs text-gray-500 mt-1">El correo no puede ser modificado</p>
                       </div>
 
@@ -203,7 +171,7 @@ const DashboardProfile = () => {
 
                       <div>
                         <Label className="text-sm font-semibold text-gray-700">Correo Electrónico</Label>
-                        <p className="mt-1 text-gray-600">{profile.email}</p>
+                        <p className="mt-1 text-gray-600">{profile.email || 'Sin correo'}</p>
                         <p className="text-xs text-gray-500 mt-1">El correo no puede ser modificado</p>
                       </div>
 
@@ -269,8 +237,9 @@ const DashboardProfile = () => {
                       </div>
                     </>
                   )}
+                  </div>
                 </div>
-              </div>
+              ) : null}
             </CardContent>
           </Card>
         </div>
