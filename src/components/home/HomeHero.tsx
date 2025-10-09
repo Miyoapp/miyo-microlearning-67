@@ -12,12 +12,12 @@ const HomeHero = () => {
   };
 
   const cardImages = [
-    'https://res.cloudinary.com/dyjx9cjat/image/upload/v1754686653/Captura_de_pantalla_2025-08-08_a_la_s_3.56.24_p._m._tvxusy.png',
-    'https://res.cloudinary.com/dyjx9cjat/image/upload/v1754686653/Captura_de_pantalla_2025-08-08_a_la_s_3.55.53_p._m._mhiugd.png',
-    'https://res.cloudinary.com/dyjx9cjat/image/upload/v1754686653/Captura_de_pantalla_2025-08-08_a_la_s_3.56.33_p._m._dfivml.png',
-    'https://res.cloudinary.com/dyjx9cjat/image/upload/v1754686652/Captura_de_pantalla_2025-08-08_a_la_s_3.56.06_p._m._rac6wc.png',
-    'https://res.cloudinary.com/dyjx9cjat/image/upload/v1754686652/Captura_de_pantalla_2025-08-08_a_la_s_3.56.41_p._m._di1ktt.png',
-    'https://res.cloudinary.com/dyjx9cjat/image/upload/v1754686652/Captura_de_pantalla_2025-08-08_a_la_s_3.56.51_p._m._irhv5q.png'
+    'https://res.cloudinary.com/dyjx9cjat/image/upload/Captura_de_pantalla_2025-08-08_a_la_s_3.56.24_p._m._tvxusy.png',
+    'https://res.cloudinary.com/dyjx9cjat/image/upload/Captura_de_pantalla_2025-08-08_a_la_s_3.55.53_p._m._mhiugd.png',
+    'https://res.cloudinary.com/dyjx9cjat/image/upload/Captura_de_pantalla_2025-08-08_a_la_s_3.56.33_p._m._dfivml.png',
+    'https://res.cloudinary.com/dyjx9cjat/image/upload/Captura_de_pantalla_2025-08-08_a_la_s_3.56.06_p._m._rac6wc.png',
+    'https://res.cloudinary.com/dyjx9cjat/image/upload/Captura_de_pantalla_2025-08-08_a_la_s_3.56.41_p._m._di1ktt.png',
+    'https://res.cloudinary.com/dyjx9cjat/image/upload/Captura_de_pantalla_2025-08-08_a_la_s_3.56.51_p._m._irhv5q.png'
   ];
 
   return (
