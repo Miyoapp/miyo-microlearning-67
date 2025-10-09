@@ -53,7 +53,7 @@ const HomeHero = () => {
                 className="bg-gray-900 rounded-lg p-1 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
               >
                 <img
-                  src={`${getOptimizedCloudinaryUrl(image, CloudinaryPresets.THUMBNAIL)}?v=${import.meta.env.VITE_ASSET_VERSION || '1760029966'}`}
+                  src={`${getOptimizedCloudinaryUrl(image, CloudinaryPresets.CARD_IMAGE)}?v=${import.meta.env.VITE_ASSET_VERSION || '1760029966'}`}
                   alt={`Course preview ${index + 1}`}
                   className="w-full h-32 md:h-36 lg:h-40 object-cover rounded-sm"
                 />
