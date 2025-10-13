@@ -471,7 +471,7 @@ const LessonCard = React.memo(({
                 value={clampedCurrentTime}
                 onChange={handleSeekChange}
                 disabled={!isCurrent} // Only allow seeking on current lesson
-                className="w-full accent-[#5e16ea] h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-full accent-[#5e16ea] h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer disabled:cursor-not-allowed"
                 style={{
                   background: `linear-gradient(to right, #5e16ea 0%, #5e16ea ${progressPercent}%, #e5e7eb ${progressPercent}%, #e5e7eb 100%)`
                 }}
