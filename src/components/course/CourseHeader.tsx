@@ -92,7 +92,7 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
       {/* Course Image - Mobile optimized */}
       <div className="relative mb-4 sm:mb-6">
         <img
-          src={getOptimizedCloudinaryUrl(podcast.imageUrl, CloudinaryPresets.CARD_IMAGE)}
+          src={getOptimizedCloudinaryUrl(podcast.imageUrl, CloudinaryPresets.COURSE_DETAIL_IMAGE)}
           alt={podcast.title}
           className="w-full h-40 sm:h-48 object-cover rounded-lg sm:rounded-xl"
         />

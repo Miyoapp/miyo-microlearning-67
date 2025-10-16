@@ -22,7 +22,7 @@ const CourseInfo = ({ podcast }: CourseInfoProps) => {
         {/* Course image */}
         <div className="w-full lg:w-1/3">
           <img 
-            src={getOptimizedCloudinaryUrl(podcast.imageUrl, CloudinaryPresets.CARD_IMAGE)} 
+            src={getOptimizedCloudinaryUrl(podcast.imageUrl, CloudinaryPresets.COURSE_DETAIL_IMAGE)} 
             alt={podcast.title}
             className="w-full h-auto rounded-xl shadow-md object-cover aspect-square"
           />

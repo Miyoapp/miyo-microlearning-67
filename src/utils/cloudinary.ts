@@ -90,4 +90,11 @@ export const CloudinaryPresets = {
     quality: 'auto' as const,
     format: 'auto' as const,
   },
+  
+  // Course detail page image (high quality for large displays)
+  COURSE_DETAIL_IMAGE: {
+    width: 800,
+    quality: 'auto' as const,
+    format: 'auto' as const,
+  },
 };
